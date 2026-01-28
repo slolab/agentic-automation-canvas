@@ -67,65 +67,47 @@
     <FormField
       id="algorithms"
       label="Algorithms / Technologies"
-      help-text="List of algorithms, models, or technologies to be used"
+      help-text="List of algorithms, models, or technologies to be used. Add one per entry."
     >
-      <input
-        id="algorithms"
-        v-model="algorithmInput"
-        type="text"
-        class="form-input"
-        placeholder="e.g., BERT, GPT-4, Random Forest"
-        @keydown.enter.prevent="addAlgorithm"
-      />
-      <div v-if="localData.algorithms && localData.algorithms.length > 0" class="mt-2 flex flex-wrap gap-2">
-        <span
-          v-for="(alg, index) in localData.algorithms"
-          :key="index"
-          class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-        >
-          {{ alg }}
-          <button
-            type="button"
-            @click="removeAlgorithm(index)"
-            class="ml-2 text-blue-600 hover:text-blue-800"
-            aria-label="Remove algorithm"
-          >
-            ×
-          </button>
-        </span>
-      </div>
+      <MultiValueInput
+        v-model="localAlgorithms"
+        label="algorithm"
+        :create-default="() => ({ value: '' })"
+      >
+        <template #input="{ item, index, update }">
+          <input
+            :id="`algorithm-${index}`"
+            :value="item.value"
+            type="text"
+            class="form-input"
+            placeholder="e.g., BERT"
+            @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
+          />
+        </template>
+      </MultiValueInput>
     </FormField>
 
     <FormField
       id="tools"
       label="Tools / Frameworks"
-      help-text="Development tools and frameworks"
+      help-text="Development tools and frameworks. Add one per entry."
     >
-      <input
-        id="tools"
-        v-model="toolInput"
-        type="text"
-        class="form-input"
-        placeholder="e.g., Python, TensorFlow, Docker"
-        @keydown.enter.prevent="addTool"
-      />
-      <div v-if="localData.tools && localData.tools.length > 0" class="mt-2 flex flex-wrap gap-2">
-        <span
-          v-for="(tool, index) in localData.tools"
-          :key="index"
-          class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
-        >
-          {{ tool }}
-          <button
-            type="button"
-            @click="removeTool(index)"
-            class="ml-2 text-green-600 hover:text-green-800"
-            aria-label="Remove tool"
-          >
-            ×
-          </button>
-        </span>
-      </div>
+      <MultiValueInput
+        v-model="localTools"
+        label="tool"
+        :create-default="() => ({ value: '' })"
+      >
+        <template #input="{ item, index, update }">
+          <input
+            :id="`tool-${index}`"
+            :value="item.value"
+            type="text"
+            class="form-input"
+            placeholder="e.g., Python"
+            @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
+          />
+        </template>
+      </MultiValueInput>
     </FormField>
 
     <FormField
@@ -160,20 +142,40 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
+import MultiValueInput from '../MultiValueInput.vue'
 import type { DeveloperFeasibility } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateDeveloperFeasibility } = useCanvasData()
 
-const localData = ref<DeveloperFeasibility>({
-  trlLevel: {},
-  ...canvasData.value.developerFeasibility,
-})
+// Initialize localData with proper array references
+const initLocalData = (): DeveloperFeasibility => {
+  const feasibility = canvasData.value.developerFeasibility
+  return {
+    trlLevel: feasibility?.trlLevel || {},
+    technicalRisk: feasibility?.technicalRisk,
+    effortEstimate: feasibility?.effortEstimate,
+    feasibilityNotes: feasibility?.feasibilityNotes,
+  }
+}
 
-const algorithmInput = ref('')
-const toolInput = ref('')
+const localData = ref<DeveloperFeasibility>(initLocalData())
+
+// Convert algorithms/tools arrays to objects for MultiValueInput
+const initAlgorithms = () => {
+  const algorithms = canvasData.value.developerFeasibility?.algorithms || []
+  return algorithms.map((a: string) => ({ value: a }))
+}
+
+const initTools = () => {
+  const tools = canvasData.value.developerFeasibility?.tools || []
+  return tools.map((t: string) => ({ value: t }))
+}
+
+const localAlgorithms = ref<Array<{ value: string }>>(initAlgorithms())
+const localTools = ref<Array<{ value: string }>>(initTools())
 
 const trlLevels = [
   { value: 1, label: 'TRL 1 - Basic principles observed' },
@@ -187,57 +189,77 @@ const trlLevels = [
   { value: 9, label: 'TRL 9 - Actual system proven in operational environment' },
 ]
 
+let isLocalUpdate = false
+let isSyncingFromCanvas = false
+
 watch(
   () => canvasData.value.developerFeasibility,
   (newFeasibility) => {
-    if (newFeasibility) {
-      localData.value = { trlLevel: {}, ...newFeasibility }
+    // Don't sync if the update came from us
+    if (!isLocalUpdate) {
+      isSyncingFromCanvas = true
+      if (newFeasibility && Object.keys(newFeasibility).length > 0) {
+        // Create new object with proper array references
+        localData.value = {
+          trlLevel: newFeasibility.trlLevel || {},
+          technicalRisk: newFeasibility.technicalRisk,
+          effortEstimate: newFeasibility.effortEstimate,
+          feasibilityNotes: newFeasibility.feasibilityNotes,
+        }
+        // Sync algorithms and tools arrays
+        localAlgorithms.value = (newFeasibility.algorithms || []).map((a: string) => ({ value: a }))
+        localTools.value = (newFeasibility.tools || []).map((t: string) => ({ value: t }))
+      } else {
+        // Reset to empty state when cleared
+        localData.value = { trlLevel: {} }
+        localAlgorithms.value = []
+        localTools.value = []
+      }
+      // Reset flag after syncing
+      nextTick(() => {
+        isSyncingFromCanvas = false
+      })
     }
   },
-  { deep: true }
+  { deep: true, immediate: false }
 )
 
-const update = () => {
+const update = async () => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
   updateDeveloperFeasibility(localData.value)
+  await nextTick()
+  isLocalUpdate = false
 }
 
-const addAlgorithm = () => {
-  if (algorithmInput.value.trim()) {
-    if (!localData.value.algorithms) {
-      localData.value.algorithms = []
-    }
-    if (!localData.value.algorithms.includes(algorithmInput.value.trim())) {
-      localData.value.algorithms.push(algorithmInput.value.trim())
-      algorithmInput.value = ''
-      update()
-    }
-  }
-}
+// Watch for local changes to algorithms and tools
+watch(localAlgorithms, async (newAlgorithms) => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
+  updateDeveloperFeasibility({
+    ...localData.value,
+    algorithms: newAlgorithms.map((a) => a.value).filter((v) => v.trim()),
+    tools: localTools.value.map((t) => t.value).filter((v) => v.trim()),
+  })
+  await nextTick()
+  isLocalUpdate = false
+}, { deep: true, immediate: false })
 
-const removeAlgorithm = (index: number) => {
-  if (localData.value.algorithms) {
-    localData.value.algorithms.splice(index, 1)
-    update()
-  }
-}
-
-const addTool = () => {
-  if (toolInput.value.trim()) {
-    if (!localData.value.tools) {
-      localData.value.tools = []
-    }
-    if (!localData.value.tools.includes(toolInput.value.trim())) {
-      localData.value.tools.push(toolInput.value.trim())
-      toolInput.value = ''
-      update()
-    }
-  }
-}
-
-const removeTool = (index: number) => {
-  if (localData.value.tools) {
-    localData.value.tools.splice(index, 1)
-    update()
-  }
-}
+watch(localTools, async (newTools) => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
+  updateDeveloperFeasibility({
+    ...localData.value,
+    algorithms: localAlgorithms.value.map((a) => a.value).filter((v) => v.trim()),
+    tools: newTools.map((t) => t.value).filter((v) => v.trim()),
+  })
+  await nextTick()
+  isLocalUpdate = false
+}, { deep: true, immediate: false })
 </script>

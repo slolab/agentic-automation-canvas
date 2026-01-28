@@ -130,7 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import type { Requirement, Stakeholder } from '@/types/canvas'
@@ -138,25 +138,70 @@ import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateUserExpectations } = useCanvasData()
 
-const localRequirements = ref<Requirement[]>(
-  canvasData.value.userExpectations?.requirements || []
-)
-const localStakeholders = ref<Stakeholder[]>(
-  canvasData.value.userExpectations?.stakeholders || []
+// Initialize with proper object copying
+const initLocalData = () => {
+  const expectations = canvasData.value.userExpectations
+  return {
+    requirements: (expectations?.requirements || []).map((item) => ({ ...item })),
+    stakeholders: (expectations?.stakeholders || []).map((item) => ({ ...item })),
+  }
+}
+
+const initialData = initLocalData()
+const localRequirements = ref<Requirement[]>(initialData.requirements)
+const localStakeholders = ref<Stakeholder[]>(initialData.stakeholders)
+
+let isLocalUpdate = false
+let isSyncingFromCanvas = false
+
+// Watch for changes from canvasData (e.g., when cleared or imported)
+watch(
+  () => canvasData.value.userExpectations,
+  (newExpectations) => {
+    // Don't sync if the update came from us
+    if (!isLocalUpdate) {
+      isSyncingFromCanvas = true
+      if (newExpectations) {
+        localRequirements.value = (newExpectations.requirements || []).map((item) => ({ ...item }))
+        localStakeholders.value = (newExpectations.stakeholders || []).map((item) => ({ ...item }))
+      } else {
+        // Reset when cleared
+        localRequirements.value = []
+        localStakeholders.value = []
+      }
+      // Reset flag after syncing
+      nextTick(() => {
+        isSyncingFromCanvas = false
+      })
+    }
+  },
+  { deep: true, immediate: false }
 )
 
 // Watch for local changes and update canvasData immediately
-watch(localRequirements, (newReqs) => {
+watch(localRequirements, async (newReqs) => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
   updateUserExpectations({
     requirements: [...newReqs],
     stakeholders: [...localStakeholders.value],
   })
+  await nextTick()
+  isLocalUpdate = false
 }, { deep: true, immediate: false })
 
-watch(localStakeholders, (newStakeholders) => {
+watch(localStakeholders, async (newStakeholders) => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
   updateUserExpectations({
     requirements: [...localRequirements.value],
     stakeholders: [...newStakeholders],
   })
+  await nextTick()
+  isLocalUpdate = false
 }, { deep: true, immediate: false })
 </script>

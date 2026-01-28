@@ -46,65 +46,173 @@ loadFromStorage()
 
 export function useCanvasData() {
   const updateProject = (updates: Partial<CanvasData['project']>) => {
-    canvasData.value.project = { ...canvasData.value.project, ...updates }
+    // Ensure arrays are properly copied to preserve references
+    const updatedProject: any = {
+      ...canvasData.value.project,
+    }
+    // Apply updates, ensuring arrays are copied
+    Object.keys(updates).forEach((key) => {
+      const value = (updates as any)[key]
+      if (Array.isArray(value)) {
+        updatedProject[key] = [...value]
+      } else {
+        updatedProject[key] = value
+      }
+    })
+    canvasData.value.project = updatedProject
   }
 
   const updateUserExpectations = (updates: Partial<CanvasData['userExpectations']>) => {
     if (!canvasData.value.userExpectations) {
       canvasData.value.userExpectations = {}
     }
-    canvasData.value.userExpectations = {
+    // Ensure arrays are properly copied to preserve references
+    const updatedExpectations: any = {
       ...canvasData.value.userExpectations,
-      ...updates,
     }
+    // Apply updates, ensuring arrays are copied
+    Object.keys(updates || {}).forEach((key) => {
+      const value = (updates as any)[key]
+      if (Array.isArray(value)) {
+        updatedExpectations[key] = [...value]
+      } else {
+        updatedExpectations[key] = value
+      }
+    })
+    canvasData.value.userExpectations = updatedExpectations
   }
 
   const updateDeveloperFeasibility = (updates: Partial<CanvasData['developerFeasibility']>) => {
     if (!canvasData.value.developerFeasibility) {
       canvasData.value.developerFeasibility = {}
     }
-    canvasData.value.developerFeasibility = {
+    // Ensure arrays are properly copied to preserve references
+    const updatedFeasibility: any = {
       ...canvasData.value.developerFeasibility,
-      ...updates,
     }
+    // Apply updates, ensuring arrays are copied
+    Object.keys(updates || {}).forEach((key) => {
+      const value = (updates as any)[key]
+      if (Array.isArray(value)) {
+        updatedFeasibility[key] = [...value]
+      } else {
+        updatedFeasibility[key] = value
+      }
+    })
+    canvasData.value.developerFeasibility = updatedFeasibility
   }
 
   const updateGovernance = (updates: Partial<CanvasData['governance']>) => {
     if (!canvasData.value.governance) {
       canvasData.value.governance = {}
     }
-    canvasData.value.governance = {
+    // Ensure arrays are properly copied to preserve references (including nested arrays)
+    const updatedGovernance: any = {
       ...canvasData.value.governance,
-      ...updates,
     }
+    // Apply updates, ensuring arrays are copied (deep copy for nested arrays)
+    Object.keys(updates || {}).forEach((key) => {
+      const value = (updates as any)[key]
+      if (Array.isArray(value)) {
+        // Deep copy array items that may contain nested arrays (e.g., agents within stages)
+        updatedGovernance[key] = value.map((item: any) => {
+          if (item && typeof item === 'object') {
+            const copiedItem = { ...item }
+            // Handle nested arrays (e.g., agents, milestones, complianceStandards)
+            Object.keys(copiedItem).forEach((nestedKey) => {
+              if (Array.isArray(copiedItem[nestedKey])) {
+                copiedItem[nestedKey] = [...copiedItem[nestedKey]]
+              }
+            })
+            return copiedItem
+          }
+          return item
+        })
+      } else {
+        updatedGovernance[key] = value
+      }
+    })
+    canvasData.value.governance = updatedGovernance
   }
 
   const updateDataAccess = (updates: Partial<CanvasData['dataAccess']>) => {
     if (!canvasData.value.dataAccess) {
       canvasData.value.dataAccess = {}
     }
-    canvasData.value.dataAccess = {
+    // Ensure arrays are properly copied to preserve references
+    const updatedDataAccess: any = {
       ...canvasData.value.dataAccess,
-      ...updates,
     }
+    // Apply updates, ensuring arrays are copied
+    Object.keys(updates || {}).forEach((key) => {
+      const value = (updates as any)[key]
+      if (Array.isArray(value)) {
+        // Deep copy array items that may contain nested arrays (e.g., duoTerms)
+        updatedDataAccess[key] = value.map((item: any) => {
+          if (item && typeof item === 'object') {
+            const copiedItem = { ...item }
+            // Handle nested arrays (e.g., duoTerms, authors)
+            Object.keys(copiedItem).forEach((nestedKey) => {
+              if (Array.isArray(copiedItem[nestedKey])) {
+                copiedItem[nestedKey] = [...copiedItem[nestedKey]]
+              }
+            })
+            return copiedItem
+          }
+          return item
+        })
+      } else {
+        updatedDataAccess[key] = value
+      }
+    })
+    canvasData.value.dataAccess = updatedDataAccess
   }
 
   const updateOutcomes = (updates: Partial<CanvasData['outcomes']>) => {
     if (!canvasData.value.outcomes) {
       canvasData.value.outcomes = {}
     }
-    canvasData.value.outcomes = {
+    // Ensure arrays are properly copied to preserve references
+    const updatedOutcomes: any = {
       ...canvasData.value.outcomes,
-      ...updates,
     }
+    // Apply updates, ensuring arrays are copied
+    Object.keys(updates || {}).forEach((key) => {
+      const value = (updates as any)[key]
+      if (Array.isArray(value)) {
+        // Deep copy array items that may contain nested arrays (e.g., authors in publications)
+        updatedOutcomes[key] = value.map((item: any) => {
+          if (item && typeof item === 'object') {
+            const copiedItem = { ...item }
+            // Handle nested arrays (e.g., authors)
+            Object.keys(copiedItem).forEach((nestedKey) => {
+              if (Array.isArray(copiedItem[nestedKey])) {
+                copiedItem[nestedKey] = [...copiedItem[nestedKey]]
+              }
+            })
+            return copiedItem
+          }
+          return item
+        })
+      } else {
+        updatedOutcomes[key] = value
+      }
+    })
+    canvasData.value.outcomes = updatedOutcomes
   }
 
   const clearData = () => {
+    // Set to empty structure - use undefined to trigger watchers properly
     canvasData.value = {
       project: {
         title: '',
         description: '',
       },
+      userExpectations: undefined,
+      developerFeasibility: undefined,
+      governance: undefined,
+      dataAccess: undefined,
+      outcomes: undefined,
     }
     localStorage.removeItem(STORAGE_KEY)
   }
@@ -120,6 +228,10 @@ export function useCanvasData() {
     } catch (error) {
       throw new Error('Invalid JSON data')
     }
+  }
+
+  const importFromROCrate = (data: CanvasData) => {
+    canvasData.value = data
   }
 
   // Computed: form completion percentage
@@ -156,6 +268,7 @@ export function useCanvasData() {
     clearData,
     exportData,
     importData,
+    importFromROCrate,
     completionPercentage,
   }
 }

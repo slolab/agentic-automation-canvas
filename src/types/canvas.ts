@@ -62,13 +62,18 @@ export interface GovernanceStaging {
   stages?: GovernanceStage[]
 }
 
+export interface Milestone {
+  description: string
+  kpi?: string
+}
+
 export interface GovernanceStage {
   id: string
   name: string
   startDate?: string
   endDate?: string
   agents?: Agent[]
-  milestones?: string[]
+  milestones?: Milestone[]
   complianceStandards?: string[]
 }
 

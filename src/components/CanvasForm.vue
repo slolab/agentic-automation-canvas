@@ -36,27 +36,27 @@
     <!-- Form sections -->
     <div class="p-6">
       <ProjectDefinition
-        v-show="activeSection === 'project'"
+        v-if="activeSection === 'project'"
         :key="'project'"
       />
       <UserExpectations
-        v-show="activeSection === 'user-expectations'"
+        v-if="activeSection === 'user-expectations'"
         :key="'user-expectations'"
       />
       <DeveloperFeasibility
-        v-show="activeSection === 'developer-feasibility'"
+        v-if="activeSection === 'developer-feasibility'"
         :key="'developer-feasibility'"
       />
       <GovernanceStaging
-        v-show="activeSection === 'governance'"
+        v-if="activeSection === 'governance'"
         :key="'governance'"
       />
       <DataAccessSensitivity
-        v-show="activeSection === 'data-access'"
+        v-if="activeSection === 'data-access'"
         :key="'data-access'"
       />
       <OutcomesEvaluation
-        v-show="activeSection === 'outcomes'"
+        v-if="activeSection === 'outcomes'"
         :key="'outcomes'"
       />
     </div>
@@ -74,9 +74,22 @@
         type="button"
         @click="downloadROCrate"
         :disabled="!canDownload"
-        class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed"
+        class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
       >
-        Download RO-Crate
+        <svg
+          class="w-5 h-5"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
+          />
+        </svg>
+        <span>Download RO-Crate</span>
       </button>
     </div>
   </div>
@@ -113,8 +126,10 @@ const canDownload = computed(() => {
 
 const clearData = () => {
   if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
+    const currentSection = activeSection.value // Save current section
     clearCanvasData()
-    activeSection.value = 'project'
+    // Keep the current section active instead of resetting to project
+    activeSection.value = currentSection
   }
 }
 
@@ -126,7 +141,7 @@ const downloadROCrate = async () => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'agentic-automation-project'
     
-    await downloadROCrateZip(rocrate, projectName)
+    await downloadROCrateZip(rocrate, projectName, canvasData.value)
   } catch (error) {
     alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
     console.error('RO-Crate generation error:', error)

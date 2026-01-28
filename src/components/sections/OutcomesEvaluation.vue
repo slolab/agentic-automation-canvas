@@ -220,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import type { Deliverable, Publication, Evaluation } from '@/types/canvas'
@@ -228,22 +228,69 @@ import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateOutcomes } = useCanvasData()
 
-const localDeliverables = ref<Deliverable[]>(
-  canvasData.value.outcomes?.deliverables || []
-)
-const localPublications = ref<Publication[]>(
-  canvasData.value.outcomes?.publications || []
-)
-const localEvaluations = ref<Evaluation[]>(
-  canvasData.value.outcomes?.evaluations || []
+// Initialize with proper deep copying of nested arrays
+const initLocalData = () => {
+  const outcomes = canvasData.value.outcomes
+  return {
+    deliverables: (outcomes?.deliverables || []).map((item) => ({ ...item })),
+    publications: (outcomes?.publications || []).map((pub) => ({
+      ...pub,
+      authors: pub.authors ? [...pub.authors] : undefined,
+    })),
+    evaluations: (outcomes?.evaluations || []).map((item) => ({ ...item })),
+  }
+}
+
+const initialData = initLocalData()
+const localDeliverables = ref<Deliverable[]>(initialData.deliverables)
+const localPublications = ref<Publication[]>(initialData.publications)
+const localEvaluations = ref<Evaluation[]>(initialData.evaluations)
+
+let isLocalUpdate = false
+let isSyncingFromCanvas = false
+
+// Watch for changes from canvasData (e.g., when cleared or imported)
+watch(
+  () => canvasData.value.outcomes,
+  (newOutcomes) => {
+    // Don't sync if the update came from us
+    if (!isLocalUpdate) {
+      isSyncingFromCanvas = true
+      if (newOutcomes) {
+        // Deep copy arrays with nested arrays (e.g., authors in publications)
+        localDeliverables.value = (newOutcomes.deliverables || []).map((item) => ({ ...item }))
+        localPublications.value = (newOutcomes.publications || []).map((pub) => ({
+          ...pub,
+          authors: pub.authors ? [...pub.authors] : undefined,
+        }))
+        localEvaluations.value = (newOutcomes.evaluations || []).map((item) => ({ ...item }))
+      } else {
+        // Reset when cleared
+        localDeliverables.value = []
+        localPublications.value = []
+        localEvaluations.value = []
+      }
+      // Reset flag after syncing
+      nextTick(() => {
+        isSyncingFromCanvas = false
+      })
+    }
+  },
+  { deep: true, immediate: false }
 )
 
 // Watch for local changes and update canvasData immediately
-watch([localDeliverables, localPublications, localEvaluations], () => {
+watch([localDeliverables, localPublications, localEvaluations], async () => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
   updateOutcomes({
     deliverables: [...localDeliverables.value],
     publications: [...localPublications.value],
     evaluations: [...localEvaluations.value],
   })
+  await nextTick()
+  isLocalUpdate = false
 }, { deep: true, immediate: false })
 </script>

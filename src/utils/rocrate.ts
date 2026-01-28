@@ -18,7 +18,6 @@ function generateId(prefix: string, index?: number): string {
  */
 export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   const graph: ROCrateEntity[] = []
-  let entityCounter = 0
 
   // 1. RO-Crate Metadata File Descriptor
   graph.push({
@@ -63,6 +62,9 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   }
   if (data.project.endDate) {
     projectEntity.endDate = data.project.endDate
+  }
+  if (data.project.domain && data.project.domain.length > 0) {
+    projectEntity.domain = data.project.domain
   }
   if (data.project.keywords && data.project.keywords.length > 0) {
     projectEntity.keywords = data.project.keywords
@@ -116,6 +118,30 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     projectEntity.hasPlan = { '@id': planId }
   }
 
+  // 4b. Stakeholders
+  if (data.userExpectations?.stakeholders && data.userExpectations.stakeholders.length > 0) {
+    const stakeholderRefs: Array<{ '@id': string }> = []
+    data.userExpectations.stakeholders.forEach((stakeholder, index) => {
+      const stakeholderId = generateId('stakeholder', index)
+      stakeholderRefs.push({ '@id': stakeholderId })
+      
+      const stakeholderEntity: ROCrateEntity = {
+        '@id': stakeholderId,
+        '@type': 'Person',
+        name: stakeholder.name,
+      }
+      if (stakeholder.role) {
+        stakeholderEntity.role = stakeholder.role
+      }
+      graph.push(stakeholderEntity)
+    })
+    
+    // Link stakeholders to project
+    if (stakeholderRefs.length > 0) {
+      projectEntity.contributor = stakeholderRefs.length === 1 ? stakeholderRefs[0] : stakeholderRefs
+    }
+  }
+
   // 5. Governance Stages as PROV-O Activities
   if (data.governance?.stages && data.governance.stages.length > 0) {
     const activities: Array<{ '@id': string }> = []
@@ -158,6 +184,33 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
         activityEntity.wasAssociatedWith = agentRefs.length === 1 ? agentRefs[0] : agentRefs
       }
 
+      // Add milestones
+      if (stage.milestones && stage.milestones.length > 0) {
+        const milestoneRefs: Array<{ '@id': string }> = []
+        stage.milestones.forEach((milestone, milestoneIndex) => {
+          const milestoneId = generateId(`milestone-${index}`, milestoneIndex)
+          milestoneRefs.push({ '@id': milestoneId })
+          
+          const milestoneEntity: ROCrateEntity = {
+            '@id': milestoneId,
+            '@type': 'Milestone',
+            name: typeof milestone === 'string' ? milestone : milestone.description,
+          }
+          if (typeof milestone === 'object' && milestone.kpi) {
+            milestoneEntity.description = milestone.kpi
+          }
+          graph.push(milestoneEntity)
+        })
+        if (milestoneRefs.length > 0) {
+          activityEntity.hasMilestone = milestoneRefs.length === 1 ? milestoneRefs[0] : milestoneRefs
+        }
+      }
+
+      // Add compliance standards
+      if (stage.complianceStandards && stage.complianceStandards.length > 0) {
+        activityEntity.complianceStandard = stage.complianceStandards
+      }
+
       // Link to previous stage
       if (index > 0) {
         activityEntity.wasInformedBy = { '@id': generateId('stage', index - 1) }
@@ -195,10 +248,10 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
         datasetEntity.identifier = dataset.pid
       }
       if (dataset.duoTerms && dataset.duoTerms.length > 0) {
-        datasetEntity.accessRights = [
-          dataset.accessRights || 'restricted',
-          ...dataset.duoTerms.map(term => ({ '@id': term })),
-        ]
+        datasetEntity.duoTerms = dataset.duoTerms.map(term => ({ '@id': term }))
+      }
+      if (dataset.containsPersonalData !== undefined) {
+        datasetEntity.containsPersonalData = dataset.containsPersonalData
       }
 
       graph.push(datasetEntity)
@@ -207,32 +260,34 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
   // 7. Outcomes (FRAPO deliverables, CreativeWork)
   if (data.outcomes?.deliverables && data.outcomes.deliverables.length > 0) {
-    data.outcomes.deliverables.forEach((deliverable, index) => {
-      const outcomeId = generateId('outcome', index)
-      hasPart.push({ '@id': outcomeId })
+    data.outcomes.deliverables
+      .filter((deliverable) => deliverable.title && deliverable.title.trim()) // Only include deliverables with titles
+      .forEach((deliverable, index) => {
+        const outcomeId = generateId('outcome', index)
+        hasPart.push({ '@id': outcomeId })
 
-      const outcomeEntity: ROCrateEntity = {
-        '@id': outcomeId,
-        '@type': 'CreativeWork',
-        name: deliverable.title,
-        description: deliverable.description,
-      }
+        const outcomeEntity: ROCrateEntity = {
+          '@id': outcomeId,
+          '@type': deliverable.type || 'CreativeWork',
+          name: deliverable.title,
+          description: deliverable.description,
+        }
 
-      if (deliverable.date) {
-        outcomeEntity.datePublished = deliverable.date
-      }
-      if (deliverable.pid) {
-        outcomeEntity.identifier = deliverable.pid
-      }
+        if (deliverable.date) {
+          outcomeEntity.datePublished = deliverable.date
+        }
+        if (deliverable.pid) {
+          outcomeEntity.identifier = deliverable.pid
+        }
 
-      // Link to generating activity if available
-      if (data.governance?.stages && data.governance.stages.length > 0) {
-        const lastStageId = generateId('stage', data.governance.stages.length - 1)
-        outcomeEntity.wasGeneratedBy = { '@id': lastStageId }
-      }
+        // Link to generating activity if available
+        if (data.governance?.stages && data.governance.stages.length > 0) {
+          const lastStageId = generateId('stage', data.governance.stages.length - 1)
+          outcomeEntity.wasGeneratedBy = { '@id': lastStageId }
+        }
 
-      graph.push(outcomeEntity)
-    })
+        graph.push(outcomeEntity)
+      })
   }
 
   if (data.outcomes?.publications && data.outcomes.publications.length > 0) {
@@ -257,6 +312,27 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       }
 
       graph.push(pubEntity)
+    })
+  }
+
+  // 7c. Evaluations
+  if (data.outcomes?.evaluations && data.outcomes.evaluations.length > 0) {
+    data.outcomes.evaluations.forEach((evaluation, index) => {
+      const evalId = generateId('evaluation', index)
+      hasPart.push({ '@id': evalId })
+
+      const evalEntity: ROCrateEntity = {
+        '@id': evalId,
+        '@type': 'Evaluation',
+        name: evaluation.type,
+        description: evaluation.results,
+      }
+
+      if (evaluation.date) {
+        evalEntity.datePublished = evaluation.date
+      }
+
+      graph.push(evalEntity)
     })
   }
 

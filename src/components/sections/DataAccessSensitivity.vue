@@ -106,20 +106,55 @@
             />
           </FormField>
 
-          <FormField
-            :id="`dataset-duo-${index}`"
-            label="DUO Terms"
-            help-text="Data Use Ontology terms (comma-separated URIs)"
-          >
-            <input
-              :id="`dataset-duo-${index}`"
-              :value="(item.duoTerms || []).join(', ')"
-              type="text"
-              class="form-input"
-              placeholder="http://purl.obolibrary.org/obo/DUO_0000006"
-              @input="update({ ...item, duoTerms: ($event.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(s => s) })"
-            />
-          </FormField>
+          <div>
+            <label class="form-label mb-2">DUO Terms</label>
+            <p class="text-xs text-gray-500 mb-2">Data Use Ontology terms. Add one URI per entry.</p>
+            <div
+              v-for="(term, termIndex) in (item.duoTerms || [])"
+              :key="termIndex"
+              class="mb-2 p-2 bg-gray-50 rounded flex items-center justify-between"
+            >
+              <span class="text-sm font-mono text-xs break-all">{{ term }}</span>
+              <button
+                type="button"
+                @click="removeDuoTerm(item, termIndex)"
+                class="text-red-600 hover:text-red-800 text-sm ml-2 flex-shrink-0"
+              >
+                Remove
+              </button>
+            </div>
+            <button
+              type="button"
+              @click="showAddDuoTerm = index"
+              class="btn-secondary text-sm"
+            >
+              Add DUO Term
+            </button>
+            <div v-if="showAddDuoTerm === index" class="mt-2 p-3 bg-gray-50 rounded space-y-2">
+              <input
+                v-model="newDuoTerm"
+                type="url"
+                placeholder="http://purl.obolibrary.org/obo/DUO_0000006"
+                class="form-input text-sm"
+              />
+              <div class="flex gap-2">
+                <button
+                  type="button"
+                  @click="addDuoTerm(item, index)"
+                  class="btn-primary text-sm"
+                >
+                  Add
+                </button>
+                <button
+                  type="button"
+                  @click="showAddDuoTerm = null; newDuoTerm = ''"
+                  class="btn-secondary text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
 
           <div class="flex items-center gap-4">
             <label class="flex items-center">
@@ -139,7 +174,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import type { Dataset } from '@/types/canvas'
@@ -147,12 +182,88 @@ import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateDataAccess } = useCanvasData()
 
-const localDatasets = ref<Dataset[]>(
-  canvasData.value.dataAccess?.datasets || []
+// Initialize with proper deep copying of nested arrays
+const initLocalDatasets = (): Dataset[] => {
+  const datasets = canvasData.value.dataAccess?.datasets || []
+  return datasets.map((dataset) => ({
+    ...dataset,
+    duoTerms: dataset.duoTerms ? [...dataset.duoTerms] : undefined,
+  }))
+}
+
+const localDatasets = ref<Dataset[]>(initLocalDatasets())
+
+const showAddDuoTerm = ref<number | null>(null)
+const newDuoTerm = ref<string>('')
+
+let isLocalUpdate = false
+let isSyncingFromCanvas = false
+
+// Watch for changes from canvasData (e.g., when cleared or imported)
+watch(
+  () => canvasData.value.dataAccess,
+  (newDataAccess) => {
+    // Don't sync if the update came from us
+    if (!isLocalUpdate) {
+      isSyncingFromCanvas = true
+      if (newDataAccess && newDataAccess.datasets) {
+        // Deep copy datasets with nested arrays (duoTerms)
+        localDatasets.value = newDataAccess.datasets.map((dataset) => ({
+          ...dataset,
+          duoTerms: dataset.duoTerms ? [...dataset.duoTerms] : undefined,
+        }))
+      } else {
+        // Reset when cleared
+        localDatasets.value = []
+      }
+      // Reset flag after syncing
+      nextTick(() => {
+        isSyncingFromCanvas = false
+      })
+    }
+  },
+  { deep: true, immediate: false }
 )
 
 // Watch for local changes and update canvasData immediately
-watch(localDatasets, () => {
+watch(localDatasets, async () => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
   updateDataAccess({ datasets: [...localDatasets.value] })
+  await nextTick()
+  isLocalUpdate = false
 }, { deep: true, immediate: false })
+
+const addDuoTerm = (dataset: Dataset, datasetIndex: number) => {
+  if (newDuoTerm.value.trim()) {
+    // Create a new array with updated dataset
+    const updatedDatasets = localDatasets.value.map((d, i) => {
+      if (i === datasetIndex) {
+        const updatedDuoTerms = [...(dataset.duoTerms || []), newDuoTerm.value.trim()]
+        return { ...dataset, duoTerms: updatedDuoTerms }
+      }
+      return d
+    })
+    localDatasets.value = updatedDatasets
+    newDuoTerm.value = ''
+    showAddDuoTerm.value = null
+  }
+}
+
+const removeDuoTerm = (dataset: Dataset, termIndex: number) => {
+  const datasetIndex = localDatasets.value.findIndex(d => d.id === dataset.id)
+  if (datasetIndex !== -1 && dataset.duoTerms) {
+    // Create a new array with updated dataset
+    const updatedDatasets = localDatasets.value.map((d, i) => {
+      if (i === datasetIndex) {
+        const updatedDuoTerms = dataset.duoTerms!.filter((_, idx) => idx !== termIndex)
+        return { ...dataset, duoTerms: updatedDuoTerms }
+      }
+      return d
+    })
+    localDatasets.value = updatedDatasets
+  }
+}
 </script>

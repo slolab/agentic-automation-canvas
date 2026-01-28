@@ -87,67 +87,49 @@
     </div>
 
     <FormField
-      id="project-domain"
-      label="Domain"
-      help-text="Research domain(s) or field(s) of application"
+      id="project-domains"
+      label="Domains"
+      help-text="Research domain(s) or field(s) of application. Add one domain per entry."
     >
-      <input
-        id="project-domain"
-        v-model="domainInput"
-        type="text"
-        class="form-input"
-        placeholder="e.g., Biomedical, Computer Science"
-        @keydown.enter.prevent="addDomain"
-      />
-      <div v-if="localData.domain && localData.domain.length > 0" class="mt-2 flex flex-wrap gap-2">
-        <span
-          v-for="(domain, index) in localData.domain"
-          :key="index"
-          class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-primary-100 text-primary-800"
-        >
-          {{ domain }}
-          <button
-            type="button"
-            @click="removeDomain(index)"
-            class="ml-2 text-primary-600 hover:text-primary-800"
-            aria-label="Remove domain"
-          >
-            ×
-          </button>
-        </span>
-      </div>
+      <MultiValueInput
+        v-model="localDomains"
+        label="domain"
+        :create-default="() => ({ value: '' })"
+      >
+        <template #input="{ item, index, update }">
+          <input
+            :id="`domain-${index}`"
+            :value="item.value"
+            type="text"
+            class="form-input"
+            placeholder="e.g., Biomedical"
+            @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
+          />
+        </template>
+      </MultiValueInput>
     </FormField>
 
     <FormField
       id="project-keywords"
       label="Keywords"
-      help-text="Keywords or tags for the project"
+      help-text="Keywords or tags for the project. Add one keyword per entry."
     >
-      <input
-        id="project-keywords"
-        v-model="keywordInput"
-        type="text"
-        class="form-input"
-        placeholder="e.g., AI, automation, machine learning"
-        @keydown.enter.prevent="addKeyword"
-      />
-      <div v-if="localData.keywords && localData.keywords.length > 0" class="mt-2 flex flex-wrap gap-2">
-        <span
-          v-for="(keyword, index) in localData.keywords"
-          :key="index"
-          class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-800"
-        >
-          {{ keyword }}
-          <button
-            type="button"
-            @click="removeKeyword(index)"
-            class="ml-2 text-gray-600 hover:text-gray-800"
-            aria-label="Remove keyword"
-          >
-            ×
-          </button>
-        </span>
-      </div>
+      <MultiValueInput
+        v-model="localKeywords"
+        label="keyword"
+        :create-default="() => ({ value: '' })"
+      >
+        <template #input="{ item, index, update }">
+          <input
+            :id="`keyword-${index}`"
+            :value="item.value"
+            type="text"
+            class="form-input"
+            placeholder="e.g., AI"
+            @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
+          />
+        </template>
+      </MultiValueInput>
     </FormField>
 
     <FormField
@@ -168,19 +150,42 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
+import MultiValueInput from '../MultiValueInput.vue'
 import type { ProjectDefinition } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateProject } = useCanvasData()
 
-const localData = ref<ProjectDefinition>({
-  ...canvasData.value.project,
-})
+// Initialize localData with proper array references
+const initLocalData = (): ProjectDefinition => {
+  const project = canvasData.value.project
+  return {
+    title: project.title || '',
+    description: project.description || '',
+    objective: project.objective,
+    startDate: project.startDate,
+    endDate: project.endDate,
+    projectId: project.projectId,
+  }
+}
 
-const domainInput = ref('')
-const keywordInput = ref('')
+const localData = ref<ProjectDefinition>(initLocalData())
+
+// Convert domain/keywords arrays to objects for MultiValueInput
+const initDomains = () => {
+  const domains = canvasData.value.project.domain || []
+  return domains.map((d: string) => ({ value: d }))
+}
+
+const initKeywords = () => {
+  const keywords = canvasData.value.project.keywords || []
+  return keywords.map((k: string) => ({ value: k }))
+}
+
+const localDomains = ref<Array<{ value: string }>>(initDomains())
+const localKeywords = ref<Array<{ value: string }>>(initKeywords())
 
 const errors = computed(() => {
   const errs: Record<string, string> = {}
@@ -193,55 +198,69 @@ const errors = computed(() => {
   return errs
 })
 
+let isLocalUpdate = false
+let isSyncingFromCanvas = false
+
 watch(
   () => canvasData.value.project,
   (newProject) => {
-    localData.value = { ...newProject }
+    // Don't sync if the update came from us
+    if (!isLocalUpdate) {
+      isSyncingFromCanvas = true
+      localData.value = {
+        title: newProject.title || '',
+        description: newProject.description || '',
+        objective: newProject.objective,
+        startDate: newProject.startDate,
+        endDate: newProject.endDate,
+        projectId: newProject.projectId,
+      }
+      // Sync domain and keywords arrays
+      localDomains.value = (newProject.domain || []).map((d: string) => ({ value: d }))
+      localKeywords.value = (newProject.keywords || []).map((k: string) => ({ value: k }))
+      // Reset flag after syncing
+      nextTick(() => {
+        isSyncingFromCanvas = false
+      })
+    }
   },
-  { deep: true }
+  { deep: true, immediate: false }
 )
 
-const update = () => {
+// Watch for local changes to domain and keywords
+watch(localDomains, async (newDomains) => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
+  updateProject({
+    domain: newDomains.map((d) => d.value).filter((v) => v.trim()),
+    keywords: localKeywords.value.map((k) => k.value).filter((v) => v.trim()),
+  })
+  await nextTick()
+  isLocalUpdate = false
+}, { deep: true, immediate: false })
+
+watch(localKeywords, async (newKeywords) => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
+  updateProject({
+    domain: localDomains.value.map((d) => d.value).filter((v) => v.trim()),
+    keywords: newKeywords.map((k) => k.value).filter((v) => v.trim()),
+  })
+  await nextTick()
+  isLocalUpdate = false
+}, { deep: true, immediate: false })
+
+const update = async () => {
+  // Skip if we're currently syncing from canvasData to avoid circular updates
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
   updateProject(localData.value)
-}
-
-const addDomain = () => {
-  if (domainInput.value.trim()) {
-    if (!localData.value.domain) {
-      localData.value.domain = []
-    }
-    if (!localData.value.domain.includes(domainInput.value.trim())) {
-      localData.value.domain.push(domainInput.value.trim())
-      domainInput.value = ''
-      update()
-    }
-  }
-}
-
-const removeDomain = (index: number) => {
-  if (localData.value.domain) {
-    localData.value.domain.splice(index, 1)
-    update()
-  }
-}
-
-const addKeyword = () => {
-  if (keywordInput.value.trim()) {
-    if (!localData.value.keywords) {
-      localData.value.keywords = []
-    }
-    if (!localData.value.keywords.includes(keywordInput.value.trim())) {
-      localData.value.keywords.push(keywordInput.value.trim())
-      keywordInput.value = ''
-      update()
-    }
-  }
-}
-
-const removeKeyword = (index: number) => {
-  if (localData.value.keywords) {
-    localData.value.keywords.splice(index, 1)
-    update()
-  }
+  await nextTick()
+  isLocalUpdate = false
 }
 </script>
