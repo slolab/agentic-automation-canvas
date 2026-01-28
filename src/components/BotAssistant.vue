@@ -78,8 +78,12 @@
     <!-- Messages -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4">
       <div v-if="messages.length === 0" class="text-center text-gray-500 text-sm py-8">
-        <p>Hello! I'm your Canvas Assistant.</p>
-        <p class="mt-2">Ask me about form fields, standards, or get help filling out the canvas.</p>
+        <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-4">
+          <p class="text-yellow-800 font-medium mb-1">⚠️ Placeholder Mode</p>
+          <p class="text-yellow-700 text-xs">This assistant is currently a placeholder. No LLM is connected. The assistant will provide contextual help based on form fields, but cannot answer general questions yet.</p>
+        </div>
+        <p class="text-gray-700 font-medium">Canvas Assistant</p>
+        <p class="mt-2 text-gray-600">Currently provides contextual help for form fields and standards. Full LLM integration coming soon.</p>
       </div>
       <div
         v-for="message in messages"
@@ -120,7 +124,7 @@
         <input
           v-model="inputMessage"
           type="text"
-          placeholder="Ask a question..."
+          placeholder="Ask about form fields (placeholder - no LLM connected)"
           class="flex-1 rounded border-gray-300 text-sm focus:ring-primary-500 focus:border-primary-500"
           :disabled="isLoading"
         />
