@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DUO Terms",
+  "description": "Data Use Ontology (DUO) terms from GA4GH for data use restrictions",
+  "type": "object",
+  "properties": {
+    "terms": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "uri": { "type": "string", "format": "uri" }
+        },
+        "required": ["id", "label", "description", "uri"]
+      }
+    }
+  },
+  "required": ["terms"],
+  "terms": [
+    {
+      "id": "DUO:0000001",
+      "label": "General Research Use",
+      "description": "For health/medical/biomedical research and other research purposes",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000001"
+    },
+    {
+      "id": "DUO:0000004",
+      "label": "Disease-Specific Research",
+      "description": "For research related to a specific disease",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000004"
+    },
+    {
+      "id": "DUO:0000006",
+      "label": "Health/Medical/Biomedical Research Only",
+      "description": "For health/medical/biomedical research purposes only",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000006"
+    },
+    {
+      "id": "DUO:0000007",
+      "label": "Population Origins or Ancestry Research Only",
+      "description": "For research related to population origins or ancestry",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000007"
+    },
+    {
+      "id": "DUO:0000011",
+      "label": "No General Methods Research",
+      "description": "Not for general methods research",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000011"
+    },
+    {
+      "id": "DUO:0000012",
+      "label": "No Commercial Use",
+      "description": "Not for commercial use",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000012"
+    },
+    {
+      "id": "DUO:0000015",
+      "label": "Publication Required",
+      "description": "Publication of research results is required",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000015"
+    },
+    {
+      "id": "DUO:0000016",
+      "label": "Collaboration Required",
+      "description": "Collaboration with data provider is required",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000016"
+    },
+    {
+      "id": "DUO:0000018",
+      "label": "Ethics Approval Required",
+      "description": "Ethics approval is required for use",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000018"
+    },
+    {
+      "id": "DUO:0000019",
+      "label": "Geographical Restriction",
+      "description": "Use is restricted to specific geographical regions",
+      "uri": "http://purl.obolibrary.org/obo/DUO_0000019"
+    }
+  ]
+}

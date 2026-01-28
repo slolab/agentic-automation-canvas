@@ -1,0 +1,31 @@
+{
+  "@context": "https://w3id.org/ro/crate/1.1/context",
+  "@graph": [
+    {
+      "@id": "ro-crate-metadata.json",
+      "@type": "CreativeWork",
+      "conformsTo": {
+        "@id": "https://w3id.org/ro/crate/1.1"
+      },
+      "about": {
+        "@id": "./"
+      }
+    },
+    {
+      "@id": "./",
+      "@type": "Dataset",
+      "name": "Minimal Agentic Automation Canvas Example",
+      "description": "A minimal example RO-Crate generated from Agentic Automation Canvas",
+      "about": {
+        "@id": "#project-1"
+      }
+    },
+    {
+      "@id": "#project-1",
+      "@type": ["Project", "ResearchProject"],
+      "name": "Example Agentic Automation Project",
+      "description": "A minimal example project",
+      "startDate": "2025-01-01"
+    }
+  ]
+}

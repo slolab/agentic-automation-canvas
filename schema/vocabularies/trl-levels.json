@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Technology Readiness Levels",
+  "description": "Controlled vocabulary for Technology Readiness Levels (TRL) as used in Horizon Europe and other research frameworks",
+  "type": "object",
+  "properties": {
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "value": { "type": "integer", "minimum": 1, "maximum": 9 }
+        },
+        "required": ["id", "label", "description", "value"]
+      }
+    }
+  },
+  "required": ["levels"],
+  "levels": [
+    {
+      "id": "trl-1",
+      "label": "TRL 1 - Basic principles observed",
+      "description": "Basic principles observed and reported",
+      "value": 1
+    },
+    {
+      "id": "trl-2",
+      "label": "TRL 2 - Technology concept formulated",
+      "description": "Technology concept and/or application formulated",
+      "value": 2
+    },
+    {
+      "id": "trl-3",
+      "label": "TRL 3 - Experimental proof of concept",
+      "description": "Analytical and experimental critical function and/or characteristic proof of concept",
+      "value": 3
+    },
+    {
+      "id": "trl-4",
+      "label": "TRL 4 - Technology validated in lab",
+      "description": "Component and/or breadboard validation in laboratory environment",
+      "value": 4
+    },
+    {
+      "id": "trl-5",
+      "label": "TRL 5 - Technology validated in relevant environment",
+      "description": "Component and/or breadboard validation in relevant environment",
+      "value": 5
+    },
+    {
+      "id": "trl-6",
+      "label": "TRL 6 - Technology demonstrated in relevant environment",
+      "description": "System/subsystem model or prototype demonstration in a relevant environment",
+      "value": 6
+    },
+    {
+      "id": "trl-7",
+      "label": "TRL 7 - System prototype demonstration in operational environment",
+      "description": "System prototype demonstration in an operational environment",
+      "value": 7
+    },
+    {
+      "id": "trl-8",
+      "label": "TRL 8 - System complete and qualified",
+      "description": "System complete and qualified",
+      "value": 8
+    },
+    {
+      "id": "trl-9",
+      "label": "TRL 9 - Actual system proven in operational environment",
+      "description": "Actual system proven in operational environment",
+      "value": 9
+    }
+  ]
+}

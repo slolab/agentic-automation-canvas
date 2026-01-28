@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Risk Levels",
+  "description": "Controlled vocabulary for technical risk classification (aligned with ISO 31000)",
+  "type": "object",
+  "properties": {
+    "levels": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "severity": { "type": "string", "enum": ["low", "medium", "high", "critical"] }
+        },
+        "required": ["id", "label", "description", "severity"]
+      }
+    }
+  },
+  "required": ["levels"],
+  "levels": [
+    {
+      "id": "risk-low",
+      "label": "Low Risk",
+      "description": "Minimal impact, well-understood technology, low uncertainty",
+      "severity": "low"
+    },
+    {
+      "id": "risk-medium",
+      "label": "Medium Risk",
+      "description": "Moderate impact, some technical challenges, manageable uncertainty",
+      "severity": "medium"
+    },
+    {
+      "id": "risk-high",
+      "label": "High Risk",
+      "description": "Significant impact, complex technical challenges, high uncertainty",
+      "severity": "high"
+    },
+    {
+      "id": "risk-critical",
+      "label": "Critical Risk",
+      "description": "Severe impact, unproven technology, very high uncertainty",
+      "severity": "critical"
+    }
+  ]
+}

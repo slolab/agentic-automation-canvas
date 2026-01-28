@@ -1,0 +1,217 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/slolab/agentic-automation-canvas/schema/canvas-schema.json",
+  "title": "Agentic Automation Canvas Schema",
+  "description": "JSON Schema for validating Agentic Automation Canvas data structure",
+  "type": "object",
+  "required": ["project"],
+  "properties": {
+    "project": {
+      "type": "object",
+      "required": ["title", "description"],
+      "properties": {
+        "title": { "type": "string", "minLength": 1 },
+        "description": { "type": "string", "minLength": 1 },
+        "objective": { "type": "string" },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "domain": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "keywords": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "fundingGrant": { "type": "string" },
+        "leadOrganization": { "type": "string" },
+        "projectId": { "type": "string", "format": "uri" }
+      }
+    },
+    "userExpectations": {
+      "type": "object",
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "description": { "type": "string" },
+              "userStory": { "type": "string" },
+              "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+              "status": { "type": "string", "enum": ["planned", "in-progress", "completed", "cancelled"] },
+              "stakeholder": { "type": "string" },
+              "value": { "type": "string" }
+            },
+            "required": ["id", "description"]
+          }
+        },
+        "stakeholders": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": { "type": "string" },
+              "role": { "type": "string" },
+              "values": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["name"]
+          }
+        }
+      }
+    },
+    "developerFeasibility": {
+      "type": "object",
+      "properties": {
+        "trlLevel": {
+          "type": "object",
+          "properties": {
+            "current": { "type": "integer", "minimum": 1, "maximum": 9 },
+            "target": { "type": "integer", "minimum": 1, "maximum": 9 }
+          }
+        },
+        "technicalRisk": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"]
+        },
+        "algorithms": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "tools": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "effortEstimate": { "type": "string" },
+        "feasibilityNotes": { "type": "string" }
+      }
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "name": { "type": "string" },
+              "startDate": { "type": "string", "format": "date" },
+              "endDate": { "type": "string", "format": "date" },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "name": { "type": "string" },
+                    "role": { "type": "string" },
+                    "type": { "type": "string", "enum": ["person", "organization", "software"] }
+                  },
+                  "required": ["name", "type"]
+                }
+              },
+              "milestones": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "complianceStandards": {
+                "type": "array",
+                "items": { "type": "string" }
+              }
+            },
+            "required": ["id", "name"]
+          }
+        }
+      }
+    },
+    "dataAccess": {
+      "type": "object",
+      "properties": {
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "description": { "type": "string" },
+              "format": { "type": "string" },
+              "license": { "type": "string", "format": "uri" },
+              "accessRights": {
+                "type": "string",
+                "enum": ["open", "restricted", "confidential", "highly-restricted"]
+              },
+              "duoTerms": {
+                "type": "array",
+                "items": { "type": "string", "format": "uri" }
+              },
+              "pid": { "type": "string", "format": "uri" },
+              "publisher": { "type": "string" },
+              "containsPersonalData": { "type": "boolean" },
+              "sensitivityLevel": { "type": "string" }
+            },
+            "required": ["id", "title"]
+          }
+        }
+      }
+    },
+    "outcomes": {
+      "type": "object",
+      "properties": {
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "type": { "type": "string" },
+              "description": { "type": "string" },
+              "date": { "type": "string", "format": "date" },
+              "pid": { "type": "string", "format": "uri" }
+            },
+            "required": ["id", "title", "type"]
+          }
+        },
+        "publications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "title": { "type": "string" },
+              "doi": { "type": "string", "format": "uri" },
+              "authors": {
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "date": { "type": "string", "format": "date" }
+            },
+            "required": ["id", "title"]
+          }
+        },
+        "evaluations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": { "type": "string" },
+              "type": { "type": "string" },
+              "date": { "type": "string", "format": "date" },
+              "metrics": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "results": { "type": "string" }
+            },
+            "required": ["id", "type"]
+          }
+        }
+      }
+    }
+  }
+}

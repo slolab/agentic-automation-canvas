@@ -1,0 +1,128 @@
+/**
+ * TypeScript interfaces for Agentic Automation Canvas data model
+ * Aligned with schema/canvas-schema.json
+ */
+
+export interface CanvasData {
+  project: ProjectDefinition
+  userExpectations?: UserExpectations
+  developerFeasibility?: DeveloperFeasibility
+  governance?: GovernanceStaging
+  dataAccess?: DataAccessSensitivity
+  outcomes?: OutcomesEvaluation
+}
+
+export interface ProjectDefinition {
+  title: string
+  description: string
+  objective?: string
+  startDate?: string
+  endDate?: string
+  domain?: string[]
+  keywords?: string[]
+  fundingGrant?: string
+  leadOrganization?: string
+  projectId?: string
+}
+
+export interface UserExpectations {
+  requirements?: Requirement[]
+  stakeholders?: Stakeholder[]
+}
+
+export interface Requirement {
+  id: string
+  description: string
+  userStory?: string
+  priority?: 'low' | 'medium' | 'high' | 'critical'
+  status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
+  stakeholder?: string
+  value?: string
+}
+
+export interface Stakeholder {
+  name: string
+  role?: string
+  values?: string[]
+}
+
+export interface DeveloperFeasibility {
+  trlLevel?: {
+    current?: number
+    target?: number
+  }
+  technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
+  algorithms?: string[]
+  tools?: string[]
+  effortEstimate?: string
+  feasibilityNotes?: string
+}
+
+export interface GovernanceStaging {
+  stages?: GovernanceStage[]
+}
+
+export interface GovernanceStage {
+  id: string
+  name: string
+  startDate?: string
+  endDate?: string
+  agents?: Agent[]
+  milestones?: string[]
+  complianceStandards?: string[]
+}
+
+export interface Agent {
+  name: string
+  role?: string
+  type: 'person' | 'organization' | 'software'
+}
+
+export interface DataAccessSensitivity {
+  datasets?: Dataset[]
+}
+
+export interface Dataset {
+  id: string
+  title: string
+  description?: string
+  format?: string
+  license?: string
+  accessRights?: 'open' | 'restricted' | 'confidential' | 'highly-restricted'
+  duoTerms?: string[]
+  pid?: string
+  publisher?: string
+  containsPersonalData?: boolean
+  sensitivityLevel?: string
+}
+
+export interface OutcomesEvaluation {
+  deliverables?: Deliverable[]
+  publications?: Publication[]
+  evaluations?: Evaluation[]
+}
+
+export interface Deliverable {
+  id: string
+  title: string
+  type: string
+  description?: string
+  date?: string
+  pid?: string
+}
+
+export interface Publication {
+  id: string
+  title: string
+  doi?: string
+  authors?: string[]
+  date?: string
+}
+
+export interface Evaluation {
+  id: string
+  type: string
+  date?: string
+  metrics?: Record<string, unknown>
+  results?: string
+}

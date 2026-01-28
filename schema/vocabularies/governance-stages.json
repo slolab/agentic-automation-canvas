@@ -1,0 +1,54 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Governance Stages",
+  "description": "Controlled vocabulary for project governance stages (aligned with PROV-O Activities)",
+  "type": "object",
+  "properties": {
+    "stages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" },
+          "order": { "type": "integer" }
+        },
+        "required": ["id", "label", "description", "order"]
+      }
+    }
+  },
+  "required": ["stages"],
+  "stages": [
+    {
+      "id": "stage-design",
+      "label": "Design",
+      "description": "Initial design and planning phase",
+      "order": 1
+    },
+    {
+      "id": "stage-development",
+      "label": "Development",
+      "description": "Active development and implementation phase",
+      "order": 2
+    },
+    {
+      "id": "stage-validation",
+      "label": "Validation",
+      "description": "Testing and validation phase",
+      "order": 3
+    },
+    {
+      "id": "stage-deployment",
+      "label": "Deployment",
+      "description": "Deployment and rollout phase",
+      "order": 4
+    },
+    {
+      "id": "stage-monitoring",
+      "label": "Monitoring",
+      "description": "Ongoing monitoring and maintenance phase",
+      "order": 5
+    }
+  ]
+}

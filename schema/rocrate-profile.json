@@ -1,0 +1,116 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/slolab/agentic-automation-canvas/schema/rocrate-profile.json",
+  "title": "RO-Crate Profile for Agentic Automation Canvas",
+  "description": "Profile definition for RO-Crate packages generated from Agentic Automation Canvas",
+  "type": "object",
+  "required": ["@context", "@graph"],
+  "properties": {
+    "@context": {
+      "const": "https://w3id.org/ro/crate/1.1/context"
+    },
+    "@graph": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "oneOf": [
+          {
+            "description": "RO-Crate Metadata File Descriptor",
+            "properties": {
+              "@id": { "const": "ro-crate-metadata.json" },
+              "@type": { "const": "CreativeWork" },
+              "conformsTo": {
+                "type": "object",
+                "properties": {
+                  "@id": { "const": "https://w3id.org/ro/crate/1.1" }
+                }
+              }
+            },
+            "required": ["@id", "@type", "conformsTo"]
+          },
+          {
+            "description": "Root Dataset",
+            "properties": {
+              "@id": { "const": "./" },
+              "@type": {
+                "type": "array",
+                "contains": { "const": "Dataset" }
+              }
+            },
+            "required": ["@id", "@type"]
+          },
+          {
+            "description": "Project Entity",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "enum": ["Project", "ResearchProject"]
+                }
+              }
+            }
+          },
+          {
+            "description": "Plan Entity (P-Plan)",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "enum": ["Plan", "p-plan:Plan"]
+                }
+              }
+            }
+          },
+          {
+            "description": "Activity Entity (PROV-O)",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": { "const": "Activity" }
+              }
+            }
+          },
+          {
+            "description": "Dataset Entity (DCAT)",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": { "const": "Dataset" }
+              }
+            }
+          },
+          {
+            "description": "Person Entity",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": { "const": "Person" }
+              }
+            }
+          },
+          {
+            "description": "Organization Entity",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": { "const": "Organization" }
+              }
+            }
+          },
+          {
+            "description": "CreativeWork Entity (Outcomes)",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "enum": ["CreativeWork", "ScholarlyArticle", "Report", "SoftwareApplication"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  },
+  "additionalProperties": false
+}
