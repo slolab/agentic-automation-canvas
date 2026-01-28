@@ -3,7 +3,7 @@
     <div>
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Governance & Staging</h2>
       <p class="text-sm text-gray-600 mb-6">
-        Define governance stages as PROV-O Activities with associated agents, milestones, and compliance standards.
+        Define governance stages as <a href="https://www.w3.org/TR/prov-o/#Activity" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Activity type - represents processes or workflows">PROV-O Activities</a> with associated <a href="https://www.w3.org/TR/prov-o/#Agent" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Agent type">agents</a> (via <a href="https://www.w3.org/TR/prov-o/#wasAssociatedWith" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O wasAssociatedWith property">wasAssociatedWith</a>), milestones, and compliance standards. Stages are linked via <a href="https://www.w3.org/TR/prov-o/#wasInformedBy" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O wasInformedBy property">wasInformedBy</a> to show workflow dependencies.
       </p>
     </div>
 
@@ -64,7 +64,12 @@
           </div>
 
           <div>
-            <label class="form-label mb-2">Agents</label>
+            <label class="form-label mb-2">
+              Agents
+              <span class="text-xs text-gray-500 font-normal ml-2">
+                (<a href="https://www.w3.org/TR/prov-o/#Agent" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Agent type">PROV-O Agents</a>)
+              </span>
+            </label>
             <div
               v-for="(agent, agentIndex) in (item.agents || [])"
               :key="agentIndex"
@@ -127,7 +132,12 @@
           </div>
 
           <div>
-            <label class="form-label mb-2">Milestones</label>
+            <label class="form-label mb-2">
+              Milestones
+              <span class="text-xs text-gray-500 font-normal ml-2">
+                (Key deliverables or checkpoints for this stage)
+              </span>
+            </label>
             <div
               v-for="(milestone, milestoneIndex) in (item.milestones || [])"
               :key="milestoneIndex"
@@ -188,7 +198,9 @@
 
           <div>
             <label class="form-label mb-2">Compliance Standards</label>
-            <p class="text-xs text-gray-500 mb-2">Regulatory or compliance standards. Add one standard per entry.</p>
+            <p class="text-xs text-gray-500 mb-2">
+              Regulatory or compliance standards that apply to this stage (e.g., GDPR, HIPAA, ISO 27001). Add one standard per entry.
+            </p>
             <div
               v-for="(standard, standardIndex) in (item.complianceStandards || [])"
               :key="standardIndex"

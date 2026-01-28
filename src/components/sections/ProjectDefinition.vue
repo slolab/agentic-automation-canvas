@@ -3,7 +3,7 @@
     <div>
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Definition & Context</h2>
       <p class="text-sm text-gray-600 mb-6">
-        Define the core project information using Schema.org Project and ResearchProject types.
+        Define the core project information using <a href="https://schema.org/Project" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org Project type specification">Schema.org Project</a> and <a href="https://schema.org/ResearchProject" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org ResearchProject type specification">ResearchProject</a> types.
       </p>
     </div>
 
@@ -44,7 +44,7 @@
     <FormField
       id="project-objective"
       label="Objective"
-      help-text="The main objective or goal of the project"
+      help-text="The main objective or goal of the project. Maps to <a href='https://schema.org/abstract' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org abstract property'>schema:abstract</a> (summary of the project)."
     >
       <textarea
         id="project-objective"
@@ -58,7 +58,7 @@
     <FormField
       id="project-stage"
       label="Project Stage"
-      help-text="Current stage of the project"
+      help-text="Current stage of the project lifecycle. Stages align with <a href='https://www.w3.org/TR/prov-o/#Activity' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='PROV-O Activity type'>PROV-O Activities</a> and represent major phases: Design, Development, Validation, Deployment, Monitoring."
       required
     >
       <select

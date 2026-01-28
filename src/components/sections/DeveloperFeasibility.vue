@@ -11,7 +11,7 @@
       <FormField
         id="trl-current"
         label="Current TRL Level"
-        help-text="Current Technology Readiness Level (1-9)"
+        help-text="Current <a href='https://en.wikipedia.org/wiki/Technology_readiness_level' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Technology Readiness Level (TRL) scale'>Technology Readiness Level (TRL)</a> (1-9). TRL measures the maturity of a technology, from basic research (1) to proven in operational environment (9)."
       >
         <select
           id="trl-current"
@@ -29,7 +29,7 @@
       <FormField
         id="trl-target"
         label="Target TRL Level"
-        help-text="Target Technology Readiness Level (1-9)"
+        help-text="Target <a href='https://en.wikipedia.org/wiki/Technology_readiness_level' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Technology Readiness Level (TRL) scale'>Technology Readiness Level (TRL)</a> (1-9). The TRL level you aim to achieve by the end of the project."
       >
         <select
           id="trl-target"

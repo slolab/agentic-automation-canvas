@@ -3,7 +3,7 @@
     <div>
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Data Access & Sensitivity</h2>
       <p class="text-sm text-gray-600 mb-6">
-        Describe datasets using DCAT vocabulary with DUO terms for data use restrictions.
+        Describe datasets using <a href="https://www.w3.org/TR/vocab-dcat-2/#Class:Dataset" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DCAT Dataset class">DCAT Dataset</a> vocabulary with properties like <a href="http://purl.org/dc/terms/accessRights" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Dublin Core Terms accessRights">dct:accessRights</a> and <a href="http://purl.org/dc/terms/license" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Dublin Core Terms license">dct:license</a>. Data use restrictions use <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DUO (Data Use Ontology) for machine-readable data use permissions">DUO terms</a>.
       </p>
     </div>
 
@@ -46,7 +46,7 @@
             <FormField
               :id="`dataset-format-${index}`"
               label="Format"
-              help-text="Data format (e.g., JSON, CSV, Parquet)"
+              help-text="Data format or MIME type (e.g., JSON, CSV, Parquet, application/json). Maps to <a href='https://schema.org/encodingFormat' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org encodingFormat property'>schema:encodingFormat</a>."
             >
               <input
                 :id="`dataset-format-${index}`"
@@ -60,6 +60,7 @@
             <FormField
               :id="`dataset-access-${index}`"
               label="Access Rights"
+              help-text="Access rights classification. Maps to <a href='http://purl.org/dc/terms/accessRights' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Dublin Core Terms accessRights'>dct:accessRights</a>. Options: Open (publicly accessible), Restricted (requires approval), Confidential (limited access), Highly Restricted (very limited access)."
               required
             >
               <select
@@ -80,7 +81,7 @@
           <FormField
             :id="`dataset-license-${index}`"
             label="License (URI)"
-            help-text="License URI (e.g., https://creativecommons.org/licenses/by/4.0/)"
+            help-text="License URI (e.g., https://creativecommons.org/licenses/by/4.0/). Maps to <a href='http://purl.org/dc/terms/license' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Dublin Core Terms license property'>dct:license</a>."
           >
             <input
               :id="`dataset-license-${index}`"
@@ -108,8 +109,12 @@
           </FormField>
 
           <div>
-            <label class="form-label mb-2">DUO Terms</label>
-            <p class="text-xs text-gray-500 mb-2">Data Use Ontology terms. Add one URI per entry.</p>
+            <label class="form-label mb-2">
+              <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DUO (Data Use Ontology) - machine-readable data use permissions">DUO Terms</a>
+            </label>
+            <p class="text-xs text-gray-500 mb-2">
+              <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline">Data Use Ontology</a> terms specify machine-readable data use permissions. Common terms include: DUO:0000006 (Health/Medical/Biomedical Research Only), DUO:0000012 (No Commercial Use). Add one URI per entry.
+            </p>
             <div
               v-for="(term, termIndex) in (item.duoTerms || [])"
               :key="termIndex"
@@ -165,7 +170,10 @@
                 class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                 @change="update({ ...item, containsPersonalData: ($event.target as HTMLInputElement).checked })"
               />
-              <span class="ml-2 text-sm text-gray-700">Contains Personal Data</span>
+              <span class="ml-2 text-sm text-gray-700">
+                Contains Personal Data
+                <span class="text-xs text-gray-500 ml-1" title="If checked, access restriction text is required for compliance">(requires access restrictions)</span>
+              </span>
             </label>
           </div>
         </div>

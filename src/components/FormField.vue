@@ -16,9 +16,8 @@
       v-if="helpText && !error"
       :id="`${id}-help`"
       class="form-help"
-    >
-      {{ helpText }}
-    </p>
+      v-html="helpText"
+    />
     
     <p
       v-if="error"

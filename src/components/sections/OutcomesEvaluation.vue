@@ -3,7 +3,7 @@
     <div>
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Outcomes & Evaluation</h2>
       <p class="text-sm text-gray-600 mb-6">
-        Document deliverables, publications, and evaluation results using FRAPO and schema.org CreativeWork types.
+        Document deliverables using <a href="https://sparontologies.github.io/frapo/current/frapo.html#d4e1003" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="FRAPO Deliverable class">FRAPO Deliverable</a> and <a href="https://schema.org/CreativeWork" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org CreativeWork type">Schema.org CreativeWork</a> types (e.g., <a href="https://schema.org/SoftwareApplication" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org SoftwareApplication type">SoftwareApplication</a>, <a href="https://schema.org/Report" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org Report type">Report</a>, <a href="https://schema.org/Dataset" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org Dataset type">Dataset</a>). Publications use <a href="https://schema.org/ScholarlyArticle" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org ScholarlyArticle type">ScholarlyArticle</a>.
       </p>
     </div>
 
@@ -34,6 +34,7 @@
             <FormField
               :id="`deliverable-type-${index}`"
               label="Type"
+              help-text="Deliverable type using <a href='https://schema.org/CreativeWork' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org CreativeWork type'>Schema.org</a> types (e.g., SoftwareApplication, Report, Dataset, Document). Maps to <a href='https://sparontologies.github.io/frapo/current/frapo.html#d4e1003' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='FRAPO Deliverable class'>FRAPO Deliverable</a>."
               required
             >
               <input
@@ -77,6 +78,7 @@
               <FormField
                 :id="`deliverable-pid-${index}`"
                 label="PID/DOI"
+                help-text="Persistent Identifier (PID) or Digital Object Identifier (DOI) for the deliverable (e.g., https://doi.org/10.1234/example)"
               >
                 <input
                   :id="`deliverable-pid-${index}`"
@@ -120,6 +122,7 @@
             <FormField
               :id="`pub-doi-${index}`"
               label="DOI"
+              help-text="Digital Object Identifier (DOI) as a full URL (e.g., https://doi.org/10.1234/example). Publications use <a href='https://schema.org/ScholarlyArticle' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org ScholarlyArticle type'>schema:ScholarlyArticle</a> type."
             >
               <input
                 :id="`pub-doi-${index}`"
@@ -171,11 +174,12 @@
       >
         <template #input="{ item, index, update }">
           <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
-            <FormField
-              :id="`eval-type-${index}`"
-              label="Evaluation Type"
-              required
-            >
+              <FormField
+                :id="`eval-type-${index}`"
+                label="Evaluation Type"
+                help-text="Type of evaluation (e.g., Performance Evaluation, User Study, Compliance Audit). Evaluations link to governance stages via <a href='https://www.w3.org/TR/prov-o/#wasGeneratedBy' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='PROV-O wasGeneratedBy property'>PROV-O wasGeneratedBy</a>."
+                required
+              >
               <input
                 :id="`eval-type-${index}`"
                 :value="item.type"

@@ -3,7 +3,7 @@
     <div>
       <h2 class="text-xl font-semibold text-gray-900 mb-4">User Expectations & Requirements</h2>
       <p class="text-sm text-gray-600 mb-6">
-        Capture user requirements as PROV-O Plan and P-Plan elements, including user stories and stakeholder values.
+        Capture user requirements as <a href="http://purl.org/net/p-plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="P-Plan (Plan Ontology) - extends PROV-O for representing plans and steps">P-Plan</a> elements (using <a href="https://www.w3.org/TR/prov-o/#Plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Plan type">PROV-O Plan</a> and <a href="http://purl.org/net/p-plan#Step" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="P-Plan Step type">p-plan:Step</a>), including user stories and stakeholder values.
       </p>
     </div>
 
@@ -89,7 +89,7 @@
               <FormField
                 :id="`req-unit-${index}`"
                 label="Unit of Work"
-                help-text="e.g., 'one staging decision', 'one data entry'"
+                help-text="The specific work item being automated (e.g., 'one document', 'one customer inquiry', 'one analysis run'). This defines what one 'unit' means for volume and time calculations."
                 required
               >
                 <input
@@ -105,7 +105,7 @@
               <FormField
                 :id="`req-unit-category-${index}`"
                 label="Unit Category"
-                help-text="Category of work unit"
+                help-text="Standardized category of the work unit. Select the type that best matches your unit of work (case, document, record, message, analysis run, meeting, or other)."
                 required
               >
                 <select
@@ -128,7 +128,7 @@
               <FormField
                 :id="`req-volume-${index}`"
                 label="Volume Per Month"
-                help-text="Number of units processed per month"
+                help-text="Average number of units processed per month. Used to calculate total time savings (volume × time saved per unit)."
                 required
               >
                 <input
@@ -144,7 +144,7 @@
               <FormField
                 :id="`req-baseline-${index}`"
                 label="Baseline Minutes Per Unit"
-                help-text="Current time spent per unit (single number or 3-point estimate)"
+                help-text="Current time spent per unit before automation. Enter a single number (average) or use a 3-point estimate (best/likely/worst) if there's significant variation."
                 required
               >
                 <input
@@ -162,7 +162,7 @@
                 <FormField
                   :id="`req-saved-best-${index}`"
                   label="Time Saved (Best)"
-                  help-text="Best case minutes saved per unit"
+                  help-text="Best case scenario: maximum minutes saved per unit (optimistic estimate)"
                 >
                   <input
                     :id="`req-saved-best-${index}`"
@@ -182,7 +182,7 @@
                 <FormField
                   :id="`req-saved-likely-${index}`"
                   label="Time Saved (Likely)"
-                  help-text="Most likely minutes saved per unit"
+                  help-text="Most likely scenario: expected minutes saved per unit (realistic estimate). This is the primary value used for calculations."
                   required
                 >
                   <input
@@ -203,7 +203,7 @@
                 <FormField
                   :id="`req-saved-worst-${index}`"
                   label="Time Saved (Worst)"
-                  help-text="Worst case minutes saved per unit"
+                  help-text="Worst case scenario: minimum minutes saved per unit (conservative estimate)"
                 >
                   <input
                     :id="`req-saved-worst-${index}`"
@@ -225,7 +225,7 @@
               <FormField
                 :id="`req-value-type-${index}`"
                 label="Value Type"
-                help-text="Select all that apply"
+                help-text="Select all value types this task delivers: Time (saves time), Quality (improves accuracy/consistency), Risk (reduces errors/compliance issues), Enablement (enables new capabilities)"
               >
                 <div class="space-y-2">
                   <label class="flex items-center">
@@ -276,7 +276,7 @@
                 <FormField
                   :id="`req-rework-${index}`"
                   label="Rework Rate (%)"
-                  help-text="Percentage of units requiring rework"
+                  help-text="Percentage of units requiring rework due to errors or quality issues. Used to calculate quality impact."
                 >
                   <input
                     :id="`req-rework-${index}`"
@@ -292,7 +292,7 @@
                 <FormField
                   :id="`req-error-cost-${index}`"
                   label="Error Cost"
-                  help-text="Cost of errors (number or text)"
+                  help-text="Estimated cost or impact of errors (can be a number or descriptive text). Used to quantify risk reduction value."
                 >
                   <input
                     :id="`req-error-cost-${index}`"
@@ -306,7 +306,7 @@
                 <FormField
                   :id="`req-oversight-${index}`"
                   label="Human Oversight Minutes Per Unit"
-                  help-text="Human review time per unit"
+                  help-text="Time required for human review/oversight per unit. This is subtracted from time saved to calculate net time savings. If automation requires no oversight, enter 0."
                 >
                   <input
                     :id="`req-oversight-${index}`"
@@ -321,6 +321,7 @@
                 <FormField
                   :id="`req-confidence-user-${index}`"
                   label="User Confidence"
+                  help-text="User's confidence level in the time savings estimates (low/medium/high)"
                 >
                   <select
                     :id="`req-confidence-user-${index}`"
@@ -338,6 +339,7 @@
                 <FormField
                   :id="`req-confidence-dev-${index}`"
                   label="Developer Confidence"
+                  help-text="Developer's confidence level in technical feasibility and implementation estimates (low/medium/high)"
                 >
                   <select
                     :id="`req-confidence-dev-${index}`"
@@ -356,7 +358,7 @@
               <FormField
                 :id="`req-assumptions-${index}`"
                 label="Assumptions"
-                help-text="Key assumptions about the value model"
+                help-text="Key assumptions underlying the time savings estimates (e.g., document formats, complexity levels, edge cases)"
               >
                 <textarea
                   :id="`req-assumptions-${index}`"
