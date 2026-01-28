@@ -107,7 +107,7 @@ See [schema/README.md](schema/README.md) for schema documentation.
 
 ## License
 
-[Add license information here]
+Licensed under the Apache License, Version 2.0. See [LICENSE](LICENSE) for details.
 
 ## Acknowledgments
 
