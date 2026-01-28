@@ -4,12 +4,16 @@
     <div class="border-b border-gray-200 px-6 py-4">
       <div class="flex items-center justify-between mb-2">
         <span class="text-sm font-medium text-gray-700">Form Completion</span>
-        <span class="text-sm text-gray-600">{{ completionPercentage }}%</span>
+        <span class="text-sm font-medium" :class="getCompletionTextColor()">
+          {{ completionPercentage.percentage }}%
+          <span v-if="!completionPercentage.isValid" class="text-xs">(validation errors)</span>
+        </span>
       </div>
       <div class="w-full bg-gray-200 rounded-full h-2">
         <div
-          class="bg-primary-600 h-2 rounded-full transition-all duration-300"
-          :style="{ width: `${completionPercentage}%` }"
+          class="h-2 rounded-full transition-all duration-300"
+          :class="getCompletionBarColor()"
+          :style="{ width: `${completionPercentage.percentage}%` }"
         />
       </div>
     </div>
@@ -180,5 +184,31 @@ const downloadROCrate = async () => {
     alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
     console.error('RO-Crate generation error:', error)
   }
+}
+
+const getCompletionBarColor = () => {
+  if (completionPercentage.value.hasErrors) {
+    return 'bg-red-500'
+  }
+  if (completionPercentage.value.hasWarnings) {
+    return 'bg-yellow-500'
+  }
+  if (completionPercentage.value.isValid) {
+    return 'bg-green-500'
+  }
+  return 'bg-primary-600'
+}
+
+const getCompletionTextColor = () => {
+  if (completionPercentage.value.hasErrors) {
+    return 'text-red-600'
+  }
+  if (completionPercentage.value.hasWarnings) {
+    return 'text-yellow-600'
+  }
+  if (completionPercentage.value.isValid) {
+    return 'text-green-600'
+  }
+  return 'text-gray-600'
 }
 </script>
