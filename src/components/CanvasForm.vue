@@ -61,6 +61,26 @@
       />
     </div>
 
+    <!-- Validation Errors -->
+    <div v-if="validation.errors.length > 0 || validation.warnings.length > 0" class="border-t border-gray-200 px-6 py-4 bg-gray-50">
+      <div v-if="validation.errors.length > 0" class="mb-4">
+        <h3 class="text-sm font-semibold text-red-700 mb-2">Validation Errors</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <li v-for="(error, index) in validation.errors" :key="index" class="text-sm text-red-600">
+            {{ error.message }}
+          </li>
+        </ul>
+      </div>
+      <div v-if="validation.warnings.length > 0">
+        <h3 class="text-sm font-semibold text-yellow-700 mb-2">Warnings</h3>
+        <ul class="list-disc list-inside space-y-1">
+          <li v-for="(warning, index) in validation.warnings" :key="index" class="text-sm text-yellow-600">
+            {{ warning.message }}
+          </li>
+        </ul>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="border-t border-gray-200 px-6 py-4 bg-gray-50 flex flex-col sm:flex-row gap-3 justify-end">
       <button
@@ -96,7 +116,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ProjectDefinition from './sections/ProjectDefinition.vue'
 import UserExpectations from './sections/UserExpectations.vue'
 import DeveloperFeasibility from './sections/DeveloperFeasibility.vue'
@@ -107,7 +127,7 @@ import { useCanvasData } from '@/composables/useCanvasData'
 import { generateROCrate } from '@/utils/rocrate'
 import { downloadROCrateZip } from '@/utils/download'
 
-const { canvasData, completionPercentage, clearData: clearCanvasData } = useCanvasData()
+const { canvasData, completionPercentage, clearData: clearCanvasData, validateAll } = useCanvasData()
 
 const activeSection = ref('project')
 
@@ -120,8 +140,10 @@ const sections = [
   { id: 'outcomes', label: 'Outcomes' },
 ]
 
+const validation = computed(() => validateAll())
+
 const canDownload = computed(() => {
-  return !!(canvasData.value.project.title && canvasData.value.project.description)
+  return validation.value.isValid && !!(canvasData.value.project.title && canvasData.value.project.description)
 })
 
 const clearData = () => {
@@ -134,6 +156,12 @@ const clearData = () => {
 }
 
 const downloadROCrate = async () => {
+  const validationResult = validateAll()
+  if (!validationResult.isValid) {
+    alert(`Please fix validation errors before downloading:\n\n${validationResult.errors.map(e => `- ${e.message}`).join('\n')}`)
+    return
+  }
+
   try {
     const rocrate = generateROCrate(canvasData.value)
     const projectName = canvasData.value.project.title

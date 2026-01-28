@@ -12,6 +12,7 @@ const canvasData = ref<CanvasData>({
   project: {
     title: '',
     description: '',
+    projectStage: '',
   },
 })
 
@@ -207,6 +208,7 @@ export function useCanvasData() {
       project: {
         title: '',
         description: '',
+        projectStage: '',
       },
       userExpectations: undefined,
       developerFeasibility: undefined,
@@ -234,13 +236,149 @@ export function useCanvasData() {
     canvasData.value = data
   }
 
+  // Validation functions
+  interface ValidationError {
+    field: string
+    message: string
+    severity: 'error' | 'warning'
+  }
+
+  const validateProject = (): ValidationError[] => {
+    const errors: ValidationError[] = []
+    const project = canvasData.value.project
+
+    if (!project.title || !project.title.trim()) {
+      errors.push({ field: 'project.title', message: 'Project title is required', severity: 'error' })
+    }
+
+    if (!project.description || !project.description.trim()) {
+      errors.push({ field: 'project.description', message: 'Project description is required', severity: 'error' })
+    } else {
+      // Check if description has at least one sentence (contains period, exclamation, or question mark)
+      const sentencePattern = /[.!?]/
+      if (!sentencePattern.test(project.description)) {
+        errors.push({ field: 'project.description', message: 'Description should be at least one sentence', severity: 'error' })
+      }
+    }
+
+    if (!project.projectStage || !project.projectStage.trim()) {
+      errors.push({ field: 'project.projectStage', message: 'Project stage is required', severity: 'error' })
+    }
+
+    return errors
+  }
+
+  const validateRequirements = (): ValidationError[] => {
+    const errors: ValidationError[] = []
+    const requirements = canvasData.value.userExpectations?.requirements || []
+
+    if (requirements.length === 0) {
+      errors.push({ field: 'userExpectations.requirements', message: 'At least one task is required', severity: 'error' })
+      return errors
+    }
+
+    requirements.forEach((req, index) => {
+      const prefix = `requirements[${index}]`
+
+      if (!req.unitOfWork || !req.unitOfWork.trim()) {
+        errors.push({ field: `${prefix}.unitOfWork`, message: 'Unit of work is required', severity: 'error' })
+      }
+
+      if (!req.unitCategory) {
+        errors.push({ field: `${prefix}.unitCategory`, message: 'Unit category is required', severity: 'error' })
+      }
+
+      if (req.volumePerMonth === undefined || req.volumePerMonth < 1) {
+        errors.push({ field: `${prefix}.volumePerMonth`, message: 'Volume per month must be at least 1', severity: 'error' })
+      }
+
+      if (req.baselineMinutesPerUnit === undefined) {
+        errors.push({ field: `${prefix}.baselineMinutesPerUnit`, message: 'Baseline minutes per unit is required', severity: 'error' })
+      } else if (typeof req.baselineMinutesPerUnit === 'number' && req.baselineMinutesPerUnit < 0) {
+        errors.push({ field: `${prefix}.baselineMinutesPerUnit`, message: 'Baseline minutes per unit must be ≥ 0', severity: 'error' })
+      }
+
+      if (!req.timeSavedMinutesPerUnit || req.timeSavedMinutesPerUnit.likely === undefined) {
+        errors.push({ field: `${prefix}.timeSavedMinutesPerUnit.likely`, message: 'Time saved (likely) is required', severity: 'error' })
+      } else if (req.timeSavedMinutesPerUnit.likely < 0) {
+        errors.push({ field: `${prefix}.timeSavedMinutesPerUnit.likely`, message: 'Time saved (likely) must be ≥ 0', severity: 'error' })
+      }
+
+      // Optional validations
+      if (req.timeSavedMinutesPerUnit) {
+        const { best, likely, worst } = req.timeSavedMinutesPerUnit
+        if (best !== undefined && likely !== undefined && best < likely) {
+          errors.push({ field: `${prefix}.timeSavedMinutesPerUnit`, message: 'Best case should be ≥ likely case', severity: 'error' })
+        }
+        if (likely !== undefined && worst !== undefined && likely < worst) {
+          errors.push({ field: `${prefix}.timeSavedMinutesPerUnit`, message: 'Likely case should be ≥ worst case', severity: 'error' })
+        }
+      }
+
+      if (req.humanOversightMinutesPerUnit !== undefined && req.humanOversightMinutesPerUnit < 0) {
+        errors.push({ field: `${prefix}.humanOversightMinutesPerUnit`, message: 'Human oversight minutes must be ≥ 0', severity: 'error' })
+      }
+
+      // Warning: net time saved ≤ 0
+      if (req.timeSavedMinutesPerUnit?.likely !== undefined && req.humanOversightMinutesPerUnit !== undefined) {
+        const netTimeSaved = req.timeSavedMinutesPerUnit.likely - req.humanOversightMinutesPerUnit
+        if (netTimeSaved <= 0) {
+          errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
+        }
+      }
+    })
+
+    return errors
+  }
+
+  const validateDatasets = (): ValidationError[] => {
+    const errors: ValidationError[] = []
+    const datasets = canvasData.value.dataAccess?.datasets || []
+
+    datasets.forEach((dataset, index) => {
+      const prefix = `datasets[${index}]`
+
+      if (!dataset.title || !dataset.title.trim()) {
+        errors.push({ field: `${prefix}.title`, message: 'Dataset title is required', severity: 'error' })
+      }
+
+      if (!dataset.accessRights || !dataset.accessRights.trim()) {
+        errors.push({ field: `${prefix}.accessRights`, message: 'Access rights are required', severity: 'error' })
+      }
+
+      if (dataset.containsPersonalData && (!dataset.accessRights || !dataset.accessRights.trim())) {
+        errors.push({ field: `${prefix}.accessRights`, message: 'Access restriction text is required when dataset contains personal data', severity: 'error' })
+      }
+    })
+
+    return errors
+  }
+
+  const validateAll = (): { errors: ValidationError[]; warnings: ValidationError[]; isValid: boolean } => {
+    const allErrors: ValidationError[] = []
+    
+    allErrors.push(...validateProject())
+    allErrors.push(...validateRequirements())
+    allErrors.push(...validateDatasets())
+
+    const errors = allErrors.filter(e => e.severity === 'error')
+    const warnings = allErrors.filter(e => e.severity === 'warning')
+
+    return {
+      errors,
+      warnings,
+      isValid: errors.length === 0,
+    }
+  }
+
   // Computed: form completion percentage
   const completionPercentage = computed(() => {
     let completed = 0
-    let total = 2 // title and description are required
+    let total = 3 // title, description, projectStage are required
 
     if (canvasData.value.project.title) completed++
     if (canvasData.value.project.description) completed++
+    if (canvasData.value.project.projectStage) completed++
 
     // Optional sections
     if (canvasData.value.userExpectations?.requirements?.length) completed++
@@ -270,5 +408,9 @@ export function useCanvasData() {
     importData,
     importFromROCrate,
     completionPercentage,
+    validateAll,
+    validateProject,
+    validateRequirements,
+    validateDatasets,
   }
 }

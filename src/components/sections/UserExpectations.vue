@@ -90,6 +90,7 @@
                 :id="`req-unit-${index}`"
                 label="Unit of Work"
                 help-text="e.g., 'one staging decision', 'one data entry'"
+                required
               >
                 <input
                   :id="`req-unit-${index}`"
@@ -102,9 +103,33 @@
               </FormField>
 
               <FormField
+                :id="`req-unit-category-${index}`"
+                label="Unit Category"
+                help-text="Category of work unit"
+                required
+              >
+                <select
+                  :id="`req-unit-category-${index}`"
+                  :value="item.unitCategory || ''"
+                  class="form-input"
+                  @change="update({ ...item, unitCategory: ($event.target as HTMLSelectElement).value as any || undefined })"
+                >
+                  <option value="">Select category</option>
+                  <option value="case">Case</option>
+                  <option value="document">Document</option>
+                  <option value="record">Record</option>
+                  <option value="message">Message</option>
+                  <option value="analysisRun">Analysis Run</option>
+                  <option value="meeting">Meeting</option>
+                  <option value="other">Other</option>
+                </select>
+              </FormField>
+
+              <FormField
                 :id="`req-volume-${index}`"
                 label="Volume Per Month"
                 help-text="Number of units processed per month"
+                required
               >
                 <input
                   :id="`req-volume-${index}`"
@@ -120,6 +145,7 @@
                 :id="`req-baseline-${index}`"
                 label="Baseline Minutes Per Unit"
                 help-text="Current time spent per unit (single number or 3-point estimate)"
+                required
               >
                 <input
                   :id="`req-baseline-${index}`"
@@ -157,6 +183,7 @@
                   :id="`req-saved-likely-${index}`"
                   label="Time Saved (Likely)"
                   help-text="Most likely minutes saved per unit"
+                  required
                 >
                   <input
                     :id="`req-saved-likely-${index}`"
@@ -278,16 +305,16 @@
 
                 <FormField
                   :id="`req-oversight-${index}`"
-                  label="Oversight Minutes Per Unit"
+                  label="Human Oversight Minutes Per Unit"
                   help-text="Human review time per unit"
                 >
                   <input
                     :id="`req-oversight-${index}`"
-                    :value="item.oversightMinutesPerUnit || ''"
+                    :value="item.humanOversightMinutesPerUnit || ''"
                     type="number"
                     min="0"
                     class="form-input"
-                    @input="update({ ...item, oversightMinutesPerUnit: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
+                    @input="update({ ...item, humanOversightMinutesPerUnit: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
                   />
                 </FormField>
 

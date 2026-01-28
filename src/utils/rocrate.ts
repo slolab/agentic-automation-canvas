@@ -43,7 +43,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   // 2. Root Dataset
   const rootDataset: ROCrateEntity = {
     '@id': './',
-    '@type': 'dcat:Dataset',
+    '@type': ['schema:Dataset', 'dcat:Dataset'],
     name: data.project.title || 'Agentic Automation Project',
     description: data.project.description,
   }
@@ -64,7 +64,10 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   }
 
   if (data.project.objective) {
-    projectEntity.about = data.project.objective
+    projectEntity['schema:abstract'] = data.project.objective
+  }
+  if (data.project.projectStage) {
+    projectEntity['aac:projectStage'] = data.project.projectStage
   }
   if (data.project.startDate) {
     projectEntity.startDate = data.project.startDate
@@ -97,17 +100,13 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   // 4. User Expectations as P-Plan
   if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
     const planId = generateId('user-plan')
-    const planSteps: Array<{ '@id': string; '@type': string; description?: string }> = []
+    const planStepRefs: Array<{ '@id': string }> = []
 
     data.userExpectations.requirements.forEach((req, index) => {
       const stepId = generateId('requirement', index)
-      planSteps.push({
-        '@id': stepId,
-        '@type': 'p-plan:Step',
-        description: req.userStory || req.description,
-      })
+      planStepRefs.push({ '@id': stepId })
 
-      // Add step entity with value model
+      // Add step entity with value model - define once in graph
       const stepEntity: ROCrateEntity = {
         '@id': stepId,
         '@type': 'p-plan:Step',
@@ -126,6 +125,9 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       if (req.unitOfWork) {
         stepEntity['aac:unitOfWork'] = req.unitOfWork
       }
+      if (req.unitCategory) {
+        stepEntity['aac:unitCategory'] = req.unitCategory
+      }
       if (req.volumePerMonth !== undefined) {
         stepEntity['aac:volumePerMonth'] = req.volumePerMonth
       }
@@ -134,6 +136,11 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       }
       if (req.timeSavedMinutesPerUnit) {
         stepEntity['aac:timeSavedMinutesPerUnit'] = req.timeSavedMinutesPerUnit
+        // Compute netTimeSavedMinutesPerUnit if we have likely and oversight
+        if (req.timeSavedMinutesPerUnit.likely !== undefined && req.humanOversightMinutesPerUnit !== undefined) {
+          const netTimeSaved = req.timeSavedMinutesPerUnit.likely - req.humanOversightMinutesPerUnit
+          stepEntity['aac:netTimeSavedMinutesPerUnit'] = netTimeSaved
+        }
       }
       if (req.valueType && req.valueType.length > 0) {
         stepEntity['aac:valueType'] = req.valueType
@@ -145,8 +152,13 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       if (req.errorCost !== undefined) {
         stepEntity['aac:errorCost'] = req.errorCost
       }
-      if (req.oversightMinutesPerUnit !== undefined) {
-        stepEntity['aac:oversightMinutesPerUnit'] = req.oversightMinutesPerUnit
+      if (req.humanOversightMinutesPerUnit !== undefined) {
+        stepEntity['aac:humanOversightMinutesPerUnit'] = req.humanOversightMinutesPerUnit
+        // Recompute netTimeSavedMinutesPerUnit if we have timeSaved
+        if (req.timeSavedMinutesPerUnit?.likely !== undefined) {
+          const netTimeSaved = req.timeSavedMinutesPerUnit.likely - req.humanOversightMinutesPerUnit
+          stepEntity['aac:netTimeSavedMinutesPerUnit'] = netTimeSaved
+        }
       }
       if (req.confidenceUser) {
         stepEntity['aac:confidenceUser'] = req.confidenceUser
@@ -165,7 +177,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       '@type': ['prov:Plan', 'p-plan:Plan'],
       name: 'User Expectations Plan',
       description: 'User requirements and expectations for the automation',
-      'p-plan:hasStep': planSteps,
+      'p-plan:hasStep': planStepRefs,
     }
 
     graph.push(planEntity)

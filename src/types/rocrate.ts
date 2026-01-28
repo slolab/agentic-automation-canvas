@@ -27,7 +27,7 @@ export interface MetadataFileDescriptor extends ROCrateEntity {
 
 export interface RootDataset extends ROCrateEntity {
   '@id': './'
-  '@type': 'Dataset'
+  '@type': 'Dataset' | ['schema:Dataset', 'dcat:Dataset']
   name?: string
   description?: string
   about?: {
@@ -54,9 +54,6 @@ export interface PlanEntity extends ROCrateEntity {
   description?: string
   'p-plan:hasStep'?: Array<{
     '@id': string
-    '@type': 'p-plan:Step'
-    description?: string
-    [key: string]: unknown
   }>
 }
 
@@ -117,13 +114,14 @@ export interface CreativeWorkEntity extends ROCrateEntity {
 
 export interface ValueModel {
   'aac:unitOfWork'?: string
+  'aac:unitCategory'?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
   'aac:volumePerMonth'?: number
   'aac:baselineMinutesPerUnit'?: number | { best: number; likely: number; worst: number }
   'aac:timeSavedMinutesPerUnit'?: { best: number; likely: number; worst: number }
   'aac:valueType'?: Array<'time' | 'quality' | 'risk' | 'enablement'>
   'aac:reworkRate'?: number
   'aac:errorCost'?: string | number
-  'aac:oversightMinutesPerUnit'?: number
+  'aac:humanOversightMinutesPerUnit'?: number
   'aac:confidenceUser'?: 'low' | 'medium' | 'high'
   'aac:confidenceDev'?: 'low' | 'medium' | 'high'
   'aac:assumptions'?: string

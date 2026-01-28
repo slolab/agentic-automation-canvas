@@ -55,6 +55,27 @@
       />
     </FormField>
 
+    <FormField
+      id="project-stage"
+      label="Project Stage"
+      help-text="Current stage of the project"
+      required
+    >
+      <select
+        id="project-stage"
+        v-model="localData.projectStage"
+        class="form-input"
+        @change="update"
+      >
+        <option value="">Select stage</option>
+        <option value="Design">Design</option>
+        <option value="Development">Development</option>
+        <option value="Validation">Validation</option>
+        <option value="Deployment">Deployment</option>
+        <option value="Monitoring">Monitoring</option>
+      </select>
+    </FormField>
+
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <FormField
         id="project-start-date"
@@ -221,6 +242,7 @@ const initLocalData = (): ProjectDefinition => {
     title: project.title || '',
     description: project.description || '',
     objective: project.objective,
+    projectStage: project.projectStage,
     startDate: project.startDate,
     endDate: project.endDate,
     projectId: project.projectId,
@@ -270,6 +292,7 @@ watch(
         title: newProject.title || '',
         description: newProject.description || '',
         objective: newProject.objective,
+        projectStage: newProject.projectStage,
         startDate: newProject.startDate,
         endDate: newProject.endDate,
         projectId: newProject.projectId,

@@ -60,6 +60,7 @@
             <FormField
               :id="`dataset-access-${index}`"
               label="Access Rights"
+              required
             >
               <select
                 :id="`dataset-access-${index}`"

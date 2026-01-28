@@ -16,6 +16,7 @@ export interface ProjectDefinition {
   title: string
   description: string
   objective?: string
+  projectStage?: string
   startDate?: string
   endDate?: string
   domain?: string[]
@@ -44,6 +45,7 @@ export interface Requirement {
   value?: string
   // Value model fields (M0 - required)
   unitOfWork?: string
+  unitCategory?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
   volumePerMonth?: number
   baselineMinutesPerUnit?: number | { best: number; likely: number; worst: number }
   timeSavedMinutesPerUnit?: { best: number; likely: number; worst: number }
@@ -51,7 +53,7 @@ export interface Requirement {
   // Value model fields (M1/M2 - optional)
   reworkRate?: number
   errorCost?: string | number
-  oversightMinutesPerUnit?: number
+  humanOversightMinutesPerUnit?: number
   confidenceUser?: 'low' | 'medium' | 'high'
   confidenceDev?: 'low' | 'medium' | 'high'
   assumptions?: string

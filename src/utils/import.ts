@@ -43,7 +43,8 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     canvasData.project = {
       title: (projectEntity.name as string) || '',
       description: (projectEntity.description as string) || '',
-      objective: (projectEntity.about as string) || undefined,
+      objective: (projectEntity['schema:abstract'] as string) || (projectEntity.about as string) || undefined,
+      projectStage: (projectEntity['aac:projectStage'] as string) || undefined,
       startDate: (projectEntity.startDate as string) || undefined,
       endDate: (projectEntity.endDate as string) || undefined,
       domain: Array.isArray(projectEntity['aac:domain'])
@@ -104,8 +105,14 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         if (step!['aac:errorCost'] !== undefined) {
           req.errorCost = step!['aac:errorCost']
         }
-        if (step!['aac:oversightMinutesPerUnit'] !== undefined) {
-          req.oversightMinutesPerUnit = step!['aac:oversightMinutesPerUnit'] as number
+        // Handle both old and new field names for backward compatibility
+        if (step!['aac:humanOversightMinutesPerUnit'] !== undefined) {
+          req.humanOversightMinutesPerUnit = step!['aac:humanOversightMinutesPerUnit'] as number
+        } else if (step!['aac:oversightMinutesPerUnit'] !== undefined) {
+          req.humanOversightMinutesPerUnit = step!['aac:oversightMinutesPerUnit'] as number
+        }
+        if (step!['aac:unitCategory']) {
+          req.unitCategory = step!['aac:unitCategory'] as 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
         }
         if (step!['aac:confidenceUser']) {
           req.confidenceUser = step!['aac:confidenceUser'] as 'low' | 'medium' | 'high'
