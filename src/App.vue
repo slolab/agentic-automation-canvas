@@ -12,6 +12,27 @@
           <div class="flex items-center gap-3">
             <button
               type="button"
+              @click="openInfo"
+              class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              title="Learn about Agentic Automation Canvas"
+            >
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>What is this?</span>
+            </button>
+            <button
+              type="button"
               @click="loadExample"
               class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               title="Load example dataset"
@@ -44,6 +65,9 @@
     <!-- Bot Assistant -->
     <BotAssistant />
     
+    <!-- Info Overlay -->
+    <InfoOverlay ref="infoOverlay" />
+    
     <footer class="bg-white border-t border-gray-200 mt-12">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <p class="text-sm text-gray-500 text-center">
@@ -55,17 +79,24 @@
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useCanvasData } from './composables/useCanvasData'
 import { exampleData } from './data/example-data'
 import CanvasForm from './components/CanvasForm.vue'
 import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
+import InfoOverlay from './components/InfoOverlay.vue'
 
 const { importFromROCrate } = useCanvasData()
+const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 
 const loadExample = () => {
   if (confirm('This will replace your current data with an example dataset. Continue?')) {
     importFromROCrate(exampleData)
   }
+}
+
+const openInfo = () => {
+  infoOverlay.value?.open()
 }
 </script>
