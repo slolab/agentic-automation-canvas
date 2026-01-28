@@ -4,7 +4,7 @@
  */
 
 export interface ROCrateJSONLD {
-  '@context': string | string[] | Record<string, unknown>
+  '@context': string | string[] | Record<string, unknown> | Array<string | Record<string, unknown>>
   '@graph': ROCrateEntity[]
 }
 

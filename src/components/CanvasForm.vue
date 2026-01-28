@@ -59,6 +59,10 @@
         v-if="activeSection === 'outcomes'"
         :key="'outcomes'"
       />
+      <Dashboard
+        v-if="activeSection === 'dashboard'"
+        :key="'dashboard'"
+      />
     </div>
 
     <!-- Validation Errors -->
@@ -123,6 +127,7 @@ import DeveloperFeasibility from './sections/DeveloperFeasibility.vue'
 import GovernanceStaging from './sections/GovernanceStaging.vue'
 import DataAccessSensitivity from './sections/DataAccessSensitivity.vue'
 import OutcomesEvaluation from './sections/OutcomesEvaluation.vue'
+import Dashboard from './sections/Dashboard.vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { generateROCrate } from '@/utils/rocrate'
 import { downloadROCrateZip } from '@/utils/download'
@@ -138,6 +143,7 @@ const sections = [
   { id: 'governance', label: 'Governance' },
   { id: 'data-access', label: 'Data Access' },
   { id: 'outcomes', label: 'Outcomes' },
+  { id: 'dashboard', label: 'Dashboard' },
 ]
 
 const validation = computed(() => validateAll())

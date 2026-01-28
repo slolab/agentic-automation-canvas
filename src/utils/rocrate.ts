@@ -426,7 +426,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   }
 
   // Extended @context with all required prefixes
-  const context = [
+  const context: (string | Record<string, string>)[] = [
     'https://w3id.org/ro/crate/1.1/context',
     {
       schema: 'https://schema.org/',
