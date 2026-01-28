@@ -25,7 +25,10 @@
         },
         "fundingGrant": { "type": "string" },
         "leadOrganization": { "type": "string" },
-        "projectId": { "type": "string", "format": "uri" }
+        "projectId": { "type": "string", "format": "uri" },
+        "headlineValue": { "type": "string" },
+        "aggregateExpectedHoursSavedPerMonth": { "type": "number", "minimum": 0 },
+        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] }
       }
     },
     "userExpectations": {
@@ -42,7 +45,48 @@
               "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
               "status": { "type": "string", "enum": ["planned", "in-progress", "completed", "cancelled"] },
               "stakeholder": { "type": "string" },
-              "value": { "type": "string" }
+              "value": { "type": "string" },
+              "unitOfWork": { "type": "string" },
+              "volumePerMonth": { "type": "number", "minimum": 0 },
+              "baselineMinutesPerUnit": {
+                "oneOf": [
+                  { "type": "number", "minimum": 0 },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "best": { "type": "number", "minimum": 0 },
+                      "likely": { "type": "number", "minimum": 0 },
+                      "worst": { "type": "number", "minimum": 0 }
+                    },
+                    "required": ["best", "likely", "worst"]
+                  }
+                ]
+              },
+              "timeSavedMinutesPerUnit": {
+                "type": "object",
+                "properties": {
+                  "best": { "type": "number", "minimum": 0 },
+                  "likely": { "type": "number", "minimum": 0 },
+                  "worst": { "type": "number", "minimum": 0 }
+                },
+                "required": ["best", "likely", "worst"]
+              },
+              "valueType": {
+                "type": "array",
+                "items": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
+                "uniqueItems": true
+              },
+              "reworkRate": { "type": "number", "minimum": 0, "maximum": 100 },
+              "errorCost": {
+                "oneOf": [
+                  { "type": "string" },
+                  { "type": "number", "minimum": 0 }
+                ]
+              },
+              "oversightMinutesPerUnit": { "type": "number", "minimum": 0 },
+              "confidenceUser": { "type": "string", "enum": ["low", "medium", "high"] },
+              "confidenceDev": { "type": "string", "enum": ["low", "medium", "high"] },
+              "assumptions": { "type": "string" }
             },
             "required": ["id", "description"]
           }

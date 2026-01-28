@@ -1,15 +1,15 @@
 <template>
   <div class="relative">
     <input
+      :key="inputKey"
       ref="fileInput"
       type="file"
-      accept=".zip,application/zip,application/x-zip-compressed"
       class="hidden"
       @change="handleFileSelect"
     />
     <button
       type="button"
-      @click="fileInput?.click()"
+      @click="openFileDialog"
       class="flex items-center gap-2 px-4 py-2 rounded-md font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       :disabled="isImporting"
     >
@@ -53,13 +53,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, nextTick } from 'vue'
 import { importROCrateFromZip } from '@/utils/import'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 const { importFromROCrate } = useCanvasData()
 const fileInput = ref<HTMLInputElement | null>(null)
 const isImporting = ref(false)
+const inputKey = ref(0)
 
 const handleFileSelect = async (event: Event) => {
   const target = event.target as HTMLInputElement
@@ -67,10 +68,24 @@ const handleFileSelect = async (event: Event) => {
 
   if (!file) return
 
+  // Validate file type in JavaScript (more reliable than accept attribute)
+  const fileName = file.name.toLowerCase()
+  const isValidZip = fileName.endsWith('.zip') || 
+                     file.type === 'application/zip' || 
+                     file.type === 'application/x-zip-compressed'
+  
+  if (!isValidZip) {
+    alert('Please select a ZIP file')
+    // Reset input
+    if (fileInput.value) {
+      fileInput.value.value = ''
+    }
+    return
+  }
+
   isImporting.value = true
 
   try {
-    // Only accept ZIP files
     const canvasData = await importROCrateFromZip(file)
     importFromROCrate(canvasData)
     alert('RO-Crate imported successfully!')
@@ -79,10 +94,17 @@ const handleFileSelect = async (event: Event) => {
     console.error('Import error:', error)
   } finally {
     isImporting.value = false
-    // Reset file input
-    if (fileInput.value) {
-      fileInput.value.value = ''
-    }
+    // Increment key to force Vue to recreate the input element
+    // This ensures fresh file picker state for the next open
+    inputKey.value++
+  }
+}
+
+const openFileDialog = () => {
+  if (fileInput.value) {
+    // Reset value to clear any previous selection
+    fileInput.value.value = ''
+    fileInput.value.click()
   }
 }
 </script>

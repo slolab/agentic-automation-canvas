@@ -69,49 +69,10 @@ export async function downloadROCrateZip(
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
 
   // Add developer feasibility as separate JSON file if present
+  // Note: The file entity is already added to the crate graph by generateROCrate()
   // This follows RO-Crate best practice of including additional metadata as separate files
   if (canvasData?.developerFeasibility && Object.keys(canvasData.developerFeasibility).length > 0) {
     zip.file('developer-feasibility.json', JSON.stringify(canvasData.developerFeasibility, null, 2))
-    
-    // Reference it in the RO-Crate metadata
-    const rootDataset = rocrate['@graph'].find((e) => e['@id'] === './')
-    if (rootDataset) {
-      // Ensure hasPart is an array and merge with existing items
-      let hasPartArray: Array<{ '@id': string }> = []
-      if (rootDataset.hasPart) {
-        if (Array.isArray(rootDataset.hasPart)) {
-          hasPartArray = [...rootDataset.hasPart]
-        } else if (typeof rootDataset.hasPart === 'object' && rootDataset.hasPart !== null) {
-          hasPartArray = [rootDataset.hasPart as { '@id': string }]
-        }
-      }
-      
-      // Check if developer-feasibility.json is already included
-      const alreadyIncluded = hasPartArray.some((part: any) => {
-        const partId = typeof part === 'object' && part !== null && '@id' in part 
-          ? part['@id'] 
-          : part
-        return partId === 'developer-feasibility.json'
-      })
-      
-      if (!alreadyIncluded) {
-        hasPartArray.push({ '@id': 'developer-feasibility.json' })
-        rootDataset.hasPart = hasPartArray
-      }
-      
-      // Add file entity for developer-feasibility.json if not already present
-      const existingFile = rocrate['@graph'].find((e) => e['@id'] === 'developer-feasibility.json')
-      if (!existingFile) {
-        const feasibilityFileEntity: any = {
-          '@id': 'developer-feasibility.json',
-          '@type': 'File',
-          name: 'Developer Feasibility Assessment',
-          description: 'Technical feasibility assessment including TRL levels, risk assessment, and technology choices',
-          encodingFormat: 'application/json',
-        }
-        rocrate['@graph'].push(feasibilityFileEntity)
-      }
-    }
   }
 
   // Add README

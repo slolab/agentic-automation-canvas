@@ -4,7 +4,7 @@
  */
 
 export interface ROCrateJSONLD {
-  '@context': string
+  '@context': string | string[] | Record<string, unknown>
   '@graph': ROCrateEntity[]
 }
 
@@ -37,16 +37,19 @@ export interface RootDataset extends ROCrateEntity {
 }
 
 export interface ProjectEntity extends ROCrateEntity {
-  '@type': 'Project' | 'ResearchProject' | ['Project', 'ResearchProject']
+  '@type': 'schema:Project' | 'schema:ResearchProject' | ['schema:Project', 'schema:ResearchProject']
   name: string
   description?: string
   startDate?: string
   endDate?: string
   keywords?: string | string[]
+  'aac:headlineValue'?: string
+  'aac:aggregateExpectedHoursSavedPerMonth'?: number
+  'aac:primaryValueDriver'?: 'time' | 'quality' | 'risk' | 'enablement'
 }
 
 export interface PlanEntity extends ROCrateEntity {
-  '@type': 'Plan' | 'p-plan:Plan' | ['Plan', 'p-plan:Plan']
+  '@type': 'prov:Plan' | 'p-plan:Plan' | ['prov:Plan', 'p-plan:Plan']
   name?: string
   description?: string
   'p-plan:hasStep'?: Array<{
@@ -58,7 +61,7 @@ export interface PlanEntity extends ROCrateEntity {
 }
 
 export interface ActivityEntity extends ROCrateEntity {
-  '@type': 'Activity'
+  '@type': 'prov:Activity'
   name?: string
   startedAtTime?: string
   endedAtTime?: string
@@ -74,13 +77,15 @@ export interface ActivityEntity extends ROCrateEntity {
 }
 
 export interface DatasetEntity extends ROCrateEntity {
-  '@type': 'Dataset'
+  '@type': 'dcat:Dataset' | 'schema:Dataset'
   name: string
   description?: string
   license?: string | { '@id': string }
-  accessRights?: string | { '@id': string } | Array<string | { '@id': string }>
-  format?: string
+  'dct:accessRights'?: string | { '@id': string } | Array<string | { '@id': string }>
+  'schema:encodingFormat'?: string
   identifier?: string
+  'dct:conformsTo'?: Array<{ '@id': string }>
+  'aac:containsPersonalData'?: boolean
 }
 
 export interface PersonEntity extends ROCrateEntity {
@@ -99,11 +104,27 @@ export interface OrganizationEntity extends ROCrateEntity {
 }
 
 export interface CreativeWorkEntity extends ROCrateEntity {
-  '@type': 'CreativeWork' | 'ScholarlyArticle' | 'Report' | 'SoftwareApplication'
+  '@type': 'schema:CreativeWork' | 'schema:ScholarlyArticle' | 'schema:Report' | 'schema:SoftwareApplication'
   name: string
   description?: string
   datePublished?: string
   wasGeneratedBy?: {
     '@id': string
   }
+  'aac:evaluationType'?: string
+  'aac:milestoneType'?: string
+}
+
+export interface ValueModel {
+  'aac:unitOfWork'?: string
+  'aac:volumePerMonth'?: number
+  'aac:baselineMinutesPerUnit'?: number | { best: number; likely: number; worst: number }
+  'aac:timeSavedMinutesPerUnit'?: { best: number; likely: number; worst: number }
+  'aac:valueType'?: Array<'time' | 'quality' | 'risk' | 'enablement'>
+  'aac:reworkRate'?: number
+  'aac:errorCost'?: string | number
+  'aac:oversightMinutesPerUnit'?: number
+  'aac:confidenceUser'?: 'low' | 'medium' | 'high'
+  'aac:confidenceDev'?: 'low' | 'medium' | 'high'
+  'aac:assumptions'?: string
 }

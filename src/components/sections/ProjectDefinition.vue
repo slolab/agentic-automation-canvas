@@ -146,6 +146,62 @@
         @blur="update"
       />
     </FormField>
+
+    <div class="pt-4 border-t border-gray-200">
+      <h3 class="text-lg font-medium text-gray-900 mb-4">Project Value Summary</h3>
+      
+      <FormField
+        id="project-headline-value"
+        label="Headline Value"
+        help-text="Short text summary of the project's value proposition"
+      >
+        <input
+          id="project-headline-value"
+          v-model="localData.headlineValue"
+          type="text"
+          class="form-input"
+          placeholder="e.g., Saves 10 hours per month through automated data processing"
+          @blur="update"
+        />
+      </FormField>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="project-aggregate-hours"
+          label="Aggregate Expected Hours Saved Per Month"
+          help-text="Total hours saved per month (computed from requirements or manually entered)"
+        >
+          <input
+            id="project-aggregate-hours"
+            v-model.number="localData.aggregateExpectedHoursSavedPerMonth"
+            type="number"
+            min="0"
+            step="0.1"
+            class="form-input"
+            @blur="update"
+          />
+        </FormField>
+
+        <FormField
+          id="project-primary-value-driver"
+          label="Primary Value Driver"
+          help-text="The main type of value this project delivers"
+        >
+          <select
+            id="project-primary-value-driver"
+            v-model="localData.primaryValueDriver"
+            class="form-input"
+            @change="update"
+          >
+            <option value="">Select value driver</option>
+            <option value="time">Time</option>
+            <option value="quality">Quality</option>
+            <option value="risk">Risk</option>
+            <option value="enablement">Enablement</option>
+          </select>
+        </FormField>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -168,6 +224,9 @@ const initLocalData = (): ProjectDefinition => {
     startDate: project.startDate,
     endDate: project.endDate,
     projectId: project.projectId,
+    headlineValue: project.headlineValue,
+    aggregateExpectedHoursSavedPerMonth: project.aggregateExpectedHoursSavedPerMonth,
+    primaryValueDriver: project.primaryValueDriver,
   }
 }
 
@@ -214,6 +273,9 @@ watch(
         startDate: newProject.startDate,
         endDate: newProject.endDate,
         projectId: newProject.projectId,
+        headlineValue: newProject.headlineValue,
+        aggregateExpectedHoursSavedPerMonth: newProject.aggregateExpectedHoursSavedPerMonth,
+        primaryValueDriver: newProject.primaryValueDriver,
       }
       // Sync domain and keywords arrays
       localDomains.value = (newProject.domain || []).map((d: string) => ({ value: d }))

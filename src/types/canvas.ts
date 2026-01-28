@@ -23,6 +23,10 @@ export interface ProjectDefinition {
   fundingGrant?: string
   leadOrganization?: string
   projectId?: string
+  // Project-level value summary
+  headlineValue?: string
+  aggregateExpectedHoursSavedPerMonth?: number
+  primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
 }
 
 export interface UserExpectations {
@@ -38,6 +42,19 @@ export interface Requirement {
   status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
   stakeholder?: string
   value?: string
+  // Value model fields (M0 - required)
+  unitOfWork?: string
+  volumePerMonth?: number
+  baselineMinutesPerUnit?: number | { best: number; likely: number; worst: number }
+  timeSavedMinutesPerUnit?: { best: number; likely: number; worst: number }
+  valueType?: Array<'time' | 'quality' | 'risk' | 'enablement'>
+  // Value model fields (M1/M2 - optional)
+  reworkRate?: number
+  errorCost?: string | number
+  oversightMinutesPerUnit?: number
+  confidenceUser?: 'low' | 'medium' | 'high'
+  confidenceDev?: 'low' | 'medium' | 'high'
+  assumptions?: string
 }
 
 export interface Stakeholder {

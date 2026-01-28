@@ -14,6 +14,15 @@ function generateId(prefix: string, index?: number): string {
 }
 
 /**
+ * Validate date string - returns true if date is valid (year between 1000 and 3000)
+ */
+function isValidDate(dateStr: string | undefined): boolean {
+  if (!dateStr) return false
+  const year = parseInt(dateStr.split('-')[0], 10)
+  return !isNaN(year) && year >= 1000 && year <= 3000
+}
+
+/**
  * Generate RO-Crate JSON-LD from canvas data
  */
 export function generateROCrate(data: CanvasData): ROCrateJSONLD {
@@ -22,7 +31,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   // 1. RO-Crate Metadata File Descriptor
   graph.push({
     '@id': 'ro-crate-metadata.json',
-    '@type': 'CreativeWork',
+    '@type': 'schema:CreativeWork',
     conformsTo: {
       '@id': 'https://w3id.org/ro/crate/1.1',
     },
@@ -34,7 +43,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   // 2. Root Dataset
   const rootDataset: ROCrateEntity = {
     '@id': './',
-    '@type': 'Dataset',
+    '@type': 'dcat:Dataset',
     name: data.project.title || 'Agentic Automation Project',
     description: data.project.description,
   }
@@ -49,7 +58,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   // 3. Project Entity (Schema.org + FRAPO)
   const projectEntity: ROCrateEntity = {
     '@id': projectId,
-    '@type': ['Project', 'ResearchProject'],
+    '@type': ['schema:Project', 'schema:ResearchProject'],
     name: data.project.title,
     description: data.project.description,
   }
@@ -64,13 +73,23 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     projectEntity.endDate = data.project.endDate
   }
   if (data.project.domain && data.project.domain.length > 0) {
-    projectEntity.domain = data.project.domain
+    projectEntity['aac:domain'] = data.project.domain
   }
   if (data.project.keywords && data.project.keywords.length > 0) {
     projectEntity.keywords = data.project.keywords
   }
   if (data.project.projectId) {
     projectEntity.identifier = data.project.projectId
+  }
+  // Project-level value summary
+  if (data.project.headlineValue) {
+    projectEntity['aac:headlineValue'] = data.project.headlineValue
+  }
+  if (data.project.aggregateExpectedHoursSavedPerMonth !== undefined) {
+    projectEntity['aac:aggregateExpectedHoursSavedPerMonth'] = data.project.aggregateExpectedHoursSavedPerMonth
+  }
+  if (data.project.primaryValueDriver) {
+    projectEntity['aac:primaryValueDriver'] = data.project.primaryValueDriver
   }
 
   graph.push(projectEntity)
@@ -88,7 +107,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
         description: req.userStory || req.description,
       })
 
-      // Add step entity
+      // Add step entity with value model
       const stepEntity: ROCrateEntity = {
         '@id': stepId,
         '@type': 'p-plan:Step',
@@ -103,12 +122,47 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       if (req.status) {
         stepEntity.status = req.status
       }
+      // Value model fields (M0 - required)
+      if (req.unitOfWork) {
+        stepEntity['aac:unitOfWork'] = req.unitOfWork
+      }
+      if (req.volumePerMonth !== undefined) {
+        stepEntity['aac:volumePerMonth'] = req.volumePerMonth
+      }
+      if (req.baselineMinutesPerUnit !== undefined) {
+        stepEntity['aac:baselineMinutesPerUnit'] = req.baselineMinutesPerUnit
+      }
+      if (req.timeSavedMinutesPerUnit) {
+        stepEntity['aac:timeSavedMinutesPerUnit'] = req.timeSavedMinutesPerUnit
+      }
+      if (req.valueType && req.valueType.length > 0) {
+        stepEntity['aac:valueType'] = req.valueType
+      }
+      // Value model fields (M1/M2 - optional)
+      if (req.reworkRate !== undefined) {
+        stepEntity['aac:reworkRate'] = req.reworkRate
+      }
+      if (req.errorCost !== undefined) {
+        stepEntity['aac:errorCost'] = req.errorCost
+      }
+      if (req.oversightMinutesPerUnit !== undefined) {
+        stepEntity['aac:oversightMinutesPerUnit'] = req.oversightMinutesPerUnit
+      }
+      if (req.confidenceUser) {
+        stepEntity['aac:confidenceUser'] = req.confidenceUser
+      }
+      if (req.confidenceDev) {
+        stepEntity['aac:confidenceDev'] = req.confidenceDev
+      }
+      if (req.assumptions) {
+        stepEntity['aac:assumptions'] = req.assumptions
+      }
       graph.push(stepEntity)
     })
 
     const planEntity: ROCrateEntity = {
       '@id': planId,
-      '@type': ['Plan', 'p-plan:Plan'],
+      '@type': ['prov:Plan', 'p-plan:Plan'],
       name: 'User Expectations Plan',
       description: 'User requirements and expectations for the automation',
       'p-plan:hasStep': planSteps,
@@ -127,7 +181,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       
       const stakeholderEntity: ROCrateEntity = {
         '@id': stakeholderId,
-        '@type': 'Person',
+        '@type': 'schema:Person',
         name: stakeholder.name,
       }
       if (stakeholder.role) {
@@ -152,7 +206,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
       const activityEntity: ROCrateEntity = {
         '@id': activityId,
-        '@type': 'Activity',
+        '@type': 'prov:Activity',
         name: stage.name,
       }
 
@@ -171,7 +225,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
           // Add agent entity
           const agentEntity: ROCrateEntity = {
             '@id': agentId,
-            '@type': agent.type === 'person' ? 'Person' : agent.type === 'organization' ? 'Organization' : 'SoftwareApplication',
+            '@type': agent.type === 'person' ? 'schema:Person' : agent.type === 'organization' ? 'schema:Organization' : 'schema:SoftwareApplication',
             name: agent.name,
           }
           if (agent.role) {
@@ -193,12 +247,13 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
           
           const milestoneEntity: ROCrateEntity = {
             '@id': milestoneId,
-            '@type': 'Milestone',
+            '@type': 'schema:CreativeWork',
             name: typeof milestone === 'string' ? milestone : milestone.description,
           }
           if (typeof milestone === 'object' && milestone.kpi) {
             milestoneEntity.description = milestone.kpi
           }
+          milestoneEntity['aac:milestoneType'] = 'milestone'
           graph.push(milestoneEntity)
         })
         if (milestoneRefs.length > 0) {
@@ -208,7 +263,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
       // Add compliance standards
       if (stage.complianceStandards && stage.complianceStandards.length > 0) {
-        activityEntity.complianceStandard = stage.complianceStandards
+        activityEntity['aac:complianceStandard'] = stage.complianceStandards
       }
 
       // Link to previous stage
@@ -230,28 +285,28 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
       const datasetEntity: ROCrateEntity = {
         '@id': datasetId,
-        '@type': 'Dataset',
+        '@type': 'dcat:Dataset',
         name: dataset.title,
         description: dataset.description,
       }
 
       if (dataset.format) {
-        datasetEntity.format = dataset.format
+        datasetEntity['schema:encodingFormat'] = dataset.format
       }
       if (dataset.license) {
         datasetEntity.license = { '@id': dataset.license }
       }
       if (dataset.accessRights) {
-        datasetEntity.accessRights = dataset.accessRights
+        datasetEntity['dct:accessRights'] = dataset.accessRights
       }
       if (dataset.pid) {
         datasetEntity.identifier = dataset.pid
       }
       if (dataset.duoTerms && dataset.duoTerms.length > 0) {
-        datasetEntity.duoTerms = dataset.duoTerms.map(term => ({ '@id': term }))
+        datasetEntity['dct:conformsTo'] = dataset.duoTerms.map(term => ({ '@id': term }))
       }
       if (dataset.containsPersonalData !== undefined) {
-        datasetEntity.containsPersonalData = dataset.containsPersonalData
+        datasetEntity['aac:containsPersonalData'] = dataset.containsPersonalData
       }
 
       graph.push(datasetEntity)
@@ -268,12 +323,12 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
         const outcomeEntity: ROCrateEntity = {
           '@id': outcomeId,
-          '@type': deliverable.type || 'CreativeWork',
+          '@type': deliverable.type ? `schema:${deliverable.type}` : 'schema:CreativeWork',
           name: deliverable.title,
           description: deliverable.description,
         }
 
-        if (deliverable.date) {
+        if (deliverable.date && isValidDate(deliverable.date)) {
           outcomeEntity.datePublished = deliverable.date
         }
         if (deliverable.pid) {
@@ -297,7 +352,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
       const pubEntity: ROCrateEntity = {
         '@id': pubId,
-        '@type': 'ScholarlyArticle',
+        '@type': 'schema:ScholarlyArticle',
         name: pub.title,
       }
 
@@ -305,9 +360,9 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
         pubEntity.identifier = pub.doi
       }
       if (pub.authors && pub.authors.length > 0) {
-        pubEntity.author = pub.authors.map(name => ({ '@type': 'Person', name }))
+        pubEntity.author = pub.authors.map(name => ({ '@type': 'schema:Person', name }))
       }
-      if (pub.date) {
+      if (pub.date && isValidDate(pub.date)) {
         pubEntity.datePublished = pub.date
       }
 
@@ -323,12 +378,13 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
       const evalEntity: ROCrateEntity = {
         '@id': evalId,
-        '@type': 'Evaluation',
+        '@type': 'schema:CreativeWork',
         name: evaluation.type,
         description: evaluation.results,
+        'aac:evaluationType': evaluation.type,
       }
 
-      if (evaluation.date) {
+      if (evaluation.date && isValidDate(evaluation.date)) {
         evalEntity.datePublished = evaluation.date
       }
 
@@ -336,13 +392,42 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     })
   }
 
+  // Add developer-feasibility.json as first-class file entity if present
+  if (data.developerFeasibility && Object.keys(data.developerFeasibility).length > 0) {
+    const feasibilityFileId = 'developer-feasibility.json'
+    hasPart.push({ '@id': feasibilityFileId })
+    
+    // Add file entity to graph
+    const feasibilityFileEntity: ROCrateEntity = {
+      '@id': feasibilityFileId,
+      '@type': 'schema:File',
+      name: 'Developer Feasibility Assessment',
+      description: 'Technical feasibility assessment including TRL levels, risk assessment, and technology choices',
+      'schema:encodingFormat': 'application/json',
+    }
+    graph.push(feasibilityFileEntity)
+  }
+
   // Update root dataset hasPart
   if (hasPart.length > 0) {
     rootDataset.hasPart = hasPart
   }
 
+  // Extended @context with all required prefixes
+  const context = [
+    'https://w3id.org/ro/crate/1.1/context',
+    {
+      schema: 'https://schema.org/',
+      prov: 'http://www.w3.org/ns/prov#',
+      'p-plan': 'http://purl.org/net/p-plan#',
+      dct: 'http://purl.org/dc/terms/',
+      dcat: 'http://www.w3.org/ns/dcat#',
+      aac: 'https://github.com/slolab/agentic-automation-canvas/schema/',
+    },
+  ]
+
   return {
-    '@context': 'https://w3id.org/ro/crate/1.1/context',
+    '@context': context,
     '@graph': graph,
   }
 }
