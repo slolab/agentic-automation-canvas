@@ -149,14 +149,14 @@
         <FormField
           id="model-name"
           label="Model Name"
-          help-text="Specific model name or identifier (e.g., 'GPT-4', 'Llama 3.1', 'Claude Sonnet')"
+          help-text="Specific model name or identifier (e.g., 'GPT-5', 'Claude 4.5', 'Gemini 2.5', 'Llama 3.2')"
         >
           <input
             id="model-name"
             v-model="localData.modelName"
             type="text"
             class="form-input"
-            placeholder="e.g., GPT-4, Llama 3.1"
+            placeholder="e.g., GPT-5, Claude 4.5, Gemini 2.5"
             @blur="update"
           />
         </FormField>
