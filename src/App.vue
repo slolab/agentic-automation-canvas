@@ -6,7 +6,7 @@
           <div>
             <h1 class="text-2xl font-bold text-gray-900">Agentic Automation Canvas</h1>
             <p class="text-sm text-gray-600 mt-1">
-              Capture project metadata and generate RO-Crate packages
+              Stop guessing—structured guidance for expectations, progress, and governance
             </p>
           </div>
           <div class="flex items-center gap-3">
