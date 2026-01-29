@@ -3,7 +3,7 @@
   <button
     v-if="!isOpen"
     @click="isOpen = true"
-    class="fixed bottom-6 right-6 bg-primary-600 text-white rounded-full p-4 shadow-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors z-50"
+    class="fixed bottom-[66px] right-6 bg-primary-600 text-white rounded-full p-4 shadow-lg hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors z-50"
     aria-label="Open assistant"
   >
     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -14,7 +14,8 @@
   <!-- Bot panel -->
   <div
     v-if="isOpen"
-    class="fixed bottom-6 right-6 w-96 h-[600px] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200"
+    class="fixed bottom-[66px] right-6 w-96 max-h-[calc(100vh-120px)] bg-white rounded-lg shadow-2xl flex flex-col z-50 border border-gray-200"
+    style="height: min(600px, calc(100vh - 120px));"
   >
     <!-- Header -->
     <div class="flex items-center justify-between p-4 border-b border-gray-200 bg-primary-600 text-white rounded-t-lg">
