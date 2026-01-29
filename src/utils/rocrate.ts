@@ -797,7 +797,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       '@id': feasibilityFileId,
       '@type': 'schema:File',
       name: 'Developer Feasibility Assessment',
-      description: 'Technical feasibility assessment including TRL levels, risk assessment, and technology choices',
+      description: 'Technical feasibility assessment including Technology Readiness Level (TRL), risk assessment, and technology choices',
       'schema:encodingFormat': 'application/json',
     }
     graph.push(feasibilityFileEntity)

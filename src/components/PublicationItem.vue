@@ -58,6 +58,7 @@
       <FormField
         :id="`pub-title-${index}`"
         label="Title"
+        tooltip="The title of the publication. Publications are represented using Schema.org ScholarlyArticle type and document papers, articles, or other publications related to your project."
         required
       >
         <input
@@ -74,6 +75,7 @@
         :id="`pub-doi-${index}`"
         label="DOI"
         help-text="Digital Object Identifier (DOI) as a full URL (e.g., https://doi.org/10.1234/example). Publications use <a href='https://schema.org/ScholarlyArticle' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org ScholarlyArticle type'>schema:ScholarlyArticle</a> type."
+        tooltip="The DOI (Digital Object Identifier) of the publication as a full URL. Format: https://doi.org/10.1234/example. If the publication doesn't have a DOI yet, leave this blank. DOIs provide stable references to publications and enable proper citation tracking."
       >
         <input
           :id="`pub-doi-${index}`"
@@ -89,6 +91,7 @@
         :id="`pub-authors-${index}`"
         label="Authors"
         help-text="Comma-separated list of authors"
+        tooltip="List all authors separated by commas. Format: 'Last, First, Last, First'. Example: 'Smith, John, Doe, Jane'. This helps attribute credit and track contributions."
       >
         <input
           :id="`pub-authors-${index}`"
@@ -102,6 +105,7 @@
       <FormField
         :id="`pub-date-${index}`"
         label="Publication Date"
+        tooltip="The date when the publication was published or accepted. This helps track when research results were made available."
       >
         <input
           :id="`pub-date-${index}`"

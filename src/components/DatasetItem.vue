@@ -70,6 +70,7 @@
       <FormField
         :id="`dataset-title-${index}`"
         label="Dataset Title"
+        tooltip="A clear, descriptive title for the dataset. Datasets are represented using DCAT (Data Catalog Vocabulary) Dataset class. The title helps identify the dataset and appears in RO-Crate metadata. Example: 'Patient Records Database' or 'Document Classification Training Data'."
         required
       >
         <input
@@ -85,6 +86,7 @@
       <FormField
         :id="`dataset-desc-${index}`"
         label="Description"
+        tooltip="A detailed description of the dataset including its contents, purpose, and how it's used in the automation project. Describe what data is included, its structure, and any relevant context. This helps others understand the dataset and its role in the project."
       >
         <textarea
           :id="`dataset-desc-${index}`"
@@ -100,6 +102,7 @@
           :id="`dataset-format-${index}`"
           label="Format"
           help-text="Data format or MIME type (e.g., JSON, CSV, Parquet, application/json). Maps to <a href='https://schema.org/encodingFormat' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org encodingFormat property'>schema:encodingFormat</a>."
+          tooltip="The data format or MIME type. Examples: JSON, CSV, Parquet, application/json, text/csv, application/x-parquet. You can use either file extensions or full MIME types. This helps others understand how to work with the dataset."
         >
           <input
             :id="`dataset-format-${index}`"
@@ -114,6 +117,7 @@
           :id="`dataset-access-${index}`"
           label="Access Rights"
           help-text="Access rights classification. Maps to <a href='http://purl.org/dc/terms/accessRights' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Dublin Core Terms accessRights'>dct:accessRights</a>. Options: Open (publicly accessible), Restricted (requires approval), Confidential (limited access), Highly Restricted (very limited access)."
+          tooltip="Classify access rights: <strong>Open</strong> - Publicly accessible, no restrictions; <strong>Restricted</strong> - Requires approval or authentication; <strong>Confidential</strong> - Limited access, sensitive data; <strong>Highly Restricted</strong> - Very limited access, highly sensitive. This helps ensure proper data governance and compliance."
           required
         >
           <select
@@ -135,6 +139,7 @@
         :id="`dataset-license-${index}`"
         label="License (URI)"
         help-text="License URI (e.g., https://creativecommons.org/licenses/by/4.0/). Maps to <a href='http://purl.org/dc/terms/license' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Dublin Core Terms license property'>dct:license</a>."
+        tooltip="The license URI that specifies how the dataset can be used. Common licenses: CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/), CC0 (https://creativecommons.org/publicdomain/zero/1.0/), or custom licenses. This clarifies usage rights and helps ensure compliance with data licensing requirements."
       >
         <input
           :id="`dataset-license-${index}`"
@@ -150,6 +155,7 @@
         :id="`dataset-pid-${index}`"
         label="Persistent Identifier (PID/DOI)"
         help-text="DOI or other persistent identifier"
+        tooltip="A persistent identifier (PID) or Digital Object Identifier (DOI) for the dataset. Use a DOI if published (e.g., https://doi.org/10.1234/dataset), or another PID for internal datasets. PIDs enable stable references and help track dataset versions and citations."
       >
         <input
           :id="`dataset-pid-${index}`"
@@ -162,8 +168,12 @@
       </FormField>
 
       <div>
-        <label class="form-label mb-2">
+        <label class="form-label mb-2 flex items-center gap-2">
           <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DUO (Data Use Ontology) - machine-readable data use permissions">DUO Terms</a>
+          <InfoTooltip
+            content="DUO (Data Use Ontology) terms specify machine-readable data use permissions. Common terms: DUO:0000006 (Health/Medical/Biomedical Research Only), DUO:0000012 (No Commercial Use), DUO:0000017 (Publication Required), DUO:0000027 (Geographical Restriction). DUO terms enable automated compliance checking and help ensure data use restrictions are respected. Add the full URI (e.g., http://purl.obolibrary.org/obo/DUO_0000006)."
+            position="top"
+          />
         </label>
         <p class="text-xs text-gray-500 mb-2">
           <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline">Data Use Ontology</a> terms specify machine-readable data use permissions. Common terms include: DUO:0000006 (Health/Medical/Biomedical Research Only), DUO:0000012 (No Commercial Use). Add one URI per entry.
@@ -219,6 +229,7 @@
         :id="`dataset-personal-data-${index}`"
         label="Contains Personal Data"
         help-text="If checked, access restriction text is required for compliance"
+        tooltip="Check if the dataset contains personal data (data that can identify individuals). This triggers additional compliance requirements (e.g., GDPR, HIPAA). If checked, ensure proper access restrictions, DUO terms, and compliance standards are documented. Personal data requires special handling and protection."
       >
         <label class="form-checkbox-field">
           <input
@@ -238,6 +249,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import FormField from './FormField.vue'
+import InfoTooltip from './InfoTooltip.vue'
 import type { Dataset } from '@/types/canvas'
 
 interface Props {

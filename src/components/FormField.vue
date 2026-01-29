@@ -3,15 +3,21 @@
     <label
       v-if="label"
       :for="id"
-      class="form-label"
+      class="form-label flex items-center gap-2"
       :class="{ 'text-red-600': error }"
     >
-      {{ label }}
+      <span>{{ label }}</span>
+      <InfoTooltip
+        v-if="tooltip"
+        :content="tooltip"
+        :title="tooltipTitle"
+        position="top"
+      />
       <span v-if="required" class="text-red-500 ml-1" aria-label="required">*</span>
     </label>
     
     <div class="mt-1">
-      <slot :id="id" :error="error" :aria-describedby="helpText ? `${id}-help` : undefined" />
+      <slot :id="id" :error="error" :aria-describedby="helpText || tooltip ? `${id}-help` : undefined" />
     </div>
     
     <p
@@ -33,10 +39,14 @@
 </template>
 
 <script setup lang="ts">
+import InfoTooltip from './InfoTooltip.vue'
+
 interface Props {
   id: string
   label?: string
   helpText?: string
+  tooltip?: string
+  tooltipTitle?: string
   error?: string
   required?: boolean
 }

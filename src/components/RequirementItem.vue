@@ -102,6 +102,7 @@
       <FormField
         :id="`req-desc-${index}`"
         label="Description"
+        tooltip="A clear description of what this automation task does. Tasks are represented as P-Plan Steps (extending PROV-O Plan) and should describe a specific automation activity. Example: 'Automatically classify incoming documents by type and route to appropriate team members'."
         required
       >
         <textarea
@@ -117,6 +118,7 @@
         :id="`req-story-${index}`"
         label="User Story"
         help-text="As a [user], I want [feature] so that [benefit]"
+        tooltip="Write a user story in the format: 'As a [user type], I want [feature/action] so that [benefit/value]'. Example: 'As a data entry manager, I want documents automatically classified so that I can reduce manual sorting time by 80%'. This helps capture stakeholder values and requirements."
       >
         <input
           :id="`req-story-${index}`"
@@ -131,6 +133,7 @@
         <FormField
           :id="`req-priority-${index}`"
           label="Priority"
+          tooltip="Set the priority level for this task: <strong>Low</strong> - Nice to have; <strong>Medium</strong> - Important; <strong>High</strong> - Critical for success; <strong>Critical</strong> - Blocking or essential. Priority helps prioritize development and track which tasks deliver the most value."
         >
           <select
             :id="`req-priority-${index}`"
@@ -149,6 +152,7 @@
         <FormField
           :id="`req-status-${index}`"
           label="Status"
+          tooltip="Track the current status: <strong>Planned</strong> - Not yet started; <strong>In Progress</strong> - Currently being developed; <strong>Completed</strong> - Finished and deployed; <strong>Cancelled</strong> - No longer pursued. Status helps track progress through governance stages."
         >
           <select
             :id="`req-status-${index}`"
@@ -173,6 +177,7 @@
           :id="`req-unit-${index}`"
           label="Unit of Work"
           help-text="The specific work item being automated (e.g., 'one document', 'one customer inquiry', 'one analysis run'). This defines what one 'unit' means for volume and time calculations."
+          tooltip="Define what one 'unit' of work means for this task. This is critical for calculating total time savings. Examples: 'one document', 'one customer inquiry', 'one staging decision', 'one analysis run'. Be specific - 'one document' is better than 'document processing'. This unit is used with Volume Per Month to calculate total savings."
           required
         >
           <input
@@ -189,6 +194,7 @@
           :id="`req-unit-category-${index}`"
           label="Unit Category"
           help-text="Standardized category of the work unit. Select the type that best matches your unit of work (case, document, record, message, analysis run, meeting, or other)."
+          tooltip="Select the standardized category that best matches your unit: <strong>Case</strong> - A case file or case record; <strong>Document</strong> - A document or file; <strong>Record</strong> - A data record or entry; <strong>Message</strong> - An email, message, or communication; <strong>Analysis Run</strong> - An analysis or computation; <strong>Meeting</strong> - A meeting or session; <strong>Other</strong> - Something else. Standardization enables comparison across projects."
           required
         >
           <select
@@ -212,6 +218,7 @@
           :id="`req-volume-${index}`"
           label="Volume Per Month"
           help-text="Average number of units processed per month. Used to calculate total time savings (volume × time saved per unit)."
+          tooltip="Enter the average number of units processed per month. This is multiplied by 'Time Saved Per Unit' to calculate total monthly time savings. Example: If you process 100 documents per month and save 5 minutes per document, total savings = 100 × 5 = 500 minutes/month. Use realistic averages - consider seasonal variations."
           required
         >
           <input
@@ -228,6 +235,7 @@
           :id="`req-baseline-${index}`"
           label="Baseline Minutes Per Unit"
           help-text="Current time spent per unit before automation. Enter a single number (average) or use a 3-point estimate (best/likely/worst) if there's significant variation."
+          tooltip="Enter how many minutes it currently takes to process one unit manually (before automation). This is your baseline. If processing time varies significantly, you can use a 3-point estimate (best/likely/worst) by entering ranges. Example: If documents take 10-15 minutes on average, enter 12.5. This baseline is compared to time saved to show improvement."
           required
         >
           <input
@@ -246,6 +254,7 @@
             :id="`req-saved-best-${index}`"
             label="Time Saved (Best)"
             help-text="Best case scenario: maximum minutes saved per unit (optimistic estimate)"
+            tooltip="Enter the best-case scenario: the maximum minutes you could save per unit in ideal conditions. This is your optimistic estimate. Use this when there's significant uncertainty and you want to capture the full range. Example: If automation could save up to 8 minutes per document in the best case, enter 8."
           >
             <input
               :id="`req-saved-best-${index}`"
@@ -266,6 +275,7 @@
             :id="`req-saved-likely-${index}`"
             label="Time Saved (Likely)"
             help-text="Most likely scenario: expected minutes saved per unit (realistic estimate). This is the primary value used for calculations."
+            tooltip="Enter your realistic estimate: the most likely minutes saved per unit. This is the primary value used for all calculations (total time saved, dashboard metrics, etc.). Be realistic - this should be what you actually expect, not your best-case scenario. Example: If you realistically expect to save 5 minutes per document, enter 5."
             required
           >
             <input
@@ -287,6 +297,7 @@
             :id="`req-saved-worst-${index}`"
             label="Time Saved (Worst)"
             help-text="Worst case scenario: minimum minutes saved per unit (conservative estimate)"
+            tooltip="Enter the worst-case scenario: the minimum minutes you would save per unit even if things don't go perfectly. This is your conservative estimate. Use this to understand the lower bound of value. Example: If automation would save at least 3 minutes per document even in worst case, enter 3."
           >
             <input
               :id="`req-saved-worst-${index}`"
@@ -309,6 +320,7 @@
           :id="`req-value-type-${index}`"
           label="Value Type"
           help-text="Select all value types this task delivers: Time (saves time), Quality (improves accuracy/consistency), Risk (reduces errors/compliance issues), Enablement (enables new capabilities)"
+          tooltip="Select all value types this task delivers (you can select multiple): <strong>Time</strong> - Saves time through automation; <strong>Quality</strong> - Improves accuracy, consistency, or outcomes; <strong>Risk</strong> - Reduces errors, compliance issues, or operational risks; <strong>Enablement</strong> - Enables new capabilities or workflows. Tasks often deliver multiple types of value."
         >
           <div class="flex flex-wrap gap-3">
             <label class="form-checkbox-field">
@@ -360,6 +372,7 @@
             :id="`req-rework-${index}`"
             label="Rework Rate (%)"
             help-text="Percentage of units requiring rework due to errors or quality issues. Used to calculate quality impact."
+            tooltip="Enter the percentage of units that currently require rework due to errors or quality issues. This helps quantify quality improvements. Example: If 15% of documents need rework due to classification errors, enter 15. After automation, this should decrease, showing quality value."
           >
             <input
               :id="`req-rework-${index}`"
@@ -376,6 +389,7 @@
             :id="`req-error-cost-${index}`"
             label="Error Cost"
             help-text="Estimated cost or impact of errors (can be a number or descriptive text). Used to quantify risk reduction value."
+            tooltip="Estimate the cost or impact of errors. This can be a number (e.g., '$500 per error') or descriptive text (e.g., 'Compliance violation risk'). This helps quantify the risk reduction value of automation. Example: 'Each misclassified document costs $50 in rework and delays' or 'High risk of regulatory non-compliance'."
           >
             <input
               :id="`req-error-cost-${index}`"
@@ -390,6 +404,7 @@
             :id="`req-oversight-${index}`"
             label="Human Oversight Minutes Per Unit"
             help-text="Time required for human review/oversight per unit. This is subtracted from time saved to calculate net time savings. If automation requires no oversight, enter 0."
+            tooltip="Enter the time required for human review or oversight per unit. This is subtracted from time saved to calculate net time savings. If automation requires no human oversight, enter 0. Example: If each automated document needs 2 minutes of human review, enter 2. Net savings = Time Saved - Oversight Time. This shows realistic time savings after accounting for oversight."
           >
             <input
               :id="`req-oversight-${index}`"
@@ -405,6 +420,7 @@
             :id="`req-confidence-user-${index}`"
             label="User Confidence"
             help-text="User's confidence level in the time savings estimates (low/medium/high)"
+            tooltip="The user's/stakeholder's confidence in the time savings estimates: <strong>Low</strong> - Estimates are uncertain or preliminary; <strong>Medium</strong> - Reasonable confidence based on experience; <strong>High</strong> - High confidence based on data or pilot testing. This helps assess estimate reliability."
           >
             <select
               :id="`req-confidence-user-${index}`"
@@ -423,6 +439,7 @@
             :id="`req-confidence-dev-${index}`"
             label="Developer Confidence"
             help-text="Developer's confidence level in technical feasibility and implementation estimates (low/medium/high)"
+            tooltip="The developer's confidence in technical feasibility and implementation estimates: <strong>Low</strong> - Uncertain feasibility or high technical risk; <strong>Medium</strong> - Feasible but may have challenges; <strong>High</strong> - High confidence in implementation. This helps assess technical risk and feasibility."
           >
             <select
               :id="`req-confidence-dev-${index}`"
@@ -442,6 +459,7 @@
           :id="`req-assumptions-${index}`"
           label="Assumptions"
           help-text="Key assumptions underlying the time savings estimates (e.g., document formats, complexity levels, edge cases)"
+          tooltip="Document key assumptions that underlie your time savings estimates. This is critical for validation and helps others understand the context. Examples: 'Assumes standard document formats', 'Based on average complexity documents', 'Does not account for edge cases requiring manual review', 'Assumes 90% automation success rate'. These assumptions help validate estimates later."
         >
           <textarea
             :id="`req-assumptions-${index}`"

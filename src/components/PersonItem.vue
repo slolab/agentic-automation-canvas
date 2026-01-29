@@ -45,6 +45,7 @@
         :id="`person-id-${index}`"
         label="Person ID"
         help-text="Unique identifier for this person (e.g., person-0, person-1). Used for referencing in stakeholders and agents."
+        tooltip="A unique identifier for this person (e.g., person-0, person-1). This ID is used to reference the person in stakeholders and governance agents. Keep IDs simple and consistent. One person entity per human ensures correct role aggregation across the project."
       >
         <input
           :id="`person-id-${index}`"
@@ -58,6 +59,7 @@
       <FormField
         :id="`person-name-${index}`"
         label="Name"
+        tooltip="The person's full name. This is required to identify the person. Use the same name format consistently across the project."
         required
       >
         <input
@@ -74,6 +76,7 @@
         :id="`person-affiliation-${index}`"
         label="Affiliation"
         help-text="Organization or department (e.g., 'IT Department', 'Operations'). Helps distinguish persons with the same name."
+        tooltip="The person's organization or department. Examples: 'IT Department', 'Operations', 'Research Lab', 'Compliance Office'. This helps distinguish persons with the same name and provides context about their role in the organization."
       >
         <input
           :id="`person-affiliation-${index}`"
@@ -89,6 +92,7 @@
         :id="`person-orcid-${index}`"
         label="ORCID"
         help-text="ORCID identifier (e.g., https://orcid.org/0000-0000-0000-0001). Provides a stable identifier for cross-project person linking."
+        tooltip="An ORCID (Open Researcher and Contributor ID) provides a persistent identifier for researchers. Format: https://orcid.org/0000-0000-0000-0001. Using ORCID enables stable cross-project person linking and helps maintain provenance across different projects and systems."
       >
         <input
           :id="`person-orcid-${index}`"

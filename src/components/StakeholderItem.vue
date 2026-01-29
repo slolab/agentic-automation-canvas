@@ -50,6 +50,7 @@
         :id="`stakeholder-person-${index}`"
         label="Person"
         help-text="Select a person from the Persons section, or create a new person there first."
+        tooltip="Select a person who has been added in the 'Persons' section. Stakeholders represent people with an interest in the project outcomes. If the person doesn't exist yet, go to the Persons section first to add them, then return here to assign their stakeholder role."
         required
       >
         <select
@@ -78,6 +79,7 @@
         :id="`stakeholder-role-${index}`"
         label="Role"
         help-text="The role this person has as a stakeholder (e.g., 'Data Entry Manager', 'IT Lead')"
+        tooltip="Describe the role this person has as a stakeholder in the project. This helps understand their perspective and interests. Examples: 'Data Entry Manager', 'IT Lead', 'End User Representative', 'Compliance Officer'. The role explains why this person is a stakeholder."
       >
         <input
           :id="`stakeholder-role-${index}`"
@@ -93,6 +95,7 @@
         :id="`stakeholder-role-context-${index}`"
         label="Role Context"
         help-text="Optional context for this stakeholder role (e.g., 'Design phase requirements gathering')"
+        tooltip="Optional context that clarifies when or how this stakeholder role applies. Examples: 'Design phase requirements gathering', 'Validation stage user testing', 'Deployment phase training'. This helps track stakeholder involvement across project phases."
       >
         <input
           :id="`stakeholder-role-context-${index}`"

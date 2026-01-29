@@ -1,7 +1,13 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="section-header">Persons</h2>
+      <h2 class="section-header flex items-center gap-2">
+        <span>Persons</span>
+        <InfoTooltip
+          content="<strong>What goes here:</strong> All people involved in the project. Create one person entry per human, then reference them in Stakeholders and Governance Agents sections.<br/><br/><strong>Why one person per human:</strong> This ensures correct role aggregation - the same person can be both a stakeholder and an agent in different stages, and their roles are properly tracked. Use Person ID to reference persons elsewhere.<br/><br/><strong>Workflow tip:</strong> Add persons first, then assign them roles in other sections. Use ORCID for researchers to enable cross-project linking."
+          position="top"
+        />
+      </h2>
       <p class="section-description">
         Manage all persons involved in the project. Persons can be assigned roles as stakeholders or agents in governance stages. One person entity per human ensures correct role aggregation and provenance.
       </p>
@@ -78,6 +84,7 @@
 import { ref, watch, nextTick, computed } from 'vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import PersonItem from '../PersonItem.vue'
+import InfoTooltip from '../InfoTooltip.vue'
 import type { Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 

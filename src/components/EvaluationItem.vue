@@ -45,6 +45,7 @@
         :id="`eval-type-${index}`"
         label="Evaluation Type"
         help-text="Type of evaluation (e.g., Performance Evaluation, User Study, Compliance Audit). Evaluations link to governance stages via <a href='https://www.w3.org/TR/prov-o/#wasGeneratedBy' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='PROV-O wasGeneratedBy property'>PROV-O wasGeneratedBy</a>."
+        tooltip="The type of evaluation performed. Examples: Performance Evaluation, User Study, Usability Test, Compliance Audit, Security Assessment, Accuracy Test. Evaluations demonstrate project success and link to governance stages via PROV-O wasGeneratedBy to show when they occurred."
         required
       >
         <input
@@ -61,6 +62,7 @@
       <FormField
         :id="`eval-date-${index}`"
         label="Date"
+        tooltip="The date when the evaluation was conducted. This helps track when evaluations occurred relative to project stages."
       >
         <input
           :id="`eval-date-${index}`"
@@ -74,6 +76,7 @@
       <FormField
         :id="`eval-results-${index}`"
         label="Results"
+        tooltip="A summary of the evaluation results. Include key findings, metrics, and outcomes. This demonstrates project success and helps validate that the automation meets its goals. Examples: '95% accuracy achieved', 'User satisfaction score: 4.5/5', 'Compliance requirements met'."
       >
         <textarea
           :id="`eval-results-${index}`"

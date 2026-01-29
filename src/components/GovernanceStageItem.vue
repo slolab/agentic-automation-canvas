@@ -64,6 +64,7 @@
       <FormField
         :id="`stage-name-${index}`"
         label="Stage Name"
+        tooltip="Select the governance stage type: <strong>Design</strong> - Planning and requirements; <strong>Development</strong> - Building the system; <strong>Validation</strong> - Testing and evaluation; <strong>Deployment</strong> - Rolling out to users; <strong>Monitoring</strong> - Ongoing operation. Stages are represented as PROV-O Activities and link sequentially to show project workflow."
         required
       >
         <select
@@ -85,6 +86,7 @@
         <FormField
           :id="`stage-start-${index}`"
           label="Start Date"
+          tooltip="The start date for this governance stage. Stages should link sequentially - the end date of one stage typically matches the start date of the next. This helps create a clear project timeline."
         >
           <input
             :id="`stage-start-${index}`"
@@ -98,6 +100,7 @@
         <FormField
           :id="`stage-end-${index}`"
           label="End Date"
+          tooltip="The end date for this governance stage. This should typically align with the start date of the next stage to create a continuous workflow. Leave blank if the stage is ongoing."
         >
           <input
             :id="`stage-end-${index}`"
@@ -111,8 +114,12 @@
       </div>
 
       <div>
-        <label class="form-label mb-2">
-          Agents
+        <label class="form-label mb-2 flex items-center gap-2">
+          <span>Agents</span>
+          <InfoTooltip
+            content="Agents are entities responsible for activities in this stage. Types: <strong>Person</strong> - A human (select from Persons section); <strong>Organization</strong> - An organization or team; <strong>Software</strong> - A software system or tool. Agents are represented as PROV-O Agents and help track who/what is responsible for each stage. Add agents to show accountability and responsibility."
+            position="top"
+          />
           <span class="text-xs text-gray-500 font-normal ml-2">
             (<a href="https://www.w3.org/TR/prov-o/#Agent" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Agent type">PROV-O Agents</a>)
           </span>
@@ -227,8 +234,12 @@
       </div>
 
       <div>
-        <label class="form-label mb-2">
-          Milestones
+        <label class="form-label mb-2 flex items-center gap-2">
+          <span>Milestones</span>
+          <InfoTooltip
+            content="Key deliverables or checkpoints for this stage. Milestones help track progress and define success criteria. Each milestone can have a description and an optional KPI (Key Performance Indicator) that measures completion. Examples: 'Prototype completed', 'User testing finished', 'Deployment to production'. KPIs help quantify milestone achievement."
+            position="top"
+          />
           <span class="text-xs text-gray-500 font-normal ml-2">
             (Key deliverables or checkpoints for this stage)
           </span>
@@ -292,7 +303,13 @@
       </div>
 
       <div>
-        <label class="form-label mb-2">Compliance Standards</label>
+        <label class="form-label mb-2 flex items-center gap-2">
+          <span>Compliance Standards</span>
+          <InfoTooltip
+            content="Regulatory or compliance standards that apply to this governance stage. Examples: GDPR (data protection), HIPAA (healthcare), ISO 27001 (information security), SOC 2 (security controls). Documenting compliance standards helps ensure regulatory requirements are met at each stage. Add one standard per entry."
+            position="top"
+          />
+        </label>
         <p class="text-xs text-gray-500 mb-2">
           Regulatory or compliance standards that apply to this stage (e.g., GDPR, HIPAA, ISO 27001). Add one standard per entry.
         </p>
@@ -349,6 +366,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
+import InfoTooltip from './InfoTooltip.vue'
 import type { GovernanceStage, Agent, Milestone, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 

@@ -1,7 +1,13 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="section-header">Project Dashboard</h2>
+      <h2 class="section-header flex items-center gap-2">
+        <span>Project Dashboard</span>
+        <InfoTooltip
+          content="<strong>What you see here:</strong> Visual overview of your project including time savings, workflow, and value metrics.<br/><br/><strong>Time Savings:</strong> Total time saved per month (sum of all tasks) and Net time saved (after subtracting oversight). These are calculated from task volume and time saved per unit.<br/><br/><strong>Workflow Visualization:</strong> Shows governance stages in sequence. Stages link to show project progression.<br/><br/><strong>Time Savings per Task:</strong> Progress bars show baseline (full bar), time saved (green), and oversight (grey). Net savings = saved - oversight.<br/><br/><strong>Value Distribution:</strong> Shows how many tasks deliver each value type (time, quality, risk, enablement)."
+          position="top"
+        />
+      </h2>
       <p class="section-description">
         Overview of workflow, time savings, and value metrics for your automation project.
       </p>
@@ -182,6 +188,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
+import InfoTooltip from '../InfoTooltip.vue'
 import type { Requirement } from '@/types/canvas'
 
 const { canvasData } = useCanvasData()

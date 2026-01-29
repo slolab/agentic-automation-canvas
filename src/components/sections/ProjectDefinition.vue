@@ -1,7 +1,13 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="section-header">Project Definition and Context</h2>
+      <h2 class="section-header flex items-center gap-2">
+        <span>Project Definition and Context</span>
+        <InfoTooltip
+          content="<strong>What goes here:</strong> Core project information including title, description, objectives, timeline, and value proposition. Start here - this section defines what you're building and why.<br/><br/><strong>Workflow tip:</strong> Fill out Project Title and Description first, then add tasks in 'Tasks &amp; Expectations' section. The value summary can be filled after you've defined tasks. Use version management to track changes over time."
+          position="top"
+        />
+      </h2>
       <p class="section-description">
         What do you want to build? Define the core project information using <a href="https://schema.org/Project" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org Project type specification">Schema.org Project</a> and <a href="https://schema.org/ResearchProject" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org ResearchProject type specification">ResearchProject</a> types.
       </p>
@@ -158,6 +164,7 @@
           id="project-title"
           label="Project Title"
           help-text="The name or title of your agentic automation project"
+          tooltip="The project title is used in RO-Crate metadata and should be clear and descriptive. It will appear in generated packages and help others understand what your automation project does. Example: 'Automated Document Classification System'."
           :error="errors.title"
           required
         >
@@ -175,6 +182,7 @@
           id="project-description"
           label="Description"
           help-text="A detailed description of the project and its objectives"
+          tooltip="Provide a comprehensive description (2-4 paragraphs) covering: what the automation does, why it's needed, who will benefit, and how it works. This is the main narrative about your project and will be used in documentation and RO-Crate metadata."
           :error="errors.description"
           required
         >
@@ -192,6 +200,7 @@
           id="project-objective"
           label="Objective"
           help-text="The main objective or goal of the project. Maps to <a href='https://schema.org/abstract' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org abstract property'>schema:abstract</a> (summary of the project)."
+          tooltip="A concise summary (1-2 sentences) of the project's main goal. This differs from Description: Objective is a brief abstract/summary, while Description provides full details. Example: 'Automate document routing to reduce manual processing time by 60% while improving accuracy.'"
         >
           <textarea
             id="project-objective"
@@ -206,6 +215,7 @@
           id="project-stage"
           label="Project Stage"
           help-text="Current stage of the project lifecycle. Stages align with <a href='https://www.w3.org/TR/prov-o/#Activity' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='PROV-O Activity type'>PROV-O Activities</a> and represent major phases: Design, Development, Validation, Deployment, Monitoring."
+          tooltip="Select the current phase of your project: <strong>Design</strong> - Planning and requirements gathering; <strong>Development</strong> - Building the system; <strong>Validation</strong> - Testing and evaluation; <strong>Deployment</strong> - Rolling out to users; <strong>Monitoring</strong> - Ongoing operation and improvement. This helps track project progress and aligns with governance stages."
           required
         >
           <select
@@ -228,6 +238,7 @@
             id="project-start-date"
             label="Start Date"
             help-text="Project start date"
+            tooltip="The date when the project officially began. This helps establish a timeline and is used to calculate project duration. It also helps align with governance stage dates."
           >
             <input
               id="project-start-date"
@@ -242,6 +253,7 @@
             id="project-end-date"
             label="End Date"
             help-text="Project end date"
+            tooltip="The expected or actual completion date for the project. Leave blank if the project is ongoing. This helps track project timelines and is used in project documentation."
           >
             <input
               id="project-end-date"
@@ -258,6 +270,7 @@
           id="project-domains"
           label="Domains"
           help-text="Research domain(s) or field(s) of application. Add one domain per entry."
+          tooltip="Specify the research domain(s) or field(s) where your automation applies. Examples: Biomedical, Computer Science, Finance, Healthcare. These improve discoverability of your project in repositories and help others find relevant automation solutions. Add multiple domains if your project spans multiple fields."
         >
           <MultiValueInput
             v-model="localDomains"
@@ -281,6 +294,7 @@
           id="project-keywords"
           label="Keywords"
           help-text="Keywords or tags for the project. Add one keyword per entry."
+          tooltip="Add relevant keywords or tags that describe your project. Examples: AI, automation, NLP, document processing, workflow. Keywords improve searchability and help categorize your project. Use specific terms that others might search for."
         >
           <MultiValueInput
             v-model="localKeywords"
@@ -304,6 +318,7 @@
           id="project-id"
           label="Project ID (URI/DOI)"
           help-text="Persistent identifier for the project (URI or DOI)"
+          tooltip="A persistent identifier (PID) that uniquely identifies your project. Use a DOI if your project is published (e.g., https://doi.org/10.1234/example) or a URI if it's an internal project (e.g., https://example.org/projects/automation-2024). This enables stable references and linking across systems."
         >
           <input
             id="project-id"
@@ -326,6 +341,7 @@
               id="project-version"
               label="Version"
               help-text="Semantic version (e.g., 0.1.0). Format: MAJOR.MINOR.PATCH. See <a href='https://semver.org/' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline font-medium'>semantic versioning standards</a> for details."
+              tooltip="Use semantic versioning (MAJOR.MINOR.PATCH) to track changes: <strong>MAJOR</strong> - Breaking changes (1.0.0); <strong>MINOR</strong> - New features, backward compatible (0.2.0); <strong>PATCH</strong> - Bug fixes (0.1.1). Increment the version when you modify an imported RO-Crate. Keep it synchronized with your implementation version - when you release v1.0.0 of your system, update the canvas to v1.0.0."
               :error="versionError"
             >
               <input
@@ -343,6 +359,7 @@
               id="project-version-date"
               label="Version Date"
               help-text="Date when this version was downloaded or created. Automatically set to today's date when importing a ROcrate."
+              tooltip="The date when this version was created or downloaded. This is automatically set when you import a RO-Crate. Use this to track when versions were released and to manage version history."
             >
               <input
                 id="project-version-date"
@@ -363,6 +380,7 @@
               id="project-headline-value"
               label="Headline Value"
               help-text="Short text summary of the project's value proposition"
+              tooltip="A brief, human-readable summary of your project's value (1-2 sentences). This is different from detailed benefit metrics - it's a quick statement that captures the essence. Do NOT include numbers or units here - those go in Benefit Value and Benefit Unit fields and are combined automatically. Example: 'Saves time through automated document processing' or 'Reduces errors while improving compliance'."
             >
               <input
                 id="project-headline-value"
@@ -378,6 +396,7 @@
               id="project-primary-value-driver"
               label="Primary Value Driver"
               help-text="The main type of value this project delivers"
+              tooltip="Select the primary type of value your project delivers: <strong>Time</strong> - Saves time through automation; <strong>Quality</strong> - Improves accuracy, consistency, or outcomes; <strong>Risk</strong> - Reduces errors, compliance issues, or operational risks; <strong>Enablement</strong> - Enables new capabilities or workflows that weren't possible before. This determines how Benefit Value and Unit fields are interpreted."
             >
               <select
                 id="project-primary-value-driver"
@@ -399,6 +418,7 @@
               id="project-aggregate-benefit-value"
               label="Benefit Value"
               :help-text="benefitValueHelpText"
+              :tooltip="benefitValueTooltip"
             >
               <input
                 id="project-aggregate-benefit-value"
@@ -416,6 +436,7 @@
               id="project-aggregate-benefit-unit"
               label="Benefit Unit"
               :help-text="benefitUnitHelpText"
+              :tooltip="benefitUnitTooltip"
             >
               <input
                 id="project-aggregate-benefit-unit"
@@ -437,6 +458,7 @@
 import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
+import InfoTooltip from '../InfoTooltip.vue'
 import type { ProjectDefinition, Requirement } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
@@ -577,6 +599,36 @@ const benefitUnitPlaceholder = computed(() => {
       return 'e.g., new capabilities enabled'
     default:
       return 'Enter unit'
+  }
+})
+
+const benefitValueTooltip = computed(() => {
+  switch (localData.value.primaryValueDriver) {
+    case 'time':
+      return 'Enter the numeric value for time saved. This represents the total time benefit across all tasks. Example: If you save 40 hours per month total, enter 40.'
+    case 'quality':
+      return 'Enter the numeric value for quality improvement, typically as a percentage. Example: If error rate decreases by 25%, enter 25. This represents overall quality gains.'
+    case 'risk':
+      return 'Enter the numeric value for risk reduction. This could be incidents prevented, compliance improvements, or other risk metrics. Example: If you prevent 10 incidents per month, enter 10.'
+    case 'enablement':
+      return 'Enter the numeric value for enablement. This represents new capabilities or users empowered. Example: If you enable 5 new workflow types, enter 5.'
+    default:
+      return 'Enter the numeric value for the benefit metric. The meaning depends on your selected Primary Value Driver.'
+  }
+})
+
+const benefitUnitTooltip = computed(() => {
+  switch (localData.value.primaryValueDriver) {
+    case 'time':
+      return 'Specify the unit for time benefit. Examples: hours/month, days/week, minutes per task, hours per day. This helps others understand the scale and frequency of time savings.'
+    case 'quality':
+      return 'Specify the unit for quality improvement. Examples: % error reduction, % accuracy improvement, defects prevented per 1000 units. This clarifies how quality is measured.'
+    case 'risk':
+      return 'Specify the unit for risk reduction. Examples: incidents prevented/month, % compliance improvement, security vulnerabilities eliminated. This explains how risk reduction is quantified.'
+    case 'enablement':
+      return 'Specify the unit for enablement. Examples: new capabilities enabled, users empowered, workflows automated. This describes what new possibilities the project creates.'
+    default:
+      return 'Enter the unit or description for the benefit metric. This helps others understand how the benefit value should be interpreted.'
   }
 })
 

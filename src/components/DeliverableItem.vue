@@ -50,6 +50,7 @@
       <FormField
         :id="`deliverable-title-${index}`"
         label="Title"
+        tooltip="The title of the deliverable. Deliverables are outputs of your project such as software, reports, datasets, or documentation. Examples: 'Automated Document Classification System', 'Project Evaluation Report', 'Training Dataset'."
         required
       >
         <input
@@ -66,6 +67,7 @@
         :id="`deliverable-type-${index}`"
         label="Type"
         help-text="Deliverable type using <a href='https://schema.org/CreativeWork' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org CreativeWork type'>Schema.org</a> types (e.g., SoftwareApplication, Report, Dataset, Document). Maps to <a href='https://sparontologies.github.io/frapo/current/frapo.html#d4e1003' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='FRAPO Deliverable class'>FRAPO Deliverable</a>."
+        tooltip="The type of deliverable using Schema.org types. Common types: SoftwareApplication (software systems), Report (reports or documents), Dataset (data files), WebApplication (web apps), CodeRepository (source code). This helps categorize deliverables and appears in RO-Crate metadata."
         required
       >
         <input
@@ -82,6 +84,7 @@
       <FormField
         :id="`deliverable-desc-${index}`"
         label="Description"
+        tooltip="A description of what the deliverable is, what it contains, and how it relates to the project. This helps others understand what was produced and how to use it."
       >
         <textarea
           :id="`deliverable-desc-${index}`"
@@ -96,6 +99,7 @@
         <FormField
           :id="`deliverable-date-${index}`"
           label="Date"
+          tooltip="The date when the deliverable was completed or released. This helps track project progress and timeline."
         >
           <input
             :id="`deliverable-date-${index}`"
@@ -110,6 +114,7 @@
           :id="`deliverable-pid-${index}`"
           label="PID/DOI"
           help-text="Persistent Identifier (PID) or Digital Object Identifier (DOI) for the deliverable (e.g., https://doi.org/10.1234/example)"
+          tooltip="A persistent identifier (PID) or DOI for the deliverable if it has been published or assigned one. Use a DOI if published (e.g., https://doi.org/10.1234/software), or another PID for versioned deliverables. PIDs enable stable references and help track deliverable versions."
         >
           <input
             :id="`deliverable-pid-${index}`"

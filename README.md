@@ -94,7 +94,7 @@ The `schema/` directory contains standalone schema definitions that can be used 
 - **JSON Schema**: `schema/canvas-schema.json` for validating canvas data
 - **RO-Crate Profile**: `schema/rocrate-profile.json` for validating RO-Crates
 - **Mappings**: Documentation of ontology mappings
-- **Vocabularies**: Controlled vocabularies (TRL levels, DUO terms, etc.)
+- **Vocabularies**: Controlled vocabularies (Technology Readiness Level (TRL), DUO terms, etc.)
 - **Examples**: Example RO-Crate files
 
 See [schema/README.md](schema/README.md) for schema documentation.

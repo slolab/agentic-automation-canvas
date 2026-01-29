@@ -1,7 +1,13 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="section-header">Tasks & Expectations</h2>
+      <h2 class="section-header flex items-center gap-2">
+        <span>Tasks & Expectations</span>
+        <InfoTooltip
+          content="<strong>What goes here:</strong> The automation tasks you need to accomplish and stakeholders with interests in the project.<br/><br/><strong>Value Model (M0):</strong> Required fields define the value model - Unit of Work, Volume, Baseline Time, and Time Saved. These calculate total time savings. M1/M2 fields (oversight, confidence, assumptions) are optional but help validate estimates.<br/><br/><strong>Workflow tip:</strong> Start with task descriptions, then fill Value Model (M0) fields. Add stakeholders after creating persons. Tasks are represented as P-Plan Steps and link to governance stages."
+          position="top"
+        />
+      </h2>
       <p class="section-description">
         What are the essential tasks you need to automate to achieve the project goal? Capture tasks and their requirements as <a href="http://purl.org/net/p-plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="P-Plan (Plan Ontology) - extends PROV-O for representing plans and steps">P-Plan</a> elements (using <a href="https://www.w3.org/TR/prov-o/#Plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Plan type">PROV-O Plan</a> and <a href="http://purl.org/net/p-plan#Step" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="P-Plan Step type">p-plan:Step</a>), including user stories and stakeholder values.
       </p>
@@ -52,6 +58,7 @@ import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import RequirementItem from '../RequirementItem.vue'
 import StakeholderItem from '../StakeholderItem.vue'
+import InfoTooltip from '../InfoTooltip.vue'
 import type { Requirement, Stakeholder } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 

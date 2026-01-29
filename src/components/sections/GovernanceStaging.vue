@@ -1,7 +1,13 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="section-header">Governance & Staging</h2>
+      <h2 class="section-header flex items-center gap-2">
+        <span>Governance & Staging</span>
+        <InfoTooltip
+          content="<strong>What goes here:</strong> Project lifecycle stages (Design, Development, Validation, Deployment, Monitoring) with agents, milestones, and compliance standards.<br/><br/><strong>Stages create workflow:</strong> Stages link sequentially (end date of one = start date of next) to show project progression. Each stage is a PROV-O Activity.<br/><br/><strong>Agents:</strong> Who/what is responsible (persons, organizations, or software). Assign agents from the Persons section or create organization/software agents.<br/><br/><strong>Workflow tip:</strong> Create stages in order. Add agents and milestones to show accountability and track progress. Compliance standards help ensure regulatory requirements."
+          position="top"
+        />
+      </h2>
       <p class="section-description">
         How will you manage the project lifecycle? Define the major stages of your project (e.g., Design, Development, Validation, Deployment, Monitoring) with associated agents, milestones, and compliance standards. Stages are represented as <a href="https://www.w3.org/TR/prov-o/#Activity" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Activity type - represents processes or workflows">PROV-O Activities</a> and linked sequentially to show the project workflow.
       </p>
@@ -27,6 +33,7 @@
 import { ref, watch, nextTick } from 'vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import GovernanceStageItem from '../GovernanceStageItem.vue'
+import InfoTooltip from '../InfoTooltip.vue'
 import type { GovernanceStage } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
