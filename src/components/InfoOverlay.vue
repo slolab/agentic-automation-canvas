@@ -43,7 +43,7 @@
                 <ul class="list-disc list-inside space-y-1 ml-2">
                   <li><strong>Framework for implementation:</strong> Structured approach to designing your automation solution</li>
                   <li><strong>Comprehensive checklist:</strong> Ensures you consider all relevant aspects (user expectations, feasibility, governance, data access)</li>
-                  <li><strong>Machine-readable output:</strong> Generates standards-compliant RO-Crate packages for interoperability</li>
+                  <li><strong>Machine-readable output:</strong> Generates standards-compliant packages that work with other tools and systems</li>
                   <li><strong>Track progress:</strong> Compare actual gains vs. initial expectations over time</li>
                   <li><strong>Governance support:</strong> Facilitate use & access decisions and data protection strategies</li>
                 </ul>
@@ -55,15 +55,15 @@
                   <li>Fill out the form sections to capture your project details, requirements, and expectations</li>
                   <li>The canvas validates your input and provides real-time feedback</li>
                   <li>View the dashboard to see workflow visualizations and time savings metrics</li>
-                  <li>Download your completed canvas as an RO-Crate package (ZIP file)</li>
-                  <li>Use the RO-Crate for project documentation, comparison, and integration with other tools</li>
+                  <li>Download your completed canvas as a package (ZIP file)</li>
+                  <li>Use the package for project documentation, comparison, and integration with other tools</li>
                 </ol>
               </div>
 
               <div>
                 <h3 class="font-semibold text-gray-900 mb-2">Version Management</h3>
                 <p class="mb-2">
-                  The canvas uses semantic versioning to keep your RO-Crate synchronized with your implementation. Here's the recommended workflow:
+                  The canvas uses semantic versioning to keep your package synchronized with your implementation. Here's the recommended workflow:
                 </p>
                 <ol class="list-decimal list-inside space-y-1 ml-2">
                   <li><strong>Create from scratch:</strong> Start a new canvas (initializes with version 0.1.0)</li>
@@ -74,6 +74,24 @@
                 </ol>
                 <p class="mt-2">
                   The download date is automatically recorded when you import a RO-Crate, and the system will remind you to increment the version when modifying an imported canvas. Follow <a href="https://semver.org/" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline">semantic versioning standards</a> for guidance on version numbering.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Why RO-Crate?</h3>
+                <p class="mb-2">
+                  RO-Crate (Research Object Crate) is a standardized packaging format that bundles your project metadata with the data files in a self-contained, portable package. We use RO-Crate because it:
+                </p>
+                <ul class="list-disc list-inside space-y-1 ml-2">
+                  <li><strong>Ensures interoperability:</strong> Your canvas can be read and used by any tool that supports RO-Crate, not just this application</li>
+                  <li><strong>Follows FAIR principles:</strong> Makes your project Findable, Accessible, Interoperable, and Reusable</li>
+                  <li><strong>Integrates with research infrastructure:</strong> Works with EOSC, research data repositories, and FAIR Digital Object ecosystems</li>
+                  <li><strong>Enables validation:</strong> Can be validated against standards to ensure correctness and completeness</li>
+                  <li><strong>Preserves provenance:</strong> Captures relationships between people, processes, and data using established ontologies</li>
+                  <li><strong>Future-proof:</strong> Based on W3C standards that won't become obsolete, ensuring your metadata remains usable long-term</li>
+                </ul>
+                <p class="mt-2">
+                  Unlike custom JSON or CSV exports, RO-Crate packages are self-describing, include all necessary context, and can be understood by both humans and machines without needing the original application.
                 </p>
               </div>
 
