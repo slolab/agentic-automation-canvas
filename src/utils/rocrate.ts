@@ -387,6 +387,14 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   if (data.project.primaryValueDriver) {
     projectEntity['aac:primaryValueDriver'] = data.project.primaryValueDriver
   }
+  // Version management
+  const version = data.project.version || data.version || '0.1.0'
+  const versionDate = data.project.versionDate || data.versionDate || new Date().toISOString().split('T')[0]
+  projectEntity['aac:version'] = version
+  projectEntity['aac:versionDate'] = versionDate
+  // Also add to root dataset for easy access
+  rootDataset['aac:version'] = version
+  rootDataset['aac:versionDate'] = versionDate
 
   graph.push(projectEntity)
 

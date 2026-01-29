@@ -28,6 +28,12 @@
                 >
                   {{ localData.projectStage }}
                 </span>
+                <span
+                  v-if="localData.version"
+                  class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700 font-mono"
+                >
+                  v{{ localData.version }}
+                </span>
               </div>
               <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                 <span v-if="localData.startDate || localData.endDate" class="flex items-center gap-1">
@@ -322,6 +328,46 @@
         </FormField>
 
         <div class="pt-6 border-t-2 border-gray-200 mt-8">
+          <h3 class="subsection-header">Version Management</h3>
+          <p class="text-sm text-gray-600 mb-4">
+            Keep your ROcrate in sync with your implementation using semantic versioning. When you upload a previous version, make changes, and export again, it's recommended to increment the version to reflect the changes. See <a href="https://semver.org/" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium">semantic versioning standards</a> for guidance.
+          </p>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <FormField
+              id="project-version"
+              label="Version"
+              help-text="Semantic version (e.g., 0.1.0). Format: MAJOR.MINOR.PATCH. See <a href='https://semver.org/' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline font-medium'>semantic versioning standards</a> for details."
+              :error="versionError"
+            >
+              <input
+                id="project-version"
+                v-model="localData.version"
+                type="text"
+                class="form-input"
+                placeholder="0.1.0"
+                pattern="^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$"
+                @blur="update"
+              />
+            </FormField>
+
+            <FormField
+              id="project-version-date"
+              label="Version Date"
+              help-text="Date when this version was downloaded or created. Automatically set to today's date when importing a ROcrate."
+            >
+              <input
+                id="project-version-date"
+                v-model="localData.versionDate"
+                type="date"
+                class="form-input"
+                @blur="update"
+              />
+            </FormField>
+          </div>
+        </div>
+
+        <div class="pt-6 border-t-2 border-gray-200 mt-8">
           <h3 class="subsection-header">Project Value Summary</h3>
           
           <FormField
@@ -388,7 +434,7 @@ import MultiValueInput from '../MultiValueInput.vue'
 import type { ProjectDefinition, Requirement } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
-const { canvasData, updateProject } = useCanvasData()
+const { canvasData, updateProject, validateProject: validateProjectFn } = useCanvasData()
 
 // Initialize localData with proper array references
 const initLocalData = (): ProjectDefinition => {
@@ -404,10 +450,19 @@ const initLocalData = (): ProjectDefinition => {
     headlineValue: project.headlineValue,
     aggregateExpectedHoursSavedPerMonth: project.aggregateExpectedHoursSavedPerMonth,
     primaryValueDriver: project.primaryValueDriver,
+    version: project.version || canvasData.value.version || '0.1.0',
+    versionDate: project.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],
   }
 }
 
 const localData = ref<ProjectDefinition>(initLocalData())
+
+// Get version error from validation if imported
+const versionError = computed(() => {
+  const validation = validateProjectFn()
+  const versionErr = validation.find(e => e.field === 'project.version')
+  return versionErr ? versionErr.message : undefined
+})
 
 // Convert domain/keywords arrays to objects for MultiValueInput
 const initDomains = () => {
@@ -487,6 +542,8 @@ watch(
         headlineValue: newProject.headlineValue,
         aggregateExpectedHoursSavedPerMonth: newProject.aggregateExpectedHoursSavedPerMonth,
         primaryValueDriver: newProject.primaryValueDriver,
+        version: newProject.version || canvasData.value.version || '0.1.0',
+        versionDate: newProject.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],
       }
       // Sync domain and keywords arrays
       localDomains.value = (newProject.domain || []).map((d: string) => ({ value: d }))
@@ -532,7 +589,18 @@ const update = async () => {
   if (isSyncingFromCanvas) return
   
   isLocalUpdate = true
-  updateProject(localData.value)
+  // Update project with version fields
+  const updateData: Partial<ProjectDefinition> = { ...localData.value }
+  updateProject(updateData)
+  
+  // Also update root-level version fields for consistency
+  if (updateData.version && canvasData.value.version !== updateData.version) {
+    canvasData.value.version = updateData.version
+  }
+  if (updateData.versionDate && canvasData.value.versionDate !== updateData.versionDate) {
+    canvasData.value.versionDate = updateData.versionDate
+  }
+  
   await nextTick()
   isLocalUpdate = false
 }

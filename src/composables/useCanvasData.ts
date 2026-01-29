@@ -14,6 +14,9 @@ const canvasData = ref<CanvasData>({
     description: '',
     projectStage: '',
   },
+  version: '0.1.0',
+  versionDate: new Date().toISOString().split('T')[0],
+  isImported: false,
 })
 
 // Load from localStorage on init
@@ -23,6 +26,19 @@ const loadFromStorage = () => {
     if (stored) {
       const parsed = JSON.parse(stored)
       canvasData.value = parsed
+      // Ensure version fields are initialized if missing
+      if (!canvasData.value.version && !canvasData.value.project.version) {
+        canvasData.value.version = '0.1.0'
+        canvasData.value.project.version = '0.1.0'
+      }
+      if (!canvasData.value.versionDate && !canvasData.value.project.versionDate) {
+        const today = new Date().toISOString().split('T')[0]
+        canvasData.value.versionDate = today
+        canvasData.value.project.versionDate = today
+      }
+      if (canvasData.value.isImported === undefined) {
+        canvasData.value.isImported = false
+      }
     }
   } catch (error) {
     console.warn('Failed to load canvas data from storage:', error)
@@ -219,6 +235,9 @@ export function useCanvasData() {
       governance: undefined,
       dataAccess: undefined,
       outcomes: undefined,
+      version: '0.1.0',
+      versionDate: new Date().toISOString().split('T')[0],
+      isImported: false,
     }
     localStorage.removeItem(STORAGE_KEY)
   }
@@ -248,6 +267,21 @@ export function useCanvasData() {
         projectStage: '',
       },
     }
+    // Set isImported flag and ensure version fields are set
+    if (newData.isImported === undefined) {
+      newData.isImported = true
+    }
+    // Sync version between project and root level
+    if (newData.project?.version && !newData.version) {
+      newData.version = newData.project.version
+    } else if (newData.version && !newData.project?.version) {
+      newData.project.version = newData.version
+    }
+    // Always set versionDate to today's date when importing (download date)
+    // This ensures the download date is always recorded
+    const today = new Date().toISOString().split('T')[0]
+    newData.versionDate = today
+    newData.project.versionDate = today
     // Then set the new data - this ensures watchers see the change
     canvasData.value = newData
   }
@@ -279,6 +313,19 @@ export function useCanvasData() {
 
     if (!project.projectStage || !project.projectStage.trim()) {
       errors.push({ field: 'project.projectStage', message: 'Project stage is required', severity: 'error' })
+    }
+
+    // Version management validation: recommend incrementing version if imported
+    if (canvasData.value.isImported && project.version) {
+      // Check if version hasn't changed from imported version
+      const importedVersion = canvasData.value.version || project.version
+      if (project.version === importedVersion) {
+        errors.push({
+          field: 'project.version',
+          message: 'It is recommended to increment the version when modifying an imported canvas. See https://semver.org/ for guidance.',
+          severity: 'warning',
+        })
+      }
     }
 
     return errors

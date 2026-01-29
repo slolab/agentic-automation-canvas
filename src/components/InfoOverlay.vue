@@ -61,6 +61,23 @@
               </div>
 
               <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Version Management</h3>
+                <p class="mb-2">
+                  The canvas uses semantic versioning to keep your RO-Crate synchronized with your implementation. Here's the recommended workflow:
+                </p>
+                <ol class="list-decimal list-inside space-y-1 ml-2">
+                  <li><strong>Create from scratch:</strong> Start a new canvas (initializes with version 0.1.0)</li>
+                  <li><strong>Download:</strong> Export your canvas as an RO-Crate when you reach a milestone</li>
+                  <li><strong>Upload for modification:</strong> Import a previous version of your RO-Crate to continue working</li>
+                  <li><strong>Update version:</strong> When you make changes, increment the version number (e.g., 0.1.0 → 0.2.0) to reflect the changes</li>
+                  <li><strong>Synchronize with implementation:</strong> Keep the canvas version aligned with your actual implementation version - when you release v1.0.0 of your system, update the canvas to v1.0.0 as well</li>
+                </ol>
+                <p class="mt-2">
+                  The download date is automatically recorded when you import a RO-Crate, and the system will remind you to increment the version when modifying an imported canvas. Follow <a href="https://semver.org/" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline">semantic versioning standards</a> for guidance on version numbering.
+                </p>
+              </div>
+
+              <div>
                 <h3 class="font-semibold text-gray-900 mb-2">Standards-Compliant</h3>
                 <p>
                   All outputs follow established W3C and Schema.org standards (RO-Crate, DCAT, PROV-O, P-Plan, FRAPO, DUO), ensuring your project metadata is interoperable and can be integrated with research infrastructure and FAIR Digital Object ecosystems.

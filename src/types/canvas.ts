@@ -11,6 +11,10 @@ export interface CanvasData {
   governance?: GovernanceStaging
   dataAccess?: DataAccessSensitivity
   outcomes?: OutcomesEvaluation
+  // Version management
+  version?: string // Semantic version (e.g., "0.1.0")
+  versionDate?: string // ISO date string when version was downloaded/created
+  isImported?: boolean // true if form was imported from ROcrate, false if created from scratch
 }
 
 export interface ProjectDefinition {
@@ -29,6 +33,9 @@ export interface ProjectDefinition {
   headlineValue?: string
   aggregateExpectedHoursSavedPerMonth?: number
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
+  // Version management (stored at project level for ROcrate compatibility)
+  version?: string // Semantic version (e.g., "0.1.0")
+  versionDate?: string // ISO date string when version was downloaded/created
 }
 
 export interface UserExpectations {

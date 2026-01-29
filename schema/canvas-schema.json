@@ -6,6 +6,20 @@
   "type": "object",
   "required": ["project"],
   "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
+    },
+    "versionDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the version was downloaded or created (ISO date format)"
+    },
+    "isImported": {
+      "type": "boolean",
+      "description": "Indicates whether the form was imported from an ROcrate (true) or created from scratch (false)"
+    },
     "persons": {
       "type": "array",
       "description": "Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents.",
@@ -43,7 +57,17 @@
         "projectId": { "type": "string", "format": "uri" },
         "headlineValue": { "type": "string" },
         "aggregateExpectedHoursSavedPerMonth": { "type": "number", "minimum": 0 },
-        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] }
+        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
+        },
+        "versionDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when the version was downloaded or created (ISO date format)"
+        }
       }
     },
     "userExpectations": {

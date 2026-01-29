@@ -33,7 +33,12 @@ export const exampleData: CanvasData = {
     headlineValue: 'Saves 40 hours per month through automated document processing',
     aggregateExpectedHoursSavedPerMonth: 40,
     primaryValueDriver: 'time',
+    version: '1.2.8',
+    versionDate: '2024-06-15',
   },
+  version: '1.2.8',
+  versionDate: '2024-06-15',
+  isImported: false, // Example data is not imported, it's loaded as example
   userExpectations: {
     requirements: [
       {

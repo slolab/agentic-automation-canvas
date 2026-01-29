@@ -65,8 +65,32 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       headlineValue: (projectEntity['aac:headlineValue'] as string) || undefined,
       aggregateExpectedHoursSavedPerMonth: (projectEntity['aac:aggregateExpectedHoursSavedPerMonth'] as number) || undefined,
       primaryValueDriver: (projectEntity['aac:primaryValueDriver'] as 'time' | 'quality' | 'risk' | 'enablement') || undefined,
+      version: (projectEntity['aac:version'] as string) || undefined,
+      versionDate: (projectEntity['aac:versionDate'] as string) || undefined,
     }
   }
+
+  // Extract version from root dataset if not found in project entity
+  const rootDataset = findEntity(graph, './')
+  if (rootDataset) {
+    if (!canvasData.project.version && (rootDataset['aac:version'] as string)) {
+      canvasData.project.version = rootDataset['aac:version'] as string
+    }
+    if (!canvasData.project.versionDate && (rootDataset['aac:versionDate'] as string)) {
+      canvasData.project.versionDate = rootDataset['aac:versionDate'] as string
+    }
+  }
+
+  // Set version at root level for consistency
+  if (canvasData.project.version) {
+    canvasData.version = canvasData.project.version
+  }
+  // Always set versionDate to today's date when importing (download date)
+  const today = new Date().toISOString().split('T')[0]
+  canvasData.versionDate = today
+  canvasData.project.versionDate = today
+  // Set isImported flag
+  canvasData.isImported = true
 
   // Find user expectations plan (P-Plan) - handle both prefixed and non-prefixed types
   const planEntity = findEntitiesByType(graph, ['Plan', 'p-plan:Plan', 'prov:Plan'])[0]

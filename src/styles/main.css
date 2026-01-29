@@ -59,6 +59,62 @@
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%230284c7' d='M4.427 5.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 5H4.604a.25.25 0 00-.177.427z'/%3E%3C/svg%3E");
   }
   
+  /* Date input specific styling - match text input height exactly */
+  input[type="date"].form-input,
+  input[type="datetime-local"].form-input {
+    /* Match exact computed height of text inputs */
+    /* py-2.5 = 0.625rem (10px) top + 0.625rem (10px) bottom */
+    /* line-height for sm:text-sm = 1.25rem (20px) */
+    /* border = 1px top + 1px bottom = 2px */
+    /* Total: 10px + 20px + 10px + 2px = 42px = 2.625rem */
+    height: 2.625rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+    line-height: 1.25rem;
+    font-size: 0.875rem; /* sm:text-sm */
+    box-sizing: border-box;
+  }
+  
+  /* Fix vertical centering for date input text - WebKit browsers */
+  input[type="date"].form-input::-webkit-datetime-edit,
+  input[type="datetime-local"].form-input::-webkit-datetime-edit {
+    line-height: 1.25rem;
+    padding: 0;
+    margin: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+  
+  input[type="date"].form-input::-webkit-datetime-edit-fields-wrapper,
+  input[type="datetime-local"].form-input::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    line-height: 1.25rem;
+  }
+  
+  input[type="date"].form-input::-webkit-datetime-edit-text,
+  input[type="datetime-local"].form-input::-webkit-datetime-edit-text {
+    padding: 0 0.25rem;
+    line-height: 1.25rem;
+    display: flex;
+    align-items: center;
+  }
+  
+  input[type="date"].form-input::-webkit-datetime-edit-month-field,
+  input[type="date"].form-input::-webkit-datetime-edit-day-field,
+  input[type="date"].form-input::-webkit-datetime-edit-year-field,
+  input[type="datetime-local"].form-input::-webkit-datetime-edit-month-field,
+  input[type="datetime-local"].form-input::-webkit-datetime-edit-day-field,
+  input[type="datetime-local"].form-input::-webkit-datetime-edit-year-field {
+    padding: 0;
+    line-height: 1.25rem;
+    display: flex;
+    align-items: center;
+  }
+  
   /* Checkbox field container - GitHub style (matching dropdowns) */
   .form-checkbox-field {
     @apply flex items-center gap-2 px-3 py-2.5 rounded-md border border-gray-300 bg-gray-50 cursor-pointer transition-all duration-200;
