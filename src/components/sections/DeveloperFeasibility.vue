@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Developer Feasibility & Technical Assessment</h2>
-      <p class="text-sm text-gray-600 mb-6">
+      <h2 class="section-header">Developer Feasibility & Technical Assessment</h2>
+      <p class="section-description">
         Assess technical feasibility, TRL levels, risks, and required technologies.
       </p>
     </div>
@@ -248,18 +248,16 @@
           label="Requires Custom Instructions"
           help-text="Whether the task requires extensive custom instructions or prompts to work"
         >
-          <div class="flex items-center">
+          <label class="form-checkbox-field">
             <input
               id="requires-custom-instructions"
               v-model="localData.baselineCapability.requiresCustomInstructions"
               type="checkbox"
-              class="form-checkbox"
+              class="form-checkbox-small"
               @change="update"
             />
-            <label for="requires-custom-instructions" class="ml-2 text-sm text-gray-700">
-              Task requires extensive custom instructions
-            </label>
-          </div>
+            <span>Task requires extensive custom instructions</span>
+          </label>
         </FormField>
 
         <FormField
@@ -399,18 +397,16 @@
           label="Baseline Comparison Required"
           help-text="Whether baseline comparison is necessary for validation"
         >
-          <div class="flex items-center">
+          <label class="form-checkbox-field">
             <input
               id="baseline-comparison-required"
               v-model="localData.implementationDifficulty.baselineComparisonRequired"
               type="checkbox"
-              class="form-checkbox"
+              class="form-checkbox-small"
               @change="update"
             />
-            <label for="baseline-comparison-required" class="ml-2 text-sm text-gray-700">
-              Baseline comparison required for validation
-            </label>
-          </div>
+            <span>Baseline comparison required for validation</span>
+          </label>
         </FormField>
 
         <FormField
@@ -418,18 +414,16 @@
           label="Validation & Monitoring Required"
           help-text="Whether validation and monitoring are required (typically depends on security level)"
         >
-          <div class="flex items-center">
+          <label class="form-checkbox-field">
             <input
               id="validation-monitoring-required"
               v-model="localData.implementationDifficulty.validationMonitoringRequired"
               type="checkbox"
-              class="form-checkbox"
+              class="form-checkbox-small"
               @change="update"
             />
-            <label for="validation-monitoring-required" class="ml-2 text-sm text-gray-700">
-              Validation and monitoring required
-            </label>
-          </div>
+            <span>Validation and monitoring required</span>
+          </label>
         </FormField>
       </div>
     </div>

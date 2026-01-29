@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Data Access & Sensitivity</h2>
-      <p class="text-sm text-gray-600 mb-6">
-        Describe datasets using <a href="https://www.w3.org/TR/vocab-dcat-2/#Class:Dataset" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DCAT Dataset class">DCAT Dataset</a> vocabulary with properties like <a href="http://purl.org/dc/terms/accessRights" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Dublin Core Terms accessRights">dct:accessRights</a> and <a href="http://purl.org/dc/terms/license" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Dublin Core Terms license">dct:license</a>. Data use restrictions use <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DUO (Data Use Ontology) for machine-readable data use permissions">DUO terms</a>.
+      <h2 class="section-header">Data Access & Sensitivity</h2>
+      <p class="section-description">
+        Describe datasets using <a href="https://www.w3.org/TR/vocab-dcat-2/#Class:Dataset" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="DCAT Dataset class">DCAT Dataset</a> vocabulary with properties like <a href="http://purl.org/dc/terms/accessRights" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Dublin Core Terms accessRights">dct:accessRights</a> and <a href="http://purl.org/dc/terms/license" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Dublin Core Terms license">dct:license</a>. Data use restrictions use <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="DUO (Data Use Ontology) for machine-readable data use permissions">DUO terms</a>.
       </p>
     </div>
 
@@ -162,20 +162,22 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-4">
-            <label class="flex items-center">
+          <FormField
+            :id="`dataset-personal-data-${index}`"
+            label="Contains Personal Data"
+            help-text="If checked, access restriction text is required for compliance"
+          >
+            <label class="form-checkbox-field">
               <input
+                :id="`dataset-personal-data-${index}`"
                 type="checkbox"
                 :checked="item.containsPersonalData || false"
-                class="rounded border-gray-300 text-primary-600 focus:ring-primary-500"
+                class="form-checkbox-small"
                 @change="update({ ...item, containsPersonalData: ($event.target as HTMLInputElement).checked })"
               />
-              <span class="ml-2 text-sm text-gray-700">
-                Contains Personal Data
-                <span class="text-xs text-gray-500 ml-1" title="If checked, access restriction text is required for compliance">(requires access restrictions)</span>
-              </span>
+              <span>Contains Personal Data</span>
             </label>
-          </div>
+          </FormField>
         </div>
       </template>
     </MultiValueInput>

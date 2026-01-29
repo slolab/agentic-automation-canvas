@@ -1,5 +1,5 @@
 <template>
-  <div class="mb-4">
+  <div class="mb-6">
     <label
       v-if="label"
       :for="id"
@@ -7,10 +7,12 @@
       :class="{ 'text-red-600': error }"
     >
       {{ label }}
-      <span v-if="required" class="text-red-500" aria-label="required">*</span>
+      <span v-if="required" class="text-red-500 ml-1" aria-label="required">*</span>
     </label>
     
-    <slot :id="id" :error="error" :aria-describedby="helpText ? `${id}-help` : undefined" />
+    <div class="mt-1">
+      <slot :id="id" :error="error" :aria-describedby="helpText ? `${id}-help` : undefined" />
+    </div>
     
     <p
       v-if="helpText && !error"

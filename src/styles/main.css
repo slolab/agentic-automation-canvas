@@ -17,19 +17,151 @@
     @apply px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors;
   }
   
+  /* Enhanced form input styling - GitHub style */
   .form-input {
-    @apply block w-full rounded-md border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
+    @apply block w-full px-3 py-2.5 rounded-md border border-gray-300 bg-white text-gray-900 placeholder-gray-400 transition-all duration-200;
+    @apply focus:border-primary-500 focus:ring-1 focus:ring-primary-500 focus:outline-none;
+    @apply hover:border-gray-400;
+    @apply sm:text-sm;
+    /* GitHub-style subtle shadow */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
   }
   
+  .form-input:focus {
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+  
+  .form-input:disabled {
+    @apply bg-gray-50 text-gray-500 cursor-not-allowed border-gray-200;
+    box-shadow: none;
+  }
+  
+  /* Select/dropdown specific styling - GitHub style */
+  select.form-input {
+    @apply appearance-none bg-gray-50;
+    /* Custom flat dropdown arrow - GitHub style (thin, clear chevron) */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%236b7280' d='M4.427 5.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 5H4.604a.25.25 0 00-.177.427z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 0.5rem center;
+    background-size: 16px;
+    padding-right: 2.25rem;
+    /* Match text input height exactly - same padding ensures same height */
+    line-height: 1.25rem;
+  }
+  
+  select.form-input:hover {
+    @apply bg-gray-100;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%23374151' d='M4.427 5.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 5H4.604a.25.25 0 00-.177.427z'/%3E%3C/svg%3E");
+  }
+  
+  select.form-input:focus {
+    @apply bg-white;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath fill='%230284c7' d='M4.427 5.427l3.396 3.396a.25.25 0 00.354 0l3.396-3.396A.25.25 0 0011.396 5H4.604a.25.25 0 00-.177.427z'/%3E%3C/svg%3E");
+  }
+  
+  /* Checkbox field container - GitHub style (matching dropdowns) */
+  .form-checkbox-field {
+    @apply flex items-center gap-2 px-3 py-2.5 rounded-md border border-gray-300 bg-gray-50 cursor-pointer transition-all duration-200;
+    @apply hover:border-gray-400 hover:bg-gray-100;
+    @apply sm:text-sm;
+    /* GitHub-style subtle shadow */
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    /* Match text input height */
+    min-height: 2.5rem;
+  }
+  
+  .form-checkbox-field:has(input:focus) {
+    @apply border-primary-500 bg-white;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  }
+  
+  .form-checkbox-field:has(input:checked) {
+    @apply border-primary-500 bg-primary-50;
+  }
+  
+  .form-checkbox-field:has(input:checked):hover {
+    @apply border-primary-600 bg-primary-100;
+  }
+  
+  /* Small checkbox inside the field */
+  .form-checkbox-small {
+    @apply appearance-none w-4 h-4 rounded border border-gray-400 bg-white cursor-pointer transition-all duration-200;
+    /* Subtle shadow */
+    box-shadow: 0 1px 1px 0 rgba(0, 0, 0, 0.05);
+    /* Position relative for checkmark */
+    position: relative;
+    flex-shrink: 0;
+  }
+  
+  .form-checkbox-small:hover {
+    @apply border-gray-500;
+  }
+  
+  .form-checkbox-small:focus {
+    @apply border-primary-500 outline-none ring-1 ring-primary-500;
+  }
+  
+  .form-checkbox-small:checked {
+    @apply bg-primary-600 border-primary-600;
+  }
+  
+  .form-checkbox-small:checked:hover {
+    @apply bg-primary-700 border-primary-700;
+  }
+  
+  .form-checkbox-small:checked::after {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 10px;
+    height: 10px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 10 10'%3E%3Cpath fill='white' d='M8.354 2.646a.5.5 0 010 .708l-4.5 4.5a.5.5 0 01-.708 0l-2-2a.5.5 0 11.708-.708L3.5 6.793l4.146-4.147a.5.5 0 01.708 0z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+  }
+  
+  /* Enhanced label styling */
   .form-label {
-    @apply block text-sm font-medium text-gray-700 mb-1;
+    @apply block text-sm font-semibold text-gray-900 mb-2 tracking-tight;
   }
   
-  .form-error {
-    @apply mt-1 text-sm text-red-600;
-  }
-  
+  /* Enhanced help text styling */
   .form-help {
-    @apply mt-1 text-sm text-gray-500;
+    @apply mt-2 text-xs text-gray-500 leading-relaxed;
+    @apply before:content-['ℹ'] before:mr-1.5 before:text-primary-500 before:font-semibold;
+  }
+  
+  /* Error styling */
+  .form-error {
+    @apply mt-2 text-sm text-red-600 font-medium;
+    @apply before:content-['⚠'] before:mr-1.5 before:text-red-500;
+  }
+  
+  /* Section header styling */
+  .section-header {
+    @apply text-2xl font-bold text-gray-900 mb-2 tracking-tight;
+    @apply border-b-2 border-primary-200 pb-3;
+  }
+  
+  /* Section description styling */
+  .section-description {
+    @apply text-sm text-gray-600 mb-8 leading-relaxed;
+    @apply bg-gray-50 border-l-4 border-primary-400 pl-4 py-3 rounded-r;
+  }
+  
+  /* Subsection header styling */
+  .subsection-header {
+    @apply text-lg font-semibold text-gray-800 mb-5 mt-8 tracking-tight;
+    @apply flex items-center gap-2;
+    @apply before:content-[''] before:w-1 before:h-6 before:bg-primary-500 before:rounded-full;
+  }
+  
+  /* Sub-subsection header (h4) styling */
+  .subsubsection-header {
+    @apply text-sm font-semibold text-gray-700 mb-3 mt-6 tracking-tight;
+    @apply uppercase text-xs;
   }
 }

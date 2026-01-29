@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Definition & Context</h2>
-      <p class="text-sm text-gray-600 mb-6">
-        Define the core project information using <a href="https://schema.org/Project" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org Project type specification">Schema.org Project</a> and <a href="https://schema.org/ResearchProject" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org ResearchProject type specification">ResearchProject</a> types.
+      <h2 class="section-header">Project Definition & Context</h2>
+      <p class="section-description">
+        Define the core project information using <a href="https://schema.org/Project" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org Project type specification">Schema.org Project</a> and <a href="https://schema.org/ResearchProject" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org ResearchProject type specification">ResearchProject</a> types.
       </p>
     </div>
 
@@ -168,8 +168,8 @@
       />
     </FormField>
 
-    <div class="pt-4 border-t border-gray-200">
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Project Value Summary</h3>
+    <div class="pt-6 border-t-2 border-gray-200 mt-8">
+      <h3 class="subsection-header">Project Value Summary</h3>
       
       <FormField
         id="project-headline-value"

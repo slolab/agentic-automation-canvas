@@ -1,14 +1,14 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">User Expectations & Requirements</h2>
-      <p class="text-sm text-gray-600 mb-6">
-        Capture user requirements as <a href="http://purl.org/net/p-plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="P-Plan (Plan Ontology) - extends PROV-O for representing plans and steps">P-Plan</a> elements (using <a href="https://www.w3.org/TR/prov-o/#Plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Plan type">PROV-O Plan</a> and <a href="http://purl.org/net/p-plan#Step" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="P-Plan Step type">p-plan:Step</a>), including user stories and stakeholder values.
+      <h2 class="section-header">User Expectations & Requirements</h2>
+      <p class="section-description">
+        Capture user requirements as <a href="http://purl.org/net/p-plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="P-Plan (Plan Ontology) - extends PROV-O for representing plans and steps">P-Plan</a> elements (using <a href="https://www.w3.org/TR/prov-o/#Plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Plan type">PROV-O Plan</a> and <a href="http://purl.org/net/p-plan#Step" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="P-Plan Step type">p-plan:Step</a>), including user stories and stakeholder values.
       </p>
     </div>
 
     <div>
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Requirements</h3>
+      <h3 class="subsection-header">Requirements</h3>
       <MultiValueInput
         v-model="localRequirements"
         label="requirement"
@@ -83,8 +83,8 @@
             </div>
 
             <!-- Value Model Fields (M0 - Required) -->
-            <div class="mt-4 pt-4 border-t border-gray-200">
-              <h4 class="text-sm font-medium text-gray-900 mb-3">Value Model (M0)</h4>
+            <div class="mt-6 pt-6 border-t-2 border-gray-200">
+              <h4 class="subsubsection-header">Value Model (M0)</h4>
               
               <FormField
                 :id="`req-unit-${index}`"
@@ -227,39 +227,39 @@
                 label="Value Type"
                 help-text="Select all value types this task delivers: Time (saves time), Quality (improves accuracy/consistency), Risk (reduces errors/compliance issues), Enablement (enables new capabilities)"
               >
-                <div class="space-y-2">
-                  <label class="flex items-center">
+                <div class="flex flex-wrap gap-3">
+                  <label class="form-checkbox-field">
                     <input
                       type="checkbox"
                       :checked="item.valueType?.includes('time') || false"
-                      class="mr-2"
+                      class="form-checkbox-small"
                       @change="handleValueTypeChange(item, update, 'time', $event)"
                     />
                     <span>Time</span>
                   </label>
-                  <label class="flex items-center">
+                  <label class="form-checkbox-field">
                     <input
                       type="checkbox"
                       :checked="item.valueType?.includes('quality') || false"
-                      class="mr-2"
+                      class="form-checkbox-small"
                       @change="handleValueTypeChange(item, update, 'quality', $event)"
                     />
                     <span>Quality</span>
                   </label>
-                  <label class="flex items-center">
+                  <label class="form-checkbox-field">
                     <input
                       type="checkbox"
                       :checked="item.valueType?.includes('risk') || false"
-                      class="mr-2"
+                      class="form-checkbox-small"
                       @change="handleValueTypeChange(item, update, 'risk', $event)"
                     />
                     <span>Risk</span>
                   </label>
-                  <label class="flex items-center">
+                  <label class="form-checkbox-field">
                     <input
                       type="checkbox"
                       :checked="item.valueType?.includes('enablement') || false"
-                      class="mr-2"
+                      class="form-checkbox-small"
                       @change="handleValueTypeChange(item, update, 'enablement', $event)"
                     />
                     <span>Enablement</span>
@@ -269,8 +269,8 @@
             </div>
 
             <!-- Value Model Fields (M1/M2 - Optional) -->
-            <div class="mt-4 pt-4 border-t border-gray-200">
-              <h4 class="text-sm font-medium text-gray-700 mb-3">Value Model (M1/M2 - Optional)</h4>
+            <div class="mt-6 pt-6 border-t-2 border-gray-200">
+              <h4 class="subsubsection-header text-gray-600">Value Model (M1/M2 - Optional)</h4>
               
               <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -375,7 +375,7 @@
     </div>
 
     <div>
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Stakeholders</h3>
+      <h3 class="subsection-header">Stakeholders</h3>
       <MultiValueInput
         v-model="localStakeholders"
         label="stakeholder"

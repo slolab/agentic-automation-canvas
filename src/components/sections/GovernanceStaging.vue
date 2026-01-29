@@ -1,9 +1,9 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Governance & Staging</h2>
-      <p class="text-sm text-gray-600 mb-6">
-        Define governance stages as <a href="https://www.w3.org/TR/prov-o/#Activity" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Activity type - represents processes or workflows">PROV-O Activities</a> with associated <a href="https://www.w3.org/TR/prov-o/#Agent" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O Agent type">agents</a> (via <a href="https://www.w3.org/TR/prov-o/#wasAssociatedWith" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O wasAssociatedWith property">wasAssociatedWith</a>), milestones, and compliance standards. Stages are linked via <a href="https://www.w3.org/TR/prov-o/#wasInformedBy" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="PROV-O wasInformedBy property">wasInformedBy</a> to show workflow dependencies.
+      <h2 class="section-header">Governance & Staging</h2>
+      <p class="section-description">
+        Define governance stages as <a href="https://www.w3.org/TR/prov-o/#Activity" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Activity type - represents processes or workflows">PROV-O Activities</a> with associated <a href="https://www.w3.org/TR/prov-o/#Agent" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Agent type">agents</a> (via <a href="https://www.w3.org/TR/prov-o/#wasAssociatedWith" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O wasAssociatedWith property">wasAssociatedWith</a>), milestones, and compliance standards. Stages are linked via <a href="https://www.w3.org/TR/prov-o/#wasInformedBy" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O wasInformedBy property">wasInformedBy</a> to show workflow dependencies.
       </p>
     </div>
 

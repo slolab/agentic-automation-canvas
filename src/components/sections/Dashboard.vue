@@ -1,8 +1,8 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Project Dashboard</h2>
-      <p class="text-sm text-gray-600 mb-6">
+      <h2 class="section-header">Project Dashboard</h2>
+      <p class="section-description">
         Overview of workflow, time savings, and value metrics for your automation project.
       </p>
     </div>

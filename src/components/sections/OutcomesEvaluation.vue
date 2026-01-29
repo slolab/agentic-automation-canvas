@@ -1,14 +1,14 @@
 <template>
   <div class="space-y-6">
     <div>
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Outcomes & Evaluation</h2>
-      <p class="text-sm text-gray-600 mb-6">
-        Document deliverables using <a href="https://sparontologies.github.io/frapo/current/frapo.html#d4e1003" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="FRAPO Deliverable class">FRAPO Deliverable</a> and <a href="https://schema.org/CreativeWork" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org CreativeWork type">Schema.org CreativeWork</a> types (e.g., <a href="https://schema.org/SoftwareApplication" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org SoftwareApplication type">SoftwareApplication</a>, <a href="https://schema.org/Report" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org Report type">Report</a>, <a href="https://schema.org/Dataset" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org Dataset type">Dataset</a>). Publications use <a href="https://schema.org/ScholarlyArticle" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="Schema.org ScholarlyArticle type">ScholarlyArticle</a>.
+      <h2 class="section-header">Outcomes & Evaluation</h2>
+      <p class="section-description">
+        Document deliverables using <a href="https://sparontologies.github.io/frapo/current/frapo.html#d4e1003" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="FRAPO Deliverable class">FRAPO Deliverable</a> and <a href="https://schema.org/CreativeWork" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org CreativeWork type">Schema.org CreativeWork</a> types (e.g., <a href="https://schema.org/SoftwareApplication" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org SoftwareApplication type">SoftwareApplication</a>, <a href="https://schema.org/Report" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org Report type">Report</a>, <a href="https://schema.org/Dataset" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org Dataset type">Dataset</a>). Publications use <a href="https://schema.org/ScholarlyArticle" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="Schema.org ScholarlyArticle type">ScholarlyArticle</a>.
       </p>
     </div>
 
     <div>
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Deliverables</h3>
+      <h3 class="subsection-header">Deliverables</h3>
       <MultiValueInput
         v-model="localDeliverables"
         label="deliverable"
@@ -96,7 +96,7 @@
     </div>
 
     <div>
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Publications</h3>
+      <h3 class="subsection-header">Publications</h3>
       <MultiValueInput
         v-model="localPublications"
         label="publication"
@@ -166,7 +166,7 @@
     </div>
 
     <div>
-      <h3 class="text-lg font-medium text-gray-900 mb-4">Evaluations</h3>
+      <h3 class="subsection-header">Evaluations</h3>
       <MultiValueInput
         v-model="localEvaluations"
         label="evaluation"
