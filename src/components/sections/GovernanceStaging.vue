@@ -3,7 +3,7 @@
     <div>
       <h2 class="section-header">Governance & Staging</h2>
       <p class="section-description">
-        Define governance stages as <a href="https://www.w3.org/TR/prov-o/#Activity" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Activity type - represents processes or workflows">PROV-O Activities</a> with associated <a href="https://www.w3.org/TR/prov-o/#Agent" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Agent type">agents</a> (via <a href="https://www.w3.org/TR/prov-o/#wasAssociatedWith" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O wasAssociatedWith property">wasAssociatedWith</a>), milestones, and compliance standards. Stages are linked via <a href="https://www.w3.org/TR/prov-o/#wasInformedBy" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O wasInformedBy property">wasInformedBy</a> to show workflow dependencies.
+        How will you manage the project lifecycle? Define the major stages of your project (e.g., Design, Development, Validation, Deployment, Monitoring) with associated agents, milestones, and compliance standards. Stages are represented as <a href="https://www.w3.org/TR/prov-o/#Activity" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Activity type - represents processes or workflows">PROV-O Activities</a> and linked sequentially to show the project workflow.
       </p>
     </div>
 
