@@ -15,82 +15,11 @@
         :create-default="() => ({ id: `deliverable-${Date.now()}`, title: '', type: '' })"
       >
         <template #input="{ item, index, update }">
-          <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
-            <FormField
-              :id="`deliverable-title-${index}`"
-              label="Title"
-              required
-            >
-              <input
-                :id="`deliverable-title-${index}`"
-                :value="item.title"
-                type="text"
-                class="form-input"
-                required
-                @input="update({ ...item, title: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`deliverable-type-${index}`"
-              label="Type"
-              help-text="Deliverable type using <a href='https://schema.org/CreativeWork' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org CreativeWork type'>Schema.org</a> types (e.g., SoftwareApplication, Report, Dataset, Document). Maps to <a href='https://sparontologies.github.io/frapo/current/frapo.html#d4e1003' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='FRAPO Deliverable class'>FRAPO Deliverable</a>."
-              required
-            >
-              <input
-                :id="`deliverable-type-${index}`"
-                :value="item.type"
-                type="text"
-                class="form-input"
-                placeholder="e.g., Report, Software, Dataset"
-                required
-                @input="update({ ...item, type: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`deliverable-desc-${index}`"
-              label="Description"
-            >
-              <textarea
-                :id="`deliverable-desc-${index}`"
-                :value="item.description || ''"
-                rows="2"
-                class="form-input"
-                @input="update({ ...item, description: ($event.target as HTMLTextAreaElement).value })"
-              />
-            </FormField>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                :id="`deliverable-date-${index}`"
-                label="Date"
-              >
-                <input
-                  :id="`deliverable-date-${index}`"
-                  :value="item.date || ''"
-                  type="date"
-                  class="form-input"
-                  @input="update({ ...item, date: ($event.target as HTMLInputElement).value })"
-                />
-              </FormField>
-
-              <FormField
-                :id="`deliverable-pid-${index}`"
-                label="PID/DOI"
-                help-text="Persistent Identifier (PID) or Digital Object Identifier (DOI) for the deliverable (e.g., https://doi.org/10.1234/example)"
-              >
-                <input
-                  :id="`deliverable-pid-${index}`"
-                  :value="item.pid || ''"
-                  type="url"
-                  class="form-input"
-                  placeholder="https://doi.org/10.1234/example"
-                  @input="update({ ...item, pid: ($event.target as HTMLInputElement).value })"
-                />
-              </FormField>
-            </div>
-          </div>
+          <DeliverableItem
+            :deliverable="item"
+            :index="index"
+            :update="update"
+          />
         </template>
       </MultiValueInput>
     </div>
@@ -103,64 +32,11 @@
         :create-default="() => ({ id: `pub-${Date.now()}`, title: '' })"
       >
         <template #input="{ item, index, update }">
-          <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
-            <FormField
-              :id="`pub-title-${index}`"
-              label="Title"
-              required
-            >
-              <input
-                :id="`pub-title-${index}`"
-                :value="item.title"
-                type="text"
-                class="form-input"
-                required
-                @input="update({ ...item, title: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`pub-doi-${index}`"
-              label="DOI"
-              help-text="Digital Object Identifier (DOI) as a full URL (e.g., https://doi.org/10.1234/example). Publications use <a href='https://schema.org/ScholarlyArticle' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org ScholarlyArticle type'>schema:ScholarlyArticle</a> type."
-            >
-              <input
-                :id="`pub-doi-${index}`"
-                :value="item.doi || ''"
-                type="url"
-                class="form-input"
-                placeholder="https://doi.org/10.1234/example"
-                @input="update({ ...item, doi: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`pub-authors-${index}`"
-              label="Authors"
-              help-text="Comma-separated list of authors"
-            >
-              <input
-                :id="`pub-authors-${index}`"
-                :value="(item.authors || []).join(', ')"
-                type="text"
-                class="form-input"
-                @input="update({ ...item, authors: ($event.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(s => s) })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`pub-date-${index}`"
-              label="Publication Date"
-            >
-              <input
-                :id="`pub-date-${index}`"
-                :value="item.date || ''"
-                type="date"
-                class="form-input"
-                @input="update({ ...item, date: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-          </div>
+          <PublicationItem
+            :publication="item"
+            :index="index"
+            :update="update"
+          />
         </template>
       </MultiValueInput>
     </div>
@@ -173,50 +49,11 @@
         :create-default="() => ({ id: `eval-${Date.now()}`, type: '' })"
       >
         <template #input="{ item, index, update }">
-          <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
-              <FormField
-                :id="`eval-type-${index}`"
-                label="Evaluation Type"
-                help-text="Type of evaluation (e.g., Performance Evaluation, User Study, Compliance Audit). Evaluations link to governance stages via <a href='https://www.w3.org/TR/prov-o/#wasGeneratedBy' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='PROV-O wasGeneratedBy property'>PROV-O wasGeneratedBy</a>."
-                required
-              >
-              <input
-                :id="`eval-type-${index}`"
-                :value="item.type"
-                type="text"
-                class="form-input"
-                placeholder="e.g., Usability Test, Performance Evaluation"
-                required
-                @input="update({ ...item, type: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`eval-date-${index}`"
-              label="Date"
-            >
-              <input
-                :id="`eval-date-${index}`"
-                :value="item.date || ''"
-                type="date"
-                class="form-input"
-                @input="update({ ...item, date: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`eval-results-${index}`"
-              label="Results"
-            >
-              <textarea
-                :id="`eval-results-${index}`"
-                :value="item.results || ''"
-                rows="3"
-                class="form-input"
-                @input="update({ ...item, results: ($event.target as HTMLTextAreaElement).value })"
-              />
-            </FormField>
-          </div>
+          <EvaluationItem
+            :evaluation="item"
+            :index="index"
+            :update="update"
+          />
         </template>
       </MultiValueInput>
     </div>
@@ -227,6 +64,9 @@
 import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
+import DeliverableItem from '../DeliverableItem.vue'
+import PublicationItem from '../PublicationItem.vue'
+import EvaluationItem from '../EvaluationItem.vue'
 import type { Deliverable, Publication, Evaluation } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 

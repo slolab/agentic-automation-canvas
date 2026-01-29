@@ -64,51 +64,33 @@
       </select>
     </FormField>
 
-    <FormField
-      id="algorithms"
-      label="Algorithms / Technologies"
-      help-text="List of algorithms, models, or technologies to be used. Add one per entry."
-    >
-      <MultiValueInput
-        v-model="localAlgorithms"
-        label="algorithm"
-        :create-default="() => ({ value: '' })"
-      >
-        <template #input="{ item, index, update }">
-          <input
-            :id="`algorithm-${index}`"
-            :value="item.value"
-            type="text"
-            class="form-input"
-            placeholder="e.g., BERT"
-            @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
-          />
-        </template>
-      </MultiValueInput>
-    </FormField>
+    <div>
+      <label class="form-label mb-2">
+        Algorithms / Technologies
+        <span class="text-xs text-gray-500 font-normal ml-2">
+          List of algorithms, models, or technologies to be used. Add one per entry.
+        </span>
+      </label>
+      <CollapsibleListField
+        v-model:items="localAlgorithms"
+        label="Algorithms / Technologies"
+        placeholder="e.g., BERT"
+      />
+    </div>
 
-    <FormField
-      id="tools"
-      label="Tools / Frameworks"
-      help-text="Development tools and frameworks. Add one per entry."
-    >
-      <MultiValueInput
-        v-model="localTools"
-        label="tool"
-        :create-default="() => ({ value: '' })"
-      >
-        <template #input="{ item, index, update }">
-          <input
-            :id="`tool-${index}`"
-            :value="item.value"
-            type="text"
-            class="form-input"
-            placeholder="e.g., Python"
-            @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
-          />
-        </template>
-      </MultiValueInput>
-    </FormField>
+    <div>
+      <label class="form-label mb-2">
+        Tools / Frameworks
+        <span class="text-xs text-gray-500 font-normal ml-2">
+          Development tools and frameworks. Add one per entry.
+        </span>
+      </label>
+      <CollapsibleListField
+        v-model:items="localTools"
+        label="Tools / Frameworks"
+        placeholder="e.g., Python"
+      />
+    </div>
 
     <FormField
       id="effort-estimate"
@@ -452,7 +434,7 @@
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
-import MultiValueInput from '../MultiValueInput.vue'
+import CollapsibleListField from '../CollapsibleListField.vue'
 import type { DeveloperFeasibility } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 

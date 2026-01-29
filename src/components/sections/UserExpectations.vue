@@ -35,35 +35,11 @@
         :create-default="() => ({ name: '' })"
       >
         <template #input="{ item, index, update }">
-          <div class="space-y-3 p-4 border border-gray-200 rounded-lg">
-            <FormField
-              :id="`stakeholder-name-${index}`"
-              label="Name"
-              required
-            >
-              <input
-                :id="`stakeholder-name-${index}`"
-                :value="item.name"
-                type="text"
-                class="form-input"
-                required
-                @input="update({ ...item, name: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-
-            <FormField
-              :id="`stakeholder-role-${index}`"
-              label="Role"
-            >
-              <input
-                :id="`stakeholder-role-${index}`"
-                :value="item.role || ''"
-                type="text"
-                class="form-input"
-                @input="update({ ...item, role: ($event.target as HTMLInputElement).value })"
-              />
-            </FormField>
-          </div>
+          <StakeholderItem
+            :stakeholder="item"
+            :index="index"
+            :update="update"
+          />
         </template>
       </MultiValueInput>
     </div>
@@ -75,6 +51,7 @@ import { ref, watch, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import RequirementItem from '../RequirementItem.vue'
+import StakeholderItem from '../StakeholderItem.vue'
 import type { Requirement, Stakeholder } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
