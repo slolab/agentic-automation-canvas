@@ -142,7 +142,7 @@ const activeSection = ref('project')
 
 const sections = [
   { id: 'project', label: 'Project' },
-  { id: 'user-expectations', label: 'User Expectations' },
+  { id: 'user-expectations', label: 'Tasks & Expectations' },
   { id: 'developer-feasibility', label: 'Developer Feasibility' },
   { id: 'governance', label: 'Governance' },
   { id: 'data-access', label: 'Data Access' },
