@@ -75,6 +75,27 @@ export interface DeveloperFeasibility {
   tools?: string[]
   effortEstimate?: string
   feasibilityNotes?: string
+  modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other'
+  modelName?: string
+  baselineCapability?: {
+    taskPerformance?: 'excellent' | 'good' | 'moderate' | 'poor' | 'fails'
+    successRate?: number
+    limitations?: string
+    requiresCustomInstructions?: boolean
+    customInstructionsComplexity?: 'low' | 'medium' | 'high'
+  }
+  expectedGains?: {
+    performanceImprovement?: 'minimal' | 'moderate' | 'significant' | 'transformative'
+    headroom?: 'low' | 'medium' | 'high'
+    justification?: string
+  }
+  implementationDifficulty?: {
+    skillAdditionDifficulty?: 'very-easy' | 'easy' | 'moderate' | 'difficult' | 'very-difficult'
+    baselineComparisonRequired?: boolean
+    validationMonitoringRequired?: boolean
+    securityLevel?: 'low' | 'medium' | 'high' | 'critical'
+  }
+  agenticExplanation?: string
 }
 
 export interface GovernanceStaging {

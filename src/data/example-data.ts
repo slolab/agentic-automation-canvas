@@ -109,6 +109,27 @@ export const exampleData: CanvasData = {
     tools: ['Python', 'TensorFlow', 'Document Processing API'],
     effortEstimate: '4-6 months',
     feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats.',
+    modelSelection: 'frontier-model',
+    modelName: 'GPT-4',
+    baselineCapability: {
+      taskPerformance: 'moderate',
+      successRate: 65,
+      limitations: 'Naive GPT-4 can extract text and basic information but struggles with: (1) Custom domain terminology specific to our business, (2) Complex multi-step workflows requiring context across multiple documents, (3) Edge cases with unusual document formats, (4) Maintaining consistency across related documents',
+      requiresCustomInstructions: true,
+      customInstructionsComplexity: 'high',
+    },
+    expectedGains: {
+      performanceImprovement: 'significant',
+      headroom: 'high',
+      justification: 'By adding agentic capabilities (tool use for document APIs, structured workflows, domain-specific instructions, and autonomy to handle multi-step processes), we expect to improve success rate from 65% to 90%+. The system will be able to handle complex workflows that require context awareness and decision-making that naive models cannot perform.',
+    },
+    implementationDifficulty: {
+      skillAdditionDifficulty: 'moderate',
+      baselineComparisonRequired: true,
+      validationMonitoringRequired: true,
+      securityLevel: 'medium',
+    },
+    agenticExplanation: 'Agentic capabilities are added through: (1) Tool use - giving the model access to document processing APIs, database queries, and external validation services, (2) Autonomy - allowing the model to make routing decisions and handle exceptions autonomously, (3) Structured workflows - defining multi-step document processing pipelines with checkpoints, (4) Domain knowledge - providing custom instructions with business-specific terminology and rules. The base GPT-4 provides reasoning and language understanding, but the agentic behavior emerges from the system architecture that enables autonomous decision-making and tool interaction.',
   },
   governance: {
     stages: [

@@ -133,7 +133,91 @@
           "items": { "type": "string" }
         },
         "effortEstimate": { "type": "string" },
-        "feasibilityNotes": { "type": "string" }
+        "feasibilityNotes": { "type": "string" },
+        "modelSelection": {
+          "type": "string",
+          "enum": ["open-source", "frontier-model", "fine-tuned", "custom", "other"],
+          "description": "Type of base model to be used"
+        },
+        "modelName": {
+          "type": "string",
+          "description": "Specific model name or identifier (e.g., 'GPT-4', 'Llama 3.1', 'Claude Sonnet')"
+        },
+        "baselineCapability": {
+          "type": "object",
+          "properties": {
+            "taskPerformance": {
+              "type": "string",
+              "enum": ["excellent", "good", "moderate", "poor", "fails"],
+              "description": "How well the naive model performs the task without custom system"
+            },
+            "successRate": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 100,
+              "description": "Estimated success rate of naive model (0-100%)"
+            },
+            "limitations": {
+              "type": "string",
+              "description": "Key limitations of naive model performance"
+            },
+            "requiresCustomInstructions": {
+              "type": "boolean",
+              "description": "Whether the task requires extensive custom instructions/prompts"
+            },
+            "customInstructionsComplexity": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "Complexity of custom instructions needed"
+            }
+          }
+        },
+        "expectedGains": {
+          "type": "object",
+          "properties": {
+            "performanceImprovement": {
+              "type": "string",
+              "enum": ["minimal", "moderate", "significant", "transformative"],
+              "description": "Expected improvement in performance from agentic system"
+            },
+            "headroom": {
+              "type": "string",
+              "enum": ["low", "medium", "high"],
+              "description": "Headroom for improvement - gap between baseline and potential"
+            },
+            "justification": {
+              "type": "string",
+              "description": "Explanation of why gains are expected and what enables them"
+            }
+          }
+        },
+        "implementationDifficulty": {
+          "type": "object",
+          "properties": {
+            "skillAdditionDifficulty": {
+              "type": "string",
+              "enum": ["very-easy", "easy", "moderate", "difficult", "very-difficult"],
+              "description": "Difficulty of adding the necessary skills (e.g., via AGENTS.md, tools, etc.)"
+            },
+            "baselineComparisonRequired": {
+              "type": "boolean",
+              "description": "Whether baseline comparison is necessary for validation"
+            },
+            "validationMonitoringRequired": {
+              "type": "boolean",
+              "description": "Whether validation and monitoring are required (depends on security level)"
+            },
+            "securityLevel": {
+              "type": "string",
+              "enum": ["low", "medium", "high", "critical"],
+              "description": "Security level of the task, affecting validation requirements"
+            }
+          }
+        },
+        "agenticExplanation": {
+          "type": "string",
+          "description": "Explanation of how agentic capabilities are added (autonomy, tool use, etc.) - clarifying that LLMs are not inherently agentic"
+        }
       }
     },
     "governance": {

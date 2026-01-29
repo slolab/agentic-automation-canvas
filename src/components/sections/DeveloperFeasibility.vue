@@ -138,6 +138,320 @@
         @blur="update"
       />
     </FormField>
+
+    <!-- Model Selection Section -->
+    <div class="border-t pt-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Model Selection</h3>
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="model-selection"
+          label="Model Type"
+          help-text="Type of base model to be used for the agentic system"
+        >
+          <select
+            id="model-selection"
+            v-model="localData.modelSelection"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select model type</option>
+            <option value="open-source">Open Source</option>
+            <option value="frontier-model">Frontier Model</option>
+            <option value="fine-tuned">Fine-tuned</option>
+            <option value="custom">Custom</option>
+            <option value="other">Other</option>
+          </select>
+        </FormField>
+
+        <FormField
+          id="model-name"
+          label="Model Name"
+          help-text="Specific model name or identifier (e.g., 'GPT-4', 'Llama 3.1', 'Claude Sonnet')"
+        >
+          <input
+            id="model-name"
+            v-model="localData.modelName"
+            type="text"
+            class="form-input"
+            placeholder="e.g., GPT-4, Llama 3.1"
+            @blur="update"
+          />
+        </FormField>
+      </div>
+    </div>
+
+    <!-- Baseline Capability Assessment Section -->
+    <div class="border-t pt-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Baseline Capability Assessment</h3>
+      <p class="text-sm text-gray-600 mb-4">
+        Assess how well the naive model performs the task without any custom agentic system. This helps determine the headroom for improvement.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="baseline-task-performance"
+          label="Task Performance (Naive Model)"
+          help-text="How well does the naive model perform the task without custom system? This measures baseline capability before adding agentic features."
+        >
+          <select
+            id="baseline-task-performance"
+            v-model="localData.baselineCapability.taskPerformance"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select performance level</option>
+            <option value="excellent">Excellent - Model handles task very well</option>
+            <option value="good">Good - Model handles task adequately</option>
+            <option value="moderate">Moderate - Model handles task with limitations</option>
+            <option value="poor">Poor - Model struggles with the task</option>
+            <option value="fails">Fails - Model cannot perform the task</option>
+          </select>
+        </FormField>
+
+        <FormField
+          id="baseline-success-rate"
+          label="Success Rate (%)"
+          help-text="Estimated success rate of naive model without custom system (0-100%)"
+        >
+          <input
+            id="baseline-success-rate"
+            v-model.number="localData.baselineCapability.successRate"
+            type="number"
+            min="0"
+            max="100"
+            class="form-input"
+            placeholder="e.g., 75"
+            @blur="update"
+          />
+        </FormField>
+      </div>
+
+      <FormField
+        id="baseline-limitations"
+        label="Key Limitations"
+        help-text="Describe the main limitations of the naive model that prevent it from performing the task well"
+      >
+        <textarea
+          id="baseline-limitations"
+          v-model="localData.baselineCapability.limitations"
+          rows="3"
+          class="form-input"
+          placeholder="e.g., Cannot handle custom domain terminology, fails on edge cases, lacks context awareness"
+          @blur="update"
+        />
+      </FormField>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="requires-custom-instructions"
+          label="Requires Custom Instructions"
+          help-text="Whether the task requires extensive custom instructions or prompts to work"
+        >
+          <div class="flex items-center">
+            <input
+              id="requires-custom-instructions"
+              v-model="localData.baselineCapability.requiresCustomInstructions"
+              type="checkbox"
+              class="form-checkbox"
+              @change="update"
+            />
+            <label for="requires-custom-instructions" class="ml-2 text-sm text-gray-700">
+              Task requires extensive custom instructions
+            </label>
+          </div>
+        </FormField>
+
+        <FormField
+          id="custom-instructions-complexity"
+          label="Custom Instructions Complexity"
+          help-text="If custom instructions are required, how complex are they?"
+        >
+          <select
+            id="custom-instructions-complexity"
+            v-model="localData.baselineCapability.customInstructionsComplexity"
+            class="form-input"
+            :disabled="!localData.baselineCapability.requiresCustomInstructions"
+            @change="update"
+          >
+            <option :value="undefined">Select complexity</option>
+            <option value="low">Low - Simple prompts suffice</option>
+            <option value="medium">Medium - Structured prompts needed</option>
+            <option value="high">High - Complex, multi-step instructions required</option>
+          </select>
+        </FormField>
+      </div>
+    </div>
+
+    <!-- Expected Gains Section -->
+    <div class="border-t pt-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Expected Gains from Agentic System</h3>
+      <p class="text-sm text-gray-600 mb-4">
+        Assess the expected improvement from implementing a custom agentic system compared to the baseline. High headroom indicates significant potential for improvement.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="performance-improvement"
+          label="Expected Performance Improvement"
+          help-text="How much improvement is expected from the agentic system compared to baseline?"
+        >
+          <select
+            id="performance-improvement"
+            v-model="localData.expectedGains.performanceImprovement"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select improvement level</option>
+            <option value="minimal">Minimal - Small improvement expected</option>
+            <option value="moderate">Moderate - Noticeable improvement expected</option>
+            <option value="significant">Significant - Major improvement expected</option>
+            <option value="transformative">Transformative - Game-changing improvement expected</option>
+          </select>
+        </FormField>
+
+        <FormField
+          id="headroom"
+          label="Headroom for Improvement"
+          help-text="The gap between baseline capability and potential. High headroom means there's much room for improvement."
+        >
+          <select
+            id="headroom"
+            v-model="localData.expectedGains.headroom"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select headroom level</option>
+            <option value="low">Low - Baseline is already good, limited improvement possible</option>
+            <option value="medium">Medium - Some room for improvement</option>
+            <option value="high">High - Significant room for improvement</option>
+          </select>
+        </FormField>
+      </div>
+
+      <FormField
+        id="gains-justification"
+        label="Justification for Expected Gains"
+        help-text="Explain why gains are expected and what enables them (e.g., tool use, autonomy, custom workflows, domain knowledge)"
+      >
+        <textarea
+          id="gains-justification"
+          v-model="localData.expectedGains.justification"
+          rows="3"
+          class="form-input"
+          placeholder="e.g., Adding tool use and autonomy will enable the model to handle complex multi-step workflows that it cannot do naively"
+          @blur="update"
+        />
+      </FormField>
+    </div>
+
+    <!-- Implementation Difficulty Section -->
+    <div class="border-t pt-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Implementation Difficulty & Requirements</h3>
+      <p class="text-sm text-gray-600 mb-4">
+        Assess how difficult it is to add the necessary capabilities and what validation/monitoring is required.
+      </p>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="skill-addition-difficulty"
+          label="Skill Addition Difficulty"
+          help-text="How difficult is it to add the necessary skills (e.g., via AGENTS.md, tools, custom instructions)?"
+        >
+          <select
+            id="skill-addition-difficulty"
+            v-model="localData.implementationDifficulty.skillAdditionDifficulty"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select difficulty</option>
+            <option value="very-easy">Very Easy - Simple configuration (e.g., AGENTS.md)</option>
+            <option value="easy">Easy - Straightforward implementation</option>
+            <option value="moderate">Moderate - Requires some development</option>
+            <option value="difficult">Difficult - Complex implementation needed</option>
+            <option value="very-difficult">Very Difficult - Major development effort</option>
+          </select>
+        </FormField>
+
+        <FormField
+          id="security-level"
+          label="Security Level"
+          help-text="Security level of the task, which affects validation and monitoring requirements"
+        >
+          <select
+            id="security-level"
+            v-model="localData.implementationDifficulty.securityLevel"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select security level</option>
+            <option value="low">Low - Minimal security requirements</option>
+            <option value="medium">Medium - Standard security requirements</option>
+            <option value="high">High - Enhanced security requirements</option>
+            <option value="critical">Critical - Maximum security requirements</option>
+          </select>
+        </FormField>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <FormField
+          id="baseline-comparison-required"
+          label="Baseline Comparison Required"
+          help-text="Whether baseline comparison is necessary for validation"
+        >
+          <div class="flex items-center">
+            <input
+              id="baseline-comparison-required"
+              v-model="localData.implementationDifficulty.baselineComparisonRequired"
+              type="checkbox"
+              class="form-checkbox"
+              @change="update"
+            />
+            <label for="baseline-comparison-required" class="ml-2 text-sm text-gray-700">
+              Baseline comparison required for validation
+            </label>
+          </div>
+        </FormField>
+
+        <FormField
+          id="validation-monitoring-required"
+          label="Validation & Monitoring Required"
+          help-text="Whether validation and monitoring are required (typically depends on security level)"
+        >
+          <div class="flex items-center">
+            <input
+              id="validation-monitoring-required"
+              v-model="localData.implementationDifficulty.validationMonitoringRequired"
+              type="checkbox"
+              class="form-checkbox"
+              @change="update"
+            />
+            <label for="validation-monitoring-required" class="ml-2 text-sm text-gray-700">
+              Validation and monitoring required
+            </label>
+          </div>
+        </FormField>
+      </div>
+    </div>
+
+    <!-- Agentic Explanation Section -->
+    <div class="border-t pt-6 mt-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Agentic Capabilities</h3>
+      <FormField
+        id="agentic-explanation"
+        label="How Agentic Capabilities Are Added"
+        help-text="Explain how agentic capabilities are added to the system. Note: LLMs are not inherently agentic - agentic behavior comes from how they are used, given autonomy, tool access, and structured workflows."
+      >
+        <textarea
+          id="agentic-explanation"
+          v-model="localData.agenticExplanation"
+          rows="4"
+          class="form-input"
+          placeholder="e.g., Agentic capabilities are added through: (1) Tool use - giving the model access to APIs and external tools, (2) Autonomy - allowing the model to make decisions and take actions, (3) Structured workflows - defining multi-step processes, (4) Domain knowledge - providing custom instructions and context. The base LLM provides reasoning and language understanding, but the agentic behavior emerges from the system architecture."
+          @blur="update"
+        />
+      </FormField>
+    </div>
   </div>
 </template>
 
@@ -158,10 +472,27 @@ const initLocalData = (): DeveloperFeasibility => {
     technicalRisk: feasibility?.technicalRisk,
     effortEstimate: feasibility?.effortEstimate,
     feasibilityNotes: feasibility?.feasibilityNotes,
+    modelSelection: feasibility?.modelSelection,
+    modelName: feasibility?.modelName,
+    baselineCapability: feasibility?.baselineCapability || {},
+    expectedGains: feasibility?.expectedGains || {},
+    implementationDifficulty: feasibility?.implementationDifficulty || {},
+    agenticExplanation: feasibility?.agenticExplanation,
   }
 }
 
 const localData = ref<DeveloperFeasibility>(initLocalData())
+
+// Ensure nested objects always exist for v-model binding
+if (!localData.value.baselineCapability) {
+  localData.value.baselineCapability = {}
+}
+if (!localData.value.expectedGains) {
+  localData.value.expectedGains = {}
+}
+if (!localData.value.implementationDifficulty) {
+  localData.value.implementationDifficulty = {}
+}
 
 // Convert algorithms/tools arrays to objects for MultiValueInput
 const initAlgorithms = () => {
@@ -205,13 +536,34 @@ watch(
           technicalRisk: newFeasibility.technicalRisk,
           effortEstimate: newFeasibility.effortEstimate,
           feasibilityNotes: newFeasibility.feasibilityNotes,
+          modelSelection: newFeasibility.modelSelection,
+          modelName: newFeasibility.modelName,
+          baselineCapability: newFeasibility.baselineCapability || {},
+          expectedGains: newFeasibility.expectedGains || {},
+          implementationDifficulty: newFeasibility.implementationDifficulty || {},
+          agenticExplanation: newFeasibility.agenticExplanation,
+        }
+        // Ensure nested objects always exist
+        if (!localData.value.baselineCapability) {
+          localData.value.baselineCapability = {}
+        }
+        if (!localData.value.expectedGains) {
+          localData.value.expectedGains = {}
+        }
+        if (!localData.value.implementationDifficulty) {
+          localData.value.implementationDifficulty = {}
         }
         // Sync algorithms and tools arrays
         localAlgorithms.value = (newFeasibility.algorithms || []).map((a: string) => ({ value: a }))
         localTools.value = (newFeasibility.tools || []).map((t: string) => ({ value: t }))
       } else {
         // Reset to empty state when cleared
-        localData.value = { trlLevel: {} }
+        localData.value = { 
+          trlLevel: {},
+          baselineCapability: {},
+          expectedGains: {},
+          implementationDifficulty: {},
+        }
         localAlgorithms.value = []
         localTools.value = []
       }
