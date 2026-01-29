@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Functional Roles",
+  "description": "Controlled vocabulary for functional roles in agentic automation projects",
+  "type": "object",
+  "properties": {
+    "roles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "label": { "type": "string" },
+          "description": { "type": "string" }
+        },
+        "required": ["id", "label", "description"]
+      }
+    }
+  },
+  "required": ["roles"],
+  "roles": [
+    {
+      "id": "project-lead",
+      "label": "Project Lead",
+      "description": "Primary person responsible for overall project direction and coordination"
+    },
+    {
+      "id": "developer",
+      "label": "Developer",
+      "description": "Person responsible for developing and implementing the automation system"
+    },
+    {
+      "id": "researcher",
+      "label": "Researcher",
+      "description": "Person conducting research or analysis related to the project"
+    },
+    {
+      "id": "data-manager",
+      "label": "Data Manager",
+      "description": "Person responsible for managing data access, quality, and compliance"
+    },
+    {
+      "id": "stakeholder",
+      "label": "Stakeholder",
+      "description": "Person with an interest in the project outcomes but not directly involved in development"
+    },
+    {
+      "id": "compliance-officer",
+      "label": "Compliance Officer",
+      "description": "Person responsible for ensuring regulatory and compliance requirements are met"
+    },
+    {
+      "id": "end-user",
+      "label": "End User",
+      "description": "Person who will use the automation system in their daily work"
+    },
+    {
+      "id": "domain-expert",
+      "label": "Domain Expert",
+      "description": "Person with specialized knowledge in the domain where automation is applied"
+    },
+    {
+      "id": "technical-lead",
+      "label": "Technical Lead",
+      "description": "Person responsible for technical architecture and technical decision-making"
+    },
+    {
+      "id": "project-manager",
+      "label": "Project Manager",
+      "description": "Person responsible for project planning, scheduling, and resource management"
+    }
+  ]
+}

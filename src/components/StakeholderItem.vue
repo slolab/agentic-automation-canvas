@@ -13,10 +13,10 @@
               {{ personName || 'Unassigned Person' }}
             </span>
             <span
-              v-if="stakeholder.role"
-              class="px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-700"
+              v-if="personFunctionRoles && personFunctionRoles.length > 0"
+              class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
             >
-              {{ stakeholder.role }}
+              {{ personFunctionRoles.join(', ') }}
             </span>
           </div>
           <div v-if="personInfo" class="text-xs text-gray-500 mt-0.5">
@@ -75,21 +75,22 @@
         <strong>No persons available.</strong> Please add persons in the "Persons" section first.
       </div>
 
-      <FormField
-        :id="`stakeholder-role-${index}`"
-        label="Role"
-        help-text="The role this person has as a stakeholder (e.g., 'Data Entry Manager', 'IT Lead')"
-        tooltip="Describe the role this person has as a stakeholder in the project. This helps understand their perspective and interests. Examples: 'Data Entry Manager', 'IT Lead', 'End User Representative', 'Compliance Officer'. The role explains why this person is a stakeholder."
-      >
-        <input
-          :id="`stakeholder-role-${index}`"
-          :value="stakeholder.role || ''"
-          type="text"
-          class="form-input"
-          placeholder="e.g., Data Entry Manager"
-          @input="update({ ...stakeholder, role: ($event.target as HTMLInputElement).value || undefined })"
-        />
-      </FormField>
+      <!-- Display functional roles from Person -->
+      <div v-if="personInfo && personInfo.functionRoles && personInfo.functionRoles.length > 0" class="p-3 bg-blue-50 border border-blue-200 rounded">
+        <div class="text-xs font-medium text-blue-900 mb-1">Functional Roles:</div>
+        <div class="flex flex-wrap gap-1">
+          <span
+            v-for="roleId in personInfo.functionRoles"
+            :key="roleId"
+            class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+          >
+            {{ roleId }}
+          </span>
+        </div>
+        <p class="text-xs text-blue-700 mt-1">
+          Functional roles are assigned in the Persons section. These roles describe the person's function in the project.
+        </p>
+      </div>
 
       <FormField
         :id="`stakeholder-role-context-${index}`"
@@ -140,6 +141,11 @@ const personName = computed(() => {
 const personInfo = computed(() => {
   if (!props.stakeholder.personId) return null
   return availablePersons.value.find(p => p.id === props.stakeholder.personId) || null
+})
+
+// Get person's functional roles for display
+const personFunctionRoles = computed(() => {
+  return personInfo.value?.functionRoles || []
 })
 
 // New stakeholders (without personId) start expanded so they can be filled in

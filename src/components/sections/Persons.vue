@@ -16,7 +16,7 @@
     <MultiValueInput
       v-model="localPersons"
       label="person"
-      :create-default="() => ({ id: `person-${Date.now()}`, name: '' })"
+      :create-default="() => ({ id: `person-${Date.now()}`, name: '', functionRoles: [] })"
     >
       <template #input="{ item, index, update }">
         <PersonItem
@@ -52,27 +52,49 @@
             <span class="text-xs text-gray-500 font-mono">{{ person.id }}</span>
           </div>
           
-          <div v-if="getPersonRoles(person.id).length > 0" class="mt-3 space-y-2">
+          <!-- Functional Roles -->
+          <div v-if="person.functionRoles && person.functionRoles.length > 0" class="mt-3">
+            <div class="text-xs font-medium text-gray-700 mb-1">Functional Roles:</div>
+            <div class="flex flex-wrap gap-1">
+              <span
+                v-for="roleId in person.functionRoles"
+                :key="roleId"
+                class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+              >
+                {{ getRoleLabel(roleId) }}
+              </span>
+            </div>
+          </div>
+          
+          <!-- Local Titles -->
+          <div v-if="person.localTitles && person.localTitles.length > 0" class="mt-2">
+            <div class="text-xs font-medium text-gray-700 mb-1">Local Titles:</div>
+            <div class="text-xs text-gray-600">{{ person.localTitles.join(', ') }}</div>
+          </div>
+          
+          <!-- Project Assignments -->
+          <div v-if="getPersonAssignments(person.id).length > 0" class="mt-3 space-y-2">
+            <div class="text-xs font-medium text-gray-700 mb-1">Project Assignments:</div>
             <div
-              v-for="role in getPersonRoles(person.id)"
-              :key="`${role.type}-${role.context}`"
+              v-for="assignment in getPersonAssignments(person.id)"
+              :key="`${assignment.type}-${assignment.context}`"
               class="text-xs"
             >
               <span
                 :class="{
-                  'bg-blue-100 text-blue-700': role.type === 'stakeholder',
-                  'bg-green-100 text-green-700': role.type === 'agent',
+                  'bg-blue-100 text-blue-700': assignment.type === 'stakeholder',
+                  'bg-green-100 text-green-700': assignment.type === 'agent',
                 }"
                 class="px-2 py-0.5 rounded font-medium"
               >
-                {{ role.type === 'stakeholder' ? 'Stakeholder' : 'Agent' }}
+                {{ assignment.type === 'stakeholder' ? 'Stakeholder' : 'Agent' }}
               </span>
-              <span class="text-gray-600 ml-2">{{ role.role || 'No role specified' }}</span>
-              <span v-if="role.context" class="text-gray-500 ml-2">({{ role.context }})</span>
+              <span v-if="assignment.context" class="text-gray-500 ml-2">({{ assignment.context }})</span>
             </div>
           </div>
-          <div v-else class="text-xs text-gray-400 italic mt-2">
-            No roles assigned yet
+          
+          <div v-if="(!person.functionRoles || person.functionRoles.length === 0) && getPersonAssignments(person.id).length === 0" class="text-xs text-gray-400 italic mt-2">
+            No functional roles assigned yet
           </div>
         </div>
       </div>
@@ -87,6 +109,7 @@ import PersonItem from '../PersonItem.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import type { Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
+import functionRolesData from '@/data/function-roles.json'
 
 const { canvasData, updatePersons } = useCanvasData()
 
@@ -135,17 +158,22 @@ watch(localPersons, async (newPersons) => {
   isLocalUpdate = false
 }, { deep: true, immediate: false })
 
-// Get all roles for a person
-function getPersonRoles(personId: string): Array<{ type: 'stakeholder' | 'agent'; role?: string; context?: string }> {
-  const roles: Array<{ type: 'stakeholder' | 'agent'; role?: string; context?: string }> = []
+// Get role label from ID
+function getRoleLabel(roleId: string): string {
+  const role = (functionRolesData as any).roles?.find((r: any) => r.id === roleId)
+  return role?.label || roleId
+}
+
+// Get project assignments for a person (stakeholder/agent assignments)
+function getPersonAssignments(personId: string): Array<{ type: 'stakeholder' | 'agent'; context?: string }> {
+  const assignments: Array<{ type: 'stakeholder' | 'agent'; context?: string }> = []
   
   // Check stakeholders
   if (canvasData.value.userExpectations?.stakeholders) {
     canvasData.value.userExpectations.stakeholders.forEach((stakeholder) => {
       if (stakeholder.personId === personId) {
-        roles.push({
+        assignments.push({
           type: 'stakeholder',
-          role: stakeholder.role,
           context: stakeholder.roleContext,
         })
       }
@@ -158,9 +186,8 @@ function getPersonRoles(personId: string): Array<{ type: 'stakeholder' | 'agent'
       if (stage.agents) {
         stage.agents.forEach((agent) => {
           if (agent.type === 'person' && agent.personId === personId) {
-            roles.push({
+            assignments.push({
               type: 'agent',
-              role: agent.role,
               context: agent.roleContext || stage.name,
             })
           }
@@ -169,6 +196,6 @@ function getPersonRoles(personId: string): Array<{ type: 'stakeholder' | 'agent'
     })
   }
   
-  return roles
+  return assignments
 }
 </script>

@@ -61,26 +61,31 @@
         </button>
       </div>
 
-      <FormField
-        :id="`stage-name-${index}`"
-        label="Stage Name"
-        tooltip="Select the governance stage type: <strong>Design</strong> - Planning and requirements; <strong>Development</strong> - Building the system; <strong>Validation</strong> - Testing and evaluation; <strong>Deployment</strong> - Rolling out to users; <strong>Monitoring</strong> - Ongoing operation. Stages are represented as PROV-O Activities and link sequentially to show project workflow."
-        required
-      >
-        <select
+        <FormField
           :id="`stage-name-${index}`"
-          :value="stage.name"
-          class="form-input"
-          @change="update({ ...stage, name: ($event.target as HTMLSelectElement).value })"
+          label="Stage Name"
+          tooltip="Select the governance stage type: <strong>Design</strong> - Planning and requirements; <strong>Development</strong> - Building the system; <strong>Validation</strong> - Testing and evaluation; <strong>Deployment</strong> - Rolling out to users; <strong>Monitoring</strong> - Ongoing operation. Stages are represented as PROV-O Activities and link sequentially to show project workflow."
+          required
         >
-          <option value="">Select stage</option>
-          <option value="Design">Design</option>
-          <option value="Development">Development</option>
-          <option value="Validation">Validation</option>
-          <option value="Deployment">Deployment</option>
-          <option value="Monitoring">Monitoring</option>
-        </select>
-      </FormField>
+          <select
+            :id="`stage-name-${index}`"
+            :value="stage.name"
+            class="form-input"
+            @change="update({ ...stage, name: ($event.target as HTMLSelectElement).value })"
+          >
+            <option value="">Select stage</option>
+            <option value="Design">Design</option>
+            <option value="Development">Development</option>
+            <option value="Validation">Validation</option>
+            <option value="Deployment">Deployment</option>
+            <option value="Monitoring">Monitoring</option>
+          </select>
+        </FormField>
+
+        <!-- Warning if stage won't be exported -->
+        <div v-if="!willBeExported" class="p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+          <strong>Note:</strong> This stage will not be exported in the RO-Crate because it is missing required fields. Stages must have a name and at least one agent to be exported as PROV-O Activities.
+        </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <FormField
@@ -141,8 +146,16 @@
               Remove
             </button>
           </div>
-          <div v-if="agent.role" class="text-xs text-gray-600 mb-1">
-            Role: {{ agent.role }}
+          <!-- Display functional roles for person-type agents -->
+          <div v-if="agent.type === 'person' && agent.personId && getPersonInfo(agent.personId)?.functionRoles && getPersonInfo(agent.personId)!.functionRoles.length > 0" class="text-xs mb-1">
+            <span class="font-medium text-gray-700">Functional Roles: </span>
+            <span
+              v-for="(roleId, idx) in getPersonInfo(agent.personId)!.functionRoles"
+              :key="roleId"
+              class="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
+            >
+              {{ roleId }}{{ idx < getPersonInfo(agent.personId)!.functionRoles.length - 1 ? ',' : '' }}
+            </span>
           </div>
           <div v-if="agent.type === 'person' && agent.personId" class="text-xs text-gray-500 space-y-0.5">
             <div v-if="getPersonInfo(agent.personId)?.affiliation">Affiliation: {{ getPersonInfo(agent.personId)?.affiliation }}</div>
@@ -197,12 +210,7 @@
             class="form-input text-sm"
           />
           
-          <input
-            v-model="newAgent.role"
-            type="text"
-            placeholder="Role (optional)"
-            class="form-input text-sm"
-          />
+          <!-- Note: role removed - functional roles come from Person.functionRoles -->
           
           <!-- Role context (for person type) -->
           <input
@@ -392,6 +400,11 @@ const newCompliance = ref<string>('')
 // Get available persons
 const availablePersons = computed<Person[]>(() => {
   return canvasData.value.persons || []
+})
+
+// Check if stage will be exported (has name and at least one agent)
+const willBeExported = computed(() => {
+  return !!(props.stage.name && props.stage.name.trim() && props.stage.agents && props.stage.agents.length > 0)
 })
 
 // Helper functions

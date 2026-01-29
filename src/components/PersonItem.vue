@@ -104,9 +104,61 @@
         />
       </FormField>
 
+      <FormField
+        :id="`person-function-roles-${index}`"
+        label="Functional Roles"
+        help-text="Select one or more functional roles for this person. These are standardized roles used across projects."
+        tooltip="Functional roles are standardized, controlled terms that describe a person's function in the project. Examples: Project Lead, Developer, Researcher, Data Manager. A person can have multiple functional roles. These roles are used for role aggregation and cross-project analysis."
+        :error="functionRolesError"
+        required
+      >
+        <div class="border border-gray-300 rounded-md bg-white max-h-64 overflow-y-auto p-3 space-y-2">
+          <label
+            v-for="role in functionRolesList"
+            :key="role.id"
+            class="flex items-start gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded -m-2"
+          >
+            <input
+              type="checkbox"
+              :checked="(person.functionRoles || []).includes(role.id)"
+              class="mt-0.5 form-checkbox-small"
+              @change="handleFunctionRoleToggle(role.id, $event)"
+            />
+            <div class="flex-1 min-w-0">
+              <span class="text-sm font-medium text-gray-900">{{ role.label }}</span>
+              <p v-if="role.description" class="text-xs text-gray-500 mt-0.5">{{ role.description }}</p>
+            </div>
+          </label>
+        </div>
+        <p class="text-xs text-gray-500 mt-1">
+          Selected: {{ (person.functionRoles || []).length }} of {{ functionRolesList.length }} roles
+        </p>
+      </FormField>
+
+      <FormField
+        :id="`person-local-titles-${index}`"
+        label="Local Titles (Optional)"
+        help-text="Free-text local titles (e.g., 'Senior Research Scientist', 'Head of IT'). Comma-separated."
+        tooltip="Local titles are free-text descriptions of a person's position or title within their organization. These are optional and complement functional roles. Examples: 'Senior Research Scientist', 'Head of IT', 'Principal Investigator'. Enter multiple titles separated by commas."
+      >
+        <input
+          :id="`person-local-titles-${index}`"
+          :value="(person.localTitles || []).join(', ')"
+          type="text"
+          class="form-input"
+          placeholder="e.g., Senior Research Scientist, Head of IT"
+          @input="handleLocalTitlesChange($event)"
+        />
+      </FormField>
+
       <!-- Validation: Check for duplicate IDs -->
       <div v-if="hasDuplicateId" class="p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
         <strong>Warning:</strong> Another person already uses this ID. Person IDs must be unique.
+      </div>
+
+      <!-- Validation: Check for function roles -->
+      <div v-if="functionRolesError" class="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
+        <strong>Error:</strong> {{ functionRolesError }}
       </div>
     </div>
   </div>
@@ -116,6 +168,7 @@
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
 import type { Person } from '@/types/canvas'
+import functionRolesData from '@/data/function-roles.json'
 
 interface Props {
   person: Person
@@ -129,8 +182,47 @@ const props = defineProps<Props>()
 // Existing persons start collapsed
 const isExpanded = ref(!props.person.name || props.person.name.trim() === '')
 
+// Load function roles from vocabulary
+const functionRolesList = computed(() => {
+  return (functionRolesData as any).roles || []
+})
+
 // Check for duplicate IDs
 const hasDuplicateId = computed(() => {
   return props.allPersons.filter(p => p.id === props.person.id).length > 1
 })
+
+// Validate function roles
+const functionRolesError = computed(() => {
+  const roles = props.person.functionRoles || []
+  if (roles.length === 0) {
+    return 'At least one functional role is required'
+  }
+  return null
+})
+
+// Handle function role toggle (checkbox)
+function handleFunctionRoleToggle(roleId: string, event: Event) {
+  const checked = (event.target as HTMLInputElement).checked
+  const currentRoles = props.person.functionRoles || []
+  let newRoles: string[]
+  
+  if (checked) {
+    newRoles = [...currentRoles, roleId]
+  } else {
+    newRoles = currentRoles.filter(r => r !== roleId)
+  }
+  
+  props.update({ ...props.person, functionRoles: newRoles })
+}
+
+// Handle local titles change
+function handleLocalTitlesChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const titles = input.value
+    .split(',')
+    .map(t => t.trim())
+    .filter(t => t.length > 0)
+  props.update({ ...props.person, localTitles: titles.length > 0 ? titles : undefined })
+}
 </script>

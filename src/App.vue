@@ -160,13 +160,99 @@ const clearData = () => {
 
 const downloadROCrate = async () => {
   const validationResult = validateAll()
+  
+  // Block on errors
   if (!validationResult.isValid) {
-    alert(`Please fix validation errors before downloading:\n\n${validationResult.errors.map(e => `- ${e.message}`).join('\n')}`)
+    const errorMessages = validationResult.errors.map(e => `- ${e.field}: ${e.message}`).join('\n')
+    alert(`Please fix validation errors before downloading:\n\n${errorMessages}`)
     return
+  }
+
+  // Show warnings but allow export
+  if (validationResult.warnings.length > 0) {
+    const warningMessages = validationResult.warnings.map(w => `- ${w.field}: ${w.message}`).join('\n')
+    const proceed = confirm(`The following warnings were found. You can still export, but consider addressing them:\n\n${warningMessages}\n\nDo you want to proceed with export?`)
+    if (!proceed) {
+      return
+    }
+  }
+
+  // Additional validation: check for null values and reference resolution
+  const additionalWarnings: string[] = []
+  
+  // Check Person references
+  const personIds = new Set((canvasData.value.persons || []).map(p => p.id))
+  
+  // Check creator references
+  if (canvasData.value.project.creator) {
+    canvasData.value.project.creator.forEach((creatorId, idx) => {
+      if (!personIds.has(creatorId)) {
+        additionalWarnings.push(`Project creator[${idx}] references unknown person: ${creatorId}`)
+      }
+    })
+  }
+  
+  // Check stakeholder references
+  if (canvasData.value.userExpectations?.stakeholders) {
+    canvasData.value.userExpectations.stakeholders.forEach((stakeholder, idx) => {
+      if (stakeholder.personId && !personIds.has(stakeholder.personId)) {
+        additionalWarnings.push(`Stakeholder[${idx}] references unknown person: ${stakeholder.personId}`)
+      }
+    })
+  }
+  
+  // Check agent references
+  if (canvasData.value.governance?.stages) {
+    canvasData.value.governance.stages.forEach((stage, stageIdx) => {
+      if (stage.agents) {
+        stage.agents.forEach((agent, agentIdx) => {
+          if (agent.type === 'person' && agent.personId && !personIds.has(agent.personId)) {
+            additionalWarnings.push(`Stage[${stageIdx}].agent[${agentIdx}] references unknown person: ${agent.personId}`)
+          }
+        })
+      }
+    })
+  }
+  
+  if (additionalWarnings.length > 0) {
+    const proceed = confirm(`Additional validation warnings:\n\n${additionalWarnings.join('\n')}\n\nDo you want to proceed with export?`)
+    if (!proceed) {
+      return
+    }
   }
 
   try {
     const rocrate = generateROCrate(canvasData.value)
+    
+    // Validate RO-Crate structure: check for null values
+    const nullValues: string[] = []
+    const checkForNulls = (obj: any, path: string = '') => {
+      if (obj === null) {
+        nullValues.push(path || 'root')
+        return
+      }
+      if (Array.isArray(obj)) {
+        obj.forEach((item, idx) => {
+          if (item === null) {
+            nullValues.push(`${path}[${idx}]`)
+          } else if (typeof item === 'object') {
+            checkForNulls(item, `${path}[${idx}]`)
+          }
+        })
+      } else if (typeof obj === 'object') {
+        Object.keys(obj).forEach(key => {
+          const newPath = path ? `${path}.${key}` : key
+          checkForNulls(obj[key], newPath)
+        })
+      }
+    }
+    checkForNulls(rocrate)
+    
+    if (nullValues.length > 0) {
+      console.warn('RO-Crate contains null values:', nullValues)
+      // Note: We'll filter these out in generateROCrate, but warn here
+    }
+    
     const projectName = canvasData.value.project.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
