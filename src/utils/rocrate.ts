@@ -282,7 +282,7 @@ class PersonRegistry {
       // Add roles array
       if (entry.roles.size > 0) {
         entity['aac:roles'] = Array.from(entry.roles)
-        // For backward compatibility, set role to first role if only one
+        // Set role to first role if only one
         if (entry.roles.size === 1) {
           entity.role = Array.from(entry.roles)[0]
         }
@@ -381,8 +381,11 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   if (data.project.headlineValue) {
     projectEntity['aac:headlineValue'] = data.project.headlineValue
   }
-  if (data.project.aggregateExpectedHoursSavedPerMonth !== undefined) {
-    projectEntity['aac:aggregateExpectedHoursSavedPerMonth'] = data.project.aggregateExpectedHoursSavedPerMonth
+  if (data.project.aggregateBenefitValue !== undefined) {
+    projectEntity['aac:aggregateBenefitValue'] = data.project.aggregateBenefitValue
+  }
+  if (data.project.aggregateBenefitUnit) {
+    projectEntity['aac:aggregateBenefitUnit'] = data.project.aggregateBenefitUnit
   }
   if (data.project.primaryValueDriver) {
     projectEntity['aac:primaryValueDriver'] = data.project.primaryValueDriver

@@ -56,7 +56,15 @@
         "leadOrganization": { "type": "string" },
         "projectId": { "type": "string", "format": "uri" },
         "headlineValue": { "type": "string" },
-        "aggregateExpectedHoursSavedPerMonth": { "type": "number", "minimum": 0 },
+        "aggregateBenefitValue": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Numeric value of the aggregate benefit metric for the project"
+        },
+        "aggregateBenefitUnit": {
+          "type": "string",
+          "description": "Unit or description of the benefit metric (e.g., 'hours/month', '% error reduction', 'incidents prevented/month', 'capabilities enabled')"
+        },
         "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
         "version": {
           "type": "string",

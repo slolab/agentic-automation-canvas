@@ -524,9 +524,12 @@ export function useCanvasData() {
       total++
       if (data.project.headlineValue?.trim()) completed++
     }
-    if (data.project.aggregateExpectedHoursSavedPerMonth !== undefined) {
+    // Check aggregate benefit fields
+    if (data.project.aggregateBenefitValue !== undefined || data.project.aggregateBenefitUnit !== undefined) {
       total++
-      if (data.project.aggregateExpectedHoursSavedPerMonth !== undefined) completed++
+      if (data.project.aggregateBenefitValue !== undefined && data.project.aggregateBenefitValue !== null) {
+        completed++
+      }
     }
     if (data.project.primaryValueDriver !== undefined) {
       total++

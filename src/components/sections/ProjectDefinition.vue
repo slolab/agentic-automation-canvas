@@ -44,23 +44,11 @@
                   <span v-if="localData.startDate && localData.endDate"> - </span>
                   <span v-if="localData.endDate">{{ formatDate(localData.endDate) }}</span>
                 </span>
-                <span v-if="localData.headlineValue" class="flex items-center gap-1 text-green-700 font-medium">
+                <span v-if="aggregatedValueDisplay" class="flex items-center gap-1 text-green-700 font-medium">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="valueDriverIconPath" />
                   </svg>
-                  {{ localData.headlineValue }}
-                </span>
-                <span v-if="localData.aggregateExpectedHoursSavedPerMonth" class="flex items-center gap-1 text-green-700 font-medium">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  {{ localData.aggregateExpectedHoursSavedPerMonth }}h/month
-                </span>
-                <span v-if="localData.primaryValueDriver" class="flex items-center gap-1">
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                  </svg>
-                  {{ localData.primaryValueDriver.charAt(0).toUpperCase() + localData.primaryValueDriver.slice(1) }}
+                  {{ aggregatedValueDisplay }}
                 </span>
               </div>
               <div v-if="localDomains.length > 0 || localKeywords.length > 0" class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
@@ -370,34 +358,18 @@
         <div class="pt-6 border-t-2 border-gray-200 mt-8">
           <h3 class="subsection-header">Project Value Summary</h3>
           
-          <FormField
-            id="project-headline-value"
-            label="Headline Value"
-            help-text="Short text summary of the project's value proposition"
-          >
-            <input
-              id="project-headline-value"
-              v-model="localData.headlineValue"
-              type="text"
-              class="form-input"
-              placeholder="e.g., Saves 10 hours per month through automated data processing"
-              @blur="update"
-            />
-          </FormField>
-
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
-              id="project-aggregate-hours"
-              label="Aggregate Expected Hours Saved Per Month"
-              help-text="Total hours saved per month (computed from requirements or manually entered)"
+              id="project-headline-value"
+              label="Headline Value"
+              help-text="Short text summary of the project's value proposition"
             >
               <input
-                id="project-aggregate-hours"
-                v-model.number="localData.aggregateExpectedHoursSavedPerMonth"
-                type="number"
-                min="0"
-                step="0.1"
+                id="project-headline-value"
+                v-model="localData.headlineValue"
+                type="text"
                 class="form-input"
+                placeholder="e.g., Saves time through automated data processing"
                 @blur="update"
               />
             </FormField>
@@ -419,6 +391,40 @@
                 <option value="risk">Risk</option>
                 <option value="enablement">Enablement</option>
               </select>
+            </FormField>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <FormField
+              id="project-aggregate-benefit-value"
+              label="Benefit Value"
+              :help-text="benefitValueHelpText"
+            >
+              <input
+                id="project-aggregate-benefit-value"
+                v-model.number="localData.aggregateBenefitValue"
+                type="number"
+                min="0"
+                step="0.1"
+                class="form-input"
+                :placeholder="benefitValuePlaceholder"
+                @blur="update"
+              />
+            </FormField>
+
+            <FormField
+              id="project-aggregate-benefit-unit"
+              label="Benefit Unit"
+              :help-text="benefitUnitHelpText"
+            >
+              <input
+                id="project-aggregate-benefit-unit"
+                v-model="localData.aggregateBenefitUnit"
+                type="text"
+                class="form-input"
+                :placeholder="benefitUnitPlaceholder"
+                @blur="update"
+              />
             </FormField>
           </div>
         </div>
@@ -448,7 +454,8 @@ const initLocalData = (): ProjectDefinition => {
     endDate: project.endDate,
     projectId: project.projectId,
     headlineValue: project.headlineValue,
-    aggregateExpectedHoursSavedPerMonth: project.aggregateExpectedHoursSavedPerMonth,
+    aggregateBenefitValue: project.aggregateBenefitValue,
+    aggregateBenefitUnit: project.aggregateBenefitUnit,
     primaryValueDriver: project.primaryValueDriver,
     version: project.version || canvasData.value.version || '0.1.0',
     versionDate: project.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],
@@ -511,6 +518,113 @@ function getTaskTimeSaved(task: Requirement): string | null {
   return null
 }
 
+
+// Dynamic benefit field configuration based on primary value driver
+const benefitValueHelpText = computed(() => {
+  switch (localData.value.primaryValueDriver) {
+    case 'time':
+      return 'Numeric value for time benefit (e.g., 40)'
+    case 'quality':
+      return 'Numeric value for quality improvement (e.g., 25 for 25%)'
+    case 'risk':
+      return 'Numeric value for risk reduction (e.g., 10)'
+    case 'enablement':
+      return 'Numeric value for enablement (e.g., 5)'
+    default:
+      return 'Enter the numeric value for the benefit metric'
+  }
+})
+
+const benefitValuePlaceholder = computed(() => {
+  switch (localData.value.primaryValueDriver) {
+    case 'time':
+      return 'e.g., 40'
+    case 'quality':
+      return 'e.g., 25'
+    case 'risk':
+      return 'e.g., 10'
+    case 'enablement':
+      return 'e.g., 5'
+    default:
+      return 'Enter value'
+  }
+})
+
+const benefitUnitHelpText = computed(() => {
+  switch (localData.value.primaryValueDriver) {
+    case 'time':
+      return 'Unit or description for time benefit (e.g., hours/month, days/week, minutes per task)'
+    case 'quality':
+      return 'Unit or description for quality improvement (e.g., % error reduction, % accuracy improvement)'
+    case 'risk':
+      return 'Unit or description for risk reduction (e.g., incidents prevented/month, % compliance improvement)'
+    case 'enablement':
+      return 'Unit or description for enablement (e.g., new capabilities enabled, users empowered)'
+    default:
+      return 'Enter the unit or description for the benefit metric'
+  }
+})
+
+const benefitUnitPlaceholder = computed(() => {
+  switch (localData.value.primaryValueDriver) {
+    case 'time':
+      return 'e.g., hours/month'
+    case 'quality':
+      return 'e.g., % error reduction'
+    case 'risk':
+      return 'e.g., incidents prevented/month'
+    case 'enablement':
+      return 'e.g., new capabilities enabled'
+    default:
+      return 'Enter unit'
+  }
+})
+
+// Display benefit metric in collapsed view
+const displayBenefitMetric = computed(() => {
+  const value = localData.value.aggregateBenefitValue
+  const unit = localData.value.aggregateBenefitUnit
+  
+  if (value === undefined || value === null) {
+    return ''
+  }
+  
+  if (unit) {
+    return `${value} ${unit}`
+  }
+  return String(value)
+})
+
+// Aggregated value display: headline value + benefit metric
+const aggregatedValueDisplay = computed(() => {
+  const headline = localData.value.headlineValue
+  const benefit = displayBenefitMetric.value
+  
+  if (!headline && !benefit) return ''
+  if (!headline) return benefit
+  if (!benefit) return headline
+  
+  return `${headline}: ${benefit}`
+})
+
+// Icon path based on primary value driver
+const valueDriverIconPath = computed(() => {
+  const driver = localData.value.primaryValueDriver
+  
+  switch (driver) {
+    case 'time':
+      return 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z' // Clock icon
+    case 'quality':
+      return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' // Checkmark circle
+    case 'risk':
+      return 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' // Shield icon
+    case 'enablement':
+      return 'M13 10V3L4 14h7v7l9-11h-7z' // Lightning bolt
+    default:
+      return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' // Default checkmark circle
+  }
+})
+
 const errors = computed(() => {
   const errs: Record<string, string> = {}
   if (!localData.value.title?.trim()) {
@@ -540,7 +654,8 @@ watch(
         endDate: newProject.endDate,
         projectId: newProject.projectId,
         headlineValue: newProject.headlineValue,
-        aggregateExpectedHoursSavedPerMonth: newProject.aggregateExpectedHoursSavedPerMonth,
+        aggregateBenefitValue: newProject.aggregateBenefitValue,
+        aggregateBenefitUnit: newProject.aggregateBenefitUnit,
         primaryValueDriver: newProject.primaryValueDriver,
         version: newProject.version || canvasData.value.version || '0.1.0',
         versionDate: newProject.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],

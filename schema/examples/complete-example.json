@@ -44,8 +44,9 @@
       "endDate": "2025-12-31",
       "keywords": ["AI", "biomedical", "automation"],
       "aac:domain": ["Biomedical", "AI"],
-      "aac:headlineValue": "Saves 10 hours per month through automated data processing",
-      "aac:aggregateExpectedHoursSavedPerMonth": 10,
+      "aac:headlineValue": "Saves time through automated data processing",
+      "aac:aggregateBenefitValue": 10,
+      "aac:aggregateBenefitUnit": "hours/month",
       "aac:primaryValueDriver": "time"
     },
     {

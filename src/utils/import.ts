@@ -37,7 +37,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     },
   }
 
-  // Find project entity (handle both prefixed and non-prefixed types for backward compatibility)
+  // Find project entity
   const projectEntity = findEntitiesByType(graph, ['Project', 'ResearchProject', 'schema:Project', 'schema:ResearchProject'])[0]
   if (projectEntity) {
     canvasData.project = {
@@ -63,7 +63,8 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           : undefined,
       projectId: (projectEntity.identifier as string) || undefined,
       headlineValue: (projectEntity['aac:headlineValue'] as string) || undefined,
-      aggregateExpectedHoursSavedPerMonth: (projectEntity['aac:aggregateExpectedHoursSavedPerMonth'] as number) || undefined,
+      aggregateBenefitValue: (projectEntity['aac:aggregateBenefitValue'] as number) || undefined,
+      aggregateBenefitUnit: (projectEntity['aac:aggregateBenefitUnit'] as string) || undefined,
       primaryValueDriver: (projectEntity['aac:primaryValueDriver'] as 'time' | 'quality' | 'risk' | 'enablement') || undefined,
       version: (projectEntity['aac:version'] as string) || undefined,
       versionDate: (projectEntity['aac:versionDate'] as string) || undefined,
@@ -129,11 +130,8 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         if (step!['aac:errorCost'] !== undefined) {
           req.errorCost = step!['aac:errorCost']
         }
-        // Handle both old and new field names for backward compatibility
         if (step!['aac:humanOversightMinutesPerUnit'] !== undefined) {
           req.humanOversightMinutesPerUnit = step!['aac:humanOversightMinutesPerUnit'] as number
-        } else if (step!['aac:oversightMinutesPerUnit'] !== undefined) {
-          req.humanOversightMinutesPerUnit = step!['aac:oversightMinutesPerUnit'] as number
         }
         if (step!['aac:unitCategory']) {
           req.unitCategory = step!['aac:unitCategory'] as 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
@@ -194,13 +192,11 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     canvasData.persons = persons
   }
 
-  // Helper function to extract Person data (for backward compatibility)
+  // Helper function to extract Person data
   const extractPersonData = (personEntity: ROCrateEntity) => {
     const roles = personEntity['aac:roles'] 
       ? (Array.isArray(personEntity['aac:roles']) ? personEntity['aac:roles'] : [personEntity['aac:roles']])
-      : personEntity.role 
-        ? [personEntity.role as string]
-        : []
+      : []
     
     const affiliation = personEntity['schema:affiliation']
       ? (typeof personEntity['schema:affiliation'] === 'string' 
@@ -244,7 +240,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         // Extract Person ID (remove # prefix if present)
         const personId = entity['@id'].replace('#', '')
         
-        // Use first role as primary role for backward compatibility
+        // Use first role as primary role
         // Filter out 'stakeholder' role if it's just the default
         const roles = personData.roles.filter(r => r !== 'stakeholder')
         const primaryRole = roles.length > 0 ? roles[0] : undefined
@@ -312,7 +308,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
               // Extract Person ID (remove # prefix if present)
               const personId = agent!['@id'].replace('#', '')
               
-              // Ensure person exists in persons array (for backward compatibility)
+              // Ensure person exists in persons array
               const existingPerson = persons.find(p => p.id === personId)
               if (!existingPerson) {
                 const personData = extractPersonData(agent!)
@@ -390,10 +386,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
   )
   if (datasetEntities.length > 0) {
     const datasets = datasetEntities.map((dataset) => {
-      // Handle both old and new property names for backward compatibility
-      const format = dataset['schema:encodingFormat'] || dataset.format
-      const accessRights = dataset['dct:accessRights'] || dataset.accessRights
-      const duoTerms = dataset['dct:conformsTo'] || dataset.duoTerms
+      const format = dataset['schema:encodingFormat']
+      const accessRights = dataset['dct:accessRights']
+      const duoTerms = dataset['dct:conformsTo']
       const containsPersonalData = dataset['aac:containsPersonalData'] !== undefined
         ? dataset['aac:containsPersonalData']
         : dataset.containsPersonalData

@@ -31,7 +31,8 @@ export interface ProjectDefinition {
   projectId?: string
   // Project-level value summary
   headlineValue?: string
-  aggregateExpectedHoursSavedPerMonth?: number
+  aggregateBenefitValue?: number // Numeric value of the aggregate benefit metric
+  aggregateBenefitUnit?: string // Unit/description of the benefit metric (e.g., "hours/month", "% error reduction", "incidents prevented/month")
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
   // Version management (stored at project level for ROcrate compatibility)
   version?: string // Semantic version (e.g., "0.1.0")

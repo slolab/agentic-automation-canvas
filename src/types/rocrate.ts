@@ -44,7 +44,8 @@ export interface ProjectEntity extends ROCrateEntity {
   endDate?: string
   keywords?: string | string[]
   'aac:headlineValue'?: string
-  'aac:aggregateExpectedHoursSavedPerMonth'?: number
+  'aac:aggregateBenefitValue'?: number
+  'aac:aggregateBenefitUnit'?: string
   'aac:primaryValueDriver'?: 'time' | 'quality' | 'risk' | 'enablement'
 }
 
@@ -97,7 +98,7 @@ export interface PersonEntity extends ROCrateEntity {
   'schema:affiliation'?: string // Disambiguation field (as string, not object)
   'aac:roleContext'?: string // Role context
   'schema:identifier'?: string | { '@id': string } // For ORCID support
-  role?: string // Backward compatibility: single role (deprecated, use aac:roles)
+  role?: string
 }
 
 export interface OrganizationEntity extends ROCrateEntity {
