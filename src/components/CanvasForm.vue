@@ -43,6 +43,10 @@
         v-if="activeSection === 'project'"
         :key="'project'"
       />
+      <Persons
+        v-if="activeSection === 'persons'"
+        :key="'persons'"
+      />
       <UserExpectations
         v-if="activeSection === 'user-expectations'"
         :key="'user-expectations'"
@@ -126,6 +130,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import ProjectDefinition from './sections/ProjectDefinition.vue'
+import Persons from './sections/Persons.vue'
 import UserExpectations from './sections/UserExpectations.vue'
 import DeveloperFeasibility from './sections/DeveloperFeasibility.vue'
 import GovernanceStaging from './sections/GovernanceStaging.vue'
@@ -142,6 +147,7 @@ const activeSection = ref('project')
 
 const sections = [
   { id: 'project', label: 'Project' },
+  { id: 'persons', label: 'Persons' },
   { id: 'user-expectations', label: 'Tasks & Expectations' },
   { id: 'developer-feasibility', label: 'Developer Feasibility' },
   { id: 'governance', label: 'Governance' },

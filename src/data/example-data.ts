@@ -6,6 +6,20 @@
 import type { CanvasData } from '@/types/canvas'
 
 export const exampleData: CanvasData = {
+  // Centralized Person management
+  persons: [
+    {
+      id: 'person-0',
+      name: 'Sarah Johnson',
+      affiliation: 'Operations Department',
+    },
+    {
+      id: 'person-1',
+      name: 'Michael Chen',
+      orcid: 'https://orcid.org/0000-0000-0000-0001',
+      affiliation: 'IT Department',
+    },
+  ],
   project: {
     title: 'Automated Document Processing System',
     description: 'A system that automatically processes, categorizes, and routes incoming documents to reduce manual handling time and improve accuracy. The system uses AI to extract key information, classify document types, and route them to appropriate team members.',
@@ -38,6 +52,8 @@ export const exampleData: CanvasData = {
           worst: 5,
         },
         valueType: ['time', 'quality'],
+        reworkRate: 5, // Example: 5% of documents require rework
+        errorCost: 'High - errors can delay processing and impact downstream systems',
         humanOversightMinutesPerUnit: 1,
         confidenceUser: 'high',
         confidenceDev: 'medium',
@@ -59,6 +75,8 @@ export const exampleData: CanvasData = {
           worst: 1.5,
         },
         valueType: ['time', 'quality'],
+        reworkRate: 2, // Example: 2% misclassification rate
+        errorCost: 50, // Example: $50 cost per misrouted document
         humanOversightMinutesPerUnit: 0.5,
         confidenceUser: 'medium',
         confidenceDev: 'medium',
@@ -88,12 +106,12 @@ export const exampleData: CanvasData = {
     ],
     stakeholders: [
       {
-        name: 'Sarah Johnson',
+        personId: 'person-0', // References Sarah Johnson from persons array
         role: 'Data Entry Manager',
         values: ['time savings', 'accuracy'],
       },
       {
-        name: 'Michael Chen',
+        personId: 'person-1', // References Michael Chen from persons array
         role: 'IT Lead',
         values: ['system reliability', 'maintainability'],
       },
@@ -140,14 +158,16 @@ export const exampleData: CanvasData = {
         endDate: '2024-02-15',
         agents: [
           {
-            name: 'Michael Chen',
+            personId: 'person-1', // References Michael Chen from persons array
             role: 'Technical Lead',
             type: 'person',
+            roleContext: 'Design phase technical oversight',
           },
           {
-            name: 'Sarah Johnson',
+            personId: 'person-0', // References Sarah Johnson from persons array
             role: 'Business Analyst',
             type: 'person',
+            roleContext: 'Design phase requirements gathering',
           },
         ],
         milestones: [
@@ -169,9 +189,10 @@ export const exampleData: CanvasData = {
         endDate: '2024-05-15',
         agents: [
           {
-            name: 'Michael Chen',
+            personId: 'person-1', // References Michael Chen from persons array
             role: 'Technical Lead',
             type: 'person',
+            roleContext: 'Development phase technical leadership',
           },
           {
             name: 'Development Team',
@@ -198,9 +219,10 @@ export const exampleData: CanvasData = {
         endDate: '2024-06-15',
         agents: [
           {
-            name: 'Sarah Johnson',
+            personId: 'person-0', // References Sarah Johnson from persons array
             role: 'Quality Assurance',
             type: 'person',
+            roleContext: 'Validation phase quality control',
           },
         ],
         milestones: [
@@ -218,9 +240,10 @@ export const exampleData: CanvasData = {
         endDate: '2024-06-30',
         agents: [
           {
-            name: 'Michael Chen',
+            personId: 'person-1', // References Michael Chen from persons array
             role: 'Technical Lead',
             type: 'person',
+            roleContext: 'Deployment phase technical oversight',
           },
         ],
         milestones: [

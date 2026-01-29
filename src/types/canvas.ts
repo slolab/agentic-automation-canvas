@@ -5,6 +5,7 @@
 
 export interface CanvasData {
   project: ProjectDefinition
+  persons?: Person[] // Centralized Person management
   userExpectations?: UserExpectations
   developerFeasibility?: DeveloperFeasibility
   governance?: GovernanceStaging
@@ -59,10 +60,18 @@ export interface Requirement {
   assumptions?: string
 }
 
-export interface Stakeholder {
+export interface Person {
+  id: string // Unique identifier for the Person (e.g., 'person-0', 'person-1')
   name: string
+  affiliation?: string // Optional disambiguation
+  orcid?: string // Optional stable identifier (e.g., ORCID)
+}
+
+export interface Stakeholder {
+  personId: string // Reference to Person entity ID
   role?: string
   values?: string[]
+  roleContext?: string // Optional role context for this stakeholder role
 }
 
 export interface DeveloperFeasibility {
@@ -118,9 +127,13 @@ export interface GovernanceStage {
 }
 
 export interface Agent {
-  name: string
+  // For person-type agents: reference to Person entity
+  // For organization/software: name directly
+  personId?: string // Reference to Person entity ID (when type === 'person')
+  name?: string // Name for organization/software agents (when type !== 'person')
   role?: string
   type: 'person' | 'organization' | 'software'
+  roleContext?: string // Optional role context for this agent role
 }
 
 export interface DataAccessSensitivity {

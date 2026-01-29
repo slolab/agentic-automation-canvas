@@ -120,16 +120,28 @@
         <div
           v-for="(agent, agentIndex) in (stage.agents || [])"
           :key="agentIndex"
-          class="mb-2 p-2 bg-gray-50 rounded flex items-center justify-between"
+          class="mb-2 p-2 bg-gray-50 rounded"
         >
-          <span class="text-sm">{{ agent.name }} ({{ agent.type }})</span>
-          <button
-            type="button"
-            @click="removeAgent(agentIndex)"
-            class="text-red-600 hover:text-red-800 text-sm"
-          >
-            Remove
-          </button>
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-sm font-medium">
+              {{ agent.type === 'person' ? getPersonName(agent.personId) : agent.name }} ({{ agent.type }})
+            </span>
+            <button
+              type="button"
+              @click="removeAgent(agentIndex)"
+              class="text-red-600 hover:text-red-800 text-sm"
+            >
+              Remove
+            </button>
+          </div>
+          <div v-if="agent.role" class="text-xs text-gray-600 mb-1">
+            Role: {{ agent.role }}
+          </div>
+          <div v-if="agent.type === 'person' && agent.personId" class="text-xs text-gray-500 space-y-0.5">
+            <div v-if="getPersonInfo(agent.personId)?.affiliation">Affiliation: {{ getPersonInfo(agent.personId)?.affiliation }}</div>
+            <div v-if="getPersonInfo(agent.personId)?.orcid">ORCID: {{ getPersonInfo(agent.personId)?.orcid }}</div>
+            <div v-if="agent.roleContext">Context: {{ agent.roleContext }}</div>
+          </div>
         </div>
         <button
           type="button"
@@ -139,12 +151,6 @@
           Add Agent
         </button>
         <div v-if="showAddAgent" class="mt-2 p-3 bg-gray-50 rounded space-y-2">
-          <input
-            v-model="newAgent.name"
-            type="text"
-            placeholder="Agent name"
-            class="form-input text-sm"
-          />
           <select
             v-model="newAgent.type"
             class="form-input text-sm"
@@ -153,23 +159,65 @@
             <option value="organization">Organization</option>
             <option value="software">Software</option>
           </select>
+          
+          <!-- Person selection (for person type) -->
+          <div v-if="newAgent.type === 'person'">
+            <select
+              v-model="newAgent.personId"
+              class="form-input text-sm"
+              :class="{ 'border-red-300': !newAgent.personId }"
+            >
+              <option value="">Select a person...</option>
+              <option
+                v-for="person in availablePersons"
+                :key="person.id"
+                :value="person.id"
+              >
+                {{ person.name }} {{ person.affiliation ? `(${person.affiliation})` : '' }}
+              </option>
+            </select>
+            <p v-if="!availablePersons.length" class="text-xs text-yellow-600 mt-1">
+              No persons available. Please add persons in the "Persons" section first.
+            </p>
+          </div>
+          
+          <!-- Name input (for organization/software type) -->
+          <input
+            v-else
+            v-model="newAgent.name"
+            type="text"
+            placeholder="Agent name"
+            class="form-input text-sm"
+          />
+          
           <input
             v-model="newAgent.role"
             type="text"
             placeholder="Role (optional)"
             class="form-input text-sm"
           />
+          
+          <!-- Role context (for person type) -->
+          <input
+            v-if="newAgent.type === 'person'"
+            v-model="newAgent.roleContext"
+            type="text"
+            placeholder="Role Context (e.g., Design phase technical oversight)"
+            class="form-input text-sm"
+          />
+          
           <div class="flex gap-2">
             <button
               type="button"
               @click="addAgent"
               class="btn-primary text-sm"
+              :disabled="newAgent.type === 'person' && !newAgent.personId"
             >
               Add
             </button>
             <button
               type="button"
-              @click="showAddAgent = false; newAgent = { name: '', type: 'person' }"
+              @click="showAddAgent = false; resetNewAgent()"
               class="btn-secondary text-sm"
             >
               Cancel
@@ -299,9 +347,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
-import type { GovernanceStage, Agent, Milestone } from '@/types/canvas'
+import type { GovernanceStage, Agent, Milestone, Person } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
 
 interface Props {
   stage: GovernanceStage
@@ -310,15 +359,38 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+const { canvasData } = useCanvasData()
+
 // New stages (without name) start expanded
 const isExpanded = ref(!props.stage.name || props.stage.name.trim() === '')
 
 const showAddAgent = ref(false)
-const newAgent = ref<Agent>({ name: '', type: 'person' })
+const newAgent = ref<Agent>({ type: 'person' })
 const showAddMilestone = ref(false)
 const newMilestone = ref<Milestone>({ description: '', kpi: '' })
 const showAddCompliance = ref(false)
 const newCompliance = ref<string>('')
+
+// Get available persons
+const availablePersons = computed<Person[]>(() => {
+  return canvasData.value.persons || []
+})
+
+// Helper functions
+function getPersonName(personId?: string): string {
+  if (!personId) return 'Unassigned Person'
+  const person = availablePersons.value.find(p => p.id === personId)
+  return person?.name || 'Unknown Person'
+}
+
+function getPersonInfo(personId?: string): Person | null {
+  if (!personId) return null
+  return availablePersons.value.find(p => p.id === personId) || null
+}
+
+function resetNewAgent() {
+  newAgent.value = { type: 'person' }
+}
 
 function formatDateRange(start?: string, end?: string): string {
   if (!start && !end) return ''
@@ -332,12 +404,21 @@ function formatDateRange(start?: string, end?: string): string {
 }
 
 function addAgent() {
-  if (newAgent.value.name.trim()) {
-    const updatedAgents = [...(props.stage.agents || []), { ...newAgent.value }]
-    props.update({ ...props.stage, agents: updatedAgents })
-    newAgent.value = { name: '', type: 'person' }
-    showAddAgent.value = false
+  // Validation: person type requires personId, non-person types require name
+  if (newAgent.value.type === 'person') {
+    if (!newAgent.value.personId) {
+      return // Don't add if no person selected
+    }
+  } else {
+    if (!newAgent.value.name?.trim()) {
+      return // Don't add if no name provided
+    }
   }
+  
+  const updatedAgents = [...(props.stage.agents || []), { ...newAgent.value }]
+  props.update({ ...props.stage, agents: updatedAgents })
+  resetNewAgent()
+  showAddAgent.value = false
 }
 
 function removeAgent(agentIndex: number) {

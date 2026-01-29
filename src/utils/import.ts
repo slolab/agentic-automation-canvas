@@ -133,6 +133,71 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     }
   }
 
+  // Collect all Person entities from graph and create centralized persons array
+  const personEntities = findEntitiesByType(graph, ['Person', 'schema:Person'])
+  const personMap = new Map<string, ROCrateEntity>()
+  personEntities.forEach(person => {
+    personMap.set(person['@id'], person)
+  })
+
+  // Create centralized persons array from Person entities
+  const persons: Array<{ id: string; name: string; affiliation?: string; orcid?: string }> = []
+  personEntities.forEach((personEntity) => {
+    const affiliation = personEntity['schema:affiliation']
+      ? (typeof personEntity['schema:affiliation'] === 'string' 
+          ? personEntity['schema:affiliation'] 
+          : undefined)
+      : undefined
+    
+    const identifier = personEntity['schema:identifier']
+    const orcid = identifier 
+      ? (typeof identifier === 'string' ? identifier : (identifier as { '@id': string })['@id'])
+      : undefined
+
+    // Extract Person ID (remove # prefix if present)
+    const personId = personEntity['@id'].replace('#', '')
+    
+    persons.push({
+      id: personId,
+      name: (personEntity.name as string) || '',
+      affiliation,
+      orcid,
+    })
+  })
+
+  // Store persons array in canvasData
+  if (persons.length > 0) {
+    canvasData.persons = persons
+  }
+
+  // Helper function to extract Person data (for backward compatibility)
+  const extractPersonData = (personEntity: ROCrateEntity) => {
+    const roles = personEntity['aac:roles'] 
+      ? (Array.isArray(personEntity['aac:roles']) ? personEntity['aac:roles'] : [personEntity['aac:roles']])
+      : personEntity.role 
+        ? [personEntity.role as string]
+        : []
+    
+    const affiliation = personEntity['schema:affiliation']
+      ? (typeof personEntity['schema:affiliation'] === 'string' 
+          ? personEntity['schema:affiliation'] 
+          : undefined)
+      : undefined
+    
+    const identifier = personEntity['schema:identifier']
+    const orcid = identifier 
+      ? (typeof identifier === 'string' ? identifier : (identifier as { '@id': string })['@id'])
+      : undefined
+
+    return {
+      name: (personEntity.name as string) || '',
+      roles,
+      affiliation,
+      orcid,
+      roleContext: personEntity['aac:roleContext'] as string | undefined,
+    }
+  }
+
   // Find stakeholders (contributors to project)
   if (projectEntity && projectEntity.contributor) {
     const contributorRefs = Array.isArray(projectEntity.contributor) 
@@ -140,20 +205,33 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       : [projectEntity.contributor]
     
     const stakeholders = contributorRefs
-      .map((ref: any) => findEntity(graph, ref['@id']))
-      .filter((entity) => {
-        if (!entity) return false
+      .map((ref: any) => {
+        const entity = findEntity(graph, ref['@id'])
+        if (!entity) return null
+        
         const entityType = Array.isArray(entity['@type'])
           ? entity['@type'][0]
           : entity['@type']
         // Handle both prefixed and non-prefixed Person type
         const normalizedType = entityType?.replace('schema:', '') || entityType
-        return normalizedType === 'Person'
+        if (normalizedType !== 'Person') return null
+
+        const personData = extractPersonData(entity)
+        // Extract Person ID (remove # prefix if present)
+        const personId = entity['@id'].replace('#', '')
+        
+        // Use first role as primary role for backward compatibility
+        // Filter out 'stakeholder' role if it's just the default
+        const roles = personData.roles.filter(r => r !== 'stakeholder')
+        const primaryRole = roles.length > 0 ? roles[0] : undefined
+        
+        return {
+          personId: personId,
+          role: primaryRole,
+          roleContext: personData.roleContext,
+        }
       })
-      .map((entity) => ({
-        name: (entity!.name as string) || '',
-        role: (entity!.role as string) || undefined,
-      }))
+      .filter((stakeholder): stakeholder is NonNullable<typeof stakeholder> => stakeholder !== null)
 
     if (stakeholders.length > 0) {
       if (!canvasData.userExpectations) {
@@ -205,15 +283,50 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
               : agent!['@type']
             // Handle both prefixed and non-prefixed types
             const normalizedType = agentType?.replace('schema:', '') || agentType
-            return {
-              name: (agent!.name as string) || '',
-              role: (agent!.role as string) || undefined,
-              type:
-                normalizedType === 'Person'
-                  ? 'person'
-                  : normalizedType === 'Organization'
-                    ? 'organization'
-                    : 'software',
+            
+            if (normalizedType === 'Person') {
+              // Extract Person ID (remove # prefix if present)
+              const personId = agent!['@id'].replace('#', '')
+              
+              // Ensure person exists in persons array (for backward compatibility)
+              const existingPerson = persons.find(p => p.id === personId)
+              if (!existingPerson) {
+                const personData = extractPersonData(agent!)
+                persons.push({
+                  id: personId,
+                  name: personData.name,
+                  affiliation: personData.affiliation,
+                  orcid: personData.orcid,
+                })
+              }
+              
+              // Extract role from aac:roles array or role property
+              const roles = agent!['aac:roles']
+                ? (Array.isArray(agent!['aac:roles']) ? agent!['aac:roles'] : [agent!['aac:roles']])
+                : agent!.role
+                  ? [agent!.role as string]
+                  : []
+              
+              // Filter out roles that are just 'stakeholder' or 'agent' defaults
+              const meaningfulRoles = roles.filter(r => r !== 'stakeholder' && r !== 'agent')
+              const primaryRole = meaningfulRoles.length > 0 ? meaningfulRoles[0] : roles[0]
+              
+              return {
+                personId: personId,
+                role: primaryRole,
+                type: 'person' as const,
+                roleContext: agent!['aac:roleContext'] as string | undefined,
+              }
+            } else {
+              // Non-person agents (organization, software)
+              return {
+                name: (agent!.name as string) || '',
+                role: (agent!.role as string) || undefined,
+                type:
+                  normalizedType === 'Organization'
+                    ? 'organization' as const
+                    : 'software' as const,
+              }
             }
           })
       }

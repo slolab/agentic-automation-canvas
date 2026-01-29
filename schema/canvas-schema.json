@@ -6,6 +6,20 @@
   "type": "object",
   "required": ["project"],
   "properties": {
+    "persons": {
+      "type": "array",
+      "description": "Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string", "description": "Unique identifier for the Person (e.g., 'person-0', 'person-1')" },
+          "name": { "type": "string", "minLength": 1 },
+          "affiliation": { "type": "string", "description": "Optional disambiguation field" },
+          "orcid": { "type": "string", "format": "uri", "description": "Optional stable identifier (e.g., ORCID)" }
+        },
+        "required": ["id", "name"]
+      }
+    },
     "project": {
       "type": "object",
       "required": ["title", "description", "projectStage"],
@@ -98,14 +112,15 @@
           "items": {
             "type": "object",
             "properties": {
-              "name": { "type": "string" },
+              "personId": { "type": "string", "description": "Reference to Person entity ID (required)" },
               "role": { "type": "string" },
               "values": {
                 "type": "array",
                 "items": { "type": "string" }
-              }
+              },
+              "roleContext": { "type": "string", "description": "Optional role context" }
             },
-            "required": ["name"]
+            "required": ["personId"]
           }
         }
       }
@@ -237,11 +252,17 @@
                 "items": {
                   "type": "object",
                   "properties": {
-                    "name": { "type": "string" },
+                    "personId": { "type": "string", "description": "Reference to Person entity ID (required when type is 'person')" },
+                    "name": { "type": "string", "description": "Name for organization/software agents (required when type is not 'person')" },
                     "role": { "type": "string" },
-                    "type": { "type": "string", "enum": ["person", "organization", "software"] }
+                    "type": { "type": "string", "enum": ["person", "organization", "software"] },
+                    "roleContext": { "type": "string", "description": "Optional role context" }
                   },
-                  "required": ["name", "type"]
+                  "required": ["type"],
+                  "anyOf": [
+                    { "required": ["personId"], "properties": { "type": { "const": "person" } } },
+                    { "required": ["name"], "properties": { "type": { "enum": ["organization", "software"] } } }
+                  ]
                 }
               },
               "milestones": {

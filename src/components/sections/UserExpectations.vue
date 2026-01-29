@@ -32,7 +32,7 @@
       <MultiValueInput
         v-model="localStakeholders"
         label="stakeholder"
-        :create-default="() => ({ name: '' })"
+        :create-default="() => ({ personId: '' })"
       >
         <template #input="{ item, index, update }">
           <StakeholderItem
@@ -94,7 +94,7 @@ watch(
       })
     }
   },
-  { deep: true, immediate: false }
+  { deep: true, immediate: true }
 )
 
 // Watch for local changes and update canvasData immediately

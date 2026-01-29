@@ -86,12 +86,18 @@ export interface DatasetEntity extends ROCrateEntity {
 }
 
 export interface PersonEntity extends ROCrateEntity {
-  '@type': 'Person'
+  '@type': 'Person' | 'schema:Person'
   name: string
   email?: string
   affiliation?: {
     '@id': string
-  }
+  } | string
+  // Person identity management fields
+  'aac:roles'?: string[] // Array of role strings
+  'schema:affiliation'?: string // Disambiguation field (as string, not object)
+  'aac:roleContext'?: string // Role context
+  'schema:identifier'?: string | { '@id': string } // For ORCID support
+  role?: string // Backward compatibility: single role (deprecated, use aac:roles)
 }
 
 export interface OrganizationEntity extends ROCrateEntity {

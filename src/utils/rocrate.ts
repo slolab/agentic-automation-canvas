@@ -14,6 +14,299 @@ function generateId(prefix: string, index?: number): string {
 }
 
 /**
+ * Person identity for deduplication
+ */
+interface PersonIdentity {
+  name: string
+  orcid?: string
+  affiliation?: string
+}
+
+/**
+ * Person registry entry
+ */
+interface PersonRegistryEntry {
+  id: string
+  identity: PersonIdentity
+  roles: Set<string>
+  roleContexts: Map<string, string> // role -> roleContext
+  entity: ROCrateEntity
+}
+
+/**
+ * Person Registry for deduplication within a crate
+ */
+class PersonRegistry {
+  private persons: Map<string, PersonRegistryEntry> = new Map()
+  private personCounter = 0
+
+  /**
+   * Normalize name for comparison (lowercase, trim)
+   */
+  private normalizeName(name: string): string {
+    return name.trim().toLowerCase()
+  }
+
+  /**
+   * Generate a key for exact matching (ORCID or name+affiliation)
+   */
+  private getMatchKey(identity: PersonIdentity): string | null {
+    if (identity.orcid) {
+      return `orcid:${identity.orcid.toLowerCase().trim()}`
+    }
+    const normalizedName = this.normalizeName(identity.name)
+    if (identity.affiliation) {
+      return `name+affiliation:${normalizedName}:${identity.affiliation.trim().toLowerCase()}`
+    }
+    return null
+  }
+
+  /**
+   * Find existing person by exact match (ORCID or name+affiliation)
+   */
+  private findExactMatch(identity: PersonIdentity): PersonRegistryEntry | null {
+    const matchKey = this.getMatchKey(identity)
+    if (!matchKey) return null
+
+    for (const entry of this.persons.values()) {
+      const entryKey = this.getMatchKey(entry.identity)
+      if (entryKey === matchKey) {
+        return entry
+      }
+    }
+    return null
+  }
+
+  /**
+   * Find existing person by soft match (name only, no conflicting context)
+   */
+  private findSoftMatch(identity: PersonIdentity): PersonRegistryEntry | null {
+    const normalizedName = this.normalizeName(identity.name)
+    
+    // Only soft match if no ORCID or affiliation provided
+    if (identity.orcid || identity.affiliation) {
+      return null
+    }
+
+    for (const entry of this.persons.values()) {
+      const entryNormalizedName = this.normalizeName(entry.identity.name)
+      // Soft match: same name, and existing entry also has no ORCID/affiliation
+      if (entryNormalizedName === normalizedName && 
+          !entry.identity.orcid && 
+          !entry.identity.affiliation) {
+        return entry
+      }
+    }
+    return null
+  }
+
+  /**
+   * Find or create a Person entity with a specific ID
+   * Used when we have a predefined Person ID from the centralized persons array
+   */
+  findOrCreatePersonWithId(
+    personId: string,
+    identity: PersonIdentity,
+    role: string | undefined,
+    roleContext?: string
+  ): string {
+    // Check if person already exists with this ID
+    let entry = this.persons.get(personId)
+    
+    if (entry) {
+      // Person exists - add role if provided
+      if (role) {
+        entry.roles.add(role)
+        if (roleContext) {
+          entry.roleContexts.set(role, roleContext)
+        }
+      }
+      return entry.id
+    }
+
+    // Create new Person entity with specified ID
+    const personEntity: ROCrateEntity = {
+      '@id': personId,
+      '@type': 'schema:Person',
+      name: identity.name,
+    }
+
+    // Add optional fields
+    if (identity.affiliation) {
+      personEntity['schema:affiliation'] = identity.affiliation
+    }
+    if (identity.orcid) {
+      personEntity['schema:identifier'] = identity.orcid
+    }
+
+    // Create registry entry
+    const rolesSet = new Set<string>()
+    const roleContextsMap = new Map<string, string>()
+    if (role) {
+      rolesSet.add(role)
+      if (roleContext) {
+        roleContextsMap.set(role, roleContext)
+      }
+    }
+
+    entry = {
+      id: personId,
+      identity,
+      roles: rolesSet,
+      roleContexts: roleContextsMap,
+      entity: personEntity,
+    }
+
+    this.persons.set(personId, entry)
+    return personId
+  }
+
+  /**
+   * Find or create a Person entity
+   * Returns the Person ID
+   */
+  findOrCreatePerson(
+    identity: PersonIdentity,
+    role: string | undefined,
+    roleContext?: string
+  ): string {
+    // Try exact match first (ORCID or name+affiliation)
+    let entry = this.findExactMatch(identity)
+    
+    // If no exact match, try soft match (name only)
+    if (!entry) {
+      entry = this.findSoftMatch(identity)
+    }
+
+    if (entry) {
+      // Add role if provided
+      if (role) {
+        entry.roles.add(role)
+        if (roleContext) {
+          entry.roleContexts.set(role, roleContext)
+        }
+      }
+      return entry.id
+    }
+
+    // Create new Person entity
+    const personId = generateId('person', this.personCounter++)
+    const personEntity: ROCrateEntity = {
+      '@id': personId,
+      '@type': 'schema:Person',
+      name: identity.name,
+    }
+
+    // Add optional fields
+    if (identity.affiliation) {
+      personEntity['schema:affiliation'] = identity.affiliation
+    }
+    if (identity.orcid) {
+      personEntity['schema:identifier'] = identity.orcid
+    }
+
+    // Create registry entry
+    const rolesSet = new Set<string>()
+    const roleContextsMap = new Map<string, string>()
+    if (role) {
+      rolesSet.add(role)
+      if (roleContext) {
+        roleContextsMap.set(role, roleContext)
+      }
+    }
+
+    entry = {
+      id: personId,
+      identity,
+      roles: rolesSet,
+      roleContexts: roleContextsMap,
+      entity: personEntity,
+    }
+
+    this.persons.set(personId, entry)
+    return personId
+  }
+
+  /**
+   * Validate Person deduplication
+   * Returns array of validation warnings/errors
+   */
+  validate(): Array<{ type: 'warning' | 'error'; message: string; personId?: string }> {
+    const issues: Array<{ type: 'warning' | 'error'; message: string; personId?: string }> = []
+    
+    // Check for potential duplicates (same name, different context)
+    const nameMap = new Map<string, PersonRegistryEntry[]>()
+    for (const entry of this.persons.values()) {
+      const normalizedName = this.normalizeName(entry.identity.name)
+      if (!nameMap.has(normalizedName)) {
+        nameMap.set(normalizedName, [])
+      }
+      nameMap.get(normalizedName)!.push(entry)
+    }
+
+    // Warn if same name appears with different contexts (potential duplicates)
+    for (const [, entries] of nameMap.entries()) {
+      if (entries.length > 1) {
+        // Check if they have different ORCIDs or affiliations
+        const hasDifferentContexts = entries.some((e1, i) => 
+          entries.slice(i + 1).some(e2 => 
+            e1.identity.orcid !== e2.identity.orcid ||
+            e1.identity.affiliation !== e2.identity.affiliation
+          )
+        )
+        
+        if (hasDifferentContexts) {
+          // This is actually fine - they're different people with same name
+          // But we could warn if they don't have disambiguation
+          const withoutDisambiguation = entries.filter(e => !e.identity.orcid && !e.identity.affiliation)
+          if (withoutDisambiguation.length > 1) {
+            issues.push({
+              type: 'warning',
+              message: `Multiple persons with name "${entries[0].identity.name}" without disambiguation (ORCID or affiliation). Consider adding disambiguation fields.`,
+            })
+          }
+        }
+      }
+    }
+
+    return issues
+  }
+
+  /**
+   * Get all Person entities for the graph
+   */
+  getAllPersonEntities(): ROCrateEntity[] {
+    return Array.from(this.persons.values()).map(entry => {
+      const entity = { ...entry.entity }
+      
+      // Add roles array
+      if (entry.roles.size > 0) {
+        entity['aac:roles'] = Array.from(entry.roles)
+        // For backward compatibility, set role to first role if only one
+        if (entry.roles.size === 1) {
+          entity.role = Array.from(entry.roles)[0]
+        }
+      }
+
+      // Add role contexts if any
+      if (entry.roleContexts.size > 0) {
+        // Store role contexts as a map or array
+        // For simplicity, we'll store as a single roleContext if there's only one context
+        const contexts = Array.from(entry.roleContexts.values())
+        if (contexts.length === 1) {
+          entity['aac:roleContext'] = contexts[0]
+        } else if (contexts.length > 1) {
+          // Multiple contexts - store as array
+          entity['aac:roleContext'] = contexts
+        }
+      }
+
+      return entity
+    })
+  }
+}
+
+/**
  * Validate date string - returns true if date is valid (year between 1000 and 3000)
  */
 function isValidDate(dateStr: string | undefined): boolean {
@@ -96,6 +389,32 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   }
 
   graph.push(projectEntity)
+
+  // Initialize Person registry for deduplication
+  // Map canvas personId to RO-Crate personId
+  const personIdMap = new Map<string, string>() // canvas personId -> RO-Crate personId
+  const personRegistry = new PersonRegistry()
+  
+  // Pre-register persons from centralized persons array
+  if (data.persons && data.persons.length > 0) {
+    data.persons.forEach((person, index) => {
+      // Generate RO-Crate Person ID (opaque, e.g., #person-0, #person-1)
+      const rocratePersonId = generateId('person', index)
+      personIdMap.set(person.id, rocratePersonId)
+      
+      // Pre-register person in registry
+      personRegistry.findOrCreatePersonWithId(
+        rocratePersonId,
+        {
+          name: person.name,
+          orcid: person.orcid,
+          affiliation: person.affiliation,
+        },
+        undefined, // No role yet
+        undefined // No role context yet
+      )
+    })
+  }
 
   // 4. User Expectations as P-Plan
   if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
@@ -184,22 +503,36 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     projectEntity.hasPlan = { '@id': planId }
   }
 
-  // 4b. Stakeholders
+  // 4b. Stakeholders - use Person registry for deduplication
   if (data.userExpectations?.stakeholders && data.userExpectations.stakeholders.length > 0) {
     const stakeholderRefs: Array<{ '@id': string }> = []
-    data.userExpectations.stakeholders.forEach((stakeholder, index) => {
-      const stakeholderId = generateId('stakeholder', index)
-      stakeholderRefs.push({ '@id': stakeholderId })
+    data.userExpectations.stakeholders.forEach((stakeholder) => {
+      // Find person by personId
+      const person = data.persons?.find(p => p.id === stakeholder.personId)
+      if (!person) {
+        console.warn(`Stakeholder references unknown person: ${stakeholder.personId}`)
+        return
+      }
       
-      const stakeholderEntity: ROCrateEntity = {
-        '@id': stakeholderId,
-        '@type': 'schema:Person',
-        name: stakeholder.name,
+      // Get RO-Crate Person ID from map
+      const rocratePersonId = personIdMap.get(stakeholder.personId)
+      if (!rocratePersonId) {
+        console.warn(`No RO-Crate ID mapped for person: ${stakeholder.personId}`)
+        return
       }
-      if (stakeholder.role) {
-        stakeholderEntity.role = stakeholder.role
-      }
-      graph.push(stakeholderEntity)
+      
+      // Find or create Person entity through registry (will reuse if already exists)
+      personRegistry.findOrCreatePersonWithId(
+        rocratePersonId,
+        {
+          name: person.name,
+          orcid: person.orcid,
+          affiliation: person.affiliation,
+        },
+        stakeholder.role || 'stakeholder',
+        stakeholder.roleContext
+      )
+      stakeholderRefs.push({ '@id': rocratePersonId })
     })
     
     // Link stakeholders to project
@@ -229,25 +562,64 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
         activityEntity.endedAtTime = `${stage.endDate}T23:59:59Z`
       }
 
-      // Link agents
+      // Link agents - use Person registry for person-type agents
       if (stage.agents && stage.agents.length > 0) {
         const agentRefs = stage.agents.map((agent, agentIndex) => {
-          const agentId = generateId(`agent-${index}`, agentIndex)
-          
-          // Add agent entity
-          const agentEntity: ROCrateEntity = {
-            '@id': agentId,
-            '@type': agent.type === 'person' ? 'schema:Person' : agent.type === 'organization' ? 'schema:Organization' : 'schema:SoftwareApplication',
-            name: agent.name,
+          if (agent.type === 'person') {
+            // Find person by personId
+            if (!agent.personId) {
+              console.warn(`Person-type agent missing personId`)
+              return null
+            }
+            
+            const person = data.persons?.find(p => p.id === agent.personId)
+            if (!person) {
+              console.warn(`Agent references unknown person: ${agent.personId}`)
+              return null
+            }
+            
+            // Get RO-Crate Person ID from map
+            const rocratePersonId = personIdMap.get(agent.personId)
+            if (!rocratePersonId) {
+              console.warn(`No RO-Crate ID mapped for person: ${agent.personId}`)
+              return null
+            }
+            
+            // Use Person registry for deduplication (will reuse if already exists)
+            // rocratePersonId is guaranteed to be defined here due to check above
+            personRegistry.findOrCreatePersonWithId(
+              rocratePersonId,
+              {
+                name: person.name,
+                orcid: person.orcid,
+                affiliation: person.affiliation,
+              },
+              agent.role || undefined,
+              agent.roleContext
+            )
+            return { '@id': rocratePersonId }
+          } else {
+            // Non-person agents (organization, software) - create separate entities
+            if (!agent.name) {
+              console.warn(`Non-person agent missing name`)
+              return null
+            }
+            const agentId = generateId(`agent-${index}`, agentIndex)
+            const agentEntity: ROCrateEntity = {
+              '@id': agentId,
+              '@type': agent.type === 'organization' ? 'schema:Organization' : 'schema:SoftwareApplication',
+              name: agent.name,
+            }
+            if (agent.role) {
+              agentEntity.role = agent.role
+            }
+            graph.push(agentEntity)
+            return { '@id': agentId }
           }
-          if (agent.role) {
-            agentEntity.role = agent.role
-          }
-          graph.push(agentEntity)
-
-          return { '@id': agentId }
-        })
-        activityEntity.wasAssociatedWith = agentRefs.length === 1 ? agentRefs[0] : agentRefs
+        }).filter((ref): ref is { '@id': string } => ref !== null)
+        if (agentRefs.length > 0) {
+          activityEntity.wasAssociatedWith = agentRefs.length === 1 ? agentRefs[0] : agentRefs
+        }
       }
 
       // Add milestones
@@ -424,6 +796,12 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   if (hasPart.length > 0) {
     rootDataset.hasPart = hasPart
   }
+
+  // Add all Person entities from registry to graph
+  const personEntities = personRegistry.getAllPersonEntities()
+  personEntities.forEach(personEntity => {
+    graph.push(personEntity)
+  })
 
   // Extended @context with all required prefixes
   const context: (string | Record<string, string>)[] = [

@@ -169,6 +169,10 @@ export function useCanvasData() {
     canvasData.value.dataAccess = updatedDataAccess
   }
 
+  const updatePersons = (persons: CanvasData['persons']) => {
+    canvasData.value.persons = persons ? [...persons] : undefined
+  }
+
   const updateOutcomes = (updates: Partial<CanvasData['outcomes']>) => {
     if (!canvasData.value.outcomes) {
       canvasData.value.outcomes = {}
@@ -233,7 +237,19 @@ export function useCanvasData() {
   }
 
   const importFromROCrate = (data: CanvasData) => {
-    canvasData.value = data
+    // Deep copy the data to ensure reactivity works properly
+    // Use Object.assign to ensure Vue's reactivity system picks up the change
+    const newData = JSON.parse(JSON.stringify(data))
+    // Clear existing data first to ensure watchers trigger
+    canvasData.value = {
+      project: {
+        title: '',
+        description: '',
+        projectStage: '',
+      },
+    }
+    // Then set the new data - this ensures watchers see the change
+    canvasData.value = newData
   }
 
   // Validation functions
@@ -540,7 +556,12 @@ export function useCanvasData() {
     if (data.userExpectations?.stakeholders && data.userExpectations.stakeholders.length > 0) {
       data.userExpectations.stakeholders.forEach(stakeholder => {
         total++
-        if (stakeholder.name?.trim()) completed++
+        // Check if stakeholder has a valid personId
+        if (stakeholder.personId?.trim()) {
+          // Check if person exists and has a name
+          const person = data.persons?.find(p => p.id === stakeholder.personId)
+          if (person?.name?.trim()) completed++
+        }
         if (stakeholder.role !== undefined) {
           total++
           if (stakeholder.role?.trim()) completed++
@@ -600,7 +621,15 @@ export function useCanvasData() {
         if (stage.agents !== undefined && stage.agents.length > 0) {
           stage.agents.forEach(agent => {
             total++
-            if (agent.name?.trim()) completed++
+            // For person-type agents, check personId; for others, check name
+            if (agent.type === 'person') {
+              if (agent.personId?.trim()) {
+                const person = data.persons?.find(p => p.id === agent.personId)
+                if (person?.name?.trim()) completed++
+              }
+            } else {
+              if (agent.name?.trim()) completed++
+            }
             if (agent.role !== undefined) {
               total++
               if (agent.role?.trim()) completed++
@@ -725,6 +754,7 @@ export function useCanvasData() {
   return {
     canvasData,
     updateProject,
+    updatePersons,
     updateUserExpectations,
     updateDeveloperFeasibility,
     updateGovernance,

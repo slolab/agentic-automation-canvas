@@ -10,7 +10,7 @@
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1">
             <span class="text-sm font-medium text-gray-900 truncate">
-              {{ stakeholder.name || 'Unnamed Stakeholder' }}
+              {{ personName || 'Unassigned Person' }}
             </span>
             <span
               v-if="stakeholder.role"
@@ -18,6 +18,11 @@
             >
               {{ stakeholder.role }}
             </span>
+          </div>
+          <div v-if="personInfo" class="text-xs text-gray-500 mt-0.5">
+            <span v-if="personInfo.affiliation">{{ personInfo.affiliation }}</span>
+            <span v-if="personInfo.affiliation && personInfo.orcid"> • </span>
+            <span v-if="personInfo.orcid" class="font-mono">{{ personInfo.orcid }}</span>
           </div>
         </div>
         <svg class="w-5 h-5 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,30 +47,60 @@
       </div>
 
       <FormField
-        :id="`stakeholder-name-${index}`"
-        label="Name"
+        :id="`stakeholder-person-${index}`"
+        label="Person"
+        help-text="Select a person from the Persons section, or create a new person there first."
         required
       >
-        <input
-          :id="`stakeholder-name-${index}`"
-          :value="stakeholder.name"
-          type="text"
+        <select
+          :id="`stakeholder-person-${index}`"
+          :value="stakeholder.personId || ''"
           class="form-input"
           required
-          @input="update({ ...stakeholder, name: ($event.target as HTMLInputElement).value })"
-        />
+          @change="update({ ...stakeholder, personId: ($event.target as HTMLSelectElement).value })"
+        >
+          <option value="">Select a person...</option>
+          <option
+            v-for="person in availablePersons"
+            :key="person.id"
+            :value="person.id"
+          >
+            {{ person.name }} {{ person.affiliation ? `(${person.affiliation})` : '' }}
+          </option>
+        </select>
       </FormField>
+
+      <div v-if="!availablePersons.length" class="p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
+        <strong>No persons available.</strong> Please add persons in the "Persons" section first.
+      </div>
 
       <FormField
         :id="`stakeholder-role-${index}`"
         label="Role"
+        help-text="The role this person has as a stakeholder (e.g., 'Data Entry Manager', 'IT Lead')"
       >
         <input
           :id="`stakeholder-role-${index}`"
           :value="stakeholder.role || ''"
           type="text"
           class="form-input"
-          @input="update({ ...stakeholder, role: ($event.target as HTMLInputElement).value })"
+          placeholder="e.g., Data Entry Manager"
+          @input="update({ ...stakeholder, role: ($event.target as HTMLInputElement).value || undefined })"
+        />
+      </FormField>
+
+      <FormField
+        :id="`stakeholder-role-context-${index}`"
+        label="Role Context"
+        help-text="Optional context for this stakeholder role (e.g., 'Design phase requirements gathering')"
+      >
+        <input
+          :id="`stakeholder-role-context-${index}`"
+          :value="stakeholder.roleContext || ''"
+          type="text"
+          class="form-input"
+          placeholder="e.g., Design phase requirements gathering"
+          @input="update({ ...stakeholder, roleContext: ($event.target as HTMLInputElement).value || undefined })"
         />
       </FormField>
     </div>
@@ -73,9 +108,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
-import type { Stakeholder } from '@/types/canvas'
+import type { Stakeholder, Person } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
 
 interface Props {
   stakeholder: Stakeholder
@@ -84,7 +120,26 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-// New stakeholders (without name) start expanded so they can be filled in
+const { canvasData } = useCanvasData()
+
+// Get available persons
+const availablePersons = computed<Person[]>(() => {
+  return canvasData.value.persons || []
+})
+
+// Get person name and info for display
+const personName = computed(() => {
+  if (!props.stakeholder.personId) return null
+  const person = availablePersons.value.find(p => p.id === props.stakeholder.personId)
+  return person?.name || 'Unknown Person'
+})
+
+const personInfo = computed(() => {
+  if (!props.stakeholder.personId) return null
+  return availablePersons.value.find(p => p.id === props.stakeholder.personId) || null
+})
+
+// New stakeholders (without personId) start expanded so they can be filled in
 // Existing stakeholders start collapsed
-const isExpanded = ref(!props.stakeholder.name || props.stakeholder.name.trim() === '')
+const isExpanded = ref(!props.stakeholder.personId || props.stakeholder.personId.trim() === '')
 </script>
