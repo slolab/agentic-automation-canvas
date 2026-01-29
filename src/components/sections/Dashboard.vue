@@ -99,11 +99,22 @@
                 (Net: {{ formatMinutes(getNetTimeSaved(req) * (req.volumePerMonth || 0)) }})
               </span>
             </div>
-            <!-- Progress bar -->
-            <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+            <!-- Progress bar: total bar = total savings, green = net savings, grey = oversight -->
+            <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden relative">
+              <!-- Net savings bar (green) -->
               <div
-                class="h-full bg-green-500 transition-all"
-                :style="{ width: `${getSavingsPercentage(req)}%` }"
+                v-if="getNetSavingsPercentage(req) > 0"
+                class="h-full bg-green-500 transition-all absolute left-0 top-0"
+                :style="{ width: `${getNetSavingsPercentage(req)}%` }"
+              />
+              <!-- Oversight bar (grey, shows time lost to oversight) -->
+              <div
+                v-if="getOversightPercentage(req) > 0"
+                class="h-full bg-gray-400 transition-all absolute top-0"
+                :style="{ 
+                  width: `${getOversightPercentage(req)}%`,
+                  left: `${getNetSavingsPercentage(req)}%`
+                }"
               />
             </div>
           </div>
@@ -179,6 +190,9 @@ const requirements = computed(() => canvasData.value.userExpectations?.requireme
 const governanceStages = computed(() => canvasData.value.governance?.stages || [])
 
 const taskCount = computed(() => requirements.value.length)
+
+// Alias for clarity - requirements are tasks
+const tasks = computed(() => requirements.value)
 
 // Calculate total time saved per month
 const totalMinutesSavedPerMonth = computed(() => {
@@ -276,11 +290,42 @@ function getNetTimeSaved(req: Requirement): number {
   return Math.max(0, timeSaved - oversight)
 }
 
-function getSavingsPercentage(req: Requirement): number {
-  const baseline = getBaselineMinutes(req)
-  if (baseline === 0) return 0
+// Calculate maximum total time saved across all tasks for normalization
+const maxTotalTimeSaved = computed(() => {
+  if (requirements.value.length === 0) return 0
+  return Math.max(...requirements.value.map(req => {
+    const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+    const volume = req.volumePerMonth || 0
+    return timeSaved * volume
+  }))
+})
+
+// Get total savings percentage (full bar width)
+function getTotalSavingsPercentage(req: Requirement): number {
+  if (maxTotalTimeSaved.value === 0) return 0
   const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
-  return Math.min(100, Math.round((timeSaved / baseline) * 100))
+  const volume = req.volumePerMonth || 0
+  const totalTimeSaved = timeSaved * volume
+  return Math.round((totalTimeSaved / maxTotalTimeSaved.value) * 100)
+}
+
+// Get net savings percentage (green bar)
+function getNetSavingsPercentage(req: Requirement): number {
+  if (maxTotalTimeSaved.value === 0) return 0
+  const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+  const oversight = req.humanOversightMinutesPerUnit || 0
+  const volume = req.volumePerMonth || 0
+  const netTimeSaved = Math.max(0, timeSaved - oversight) * volume
+  return Math.round((netTimeSaved / maxTotalTimeSaved.value) * 100)
+}
+
+// Get oversight percentage (grey bar)
+function getOversightPercentage(req: Requirement): number {
+  if (maxTotalTimeSaved.value === 0) return 0
+  const oversight = req.humanOversightMinutesPerUnit || 0
+  const volume = req.volumePerMonth || 0
+  const oversightTime = oversight * volume
+  return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 
 function getStageColor(index: number): string {
