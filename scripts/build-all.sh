@@ -43,16 +43,22 @@ with open('site/schema/aac.schema.yaml', 'w') as f:
 echo "📋 Copying examples..."
 cp schema/examples/*.json site/examples/ 2>/dev/null || true
 
-# Combine builds: copy docs to dist/docs subdirectory
+# Combine builds: reorganize to match GitHub Pages structure
 echo "🔗 Combining builds..."
-# Vue app is already at dist/ root (for custom domain serving)
-mkdir -p dist/docs
-cp -r site/* dist/docs/
+# Create the base path directory
+mkdir -p dist/agentic-automation-canvas
+# Move Vue app files to the base path
+mv dist/index.html dist/agentic-automation-canvas/ 2>/dev/null || true
+mv dist/assets dist/agentic-automation-canvas/ 2>/dev/null || true
+mv dist/favicon.svg dist/agentic-automation-canvas/ 2>/dev/null || true
+# Copy docs to the base path subdirectory
+mkdir -p dist/agentic-automation-canvas/docs
+cp -r site/* dist/agentic-automation-canvas/docs/
 
 echo "✅ Build complete!"
 echo ""
-echo "📁 Vue app: dist/ (root)"
-echo "📁 Documentation: dist/docs/"
+echo "📁 Vue app: dist/agentic-automation-canvas/"
+echo "📁 Documentation: dist/agentic-automation-canvas/docs/"
 echo ""
 echo "To preview locally:"
 echo "  npm run preview    # Preview Vue app at http://localhost:4173"
@@ -60,5 +66,5 @@ echo "  uv run mkdocs serve  # Preview docs at http://localhost:8000"
 echo ""
 echo "Or serve the combined build:"
 echo "  npm run preview:all"
-echo "  # Vue app: http://localhost:4173/"
-echo "  # Docs: http://localhost:4173/docs/"
+echo "  # Vue app: http://localhost:4173/agentic-automation-canvas/"
+echo "  # Docs: http://localhost:4173/agentic-automation-canvas/docs/"

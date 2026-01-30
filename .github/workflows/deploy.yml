@@ -69,7 +69,10 @@ jobs:
         run: npm ci
 
       - name: Build Vue app
-        run: npm run build
+        run: |
+          # Build Vue app with base path for GitHub Pages compatibility
+          # This allows both GitHub Pages URL and custom domain to work
+          npm run build
 
       - name: Install uv
         uses: astral-sh/setup-uv@v4
@@ -87,11 +90,10 @@ jobs:
 
       - name: Build MkDocs
         run: |
-          # Temporarily update site_url for deployment
+          # Temporarily update site_url for GitHub Pages deployment
           # The canonical URL (w3id.org) will be set up via redirect
           # Use sed to update site_url without parsing custom YAML tags
-          # For custom domain (aac.slolab.ai), docs will be at root /docs/
-          sed 's|site_url: https://w3id.org/aac/|site_url: https://aac.slolab.ai/docs/|' mkdocs.yml > mkdocs.yml.tmp
+          sed 's|site_url: https://w3id.org/aac/|site_url: https://slolab.github.io/agentic-automation-canvas/docs/|' mkdocs.yml > mkdocs.yml.tmp
           uv run mkdocs build --quiet --config-file mkdocs.yml.tmp
           rm -f mkdocs.yml.tmp
 
@@ -124,10 +126,16 @@ jobs:
 
       - name: Combine builds
         run: |
-          # Copy docs to dist/docs subdirectory
-          # Vue app is already at dist/ root (for custom domain serving)
-          mkdir -p dist/docs
-          cp -r site/* dist/docs/
+          # Reorganize to match GitHub Pages project site structure
+          # Vue app needs to be in subdirectory for GitHub Pages compatibility
+          mkdir -p dist/agentic-automation-canvas
+          # Move Vue app files to the base path
+          mv dist/index.html dist/agentic-automation-canvas/ 2>/dev/null || true
+          mv dist/assets dist/agentic-automation-canvas/ 2>/dev/null || true
+          mv dist/favicon.svg dist/agentic-automation-canvas/ 2>/dev/null || true
+          # Copy docs to the base path subdirectory
+          mkdir -p dist/agentic-automation-canvas/docs
+          cp -r site/* dist/agentic-automation-canvas/docs/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
