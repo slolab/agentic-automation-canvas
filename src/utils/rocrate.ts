@@ -152,7 +152,6 @@ class PersonRegistry {
   private persons: Map<string, PersonRegistryEntry> = new Map()
   private roleAssignments: RoleAssignment[] = []
   private personCounter = 0
-  private roleCounter = 0
 
   /**
    * Normalize name for comparison (lowercase, trim)
