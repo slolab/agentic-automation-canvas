@@ -50,11 +50,16 @@
               </svg>
               {{ timeSavedText }}
             </span>
-            <span v-if="requirement.valueType && requirement.valueType.length > 0" class="flex items-center gap-1">
-              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              {{ valueTypesText }}
+            <!-- Benefit type badges -->
+            <span v-if="benefitTypes.length > 0" class="flex items-center gap-1">
+              <span
+                v-for="type in benefitTypes"
+                :key="type"
+                :class="benefitTypeBadgeClass(type)"
+                class="px-1.5 py-0.5 rounded text-xs font-medium"
+              >
+                {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+              </span>
             </span>
           </div>
           <!-- Time savings bar -->
@@ -169,9 +174,9 @@
         </FormField>
       </div>
 
-      <!-- Value Model Fields (M0 - Required) -->
+      <!-- Value Model Fields -->
       <div class="mt-6 pt-6 border-t-2 border-gray-200">
-        <h4 class="subsubsection-header">Value Model (M0)</h4>
+        <h4 class="subsubsection-header">Value Model</h4>
         
         <FormField
           :id="`req-unit-${index}`"
@@ -193,8 +198,8 @@
         <FormField
           :id="`req-unit-category-${index}`"
           label="Unit Category"
-          help-text="Standardized category of the work unit. Select the type that best matches your unit of work (case, document, record, message, analysis run, meeting, or other)."
-          tooltip="Select the standardized category that best matches your unit: <strong>Case</strong> - A case file or case record; <strong>Document</strong> - A document or file; <strong>Record</strong> - A data record or entry; <strong>Message</strong> - An email, message, or communication; <strong>Analysis Run</strong> - An analysis or computation; <strong>Meeting</strong> - A meeting or session; <strong>Other</strong> - Something else. Standardization enables comparison across projects."
+          help-text="Standardized category of the work unit. Select the type that best matches your unit of work."
+          tooltip="Select the standardized category that best matches your unit: <strong>Case</strong> - A case file or case record; <strong>Document</strong> - A document or file; <strong>Record</strong> - A data record or entry; <strong>Message</strong> - An email, message, or communication; <strong>Analysis Run</strong> - An analysis or computation; <strong>Meeting</strong> - A meeting or session; <strong>Other</strong> - Something else."
           required
         >
           <select
@@ -214,197 +219,29 @@
           </select>
         </FormField>
 
-        <FormField
-          :id="`req-volume-${index}`"
-          label="Volume Per Month"
-          help-text="Average number of units processed per month. Used to calculate total time savings (volume × time saved per unit)."
-          tooltip="Enter the average number of units processed per month. This is multiplied by 'Time Saved Per Unit' to calculate total monthly time savings. Example: If you process 100 documents per month and save 5 minutes per document, total savings = 100 × 5 = 500 minutes/month. Use realistic averages - consider seasonal variations."
-          required
-        >
-          <input
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
             :id="`req-volume-${index}`"
-            :value="requirement.volumePerMonth || ''"
-            type="number"
-            min="0"
-            class="form-input"
-            @input="update({ ...requirement, volumePerMonth: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
-          />
-        </FormField>
-
-        <FormField
-          :id="`req-baseline-${index}`"
-          label="Baseline Minutes Per Unit"
-          help-text="Current time spent per unit before automation. Enter a single number (average) or use a 3-point estimate (best/likely/worst) if there's significant variation."
-          tooltip="Enter how many minutes it currently takes to process one unit manually (before automation). This is your baseline. If processing time varies significantly, you can use a 3-point estimate (best/likely/worst) by entering ranges. Example: If documents take 10-15 minutes on average, enter 12.5. This baseline is compared to time saved to show improvement."
-          required
-        >
-          <input
-            :id="`req-baseline-${index}`"
-            :value="typeof requirement.baselineMinutesPerUnit === 'number' ? requirement.baselineMinutesPerUnit : ''"
-            type="number"
-            min="0"
-            class="form-input"
-            placeholder="Single number"
-            @input="update({ ...requirement, baselineMinutesPerUnit: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
-          />
-        </FormField>
-
-        <div class="grid grid-cols-3 gap-2">
-          <FormField
-            :id="`req-saved-best-${index}`"
-            label="Time Saved (Best)"
-            help-text="Best case scenario: maximum minutes saved per unit (optimistic estimate)"
-            tooltip="Enter the best-case scenario: the maximum minutes you could save per unit in ideal conditions. This is your optimistic estimate. Use this when there's significant uncertainty and you want to capture the full range. Example: If automation could save up to 8 minutes per document in the best case, enter 8."
-          >
-            <input
-              :id="`req-saved-best-${index}`"
-              :value="requirement.timeSavedMinutesPerUnit?.best || ''"
-              type="number"
-              min="0"
-              class="form-input"
-              @input="update({ 
-                ...requirement, 
-                timeSavedMinutesPerUnit: { 
-                  ...(requirement.timeSavedMinutesPerUnit || { likely: 0, worst: 0 }), 
-                  best: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : 0 
-                } 
-              })"
-            />
-          </FormField>
-          <FormField
-            :id="`req-saved-likely-${index}`"
-            label="Time Saved (Likely)"
-            help-text="Most likely scenario: expected minutes saved per unit (realistic estimate). This is the primary value used for calculations."
-            tooltip="Enter your realistic estimate: the most likely minutes saved per unit. This is the primary value used for all calculations (total time saved, dashboard metrics, etc.). Be realistic - this should be what you actually expect, not your best-case scenario. Example: If you realistically expect to save 5 minutes per document, enter 5."
+            label="Volume Per Month"
+            help-text="Average number of units processed per month. Used to calculate total benefit values."
+            tooltip="Enter the average number of units processed per month. This is multiplied by per-unit benefits to calculate total monthly impact."
             required
           >
             <input
-              :id="`req-saved-likely-${index}`"
-              :value="requirement.timeSavedMinutesPerUnit?.likely || ''"
+              :id="`req-volume-${index}`"
+              :value="requirement.volumePerMonth || ''"
               type="number"
               min="0"
               class="form-input"
-              @input="update({ 
-                ...requirement, 
-                timeSavedMinutesPerUnit: { 
-                  ...(requirement.timeSavedMinutesPerUnit || { best: 0, worst: 0 }), 
-                  likely: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : 0 
-                } 
-              })"
-            />
-          </FormField>
-          <FormField
-            :id="`req-saved-worst-${index}`"
-            label="Time Saved (Worst)"
-            help-text="Worst case scenario: minimum minutes saved per unit (conservative estimate)"
-            tooltip="Enter the worst-case scenario: the minimum minutes you would save per unit even if things don't go perfectly. This is your conservative estimate. Use this to understand the lower bound of value. Example: If automation would save at least 3 minutes per document even in worst case, enter 3."
-          >
-            <input
-              :id="`req-saved-worst-${index}`"
-              :value="requirement.timeSavedMinutesPerUnit?.worst || ''"
-              type="number"
-              min="0"
-              class="form-input"
-              @input="update({ 
-                ...requirement, 
-                timeSavedMinutesPerUnit: { 
-                  ...(requirement.timeSavedMinutesPerUnit || { best: 0, likely: 0 }), 
-                  worst: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : 0 
-                } 
-              })"
-            />
-          </FormField>
-        </div>
-
-        <FormField
-          :id="`req-value-type-${index}`"
-          label="Value Type"
-          help-text="Select all value types this task delivers: Time (saves time), Quality (improves accuracy/consistency), Risk (reduces errors/compliance issues), Enablement (enables new capabilities)"
-          tooltip="Select all value types this task delivers (you can select multiple): <strong>Time</strong> - Saves time through automation; <strong>Quality</strong> - Improves accuracy, consistency, or outcomes; <strong>Risk</strong> - Reduces errors, compliance issues, or operational risks; <strong>Enablement</strong> - Enables new capabilities or workflows. Tasks often deliver multiple types of value."
-        >
-          <div class="flex flex-wrap gap-3">
-            <label class="form-checkbox-field">
-              <input
-                type="checkbox"
-                :checked="requirement.valueType?.includes('time') || false"
-                class="form-checkbox-small"
-                @change="handleValueTypeChange('time', $event)"
-              />
-              <span>Time</span>
-            </label>
-            <label class="form-checkbox-field">
-              <input
-                type="checkbox"
-                :checked="requirement.valueType?.includes('quality') || false"
-                class="form-checkbox-small"
-                @change="handleValueTypeChange('quality', $event)"
-              />
-              <span>Quality</span>
-            </label>
-            <label class="form-checkbox-field">
-              <input
-                type="checkbox"
-                :checked="requirement.valueType?.includes('risk') || false"
-                class="form-checkbox-small"
-                @change="handleValueTypeChange('risk', $event)"
-              />
-              <span>Risk</span>
-            </label>
-            <label class="form-checkbox-field">
-              <input
-                type="checkbox"
-                :checked="requirement.valueType?.includes('enablement') || false"
-                class="form-checkbox-small"
-                @change="handleValueTypeChange('enablement', $event)"
-              />
-              <span>Enablement</span>
-            </label>
-          </div>
-        </FormField>
-      </div>
-
-      <!-- Value Model Fields (M1/M2 - Optional) -->
-      <div class="mt-6 pt-6 border-t-2 border-gray-200">
-        <h4 class="subsubsection-header text-gray-600">Value Model (M1/M2 - Optional)</h4>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            :id="`req-rework-${index}`"
-            label="Rework Rate (%)"
-            help-text="Percentage of units requiring rework due to errors or quality issues. Used to calculate quality impact."
-            tooltip="Enter the percentage of units that currently require rework due to errors or quality issues. This helps quantify quality improvements. Example: If 15% of documents need rework due to classification errors, enter 15. After automation, this should decrease, showing quality value."
-          >
-            <input
-              :id="`req-rework-${index}`"
-              :value="requirement.reworkRate || ''"
-              type="number"
-              min="0"
-              max="100"
-              class="form-input"
-              @input="update({ ...requirement, reworkRate: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
-            />
-          </FormField>
-
-          <FormField
-            :id="`req-error-cost-${index}`"
-            label="Error Cost"
-            help-text="Estimated cost or impact of errors (can be a number or descriptive text). Used to quantify risk reduction value."
-            tooltip="Estimate the cost or impact of errors. This can be a number (e.g., '$500 per error') or descriptive text (e.g., 'Compliance violation risk'). This helps quantify the risk reduction value of automation. Example: 'Each misclassified document costs $50 in rework and delays' or 'High risk of regulatory non-compliance'."
-          >
-            <input
-              :id="`req-error-cost-${index}`"
-              :value="requirement.errorCost || ''"
-              type="text"
-              class="form-input"
-              @input="update({ ...requirement, errorCost: ($event.target as HTMLInputElement).value || undefined })"
+              @input="update({ ...requirement, volumePerMonth: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
             />
           </FormField>
 
           <FormField
             :id="`req-oversight-${index}`"
-            label="Human Oversight Minutes Per Unit"
-            help-text="Time required for human review/oversight per unit. This is subtracted from time saved to calculate net time savings. If automation requires no oversight, enter 0."
-            tooltip="Enter the time required for human review or oversight per unit. This is subtracted from time saved to calculate net time savings. If automation requires no human oversight, enter 0. Example: If each automated document needs 2 minutes of human review, enter 2. Net savings = Time Saved - Oversight Time. This shows realistic time savings after accounting for oversight."
+            label="Human Oversight (min/unit)"
+            help-text="Time required for human review/oversight per unit. Subtracted from time savings."
+            tooltip="Enter the time required for human review or oversight per unit. This is subtracted from time savings to calculate net benefit."
           >
             <input
               :id="`req-oversight-${index}`"
@@ -415,69 +252,63 @@
               @input="update({ ...requirement, humanOversightMinutesPerUnit: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
             />
           </FormField>
+        </div>
+      </div>
 
-          <FormField
-            :id="`req-confidence-user-${index}`"
-            label="User Confidence"
-            help-text="User's confidence level in the time savings estimates (low/medium/high)"
-            tooltip="The user's/stakeholder's confidence in the time savings estimates: <strong>Low</strong> - Estimates are uncertain or preliminary; <strong>Medium</strong> - Reasonable confidence based on experience; <strong>High</strong> - High confidence based on data or pilot testing. This helps assess estimate reliability."
+      <!-- Benefits Section -->
+      <div class="mt-6 pt-6 border-t-2 border-gray-200">
+        <div class="flex items-center justify-between mb-4">
+          <h4 class="subsubsection-header mb-0">Benefits</h4>
+          <button
+            @click="openBenefitsModal"
+            class="btn-secondary text-sm flex items-center gap-2"
           >
-            <select
-              :id="`req-confidence-user-${index}`"
-              :value="requirement.confidenceUser || ''"
-              class="form-input"
-              @change="update({ ...requirement, confidenceUser: ($event.target as HTMLSelectElement).value || undefined })"
-            >
-              <option value="">Select confidence</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </FormField>
-
-          <FormField
-            :id="`req-confidence-dev-${index}`"
-            label="Developer Confidence"
-            help-text="Developer's confidence level in technical feasibility and implementation estimates (low/medium/high)"
-            tooltip="The developer's confidence in technical feasibility and implementation estimates: <strong>Low</strong> - Uncertain feasibility or high technical risk; <strong>Medium</strong> - Feasible but may have challenges; <strong>High</strong> - High confidence in implementation. This helps assess technical risk and feasibility."
-          >
-            <select
-              :id="`req-confidence-dev-${index}`"
-              :value="requirement.confidenceDev || ''"
-              class="form-input"
-              @change="update({ ...requirement, confidenceDev: ($event.target as HTMLSelectElement).value || undefined })"
-            >
-              <option value="">Select confidence</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-          </FormField>
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+            </svg>
+            Edit Benefits
+          </button>
         </div>
 
-        <FormField
-          :id="`req-assumptions-${index}`"
-          label="Assumptions"
-          help-text="Key assumptions underlying the time savings estimates (e.g., document formats, complexity levels, edge cases)"
-          tooltip="Document key assumptions that underlie your time savings estimates. This is critical for validation and helps others understand the context. Examples: 'Assumes standard document formats', 'Based on average complexity documents', 'Does not account for edge cases requiring manual review', 'Assumes 90% automation success rate'. These assumptions help validate estimates later."
-        >
-          <textarea
-            :id="`req-assumptions-${index}`"
-            :value="requirement.assumptions || ''"
-            rows="2"
-            class="form-input"
-            @input="update({ ...requirement, assumptions: ($event.target as HTMLTextAreaElement).value || undefined })"
-          />
-        </FormField>
+        <!-- Benefits Summary -->
+        <div v-if="benefits.length === 0" class="text-sm text-gray-500 italic py-4 text-center bg-gray-50 rounded-lg">
+          No benefits defined yet. Click "Edit Benefits" to add time, quality, risk, or enablement benefits.
+        </div>
+        <div v-else class="space-y-2">
+          <div
+            v-for="(benefit, bIndex) in benefits"
+            :key="bIndex"
+            class="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+          >
+            <div class="flex items-center gap-3">
+              <span :class="benefitTypeBadgeClass(benefit.benefitType)" class="px-2 py-1 rounded text-xs font-medium">
+                {{ benefit.benefitType.charAt(0).toUpperCase() + benefit.benefitType.slice(1) }}
+              </span>
+              <span class="text-sm font-medium text-gray-900">{{ benefit.metricLabel }}</span>
+            </div>
+            <div class="text-sm text-gray-600">
+              {{ formatBenefitValue(benefit) }}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Benefits Modal -->
+    <BenefitsModal
+      :is-open="isBenefitsModalOpen"
+      :benefits="benefits"
+      @update:is-open="isBenefitsModalOpen = $event"
+      @save="saveBenefits"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
-import type { Requirement } from '@/types/canvas'
+import BenefitsModal from './BenefitsModal.vue'
+import type { Requirement, Benefit, BenefitValue } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 interface Props {
@@ -487,27 +318,54 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
 // New requirements (without description) start expanded
 const isExpanded = ref(!props.requirement.description || props.requirement.description.trim() === '')
+const isBenefitsModalOpen = ref(false)
 
 // Get all requirements for normalization
 const { canvasData } = useCanvasData()
 const allRequirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 
+// Benefits array (ensure it's always an array)
+const benefits = computed(() => props.requirement.benefits || [])
+
+// Get unique benefit types
+const benefitTypes = computed(() => {
+  const types = new Set(benefits.value.map(b => b.benefitType))
+  return Array.from(types)
+})
+
+// Get time benefit for calculations
+const timeBenefit = computed(() => {
+  return benefits.value.find(b => b.benefitType === 'time')
+})
+
 // Calculate maximum total time saved across all tasks for normalization
 const maxTotalTimeSaved = computed(() => {
   if (allRequirements.value.length === 0) return 0
   return Math.max(...allRequirements.value.map(req => {
-    const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+    const timeBen = (req.benefits || []).find(b => b.benefitType === 'time')
+    if (!timeBen) return 0
+    const timeSaved = getExpectedLikely(timeBen.expected)
     const volume = req.volumePerMonth || 0
     return timeSaved * volume
   }))
 })
 
+// Get likely value from expected (for time benefits)
+function getExpectedLikely(expected: BenefitValue): number {
+  if (expected.type === 'threePoint') return expected.likely
+  if (expected.type === 'numeric') return expected.value
+  return 0
+}
+
 // Get net savings percentage (green bar)
 function getNetSavingsPercentage(): number {
   if (maxTotalTimeSaved.value === 0) return 0
-  const timeSaved = props.requirement.timeSavedMinutesPerUnit?.likely || 0
+  if (!timeBenefit.value) return 0
+  
+  const timeSaved = getExpectedLikely(timeBenefit.value.expected)
   const oversight = props.requirement.humanOversightMinutesPerUnit || 0
   const volume = props.requirement.volumePerMonth || 0
   const netTimeSaved = Math.max(0, timeSaved - oversight) * volume
@@ -525,7 +383,9 @@ function getOversightPercentage(): number {
 
 // Format time saved text for collapsed view
 const timeSavedText = computed(() => {
-  const likely = props.requirement.timeSavedMinutesPerUnit?.likely
+  if (!timeBenefit.value) return null
+  
+  const likely = getExpectedLikely(timeBenefit.value.expected)
   const volume = props.requirement.volumePerMonth
   
   if (likely && volume) {
@@ -540,30 +400,44 @@ const timeSavedText = computed(() => {
   return null
 })
 
-// Format value types text
-const valueTypesText = computed(() => {
-  if (!props.requirement.valueType || props.requirement.valueType.length === 0) {
-    return null
+// Badge class for benefit types
+function benefitTypeBadgeClass(type: string): string {
+  const classes: Record<string, string> = {
+    'time': 'bg-green-100 text-green-700',
+    'quality': 'bg-blue-100 text-blue-700',
+    'risk': 'bg-orange-100 text-orange-700',
+    'enablement': 'bg-purple-100 text-purple-700'
   }
-  return props.requirement.valueType.map(t => t.charAt(0).toUpperCase() + t.slice(1)).join(', ')
-})
-
-// Handle value type checkbox changes
-function handleValueTypeChange(
-  valueType: 'time' | 'quality' | 'risk' | 'enablement',
-  event: Event
-) {
-  const checked = (event.target as HTMLInputElement).checked
-  const currentTypes = props.requirement.valueType || []
-  let newTypes: Array<'time' | 'quality' | 'risk' | 'enablement'>
-  
-  if (checked) {
-    newTypes = [...currentTypes, valueType]
-  } else {
-    newTypes = currentTypes.filter(t => t !== valueType)
-  }
-  
-  props.update({ ...props.requirement, valueType: newTypes.length > 0 ? newTypes : undefined })
+  return classes[type] || 'bg-gray-100 text-gray-700'
 }
 
+// Format benefit value for display
+function formatBenefitValue(benefit: Benefit): string {
+  const baseline = formatValue(benefit.baseline)
+  const expected = formatValue(benefit.expected)
+  return `${baseline} → ${expected} ${benefit.benefitUnit}`
+}
+
+function formatValue(value: BenefitValue): string {
+  switch (value.type) {
+    case 'numeric':
+      return String(value.value)
+    case 'categorical':
+      return value.category.charAt(0).toUpperCase() + value.category.slice(1)
+    case 'binary':
+      return value.bool ? 'Yes' : 'No'
+    case 'threePoint':
+      return `${value.likely} (${value.worst}-${value.best})`
+  }
+}
+
+// Open benefits modal
+function openBenefitsModal() {
+  isBenefitsModalOpen.value = true
+}
+
+// Save benefits from modal
+function saveBenefits(newBenefits: Benefit[]) {
+  props.update({ ...props.requirement, benefits: newBenefits })
+}
 </script>

@@ -96,47 +96,14 @@
               "unitOfWork": { "type": "string", "minLength": 1 },
               "unitCategory": { "type": "string", "enum": ["case", "document", "record", "message", "analysisRun", "meeting", "other"] },
               "volumePerMonth": { "type": "number", "minimum": 1 },
-              "baselineMinutesPerUnit": {
-                "oneOf": [
-                  { "type": "number", "minimum": 0 },
-                  {
-                    "type": "object",
-                    "properties": {
-                      "best": { "type": "number", "minimum": 0 },
-                      "likely": { "type": "number", "minimum": 0 },
-                      "worst": { "type": "number", "minimum": 0 }
-                    },
-                    "required": ["best", "likely", "worst"]
-                  }
-                ]
-              },
-              "timeSavedMinutesPerUnit": {
-                "type": "object",
-                "properties": {
-                  "best": { "type": "number", "minimum": 0 },
-                  "likely": { "type": "number", "minimum": 0 },
-                  "worst": { "type": "number", "minimum": 0 }
-                },
-                "required": ["likely"]
-              },
-              "valueType": {
-                "type": "array",
-                "items": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
-                "uniqueItems": true
-              },
-              "reworkRate": { "type": "number", "minimum": 0, "maximum": 100 },
-              "errorCost": {
-                "oneOf": [
-                  { "type": "string" },
-                  { "type": "number", "minimum": 0 }
-                ]
-              },
               "humanOversightMinutesPerUnit": { "type": "number", "minimum": 0 },
-              "confidenceUser": { "type": "string", "enum": ["low", "medium", "high"] },
-              "confidenceDev": { "type": "string", "enum": ["low", "medium", "high"] },
-              "assumptions": { "type": "string" }
+              "benefits": {
+                "type": "array",
+                "description": "Array of benefit metrics for this requirement",
+                "items": { "$ref": "#/$defs/Benefit" }
+              }
             },
-            "required": ["id", "description", "unitOfWork", "unitCategory", "volumePerMonth", "baselineMinutesPerUnit", "timeSavedMinutesPerUnit"]
+            "required": ["id", "description", "benefits"]
           }
         },
         "stakeholders": {
@@ -394,6 +361,99 @@
           }
         }
       }
+    }
+  },
+  "$defs": {
+    "BenefitValue": {
+      "description": "A benefit value that can be numeric, categorical, binary, or a 3-point estimate",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "numeric" },
+            "value": { "type": "number" }
+          },
+          "required": ["type", "value"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "categorical" },
+            "category": { "type": "string", "enum": ["low", "medium", "high"] }
+          },
+          "required": ["type", "category"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "binary" },
+            "bool": { "type": "boolean" }
+          },
+          "required": ["type", "bool"]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": { "const": "threePoint" },
+            "best": { "type": "number" },
+            "likely": { "type": "number" },
+            "worst": { "type": "number" }
+          },
+          "required": ["type", "best", "likely", "worst"]
+        }
+      ]
+    },
+    "Benefit": {
+      "type": "object",
+      "description": "A benefit metric for a requirement",
+      "properties": {
+        "benefitType": {
+          "type": "string",
+          "enum": ["time", "quality", "risk", "enablement"],
+          "description": "Type of benefit"
+        },
+        "metricId": {
+          "type": "string",
+          "description": "Identifier for the metric (controlled vocabulary or 'custom')"
+        },
+        "metricLabel": {
+          "type": "string",
+          "description": "Human-readable label for the metric"
+        },
+        "aggregationBasis": {
+          "type": "string",
+          "enum": ["perUnit", "perMonth", "oneOff"],
+          "default": "perUnit",
+          "description": "How the benefit value is aggregated"
+        },
+        "benefitUnit": {
+          "type": "string",
+          "description": "Unit for the benefit value (e.g., 'minutes', '%', 'incidents/month')"
+        },
+        "baseline": {
+          "$ref": "#/$defs/BenefitValue",
+          "description": "Baseline value before automation"
+        },
+        "expected": {
+          "$ref": "#/$defs/BenefitValue",
+          "description": "Expected value after automation"
+        },
+        "confidenceUser": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "User's confidence in the benefit estimate"
+        },
+        "confidenceDev": {
+          "type": "string",
+          "enum": ["low", "medium", "high"],
+          "description": "Developer's confidence in the benefit estimate"
+        },
+        "assumptions": {
+          "type": "string",
+          "description": "Key assumptions underlying the benefit estimate"
+        }
+      },
+      "required": ["benefitType", "metricId", "metricLabel", "benefitUnit", "baseline", "expected"]
     }
   }
 }

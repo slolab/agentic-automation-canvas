@@ -451,7 +451,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       if (req.status) {
         stepEntity.status = req.status
       }
-      // Value model fields (M0 - required)
+      // Value model fields
       if (req.unitOfWork) {
         stepEntity['aac:unitOfWork'] = req.unitOfWork
       }
@@ -461,43 +461,12 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       if (req.volumePerMonth !== undefined) {
         stepEntity['aac:volumePerMonth'] = req.volumePerMonth
       }
-      if (req.baselineMinutesPerUnit !== undefined) {
-        stepEntity['aac:baselineMinutesPerUnit'] = req.baselineMinutesPerUnit
-      }
-      if (req.timeSavedMinutesPerUnit) {
-        stepEntity['aac:timeSavedMinutesPerUnit'] = req.timeSavedMinutesPerUnit
-        // Compute netTimeSavedMinutesPerUnit if we have likely and oversight
-        if (req.timeSavedMinutesPerUnit.likely !== undefined && req.humanOversightMinutesPerUnit !== undefined) {
-          const netTimeSaved = req.timeSavedMinutesPerUnit.likely - req.humanOversightMinutesPerUnit
-          stepEntity['aac:netTimeSavedMinutesPerUnit'] = netTimeSaved
-        }
-      }
-      if (req.valueType && req.valueType.length > 0) {
-        stepEntity['aac:valueType'] = req.valueType
-      }
-      // Value model fields (M1/M2 - optional)
-      if (req.reworkRate !== undefined) {
-        stepEntity['aac:reworkRate'] = req.reworkRate
-      }
-      if (req.errorCost !== undefined) {
-        stepEntity['aac:errorCost'] = req.errorCost
-      }
       if (req.humanOversightMinutesPerUnit !== undefined) {
         stepEntity['aac:humanOversightMinutesPerUnit'] = req.humanOversightMinutesPerUnit
-        // Recompute netTimeSavedMinutesPerUnit if we have timeSaved
-        if (req.timeSavedMinutesPerUnit?.likely !== undefined) {
-          const netTimeSaved = req.timeSavedMinutesPerUnit.likely - req.humanOversightMinutesPerUnit
-          stepEntity['aac:netTimeSavedMinutesPerUnit'] = netTimeSaved
-        }
       }
-      if (req.confidenceUser) {
-        stepEntity['aac:confidenceUser'] = req.confidenceUser
-      }
-      if (req.confidenceDev) {
-        stepEntity['aac:confidenceDev'] = req.confidenceDev
-      }
-      if (req.assumptions) {
-        stepEntity['aac:assumptions'] = req.assumptions
+      // Benefits array - generalized benefit tracking
+      if (req.benefits && req.benefits.length > 0) {
+        stepEntity['aac:benefits'] = req.benefits
       }
       graph.push(stepEntity)
     })

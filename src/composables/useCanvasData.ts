@@ -355,39 +355,36 @@ export function useCanvasData() {
         errors.push({ field: `${prefix}.volumePerMonth`, message: 'Volume per month must be at least 1', severity: 'error' })
       }
 
-      if (req.baselineMinutesPerUnit === undefined) {
-        errors.push({ field: `${prefix}.baselineMinutesPerUnit`, message: 'Baseline minutes per unit is required', severity: 'error' })
-      } else if (typeof req.baselineMinutesPerUnit === 'number' && req.baselineMinutesPerUnit < 0) {
-        errors.push({ field: `${prefix}.baselineMinutesPerUnit`, message: 'Baseline minutes per unit must be ≥ 0', severity: 'error' })
-      }
-
-      if (!req.timeSavedMinutesPerUnit || req.timeSavedMinutesPerUnit.likely === undefined) {
-        errors.push({ field: `${prefix}.timeSavedMinutesPerUnit.likely`, message: 'Time saved (likely) is required', severity: 'error' })
-      } else if (req.timeSavedMinutesPerUnit.likely < 0) {
-        errors.push({ field: `${prefix}.timeSavedMinutesPerUnit.likely`, message: 'Time saved (likely) must be ≥ 0', severity: 'error' })
-      }
-
-      // Optional validations
-      if (req.timeSavedMinutesPerUnit) {
-        const { best, likely, worst } = req.timeSavedMinutesPerUnit
-        if (best !== undefined && likely !== undefined && best < likely) {
-          errors.push({ field: `${prefix}.timeSavedMinutesPerUnit`, message: 'Best case should be ≥ likely case', severity: 'error' })
-        }
-        if (likely !== undefined && worst !== undefined && likely < worst) {
-          errors.push({ field: `${prefix}.timeSavedMinutesPerUnit`, message: 'Likely case should be ≥ worst case', severity: 'error' })
-        }
-      }
-
       if (req.humanOversightMinutesPerUnit !== undefined && req.humanOversightMinutesPerUnit < 0) {
         errors.push({ field: `${prefix}.humanOversightMinutesPerUnit`, message: 'Human oversight minutes must be ≥ 0', severity: 'error' })
       }
 
-      // Warning: net time saved ≤ 0
-      if (req.timeSavedMinutesPerUnit?.likely !== undefined && req.humanOversightMinutesPerUnit !== undefined) {
-        const netTimeSaved = req.timeSavedMinutesPerUnit.likely - req.humanOversightMinutesPerUnit
-        if (netTimeSaved <= 0) {
-          errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
+      // Validate benefits array
+      if (!req.benefits || req.benefits.length === 0) {
+        errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
+      } else {
+        // Check for time benefit and validate net savings
+        const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
+        if (timeBenefit && req.humanOversightMinutesPerUnit !== undefined) {
+          const expected = timeBenefit.expected
+          const likelyValue = expected.type === 'threePoint' ? expected.likely : 
+                             expected.type === 'numeric' ? expected.value : 0
+          const netTimeSaved = likelyValue - req.humanOversightMinutesPerUnit
+          if (netTimeSaved <= 0) {
+            errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
+          }
         }
+
+        // Validate each benefit
+        req.benefits.forEach((benefit, bIndex) => {
+          const benefitPrefix = `${prefix}.benefits[${bIndex}]`
+          if (!benefit.metricLabel || !benefit.metricLabel.trim()) {
+            errors.push({ field: `${benefitPrefix}.metricLabel`, message: 'Benefit metric label is required', severity: 'error' })
+          }
+          if (!benefit.benefitUnit || !benefit.benefitUnit.trim()) {
+            errors.push({ field: `${benefitPrefix}.benefitUnit`, message: 'Benefit unit is required', severity: 'error' })
+          }
+        })
       }
     })
 
@@ -553,10 +550,7 @@ export function useCanvasData() {
         if (req.volumePerMonth !== undefined && req.volumePerMonth >= 1) completed++
         
         total++
-        if (req.baselineMinutesPerUnit !== undefined) completed++
-        
-        total++
-        if (req.timeSavedMinutesPerUnit?.likely !== undefined) completed++
+        if (req.benefits && req.benefits.length > 0) completed++
 
         // Optional fields per requirement
         if (req.userStory !== undefined) {
@@ -571,33 +565,14 @@ export function useCanvasData() {
           total++
           if (req.status) completed++
         }
-        if (req.valueType !== undefined && req.valueType.length > 0) {
-          total += req.valueType.length
-          completed += req.valueType.length
-        }
-        if (req.reworkRate !== undefined) {
-          total++
-          if (req.reworkRate !== undefined) completed++
-        }
-        if (req.errorCost !== undefined) {
-          total++
-          if (req.errorCost !== undefined && req.errorCost !== '') completed++
-        }
         if (req.humanOversightMinutesPerUnit !== undefined) {
           total++
           if (req.humanOversightMinutesPerUnit !== undefined) completed++
         }
-        if (req.confidenceUser !== undefined) {
-          total++
-          if (req.confidenceUser) completed++
-        }
-        if (req.confidenceDev !== undefined) {
-          total++
-          if (req.confidenceDev) completed++
-        }
-        if (req.assumptions !== undefined) {
-          total++
-          if (req.assumptions?.trim()) completed++
+        // Count benefits as completed fields
+        if (req.benefits && req.benefits.length > 0) {
+          total += req.benefits.length
+          completed += req.benefits.length
         }
       })
     }

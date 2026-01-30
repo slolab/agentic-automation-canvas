@@ -82,8 +82,8 @@
               </p>
             </div>
             <div class="text-right ml-4">
-              <div v-if="req.timeSavedMinutesPerUnit?.likely !== undefined" class="text-lg font-semibold text-green-700">
-                {{ formatMinutes(req.timeSavedMinutesPerUnit.likely * (req.volumePerMonth || 0)) }}
+              <div v-if="getTimeSavedMinutes(req) > 0" class="text-lg font-semibold text-green-700">
+                {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
               </div>
               <div v-if="req.humanOversightMinutesPerUnit !== undefined" class="text-sm text-gray-500">
                 Oversight: {{ formatMinutes(req.humanOversightMinutesPerUnit * (req.volumePerMonth || 0)) }}
@@ -99,7 +99,7 @@
               <span class="mx-2">→</span>
               <span>Saved:</span>
               <span class="font-medium text-green-700">
-                {{ formatMinutes((req.timeSavedMinutesPerUnit?.likely || 0) * (req.volumePerMonth || 0)) }}
+                {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
               </span>
               <span v-if="req.humanOversightMinutesPerUnit !== undefined" class="ml-2">
                 (Net: {{ formatMinutes(getNetTimeSaved(req) * (req.volumePerMonth || 0)) }})
@@ -189,7 +189,7 @@
 import { computed } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { Requirement } from '@/types/canvas'
+import type { Requirement, Benefit, BenefitValue } from '@/types/canvas'
 
 const { canvasData } = useCanvasData()
 
@@ -201,10 +201,24 @@ const taskCount = computed(() => requirements.value.length)
 // Alias for clarity - requirements are tasks
 const tasks = computed(() => requirements.value)
 
-// Calculate total time saved per month
+// Helper to get time benefit from a requirement
+function getTimeBenefit(req: Requirement): Benefit | undefined {
+  return (req.benefits || []).find(b => b.benefitType === 'time')
+}
+
+// Helper to get likely value from a BenefitValue
+function getExpectedLikely(value: BenefitValue): number {
+  if (value.type === 'threePoint') return value.likely
+  if (value.type === 'numeric') return value.value
+  return 0
+}
+
+// Calculate total time saved per month (from time benefits)
 const totalMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
-    const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+    const timeBenefit = getTimeBenefit(req)
+    if (!timeBenefit) return total
+    const timeSaved = getExpectedLikely(timeBenefit.expected)
     const volume = req.volumePerMonth || 0
     return total + (timeSaved * volume)
   }, 0)
@@ -217,7 +231,9 @@ const totalHoursSavedPerMonth = computed(() => {
 // Calculate net time saved (after oversight)
 const netMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
-    const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+    const timeBenefit = getTimeBenefit(req)
+    if (!timeBenefit) return total
+    const timeSaved = getExpectedLikely(timeBenefit.expected)
     const oversight = req.humanOversightMinutesPerUnit || 0
     const volume = req.volumePerMonth || 0
     const netSaved = timeSaved - oversight
@@ -229,11 +245,13 @@ const netHoursSavedPerMonth = computed(() => {
   return Math.round((netMinutesSavedPerMonth.value / 60) * 10) / 10
 })
 
-// Value type breakdown
+// Value type breakdown (from benefits array)
 const valueTypeBreakdown = computed(() => {
   const counts: Record<string, number> = {}
   requirements.value.forEach(req => {
-    req.valueType?.forEach(type => {
+    // Get unique benefit types for this requirement
+    const benefitTypes = new Set((req.benefits || []).map(b => b.benefitType))
+    benefitTypes.forEach(type => {
       counts[type] = (counts[type] || 0) + 1
     })
   })
@@ -282,17 +300,23 @@ function formatDate(dateStr: string): string {
 }
 
 function getBaselineMinutes(req: Requirement): number {
-  if (typeof req.baselineMinutesPerUnit === 'number') {
-    return req.baselineMinutesPerUnit
-  }
-  if (req.baselineMinutesPerUnit && typeof req.baselineMinutesPerUnit === 'object') {
-    return req.baselineMinutesPerUnit.likely || 0
-  }
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
+  
+  const baseline = timeBenefit.baseline
+  if (baseline.type === 'numeric') return baseline.value
+  if (baseline.type === 'threePoint') return baseline.likely
   return 0
 }
 
+function getTimeSavedMinutes(req: Requirement): number {
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
+  return getExpectedLikely(timeBenefit.expected)
+}
+
 function getNetTimeSaved(req: Requirement): number {
-  const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+  const timeSaved = getTimeSavedMinutes(req)
   const oversight = req.humanOversightMinutesPerUnit || 0
   return Math.max(0, timeSaved - oversight)
 }
@@ -301,7 +325,7 @@ function getNetTimeSaved(req: Requirement): number {
 const maxTotalTimeSaved = computed(() => {
   if (requirements.value.length === 0) return 0
   return Math.max(...requirements.value.map(req => {
-    const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+    const timeSaved = getTimeSavedMinutes(req)
     const volume = req.volumePerMonth || 0
     return timeSaved * volume
   }))
@@ -310,7 +334,7 @@ const maxTotalTimeSaved = computed(() => {
 // Get total savings percentage (full bar width)
 function getTotalSavingsPercentage(req: Requirement): number {
   if (maxTotalTimeSaved.value === 0) return 0
-  const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+  const timeSaved = getTimeSavedMinutes(req)
   const volume = req.volumePerMonth || 0
   const totalTimeSaved = timeSaved * volume
   return Math.round((totalTimeSaved / maxTotalTimeSaved.value) * 100)
@@ -319,7 +343,7 @@ function getTotalSavingsPercentage(req: Requirement): number {
 // Get net savings percentage (green bar)
 function getNetSavingsPercentage(req: Requirement): number {
   if (maxTotalTimeSaved.value === 0) return 0
-  const timeSaved = req.timeSavedMinutesPerUnit?.likely || 0
+  const timeSaved = getTimeSavedMinutes(req)
   const oversight = req.humanOversightMinutesPerUnit || 0
   const volume = req.volumePerMonth || 0
   const netTimeSaved = Math.max(0, timeSaved - oversight) * volume

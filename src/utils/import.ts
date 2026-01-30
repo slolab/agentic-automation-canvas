@@ -107,6 +107,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           userStory: (step!.name as string) || undefined,
           priority: (step!.priority as 'low' | 'medium' | 'high' | 'critical' | undefined) || undefined,
           status: (step!.status as 'planned' | 'in-progress' | 'completed' | 'cancelled' | undefined) || undefined,
+          benefits: [], // Always initialize benefits array
         }
         // Parse value model fields
         if (step!['aac:unitOfWork']) {
@@ -115,35 +116,15 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         if (step!['aac:volumePerMonth'] !== undefined) {
           req.volumePerMonth = step!['aac:volumePerMonth'] as number
         }
-        if (step!['aac:baselineMinutesPerUnit'] !== undefined) {
-          req.baselineMinutesPerUnit = step!['aac:baselineMinutesPerUnit']
-        }
-        if (step!['aac:timeSavedMinutesPerUnit']) {
-          req.timeSavedMinutesPerUnit = step!['aac:timeSavedMinutesPerUnit'] as { best: number; likely: number; worst: number }
-        }
-        if (step!['aac:valueType']) {
-          req.valueType = step!['aac:valueType'] as Array<'time' | 'quality' | 'risk' | 'enablement'>
-        }
-        if (step!['aac:reworkRate'] !== undefined) {
-          req.reworkRate = step!['aac:reworkRate'] as number
-        }
-        if (step!['aac:errorCost'] !== undefined) {
-          req.errorCost = step!['aac:errorCost']
-        }
         if (step!['aac:humanOversightMinutesPerUnit'] !== undefined) {
           req.humanOversightMinutesPerUnit = step!['aac:humanOversightMinutesPerUnit'] as number
         }
         if (step!['aac:unitCategory']) {
           req.unitCategory = step!['aac:unitCategory'] as 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
         }
-        if (step!['aac:confidenceUser']) {
-          req.confidenceUser = step!['aac:confidenceUser'] as 'low' | 'medium' | 'high'
-        }
-        if (step!['aac:confidenceDev']) {
-          req.confidenceDev = step!['aac:confidenceDev'] as 'low' | 'medium' | 'high'
-        }
-        if (step!['aac:assumptions']) {
-          req.assumptions = step!['aac:assumptions'] as string
+        // Parse benefits array
+        if (step!['aac:benefits'] && Array.isArray(step!['aac:benefits'])) {
+          req.benefits = step!['aac:benefits']
         }
         return req
       })

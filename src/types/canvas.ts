@@ -44,6 +44,27 @@ export interface UserExpectations {
   stakeholders?: Stakeholder[]
 }
 
+// Benefit value types - supports numeric, categorical, binary, and 3-point estimates
+export type BenefitValue =
+  | { type: 'numeric'; value: number }
+  | { type: 'categorical'; category: 'low' | 'medium' | 'high' }
+  | { type: 'binary'; bool: boolean }
+  | { type: 'threePoint'; best: number; likely: number; worst: number }
+
+// Generalized benefit structure for all benefit types
+export interface Benefit {
+  benefitType: 'time' | 'quality' | 'risk' | 'enablement'
+  metricId: string // Controlled vocabulary + "custom"
+  metricLabel: string // Human-readable label
+  aggregationBasis?: 'perUnit' | 'perMonth' | 'oneOff' // Default: perUnit
+  benefitUnit: string // e.g., "minutes", "%", "incidents/month"
+  baseline: BenefitValue
+  expected: BenefitValue
+  confidenceUser?: 'low' | 'medium' | 'high'
+  confidenceDev?: 'low' | 'medium' | 'high'
+  assumptions?: string
+}
+
 export interface Requirement {
   id: string
   description: string
@@ -52,20 +73,13 @@ export interface Requirement {
   status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
   stakeholder?: string
   value?: string
-  // Value model fields (M0 - required)
+  // Value model fields
   unitOfWork?: string
   unitCategory?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
   volumePerMonth?: number
-  baselineMinutesPerUnit?: number | { best: number; likely: number; worst: number }
-  timeSavedMinutesPerUnit?: { best: number; likely: number; worst: number }
-  valueType?: Array<'time' | 'quality' | 'risk' | 'enablement'>
-  // Value model fields (M1/M2 - optional)
-  reworkRate?: number
-  errorCost?: string | number
-  humanOversightMinutesPerUnit?: number
-  confidenceUser?: 'low' | 'medium' | 'high'
-  confidenceDev?: 'low' | 'medium' | 'high'
-  assumptions?: string
+  humanOversightMinutesPerUnit?: number // Applies globally to time benefits
+  // Generalized benefits array - replaces legacy time/quality/risk fields
+  benefits: Benefit[]
 }
 
 export interface Person {

@@ -4,7 +4,7 @@
       <h2 class="section-header flex items-center gap-2">
         <span>Tasks & Expectations</span>
         <InfoTooltip
-          content="<strong>What goes here:</strong> The automation tasks you need to accomplish and stakeholders with interests in the project.<br/><br/><strong>Value Model (M0):</strong> Required fields define the value model - Unit of Work, Volume, Baseline Time, and Time Saved. These calculate total time savings. M1/M2 fields (oversight, confidence, assumptions) are optional but help validate estimates.<br/><br/><strong>Workflow tip:</strong> Start with task descriptions, then fill Value Model (M0) fields. Add stakeholders after creating persons. Tasks are represented as P-Plan Steps and link to governance stages."
+          content="<strong>What goes here:</strong> The automation tasks you need to accomplish and stakeholders with interests in the project.<br/><br/><strong>Benefits:</strong> Each task can have multiple benefits across four types: Time (savings), Quality (improvements), Risk (reduction), and Enablement (new capabilities). Use the Edit Benefits button to define detailed benefit metrics.<br/><br/><strong>Workflow tip:</strong> Start with task descriptions, then define value model fields and benefits. Add stakeholders after creating persons. Tasks are represented as P-Plan Steps and link to governance stages."
           position="top"
         />
       </h2>
@@ -21,7 +21,7 @@
       <MultiValueInput
         v-model="localRequirements"
         label="task"
-        :create-default="() => ({ id: `req-${Date.now()}`, description: '' })"
+        :create-default="() => ({ id: `req-${Date.now()}`, description: '', benefits: [] })"
       >
         <template #input="{ item, index, update }">
           <RequirementItem
@@ -68,7 +68,10 @@ const { canvasData, updateUserExpectations } = useCanvasData()
 const initLocalData = () => {
   const expectations = canvasData.value.userExpectations
   return {
-    requirements: (expectations?.requirements || []).map((item) => ({ ...item })),
+    requirements: (expectations?.requirements || []).map((item) => ({ 
+      ...item, 
+      benefits: item.benefits || [] 
+    })),
     stakeholders: (expectations?.stakeholders || []).map((item) => ({ ...item })),
   }
 }
@@ -88,7 +91,10 @@ watch(
     if (!isLocalUpdate) {
       isSyncingFromCanvas = true
       if (newExpectations) {
-        localRequirements.value = (newExpectations.requirements || []).map((item) => ({ ...item }))
+        localRequirements.value = (newExpectations.requirements || []).map((item) => ({ 
+          ...item, 
+          benefits: item.benefits || [] 
+        }))
         localStakeholders.value = (newExpectations.stakeholders || []).map((item) => ({ ...item }))
       } else {
         // Reset when cleared

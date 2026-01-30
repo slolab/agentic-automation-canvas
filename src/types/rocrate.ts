@@ -123,13 +123,17 @@ export interface ValueModel {
   'aac:unitOfWork'?: string
   'aac:unitCategory'?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
   'aac:volumePerMonth'?: number
-  'aac:baselineMinutesPerUnit'?: number | { best: number; likely: number; worst: number }
-  'aac:timeSavedMinutesPerUnit'?: { best: number; likely: number; worst: number }
-  'aac:valueType'?: Array<'time' | 'quality' | 'risk' | 'enablement'>
-  'aac:reworkRate'?: number
-  'aac:errorCost'?: string | number
   'aac:humanOversightMinutesPerUnit'?: number
-  'aac:confidenceUser'?: 'low' | 'medium' | 'high'
-  'aac:confidenceDev'?: 'low' | 'medium' | 'high'
-  'aac:assumptions'?: string
+  'aac:benefits'?: Array<{
+    benefitType: 'time' | 'quality' | 'risk' | 'enablement'
+    metricId: string
+    metricLabel: string
+    aggregationBasis?: 'perUnit' | 'perMonth' | 'oneOff'
+    benefitUnit: string
+    baseline: unknown
+    expected: unknown
+    confidenceUser?: 'low' | 'medium' | 'high'
+    confidenceDev?: 'low' | 'medium' | 'high'
+    assumptions?: string
+  }>
 }
