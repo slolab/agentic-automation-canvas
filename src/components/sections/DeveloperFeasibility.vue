@@ -2,11 +2,13 @@
   <div class="space-y-6">
     <div>
       <h2 class="section-header flex items-center gap-2">
-        <span>Developer Feasibility & Technical Assessment</span>
-        <InfoTooltip
-          content="<strong>What goes here:</strong> Technical assessment including Technology Readiness Level (TRL), risks, technologies, model selection, baseline capability, and expected gains.<br/><br/><strong>TRL (Technology Readiness Level):</strong> Measures maturity from 1 (basic research) to 9 (operational). Track current and target TRL to measure progress.<br/><br/><strong>Baseline Assessment:</strong> Critical for understanding improvement potential. Assess how well the naive model performs without agentic capabilities - this shows headroom for improvement.<br/><br/><strong>Workflow tip:</strong> Fill TRL and risk first, then assess baseline capability. Expected gains should align with baseline limitations."
-          position="top"
-        />
+        <span class="flex-1 min-w-0">Developer Feasibility & Technical Assessment</span>
+        <span class="flex-shrink-0">
+          <InfoTooltip
+            content="<strong>What goes here:</strong> Technical assessment including Technology Readiness Level (TRL), risks, technologies, model selection, baseline capability, and expected gains.<br/><br/><strong>TRL (Technology Readiness Level):</strong> Measures maturity from 1 (basic research) to 9 (operational). Track current and target TRL to measure progress.<br/><br/><strong>Baseline Assessment:</strong> Critical for understanding improvement potential. Assess how well the naive model performs without agentic capabilities - this shows headroom for improvement.<br/><br/><strong>Workflow tip:</strong> Fill TRL and risk first, then assess baseline capability. Expected gains should align with baseline limitations."
+            position="top"
+          />
+        </span>
       </h2>
       <p class="section-description">
         Assess technical feasibility, Technology Readiness Level (TRL), risks, and required technologies.

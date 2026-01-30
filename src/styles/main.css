@@ -3,6 +3,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* Always show scrollbar track to reserve space and prevent layout shifts */
+    overflow-y: scroll;
+  }
+  
   body {
     @apply bg-gray-50 text-gray-900;
   }
