@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-gray-600">
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm text-gray-600 flex-1">
         Track time savings from automation. Use 3-point estimates (best/likely/worst) for expected savings.
       </p>
       <button
         @click="addBenefit"
-        class="btn-secondary text-sm"
+        class="btn-secondary text-sm flex-shrink-0"
       >
         Add Time Benefit
       </button>
@@ -41,7 +41,7 @@
           <select
             :value="benefit.metricId"
             class="form-input"
-            @change="updateBenefit(index, { metricId: ($event.target as HTMLSelectElement).value, metricLabel: getMetricLabel(($event.target as HTMLSelectElement).value) })"
+            @change="handleMetricChange(index, ($event.target as HTMLSelectElement).value)"
           >
             <option value="timeSaved">Time Saved</option>
             <option value="processingTime">Processing Time Reduction</option>
@@ -186,7 +186,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Benefit, BenefitValue } from '@/types/canvas'
+import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 
 interface Props {
   benefits: Benefit[]
@@ -203,26 +203,52 @@ watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
 }, { immediate: true, deep: true })
 
+// Metric defaults for direction and valueMeaning
+interface MetricDefaults {
+  label: string
+  direction: BenefitDirection
+  valueMeaning: ValueMeaning
+}
+
+const metricDefaults: Record<string, MetricDefaults> = {
+  'timeSaved': { label: 'Time Saved', direction: 'increaseIsBetter', valueMeaning: 'delta' },
+  'processingTime': { label: 'Processing Time Reduction', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
+  'cycleTime': { label: 'Cycle Time Improvement', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
+  'custom': { label: '', direction: 'increaseIsBetter', valueMeaning: 'delta' }
+}
+
 function getMetricLabel(metricId: string): string {
-  const labels: Record<string, string> = {
-    'timeSaved': 'Time Saved',
-    'processingTime': 'Processing Time Reduction',
-    'cycleTime': 'Cycle Time Improvement',
-    'custom': ''
-  }
-  return labels[metricId] || metricId
+  return metricDefaults[metricId]?.label || metricId
+}
+
+function getMetricDefaults(metricId: string): { direction: BenefitDirection; valueMeaning: ValueMeaning } {
+  const defaults = metricDefaults[metricId] || metricDefaults['custom']
+  return { direction: defaults.direction, valueMeaning: defaults.valueMeaning }
 }
 
 function createDefaultBenefit(): Benefit {
+  const defaults = getMetricDefaults('timeSaved')
   return {
     benefitType: 'time',
     metricId: 'timeSaved',
     metricLabel: 'Time Saved',
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning,
     aggregationBasis: 'perUnit',
     benefitUnit: 'minutes',
     baseline: { type: 'numeric', value: 0 },
     expected: { type: 'threePoint', best: 0, likely: 0, worst: 0 }
   }
+}
+
+function handleMetricChange(index: number, metricId: string) {
+  const defaults = getMetricDefaults(metricId)
+  updateBenefit(index, {
+    metricId,
+    metricLabel: getMetricLabel(metricId),
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning
+  })
 }
 
 function addBenefit() {

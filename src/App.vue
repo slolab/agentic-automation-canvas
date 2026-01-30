@@ -126,7 +126,7 @@
 import { ref, computed } from 'vue'
 import { useCanvasData } from './composables/useCanvasData'
 import { exampleData } from './data/example-data'
-import { generateROCrate } from './utils/rocrate'
+import { generateROCrate, validateForExport, hasBlockingErrors } from './utils/rocrate'
 import { downloadROCrateZip } from './utils/download'
 import CanvasForm from './components/CanvasForm.vue'
 import BotAssistant from './components/BotAssistant.vue'
@@ -216,6 +216,29 @@ const downloadROCrate = async () => {
   
   if (additionalWarnings.length > 0) {
     const proceed = confirm(`Additional validation warnings:\n\n${additionalWarnings.join('\n')}\n\nDo you want to proceed with export?`)
+    if (!proceed) {
+      return
+    }
+  }
+
+  // Validate for RO-Crate export (benefit semantics, aggregation consistency)
+  const exportErrors = validateForExport(canvasData.value)
+  
+  // Block export if there are critical errors
+  if (hasBlockingErrors(exportErrors)) {
+    const errorMessages = exportErrors
+      .filter(e => e.severity === 'error')
+      .map(e => `${e.path}: ${e.message}`)
+      .join('\n\n')
+    alert(`Export blocked due to validation errors:\n\n${errorMessages}\n\nPlease fix these issues before exporting.`)
+    return
+  }
+  
+  // Show warnings but allow proceeding
+  const warnings = exportErrors.filter(e => e.severity === 'warning')
+  if (warnings.length > 0) {
+    const warningMessages = warnings.map(e => `${e.path}: ${e.message}`).join('\n\n')
+    const proceed = confirm(`Export validation warnings:\n\n${warningMessages}\n\nDo you want to proceed anyway?`)
     if (!proceed) {
       return
     }

@@ -31,9 +31,10 @@ export interface ProjectDefinition {
   projectId?: string
   // Project-level value summary
   headlineValue?: string
-  aggregateBenefitValue?: number // Numeric value of the aggregate benefit metric
+  aggregateBenefitValue?: number // Numeric value of the aggregate benefit metric (legacy scalar)
   aggregateBenefitUnit?: string // Unit/description of the benefit metric (e.g., "hours/month", "% error reduction", "incidents prevented/month")
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
+  aggregateBenefits?: AggregateBenefit[] // Structured aggregates for multiple benefit types
   // Version management (stored at project level for ROcrate compatibility)
   version?: string // Semantic version (e.g., "0.1.0")
   versionDate?: string // ISO date string when version was downloaded/created
@@ -51,11 +52,20 @@ export type BenefitValue =
   | { type: 'binary'; bool: boolean }
   | { type: 'threePoint'; best: number; likely: number; worst: number }
 
+// Benefit interpretation direction
+export type BenefitDirection = 'increaseIsBetter' | 'decreaseIsBetter' | 'targetIsBetter' | 'boolIsBetter'
+
+// Value meaning for baseline/expected
+export type ValueMeaning = 'absolute' | 'delta'
+
 // Generalized benefit structure for all benefit types
 export interface Benefit {
   benefitType: 'time' | 'quality' | 'risk' | 'enablement'
   metricId: string // Controlled vocabulary + "custom"
   metricLabel: string // Human-readable label
+  direction: BenefitDirection // Whether higher/lower/target/bool is better
+  valueMeaning: ValueMeaning // Whether values are absolute or deltas
+  target?: number // Target value when direction is 'targetIsBetter'
   aggregationBasis?: 'perUnit' | 'perMonth' | 'oneOff' // Default: perUnit
   benefitUnit: string // e.g., "minutes", "%", "incidents/month"
   baseline: BenefitValue
@@ -63,6 +73,17 @@ export interface Benefit {
   confidenceUser?: 'low' | 'medium' | 'high'
   confidenceDev?: 'low' | 'medium' | 'high'
   assumptions?: string
+}
+
+// Aggregate benefit for project-level summaries
+export interface AggregateBenefit {
+  benefitType: 'time' | 'quality' | 'risk' | 'enablement'
+  metricId: string
+  aggregationBasis: 'perUnit' | 'perMonth' | 'oneOff'
+  unit: string
+  value: number | string | boolean
+  method: 'computed' | 'manualOverride'
+  rationale?: string // Required when method is 'manualOverride'
 }
 
 export interface Requirement {

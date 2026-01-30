@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-gray-600">
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm text-gray-600 flex-1">
         Track risk reduction metrics like compliance incidents, data exposure, or audit findings.
       </p>
       <button
         @click="addBenefit"
-        class="btn-secondary text-sm"
+        class="btn-secondary text-sm flex-shrink-0"
       >
         Add Risk Benefit
       </button>
@@ -201,7 +201,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Benefit, BenefitValue } from '@/types/canvas'
+import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 
 interface Props {
   benefits: Benefit[]
@@ -218,39 +218,49 @@ watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
 }, { immediate: true, deep: true })
 
+// Metric defaults for direction and valueMeaning
+interface MetricDefaults {
+  label: string
+  unit: string
+  direction: BenefitDirection
+  valueMeaning: ValueMeaning
+  isCategorical: boolean
+}
+
+const metricDefaults: Record<string, MetricDefaults> = {
+  'complianceIncidents': { label: 'Compliance Incidents', unit: 'incidents/month', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isCategorical: false },
+  'dataExposureRisk': { label: 'Data Exposure Risk', unit: 'risk level', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isCategorical: true },
+  'auditFindings': { label: 'Audit Findings', unit: 'findings/audit', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isCategorical: false },
+  'probabilityOfHarm': { label: 'Probability of Harm', unit: '%', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isCategorical: false },
+  'securityVulnerabilities': { label: 'Security Vulnerabilities', unit: 'vulnerabilities', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isCategorical: false },
+  'custom': { label: '', unit: '', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isCategorical: false }
+}
+
 function getMetricLabel(metricId: string): string {
-  const labels: Record<string, string> = {
-    'complianceIncidents': 'Compliance Incidents',
-    'dataExposureRisk': 'Data Exposure Risk',
-    'auditFindings': 'Audit Findings',
-    'probabilityOfHarm': 'Probability of Harm',
-    'securityVulnerabilities': 'Security Vulnerabilities',
-    'custom': ''
-  }
-  return labels[metricId] || metricId
+  return metricDefaults[metricId]?.label || metricId
 }
 
 function getDefaultUnit(metricId: string): string {
-  const units: Record<string, string> = {
-    'complianceIncidents': 'incidents/month',
-    'dataExposureRisk': 'risk level',
-    'auditFindings': 'findings/audit',
-    'probabilityOfHarm': '%',
-    'securityVulnerabilities': 'vulnerabilities',
-    'custom': ''
-  }
-  return units[metricId] || 'incidents/month'
+  return metricDefaults[metricId]?.unit || 'incidents/month'
+}
+
+function getMetricDefaults(metricId: string): { direction: BenefitDirection; valueMeaning: ValueMeaning } {
+  const defaults = metricDefaults[metricId] || metricDefaults['custom']
+  return { direction: defaults.direction, valueMeaning: defaults.valueMeaning }
 }
 
 function isCategoricalMetric(metricId: string): boolean {
-  return ['dataExposureRisk'].includes(metricId)
+  return metricDefaults[metricId]?.isCategorical || false
 }
 
 function createDefaultBenefit(): Benefit {
+  const defaults = getMetricDefaults('complianceIncidents')
   return {
     benefitType: 'risk',
     metricId: 'complianceIncidents',
     metricLabel: 'Compliance Incidents',
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning,
     aggregationBasis: 'perMonth',
     benefitUnit: 'incidents/month',
     baseline: { type: 'categorical', category: 'high' },
@@ -277,10 +287,13 @@ function updateBenefit(index: number, updates: Partial<Benefit>) {
 
 function handleMetricChange(index: number, metricId: string) {
   const useCategorical = isCategoricalMetric(metricId)
+  const defaults = getMetricDefaults(metricId)
   const updates: Partial<Benefit> = {
     metricId,
     metricLabel: getMetricLabel(metricId),
-    benefitUnit: getDefaultUnit(metricId)
+    benefitUnit: getDefaultUnit(metricId),
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning
   }
   
   if (useCategorical) {

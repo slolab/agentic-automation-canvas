@@ -23,88 +23,178 @@
     },
     {
       "@id": "./",
-      "@type": "dcat:Dataset",
+      "@type": ["schema:Dataset", "dcat:Dataset"],
       "name": "Complete Agentic Automation Canvas Example",
       "description": "A complete example RO-Crate with all sections populated",
       "about": {
-        "@id": "#project-1"
+        "@id": "#project"
       },
       "hasPart": [
-        { "@id": "#dataset-1" },
-        { "@id": "#outcome-1" },
+        { "@id": "#dataset-0" },
+        { "@id": "#outcome-0" },
+        { "@id": "#stage-0" },
         { "@id": "developer-feasibility.json" }
-      ]
+      ],
+      "aac:version": "0.2.0",
+      "aac:versionDate": "2025-01-30"
     },
     {
-      "@id": "#project-1",
+      "@id": "#project",
       "@type": ["schema:Project", "schema:ResearchProject"],
       "name": "Biomedical AI Automation Project",
-      "description": "An agentic automation system for processing biomedical data",
+      "description": "An agentic automation system for processing biomedical data using AI to reduce manual effort and improve data quality.",
+      "schema:abstract": "Automate data processing workflows to reduce time spent on repetitive tasks.",
+      "aac:projectStage": "Development",
       "startDate": "2025-01-01",
       "endDate": "2025-12-31",
-      "keywords": ["AI", "biomedical", "automation"],
+      "keywords": ["AI", "biomedical", "automation", "data processing"],
       "aac:domain": ["Biomedical", "AI"],
       "aac:headlineValue": "Saves time through automated data processing",
       "aac:aggregateBenefitValue": 10,
       "aac:aggregateBenefitUnit": "hours/month",
-      "aac:primaryValueDriver": "time"
+      "aac:primaryValueDriver": "time",
+      "aac:aggregateBenefits": [
+        {
+          "benefitType": "time",
+          "metricId": "timeSavedTotal",
+          "aggregationBasis": "perMonth",
+          "unit": "hours/month",
+          "value": 10,
+          "method": "computed"
+        },
+        {
+          "benefitType": "quality",
+          "metricId": "errorReduction",
+          "aggregationBasis": "perMonth",
+          "unit": "% error reduction",
+          "value": 25,
+          "method": "manualOverride",
+          "rationale": "Based on pilot study comparing manual vs automated processing error rates"
+        }
+      ],
+      "aac:version": "0.2.0",
+      "aac:versionDate": "2025-01-30",
+      "contributor": [
+        { "@id": "#person-0" },
+        { "@id": "#person-1" }
+      ],
+      "hasPlan": { "@id": "#user-plan" }
     },
     {
       "@id": "#user-plan",
       "@type": ["prov:Plan", "p-plan:Plan"],
       "name": "User Expectations Plan",
-      "description": "User requirements and expectations",
+      "description": "User requirements and expectations for the automation",
       "p-plan:hasStep": [
-        {
-          "@id": "#requirement-1",
-          "@type": "p-plan:Step",
-          "description": "As a researcher, I want automated data processing so that I can focus on analysis"
-        }
+        { "@id": "#requirement-0" }
       ]
     },
     {
-      "@id": "#requirement-1",
+      "@id": "#requirement-0",
       "@type": "p-plan:Step",
       "description": "As a researcher, I want automated data processing so that I can focus on analysis",
       "name": "Automated data processing",
       "priority": "high",
       "status": "in-progress",
       "aac:unitOfWork": "one data processing task",
+      "aac:unitCategory": "analysisRun",
       "aac:volumePerMonth": 120,
-      "aac:baselineMinutesPerUnit": 10,
-      "aac:timeSavedMinutesPerUnit": {
-        "best": 8,
-        "likely": 5,
-        "worst": 1
-      },
-      "aac:valueType": ["time", "quality"],
-      "aac:confidenceUser": "high",
-      "aac:confidenceDev": "medium",
-      "aac:assumptions": "Assumes standard data formats and no major edge cases"
+      "aac:humanOversightMinutesPerUnit": 2,
+      "aac:benefits": [
+        {
+          "benefitType": "time",
+          "metricId": "timeSaved",
+          "metricLabel": "Time Saved",
+          "direction": "increaseIsBetter",
+          "valueMeaning": "delta",
+          "aggregationBasis": "perUnit",
+          "benefitUnit": "minutes",
+          "baseline": { "type": "numeric", "value": 10 },
+          "expected": { "type": "threePoint", "best": 8, "likely": 5, "worst": 1 },
+          "confidenceUser": "high",
+          "confidenceDev": "medium",
+          "assumptions": "Assumes standard data formats and no major edge cases"
+        },
+        {
+          "benefitType": "quality",
+          "metricId": "errorRate",
+          "metricLabel": "Error Rate",
+          "direction": "decreaseIsBetter",
+          "valueMeaning": "absolute",
+          "aggregationBasis": "perUnit",
+          "benefitUnit": "%",
+          "baseline": { "type": "numeric", "value": 15 },
+          "expected": { "type": "numeric", "value": 3 },
+          "confidenceUser": "medium",
+          "confidenceDev": "medium"
+        }
+      ]
     },
     {
-      "@id": "#stage-development",
+      "@id": "#stage-0",
       "@type": "prov:Activity",
       "name": "Development Stage",
       "startedAtTime": "2025-02-01T00:00:00Z",
-      "wasAssociatedWith": {
-        "@id": "#developer-1"
-      },
-      "hadPlan": {
-        "@id": "#user-plan"
-      },
+      "endedAtTime": "2025-06-30T23:59:59Z",
+      "wasAssociatedWith": [
+        { "@id": "#person-0" },
+        { "@id": "#org-0" }
+      ],
       "aac:complianceStandard": ["GDPR", "HIPAA"]
     },
     {
-      "@id": "#developer-1",
+      "@id": "#person-0",
       "@type": "schema:Person",
-      "name": "Jane Developer"
+      "name": "Jane Developer",
+      "schema:affiliation": "Research Institute",
+      "schema:identifier": "https://orcid.org/0000-0001-2345-6789"
     },
     {
-      "@id": "#dataset-1",
+      "@id": "#person-1",
+      "@type": "schema:Person",
+      "name": "John Researcher",
+      "schema:affiliation": "University Lab"
+    },
+    {
+      "@id": "#role-0",
+      "@type": "schema:Role",
+      "schema:roleName": "Lead Developer",
+      "schema:member": { "@id": "#person-0" },
+      "aac:roleContext": "stakeholder"
+    },
+    {
+      "@id": "#role-1",
+      "@type": "schema:Role",
+      "schema:roleName": "Domain Expert",
+      "schema:member": { "@id": "#person-1" },
+      "aac:roleContext": "stakeholder"
+    },
+    {
+      "@id": "#role-2",
+      "@type": "schema:Role",
+      "schema:roleName": "Developer",
+      "schema:member": { "@id": "#person-0" },
+      "aac:roleContext": "stage-agent",
+      "aac:stageId": "#stage-0"
+    },
+    {
+      "@id": "#org-0",
+      "@type": "schema:Organization",
+      "name": "Development Team"
+    },
+    {
+      "@id": "#agent-role-0",
+      "@type": "schema:Role",
+      "schema:roleName": "Development Partner",
+      "schema:member": { "@id": "#org-0" },
+      "aac:roleContext": "stage-agent",
+      "aac:stageId": "#stage-0"
+    },
+    {
+      "@id": "#dataset-0",
       "@type": "dcat:Dataset",
       "name": "Patient Dataset",
-      "description": "Anonymized patient data",
+      "description": "Anonymized patient data for processing",
       "license": { "@id": "https://creativecommons.org/licenses/by/4.0/" },
       "dct:accessRights": "restricted",
       "schema:encodingFormat": "CSV",
@@ -114,12 +204,13 @@
       "aac:containsPersonalData": true
     },
     {
-      "@id": "#outcome-1",
+      "@id": "#outcome-0",
       "@type": "schema:CreativeWork",
       "name": "Final Report",
+      "description": "Summary report of automation implementation and results",
       "datePublished": "2025-12-31",
       "wasGeneratedBy": {
-        "@id": "#stage-development"
+        "@id": "#stage-0"
       }
     },
     {

@@ -66,6 +66,11 @@
           "description": "Unit or description of the benefit metric (e.g., 'hours/month', '% error reduction', 'incidents prevented/month', 'capabilities enabled')"
         },
         "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
+        "aggregateBenefits": {
+          "type": "array",
+          "description": "Structured aggregate benefits across all requirements, supporting multiple benefit types",
+          "items": { "$ref": "#/$defs/AggregateBenefit" }
+        },
         "version": {
           "type": "string",
           "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
@@ -258,10 +263,15 @@
                     "roleContext": { "type": "string", "description": "Optional role context" }
                   },
                   "required": ["type"],
-                  "anyOf": [
-                    { "required": ["personId"], "properties": { "type": { "const": "person" } } },
-                    { "required": ["name"], "properties": { "type": { "enum": ["organization", "software"] } } }
-                  ]
+                  "if": {
+                    "properties": { "type": { "const": "person" } }
+                  },
+                  "then": {
+                    "required": ["personId"]
+                  },
+                  "else": {
+                    "required": ["name"]
+                  }
                 }
               },
               "milestones": {
@@ -420,6 +430,20 @@
           "type": "string",
           "description": "Human-readable label for the metric"
         },
+        "direction": {
+          "type": "string",
+          "enum": ["increaseIsBetter", "decreaseIsBetter", "targetIsBetter", "boolIsBetter"],
+          "description": "Indicates whether higher values, lower values, hitting a target, or boolean true is the desired outcome"
+        },
+        "valueMeaning": {
+          "type": "string",
+          "enum": ["absolute", "delta"],
+          "description": "Whether baseline/expected are absolute measured values or improvement deltas"
+        },
+        "target": {
+          "type": "number",
+          "description": "Target value when direction is 'targetIsBetter'"
+        },
         "aggregationBasis": {
           "type": "string",
           "enum": ["perUnit", "perMonth", "oneOff"],
@@ -453,7 +477,55 @@
           "description": "Key assumptions underlying the benefit estimate"
         }
       },
-      "required": ["benefitType", "metricId", "metricLabel", "benefitUnit", "baseline", "expected"]
+      "required": ["benefitType", "metricId", "metricLabel", "direction", "valueMeaning", "benefitUnit", "baseline", "expected"]
+    },
+    "AggregateBenefit": {
+      "type": "object",
+      "description": "An aggregate benefit summary for the project",
+      "properties": {
+        "benefitType": {
+          "type": "string",
+          "enum": ["time", "quality", "risk", "enablement"],
+          "description": "Type of benefit"
+        },
+        "metricId": {
+          "type": "string",
+          "description": "Identifier for the aggregated metric"
+        },
+        "aggregationBasis": {
+          "type": "string",
+          "enum": ["perUnit", "perMonth", "oneOff"],
+          "description": "How the aggregate value is expressed"
+        },
+        "unit": {
+          "type": "string",
+          "description": "Unit for the aggregate value"
+        },
+        "value": {
+          "oneOf": [
+            { "type": "number" },
+            { "type": "string" },
+            { "type": "boolean" }
+          ],
+          "description": "The aggregate value (numeric, categorical string, or boolean)"
+        },
+        "method": {
+          "type": "string",
+          "enum": ["computed", "manualOverride"],
+          "description": "Whether this aggregate was computed from individual benefits or manually overridden"
+        },
+        "rationale": {
+          "type": "string",
+          "description": "Explanation for manual overrides or computation methodology"
+        }
+      },
+      "required": ["benefitType", "metricId", "aggregationBasis", "unit", "value", "method"],
+      "if": {
+        "properties": { "method": { "const": "manualOverride" } }
+      },
+      "then": {
+        "required": ["rationale"]
+      }
     }
   }
 }

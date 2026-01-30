@@ -3,14 +3,22 @@
   <Transition name="fade">
     <div
       v-if="isOpen"
-      class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4"
+      class="fixed inset-0 z-50 flex items-center justify-center p-4"
       @click.self="close"
     >
+      <!-- Backdrop that prevents scrolling -->
+      <div 
+        class="fixed inset-0 bg-black bg-opacity-50"
+        @scroll.prevent
+        @wheel.prevent.stop
+        @touchmove.prevent.stop
+      />
+      
       <!-- Modal content -->
       <Transition name="slide-up">
         <div
           v-if="isOpen"
-          class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+          class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col relative z-10"
           @click.stop
         >
           <!-- Header with close button -->
@@ -121,19 +129,47 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, onUnmounted } from 'vue'
 
 const isOpen = ref(false)
+const savedScrollPosition = ref(0)
+
+watch(isOpen, (open) => {
+  if (open) {
+    // Prevent background scrolling - save current scroll position and lock
+    savedScrollPosition.value = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${savedScrollPosition.value}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+  } else {
+    // Restore background scrolling and scroll position
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    window.scrollTo(0, savedScrollPosition.value)
+  }
+})
 
 const open = () => {
   isOpen.value = true
-  document.body.style.overflow = 'hidden'
 }
 
 const close = () => {
   isOpen.value = false
-  document.body.style.overflow = ''
 }
+
+// Ensure body scroll is restored when component is unmounted
+onUnmounted(() => {
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  if (savedScrollPosition.value > 0) {
+    window.scrollTo(0, savedScrollPosition.value)
+  }
+})
 
 defineExpose({
   open,

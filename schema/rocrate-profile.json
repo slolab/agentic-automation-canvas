@@ -80,11 +80,35 @@
             }
           },
           {
+            "description": "Step Entity (P-Plan)",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "enum": ["Step", "p-plan:Step"]
+                }
+              }
+            }
+          },
+          {
             "description": "Person Entity",
             "properties": {
               "@type": {
                 "type": "array",
-                "contains": { "const": "Person" }
+                "contains": {
+                  "enum": ["Person", "schema:Person"]
+                }
+              }
+            }
+          },
+          {
+            "description": "Role Entity (schema:Role for person-role relationships)",
+            "properties": {
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "enum": ["Role", "schema:Role"]
+                }
               }
             }
           },
@@ -93,7 +117,9 @@
             "properties": {
               "@type": {
                 "type": "array",
-                "contains": { "const": "Organization" }
+                "contains": {
+                  "enum": ["Organization", "schema:Organization"]
+                }
               }
             }
           },

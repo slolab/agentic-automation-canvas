@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-gray-600">
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm text-gray-600 flex-1">
         Track quality improvements like error reduction, precision, recall, or satisfaction metrics.
       </p>
       <button
         @click="addBenefit"
-        class="btn-secondary text-sm"
+        class="btn-secondary text-sm flex-shrink-0"
       >
         Add Quality Benefit
       </button>
@@ -41,11 +41,7 @@
           <select
             :value="benefit.metricId"
             class="form-input"
-            @change="updateBenefit(index, { 
-              metricId: ($event.target as HTMLSelectElement).value, 
-              metricLabel: getMetricLabel(($event.target as HTMLSelectElement).value),
-              benefitUnit: getDefaultUnit(($event.target as HTMLSelectElement).value)
-            })"
+            @change="handleMetricChange(index, ($event.target as HTMLSelectElement).value)"
           >
             <option value="errorRate">Error Rate</option>
             <option value="reworkRate">Rework Rate</option>
@@ -166,7 +162,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Benefit, BenefitValue } from '@/types/canvas'
+import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 
 interface Props {
   benefits: Benefit[]
@@ -183,42 +179,61 @@ watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
 }, { immediate: true, deep: true })
 
+// Metric defaults for direction and valueMeaning
+interface MetricDefaults {
+  label: string
+  unit: string
+  direction: BenefitDirection
+  valueMeaning: ValueMeaning
+}
+
+const metricDefaults: Record<string, MetricDefaults> = {
+  'errorRate': { label: 'Error Rate', unit: '%', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
+  'reworkRate': { label: 'Rework Rate', unit: '%', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
+  'precision': { label: 'Precision', unit: '%', direction: 'increaseIsBetter', valueMeaning: 'absolute' },
+  'recall': { label: 'Recall', unit: '%', direction: 'increaseIsBetter', valueMeaning: 'absolute' },
+  'satisfaction': { label: 'Satisfaction Score', unit: 'score', direction: 'increaseIsBetter', valueMeaning: 'absolute' },
+  'accuracy': { label: 'Accuracy', unit: '%', direction: 'increaseIsBetter', valueMeaning: 'absolute' },
+  'custom': { label: '', unit: '', direction: 'increaseIsBetter', valueMeaning: 'absolute' }
+}
+
 function getMetricLabel(metricId: string): string {
-  const labels: Record<string, string> = {
-    'errorRate': 'Error Rate',
-    'reworkRate': 'Rework Rate',
-    'precision': 'Precision',
-    'recall': 'Recall',
-    'satisfaction': 'Satisfaction Score',
-    'accuracy': 'Accuracy',
-    'custom': ''
-  }
-  return labels[metricId] || metricId
+  return metricDefaults[metricId]?.label || metricId
 }
 
 function getDefaultUnit(metricId: string): string {
-  const units: Record<string, string> = {
-    'errorRate': '%',
-    'reworkRate': '%',
-    'precision': '%',
-    'recall': '%',
-    'satisfaction': 'score',
-    'accuracy': '%',
-    'custom': ''
-  }
-  return units[metricId] || '%'
+  return metricDefaults[metricId]?.unit || '%'
+}
+
+function getMetricDefaults(metricId: string): { direction: BenefitDirection; valueMeaning: ValueMeaning } {
+  const defaults = metricDefaults[metricId] || metricDefaults['custom']
+  return { direction: defaults.direction, valueMeaning: defaults.valueMeaning }
 }
 
 function createDefaultBenefit(): Benefit {
+  const defaults = getMetricDefaults('errorRate')
   return {
     benefitType: 'quality',
     metricId: 'errorRate',
     metricLabel: 'Error Rate',
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning,
     aggregationBasis: 'perUnit',
     benefitUnit: '%',
     baseline: { type: 'numeric', value: 0 },
     expected: { type: 'numeric', value: 0 }
   }
+}
+
+function handleMetricChange(index: number, metricId: string) {
+  const defaults = getMetricDefaults(metricId)
+  updateBenefit(index, {
+    metricId,
+    metricLabel: getMetricLabel(metricId),
+    benefitUnit: getDefaultUnit(metricId),
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning
+  })
 }
 
 function addBenefit() {

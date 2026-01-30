@@ -58,6 +58,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 
+const savedScrollPosition = ref(0)
+
 interface Props {
   content: string
   title?: string
@@ -92,6 +94,14 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  // Ensure body scroll is restored when component is unmounted
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  if (savedScrollPosition.value > 0) {
+    window.scrollTo(0, savedScrollPosition.value)
+  }
 })
 
 // Smart positioning: choose best position based on available space
@@ -228,10 +238,27 @@ const calculateBestPosition = async () => {
   }
 }
 
-// Watch for visibility changes to recalculate position
+// Watch for visibility changes to recalculate position and lock scroll on mobile
 watch(isVisible, (newVal) => {
   if (newVal) {
     calculateBestPosition()
+    // On mobile, lock background scrolling when tooltip is visible
+    if (isMobile.value) {
+      savedScrollPosition.value = window.scrollY
+      document.body.style.position = 'fixed'
+      document.body.style.top = `-${savedScrollPosition.value}px`
+      document.body.style.width = '100%'
+      document.body.style.overflow = 'hidden'
+    }
+  } else {
+    // Restore background scrolling on mobile
+    if (isMobile.value) {
+      document.body.style.position = ''
+      document.body.style.top = ''
+      document.body.style.width = ''
+      document.body.style.overflow = ''
+      window.scrollTo(0, savedScrollPosition.value)
+    }
   }
 })
 

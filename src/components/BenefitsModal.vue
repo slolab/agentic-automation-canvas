@@ -6,7 +6,13 @@
       @click.self="close"
     >
       <!-- Backdrop -->
-      <div class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" @click="close" />
+      <div 
+        class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
+        @click="close"
+        @scroll.prevent
+        @wheel.prevent.stop
+        @touchmove.prevent.stop
+      />
       
       <!-- Modal -->
       <div class="flex min-h-full items-center justify-center p-4">
@@ -16,10 +22,10 @@
         >
           <!-- Header -->
           <div class="flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <h2 class="text-lg font-semibold text-gray-900">Edit Benefits</h2>
+            <h2 class="text-lg font-semibold text-gray-900 flex-1 mr-4">Edit Benefits</h2>
             <button
               @click="close"
-              class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded p-1"
+              class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded p-1 flex-shrink-0"
               aria-label="Close modal"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -112,7 +118,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, h } from 'vue'
+import { ref, watch, h, onUnmounted } from 'vue'
 import type { Benefit } from '@/types/canvas'
 import TimeBenefitForm from './benefits/TimeBenefitForm.vue'
 import QualityBenefitForm from './benefits/QualityBenefitForm.vue'
@@ -135,6 +141,9 @@ const localBenefits = ref<Benefit[]>([])
 
 // Active tab
 const activeTab = ref<'time' | 'quality' | 'risk' | 'enablement'>('time')
+
+// Store scroll position when modal opens
+const savedScrollPosition = ref(0)
 
 // Tab configuration with inline SVG icons
 const ClockIcon = {
@@ -168,13 +177,37 @@ const tabs = [
   { id: 'enablement' as const, label: 'Enablement', icon: LightningIcon },
 ]
 
-// Watch for modal open to initialize local state
+// Watch for modal open to initialize local state and lock body scroll
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     localBenefits.value = props.benefits.map(b => ({ ...b }))
     // Set active tab to first type with benefits, or 'time' by default
     const firstType = props.benefits[0]?.benefitType
     activeTab.value = firstType || 'time'
+    // Prevent background scrolling - save current scroll position and lock
+    savedScrollPosition.value = window.scrollY
+    document.body.style.position = 'fixed'
+    document.body.style.top = `-${savedScrollPosition.value}px`
+    document.body.style.width = '100%'
+    document.body.style.overflow = 'hidden'
+  } else {
+    // Restore background scrolling and scroll position
+    document.body.style.position = ''
+    document.body.style.top = ''
+    document.body.style.width = ''
+    document.body.style.overflow = ''
+    window.scrollTo(0, savedScrollPosition.value)
+  }
+})
+
+// Ensure body scroll is restored when component is unmounted
+onUnmounted(() => {
+  document.body.style.position = ''
+  document.body.style.top = ''
+  document.body.style.width = ''
+  document.body.style.overflow = ''
+  if (savedScrollPosition.value > 0) {
+    window.scrollTo(0, savedScrollPosition.value)
   }
 })
 

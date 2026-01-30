@@ -448,6 +448,131 @@
               />
             </FormField>
           </div>
+
+          <!-- Aggregate Benefits Section -->
+          <div class="mt-6 pt-4 border-t border-gray-200">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h4 class="text-sm font-semibold text-gray-900">Structured Aggregate Benefits</h4>
+                <p class="text-xs text-gray-500 mt-0.5">Optional structured aggregates for analytics and reporting</p>
+              </div>
+              <button
+                type="button"
+                @click="addAggregateBenefit"
+                class="btn-secondary text-xs"
+              >
+                Add Aggregate
+              </button>
+            </div>
+            
+            <div v-if="!localAggregateBenefits.length" class="text-xs text-gray-400 italic py-2">
+              No structured aggregates. The scalar Benefit Value/Unit above serves as the primary headline metric.
+            </div>
+            
+            <div v-else class="space-y-3">
+              <div
+                v-for="(agg, index) in localAggregateBenefits"
+                :key="index"
+                class="border border-gray-200 rounded-md p-3 bg-gray-50"
+              >
+                <div class="flex items-start justify-between mb-2">
+                  <span class="text-xs font-medium text-gray-700">Aggregate {{ index + 1 }}</span>
+                  <button
+                    type="button"
+                    @click="removeAggregateBenefit(index)"
+                    class="text-red-500 hover:text-red-700 text-xs"
+                  >
+                    Remove
+                  </button>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <label class="form-label text-xs">Benefit Type</label>
+                    <select
+                      v-model="agg.benefitType"
+                      class="form-input text-xs py-1"
+                      @change="updateAggregateBenefits"
+                    >
+                      <option value="time">Time</option>
+                      <option value="quality">Quality</option>
+                      <option value="risk">Risk</option>
+                      <option value="enablement">Enablement</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label class="form-label text-xs">Metric ID</label>
+                    <input
+                      v-model="agg.metricId"
+                      type="text"
+                      class="form-input text-xs py-1"
+                      placeholder="e.g., timeSavedTotal"
+                      @blur="updateAggregateBenefits"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label class="form-label text-xs">Aggregation Basis</label>
+                    <select
+                      v-model="agg.aggregationBasis"
+                      class="form-input text-xs py-1"
+                      @change="updateAggregateBenefits"
+                    >
+                      <option value="perUnit">Per Unit</option>
+                      <option value="perMonth">Per Month</option>
+                      <option value="oneOff">One-off</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label class="form-label text-xs">Unit</label>
+                    <input
+                      v-model="agg.unit"
+                      type="text"
+                      class="form-input text-xs py-1"
+                      placeholder="e.g., hours/month"
+                      @blur="updateAggregateBenefits"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label class="form-label text-xs">Value</label>
+                    <input
+                      v-model="agg.value"
+                      type="text"
+                      class="form-input text-xs py-1"
+                      placeholder="e.g., 40"
+                      @blur="updateAggregateBenefits"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label class="form-label text-xs">Method</label>
+                    <select
+                      v-model="agg.method"
+                      class="form-input text-xs py-1"
+                      @change="updateAggregateBenefits"
+                    >
+                      <option value="computed">Computed</option>
+                      <option value="manualOverride">Manual Override</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div v-if="agg.method === 'manualOverride'" class="mt-2">
+                  <label class="form-label text-xs">Rationale (required for manual override)</label>
+                  <textarea
+                    v-model="agg.rationale"
+                    rows="2"
+                    class="form-input text-xs py-1"
+                    placeholder="Explain why this value was manually set"
+                    @blur="updateAggregateBenefits"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -459,7 +584,7 @@ import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { ProjectDefinition, Requirement } from '@/types/canvas'
+import type { ProjectDefinition, Requirement, AggregateBenefit } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateProject, validateProject: validateProjectFn } = useCanvasData()
@@ -506,6 +631,50 @@ const initKeywords = () => {
 
 const localDomains = ref<Array<{ value: string }>>(initDomains())
 const localKeywords = ref<Array<{ value: string }>>(initKeywords())
+
+// Initialize aggregate benefits
+const initAggregateBenefits = (): AggregateBenefit[] => {
+  return canvasData.value.project.aggregateBenefits || []
+}
+const localAggregateBenefits = ref<AggregateBenefit[]>(initAggregateBenefits())
+
+// State flags for update coordination (declared early for use in functions)
+let isLocalUpdate = false
+let isSyncingFromCanvas = false
+
+// Aggregate benefits management
+function addAggregateBenefit() {
+  localAggregateBenefits.value.push({
+    benefitType: 'time',
+    metricId: '',
+    aggregationBasis: 'perMonth',
+    unit: '',
+    value: 0,
+    method: 'computed',
+  })
+  updateAggregateBenefits()
+}
+
+function removeAggregateBenefit(index: number) {
+  localAggregateBenefits.value.splice(index, 1)
+  updateAggregateBenefits()
+}
+
+async function updateAggregateBenefits() {
+  if (isSyncingFromCanvas) return
+  
+  isLocalUpdate = true
+  // Convert values to appropriate types
+  const benefits = localAggregateBenefits.value.map(agg => ({
+    ...agg,
+    value: isNaN(Number(agg.value)) ? agg.value : Number(agg.value)
+  }))
+  updateProject({
+    aggregateBenefits: benefits.length > 0 ? benefits : undefined,
+  })
+  await nextTick()
+  isLocalUpdate = false
+}
 
 // Get tasks for display in collapsed view
 const tasks = computed(() => canvasData.value.userExpectations?.requirements || [])
@@ -700,9 +869,6 @@ const errors = computed(() => {
   return errs
 })
 
-let isLocalUpdate = false
-let isSyncingFromCanvas = false
-
 watch(
   () => canvasData.value.project,
   (newProject) => {
@@ -727,6 +893,8 @@ watch(
       // Sync domain and keywords arrays
       localDomains.value = (newProject.domain || []).map((d: string) => ({ value: d }))
       localKeywords.value = (newProject.keywords || []).map((k: string) => ({ value: k }))
+      // Sync aggregate benefits
+      localAggregateBenefits.value = newProject.aggregateBenefits || []
       // Reset flag after syncing
       nextTick(() => {
         isSyncingFromCanvas = false

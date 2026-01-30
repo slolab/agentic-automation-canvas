@@ -3,8 +3,111 @@
  * Following RO-Crate 1.1 specification with Schema.org, DCAT, PROV-O, FRAPO mappings
  */
 
-import type { CanvasData } from '@/types/canvas'
+import type { CanvasData, Benefit } from '@/types/canvas'
 import type { ROCrateJSONLD, ROCrateEntity } from '@/types/rocrate'
+
+/**
+ * Validation error for export
+ */
+export interface ExportValidationError {
+  path: string
+  message: string
+  severity: 'error' | 'warning'
+}
+
+/**
+ * Validate a benefit object for export
+ */
+function validateBenefit(benefit: Benefit, requirementId: string, benefitIndex: number): ExportValidationError[] {
+  const errors: ExportValidationError[] = []
+  const path = `requirements[${requirementId}].benefits[${benefitIndex}]`
+
+  // Required fields
+  if (!benefit.direction) {
+    errors.push({
+      path: `${path}.direction`,
+      message: `Benefit missing required 'direction' field. Expected one of: increaseIsBetter, decreaseIsBetter, targetIsBetter, boolIsBetter`,
+      severity: 'error'
+    })
+  }
+
+  if (!benefit.valueMeaning) {
+    errors.push({
+      path: `${path}.valueMeaning`,
+      message: `Benefit missing required 'valueMeaning' field. Expected one of: absolute, delta`,
+      severity: 'error'
+    })
+  }
+
+  // If direction is targetIsBetter, target must be present
+  if (benefit.direction === 'targetIsBetter' && benefit.target === undefined) {
+    errors.push({
+      path: `${path}.target`,
+      message: `Benefit with direction 'targetIsBetter' must have a 'target' value`,
+      severity: 'error'
+    })
+  }
+
+  // Note: Baseline and expected can have different types - this is valid.
+  // E.g., numeric baseline (known current value) + threePoint expected (uncertain estimate)
+
+  return errors
+}
+
+/**
+ * Validate canvas data before RO-Crate export
+ * Returns array of validation errors. If any error has severity 'error', export should be blocked.
+ */
+export function validateForExport(data: CanvasData): ExportValidationError[] {
+  const errors: ExportValidationError[] = []
+
+  // Validate all benefits in requirements
+  if (data.userExpectations?.requirements) {
+    data.userExpectations.requirements.forEach((req, reqIndex) => {
+      if (req.benefits && req.benefits.length > 0) {
+        req.benefits.forEach((benefit, benefitIndex) => {
+          errors.push(...validateBenefit(benefit, req.id || `${reqIndex}`, benefitIndex))
+        })
+      }
+    })
+  }
+
+  // Validate project aggregation consistency
+  if (data.project.aggregateBenefitValue !== undefined || data.project.aggregateBenefitUnit) {
+    // If scalar aggregates are present, check if structured aggregates exist
+    if (!data.project.aggregateBenefits || data.project.aggregateBenefits.length === 0) {
+      errors.push({
+        path: 'project.aggregateBenefits',
+        message: 'Scalar aggregateBenefitValue/Unit present but structured aggregateBenefits[] is empty. Consider adding structured aggregates for full semantics.',
+        severity: 'warning'
+      })
+    }
+  }
+
+  // Validate aggregateBenefits if present
+  if (data.project.aggregateBenefits) {
+    data.project.aggregateBenefits.forEach((agg, index) => {
+      const path = `project.aggregateBenefits[${index}]`
+      
+      if (agg.method === 'manualOverride' && !agg.rationale) {
+        errors.push({
+          path: `${path}.rationale`,
+          message: `Aggregate benefit with method 'manualOverride' must have a rationale`,
+          severity: 'error'
+        })
+      }
+    })
+  }
+
+  return errors
+}
+
+/**
+ * Check if export should be blocked based on validation errors
+ */
+export function hasBlockingErrors(errors: ExportValidationError[]): boolean {
+  return errors.some(e => e.severity === 'error')
+}
 
 /**
  * Generate a unique ID for an entity
@@ -23,22 +126,33 @@ interface PersonIdentity {
 }
 
 /**
+ * Role assignment for a person
+ */
+interface RoleAssignment {
+  personId: string
+  role: string
+  roleContext: 'stakeholder' | 'stage-agent' | 'task-agent'
+  stageId?: string // For stage-agent context
+}
+
+/**
  * Person registry entry
  */
 interface PersonRegistryEntry {
   id: string
   identity: PersonIdentity
-  roles: Set<string>
-  roleContexts: Map<string, string> // role -> roleContext
   entity: ROCrateEntity
 }
 
 /**
  * Person Registry for deduplication within a crate
+ * Stores persons and their role assignments separately for clean export
  */
 class PersonRegistry {
   private persons: Map<string, PersonRegistryEntry> = new Map()
+  private roleAssignments: RoleAssignment[] = []
   private personCounter = 0
+  private roleCounter = 0
 
   /**
    * Normalize name for comparison (lowercase, trim)
@@ -101,30 +215,39 @@ class PersonRegistry {
   }
 
   /**
+   * Add a role assignment for a person
+   */
+  addRoleAssignment(
+    personId: string,
+    role: string,
+    roleContext: 'stakeholder' | 'stage-agent' | 'task-agent',
+    stageId?: string
+  ): void {
+    // Avoid duplicate role assignments
+    const exists = this.roleAssignments.some(
+      ra => ra.personId === personId && ra.role === role && ra.roleContext === roleContext && ra.stageId === stageId
+    )
+    if (!exists) {
+      this.roleAssignments.push({ personId, role, roleContext, stageId })
+    }
+  }
+
+  /**
    * Find or create a Person entity with a specific ID
    * Used when we have a predefined Person ID from the centralized persons array
    */
   findOrCreatePersonWithId(
     personId: string,
-    identity: PersonIdentity,
-    role: string | undefined,
-    roleContext?: string
+    identity: PersonIdentity
   ): string {
     // Check if person already exists with this ID
-    let entry = this.persons.get(personId)
+    const entry = this.persons.get(personId)
     
     if (entry) {
-      // Person exists - add role if provided
-      if (role) {
-        entry.roles.add(role)
-        if (roleContext) {
-          entry.roleContexts.set(role, roleContext)
-        }
-      }
       return entry.id
     }
 
-    // Create new Person entity with specified ID
+    // Create new Person entity with specified ID (identity-only, no roles embedded)
     const personEntity: ROCrateEntity = {
       '@id': personId,
       '@type': 'schema:Person',
@@ -139,25 +262,12 @@ class PersonRegistry {
       personEntity['schema:identifier'] = identity.orcid
     }
 
-    // Create registry entry
-    const rolesSet = new Set<string>()
-    const roleContextsMap = new Map<string, string>()
-    if (role) {
-      rolesSet.add(role)
-      if (roleContext) {
-        roleContextsMap.set(role, roleContext)
-      }
-    }
-
-    entry = {
+    this.persons.set(personId, {
       id: personId,
       identity,
-      roles: rolesSet,
-      roleContexts: roleContextsMap,
       entity: personEntity,
-    }
+    })
 
-    this.persons.set(personId, entry)
     return personId
   }
 
@@ -166,9 +276,7 @@ class PersonRegistry {
    * Returns the Person ID
    */
   findOrCreatePerson(
-    identity: PersonIdentity,
-    role: string | undefined,
-    roleContext?: string
+    identity: PersonIdentity
   ): string {
     // Try exact match first (ORCID or name+affiliation)
     let entry = this.findExactMatch(identity)
@@ -179,17 +287,10 @@ class PersonRegistry {
     }
 
     if (entry) {
-      // Add role if provided
-      if (role) {
-        entry.roles.add(role)
-        if (roleContext) {
-          entry.roleContexts.set(role, roleContext)
-        }
-      }
       return entry.id
     }
 
-    // Create new Person entity
+    // Create new Person entity (identity-only, no roles embedded)
     const personId = generateId('person', this.personCounter++)
     const personEntity: ROCrateEntity = {
       '@id': personId,
@@ -205,25 +306,12 @@ class PersonRegistry {
       personEntity['schema:identifier'] = identity.orcid
     }
 
-    // Create registry entry
-    const rolesSet = new Set<string>()
-    const roleContextsMap = new Map<string, string>()
-    if (role) {
-      rolesSet.add(role)
-      if (roleContext) {
-        roleContextsMap.set(role, roleContext)
-      }
-    }
-
-    entry = {
+    this.persons.set(personId, {
       id: personId,
       identity,
-      roles: rolesSet,
-      roleContexts: roleContextsMap,
       entity: personEntity,
-    }
+    })
 
-    this.persons.set(personId, entry)
     return personId
   }
 
@@ -273,35 +361,32 @@ class PersonRegistry {
   }
 
   /**
-   * Get all Person entities for the graph
+   * Get all Person entities for the graph (identity-only, no roles embedded)
    */
   getAllPersonEntities(): ROCrateEntity[] {
-    return Array.from(this.persons.values()).map(entry => {
-      const entity = { ...entry.entity }
+    return Array.from(this.persons.values()).map(entry => ({ ...entry.entity }))
+  }
+
+  /**
+   * Get all Role entities for the graph
+   * Creates schema:Role nodes for each role assignment
+   */
+  getAllRoleEntities(): ROCrateEntity[] {
+    return this.roleAssignments.map((assignment, index) => {
+      const roleId = generateId('role', index)
+      const roleEntity: ROCrateEntity = {
+        '@id': roleId,
+        '@type': 'schema:Role',
+        'schema:roleName': assignment.role,
+        'schema:member': { '@id': assignment.personId },
+        'aac:roleContext': assignment.roleContext,
+      }
       
-      // Add roles array
-      if (entry.roles.size > 0) {
-        entity['aac:roles'] = Array.from(entry.roles)
-        // Set role to first role if only one
-        if (entry.roles.size === 1) {
-          entity.role = Array.from(entry.roles)[0]
-        }
+      if (assignment.stageId) {
+        roleEntity['aac:stageId'] = assignment.stageId
       }
-
-      // Add role contexts if any
-      if (entry.roleContexts.size > 0) {
-        // Store role contexts as a map or array
-        // For simplicity, we'll store as a single roleContext if there's only one context
-        const contexts = Array.from(entry.roleContexts.values())
-        if (contexts.length === 1) {
-          entity['aac:roleContext'] = contexts[0]
-        } else if (contexts.length > 1) {
-          // Multiple contexts - store as array
-          entity['aac:roleContext'] = contexts
-        }
-      }
-
-      return entity
+      
+      return roleEntity
     })
   }
 }
@@ -390,6 +475,10 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   if (data.project.primaryValueDriver) {
     projectEntity['aac:primaryValueDriver'] = data.project.primaryValueDriver
   }
+  // Aggregate benefits array (structured aggregation)
+  if (data.project.aggregateBenefits && data.project.aggregateBenefits.length > 0) {
+    projectEntity['aac:aggregateBenefits'] = data.project.aggregateBenefits
+  }
   // Version management
   const version = data.project.version || data.version || '0.1.0'
   const versionDate = data.project.versionDate || data.versionDate || new Date().toISOString().split('T')[0]
@@ -413,16 +502,14 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
       const rocratePersonId = generateId('person', index)
       personIdMap.set(person.id, rocratePersonId)
       
-      // Pre-register person in registry
+      // Pre-register person in registry (identity-only)
       personRegistry.findOrCreatePersonWithId(
         rocratePersonId,
         {
           name: person.name,
           orcid: person.orcid,
           affiliation: person.affiliation,
-        },
-        undefined, // No role yet
-        undefined // No role context yet
+        }
       )
     })
   }
@@ -501,17 +588,21 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
         return
       }
       
-      // Find or create Person entity through registry (will reuse if already exists)
+      // Ensure Person entity exists in registry (identity-only)
       personRegistry.findOrCreatePersonWithId(
         rocratePersonId,
         {
           name: person.name,
           orcid: person.orcid,
           affiliation: person.affiliation,
-        },
-        stakeholder.role || 'stakeholder',
-        stakeholder.roleContext
+        }
       )
+      
+      // Add role assignment separately (will create schema:Role node)
+      if (stakeholder.role) {
+        personRegistry.addRoleAssignment(rocratePersonId, stakeholder.role, 'stakeholder')
+      }
+      
       stakeholderRefs.push({ '@id': rocratePersonId })
     })
     
@@ -522,6 +613,16 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   }
 
   // 5. Governance Stages as PROV-O Activities
+  // Track non-person agent entities and their roles
+  let orgCounter = 0
+  let softwareCounter = 0
+  interface NonPersonAgentRole {
+    agentId: string
+    role: string
+    stageId: string
+  }
+  const nonPersonAgentRoles: NonPersonAgentRole[] = []
+
   if (data.governance?.stages && data.governance.stages.length > 0) {
     const activities: Array<{ '@id': string }> = []
 
@@ -544,7 +645,7 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
 
       // Link agents - use Person registry for person-type agents
       if (stage.agents && stage.agents.length > 0) {
-        const agentRefs = stage.agents.map((agent, agentIndex) => {
+        const agentRefs = stage.agents.map((agent) => {
           if (agent.type === 'person') {
             // Find person by personId
             if (!agent.personId) {
@@ -565,35 +666,52 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
               return null
             }
             
-            // Use Person registry for deduplication (will reuse if already exists)
-            // rocratePersonId is guaranteed to be defined here due to check above
+            // Ensure Person entity exists in registry (identity-only)
             personRegistry.findOrCreatePersonWithId(
               rocratePersonId,
               {
                 name: person.name,
                 orcid: person.orcid,
                 affiliation: person.affiliation,
-              },
-              agent.role || undefined,
-              agent.roleContext
+              }
             )
+            
+            // Add role assignment separately (will create schema:Role node)
+            if (agent.role) {
+              personRegistry.addRoleAssignment(rocratePersonId, agent.role, 'stage-agent', activityId)
+            }
+            
             return { '@id': rocratePersonId }
           } else {
-            // Non-person agents (organization, software) - create separate entities
+            // Non-person agents (organization, software) - create separate entities with proper IDs
             if (!agent.name) {
               console.warn(`Non-person agent missing name`)
               return null
             }
-            const agentId = generateId(`agent-${index}`, agentIndex)
+            
+            // Use consistent ID format: #org-N or #software-N
+            const isOrg = agent.type === 'organization'
+            const agentId = isOrg 
+              ? generateId('org', orgCounter++)
+              : generateId('software', softwareCounter++)
+            
             const agentEntity: ROCrateEntity = {
               '@id': agentId,
-              '@type': agent.type === 'organization' ? 'schema:Organization' : 'schema:SoftwareApplication',
+              '@type': isOrg ? 'schema:Organization' : 'schema:SoftwareApplication',
               name: agent.name,
             }
-            if (agent.role) {
-              agentEntity.role = agent.role
-            }
+            // No role embedded - roles are separate entities
             graph.push(agentEntity)
+            
+            // Track role for creating Role node later
+            if (agent.role) {
+              nonPersonAgentRoles.push({
+                agentId,
+                role: agent.role,
+                stageId: activityId,
+              })
+            }
+            
             return { '@id': agentId }
           }
         }).filter((ref): ref is { '@id': string } => ref !== null)
@@ -777,10 +895,30 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     rootDataset.hasPart = hasPart
   }
 
-  // Add all Person entities from registry to graph
+  // Add all Person entities from registry to graph (identity-only, no roles embedded)
   const personEntities = personRegistry.getAllPersonEntities()
   personEntities.forEach(personEntity => {
     graph.push(personEntity)
+  })
+
+  // Add all Role entities from registry to graph (separate schema:Role nodes)
+  const roleEntities = personRegistry.getAllRoleEntities()
+  roleEntities.forEach(roleEntity => {
+    graph.push(roleEntity)
+  })
+
+  // Add Role entities for non-person agents (organizations, software)
+  nonPersonAgentRoles.forEach((agentRole, index) => {
+    const roleId = generateId('agent-role', index)
+    const roleEntity: ROCrateEntity = {
+      '@id': roleId,
+      '@type': 'schema:Role',
+      'schema:roleName': agentRole.role,
+      'schema:member': { '@id': agentRole.agentId },
+      'aac:roleContext': 'stage-agent',
+      'aac:stageId': agentRole.stageId,
+    }
+    graph.push(roleEntity)
   })
 
   // Extended @context with all required prefixes

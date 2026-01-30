@@ -1,12 +1,12 @@
 <template>
   <div class="space-y-4">
-    <div class="flex items-center justify-between">
-      <p class="text-sm text-gray-600">
+    <div class="flex items-center justify-between gap-4">
+      <p class="text-sm text-gray-600 flex-1">
         Track new capabilities enabled by automation, coverage improvements, or latency reductions.
       </p>
       <button
         @click="addBenefit"
-        class="btn-secondary text-sm"
+        class="btn-secondary text-sm flex-shrink-0"
       >
         Add Enablement Benefit
       </button>
@@ -227,7 +227,7 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Benefit, BenefitValue } from '@/types/canvas'
+import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 
 interface Props {
   benefits: Benefit[]
@@ -244,39 +244,49 @@ watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
 }, { immediate: true, deep: true })
 
+// Metric defaults for direction and valueMeaning
+interface MetricDefaults {
+  label: string
+  unit: string
+  direction: BenefitDirection
+  valueMeaning: ValueMeaning
+  isBinary: boolean
+}
+
+const metricDefaults: Record<string, MetricDefaults> = {
+  'newCapability': { label: 'New Capability', unit: 'capability', direction: 'boolIsBetter', valueMeaning: 'absolute', isBinary: true },
+  'coverage': { label: 'Coverage', unit: 'cases covered', direction: 'increaseIsBetter', valueMeaning: 'absolute', isBinary: false },
+  'latencyToAnswer': { label: 'Latency to Answer', unit: 'seconds', direction: 'decreaseIsBetter', valueMeaning: 'absolute', isBinary: false },
+  'throughput': { label: 'Throughput', unit: 'units/hour', direction: 'increaseIsBetter', valueMeaning: 'absolute', isBinary: false },
+  'availability': { label: 'Availability', unit: '%', direction: 'increaseIsBetter', valueMeaning: 'absolute', isBinary: false },
+  'custom': { label: '', unit: '', direction: 'increaseIsBetter', valueMeaning: 'absolute', isBinary: false }
+}
+
 function getMetricLabel(metricId: string): string {
-  const labels: Record<string, string> = {
-    'newCapability': 'New Capability',
-    'coverage': 'Coverage',
-    'latencyToAnswer': 'Latency to Answer',
-    'throughput': 'Throughput',
-    'availability': 'Availability',
-    'custom': ''
-  }
-  return labels[metricId] || metricId
+  return metricDefaults[metricId]?.label || metricId
 }
 
 function getDefaultUnit(metricId: string): string {
-  const units: Record<string, string> = {
-    'newCapability': 'capability',
-    'coverage': 'cases covered',
-    'latencyToAnswer': 'seconds',
-    'throughput': 'units/hour',
-    'availability': '%',
-    'custom': ''
-  }
-  return units[metricId] || 'units'
+  return metricDefaults[metricId]?.unit || 'units'
+}
+
+function getMetricDefaults(metricId: string): { direction: BenefitDirection; valueMeaning: ValueMeaning } {
+  const defaults = metricDefaults[metricId] || metricDefaults['custom']
+  return { direction: defaults.direction, valueMeaning: defaults.valueMeaning }
 }
 
 function isBinaryMetric(metricId: string): boolean {
-  return ['newCapability'].includes(metricId)
+  return metricDefaults[metricId]?.isBinary || false
 }
 
 function createDefaultBenefit(): Benefit {
+  const defaults = getMetricDefaults('newCapability')
   return {
     benefitType: 'enablement',
     metricId: 'newCapability',
     metricLabel: 'New Capability',
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning,
     aggregationBasis: 'oneOff',
     benefitUnit: 'capability',
     baseline: { type: 'binary', bool: false },
@@ -303,10 +313,13 @@ function updateBenefit(index: number, updates: Partial<Benefit>) {
 
 function handleMetricChange(index: number, metricId: string) {
   const useBinary = isBinaryMetric(metricId)
+  const defaults = getMetricDefaults(metricId)
   const updates: Partial<Benefit> = {
     metricId,
     metricLabel: getMetricLabel(metricId),
-    benefitUnit: getDefaultUnit(metricId)
+    benefitUnit: getDefaultUnit(metricId),
+    direction: defaults.direction,
+    valueMeaning: defaults.valueMeaning
   }
   
   if (useBinary) {
