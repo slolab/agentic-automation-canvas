@@ -89,18 +89,10 @@ jobs:
         run: |
           # Temporarily update site_url for GitHub Pages subdirectory deployment
           # The canonical URL (w3id.org) will be set up via redirect
-          uv run python -c "
-          import yaml
-          with open('mkdocs.yml', 'r') as f:
-              config = yaml.safe_load(f)
-          # Set base URL for GitHub Pages subdirectory
-          config['site_url'] = 'https://slolab.github.io/agentic-automation-canvas/docs/'
-          with open('mkdocs.yml.tmp', 'w') as f:
-              yaml.dump(config, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-          "
+          # Use sed to update site_url without parsing custom YAML tags
+          sed 's|site_url: https://w3id.org/aac/|site_url: https://slolab.github.io/agentic-automation-canvas/docs/|' mkdocs.yml > mkdocs.yml.tmp
           uv run mkdocs build --quiet --config-file mkdocs.yml.tmp
-          # Restore original config
-          git checkout mkdocs.yml || true
+          rm -f mkdocs.yml.tmp
 
       - name: Prepare schema artifacts
         run: |
