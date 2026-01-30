@@ -27,3 +27,11 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# MkDocs build output
+site/
+mkdocs.yml.tmp
+
+# uv
+.venv/
+# Note: uv.lock should be committed (not ignored) for reproducible builds

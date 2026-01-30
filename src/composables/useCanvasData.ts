@@ -14,7 +14,7 @@ const canvasData = ref<CanvasData>({
     description: '',
     projectStage: '',
   },
-  version: '0.1.0',
+  version: '0.9.0',
   versionDate: new Date().toISOString().split('T')[0],
   isImported: false,
 })
@@ -28,8 +28,8 @@ const loadFromStorage = () => {
       canvasData.value = parsed
       // Ensure version fields are initialized if missing
       if (!canvasData.value.version && !canvasData.value.project.version) {
-        canvasData.value.version = '0.1.0'
-        canvasData.value.project.version = '0.1.0'
+        canvasData.value.version = '0.9.0'
+        canvasData.value.project.version = '0.9.0'
       }
       if (!canvasData.value.versionDate && !canvasData.value.project.versionDate) {
         const today = new Date().toISOString().split('T')[0]
@@ -235,7 +235,7 @@ export function useCanvasData() {
       governance: undefined,
       dataAccess: undefined,
       outcomes: undefined,
-      version: '0.1.0',
+      version: '0.9.0',
       versionDate: new Date().toISOString().split('T')[0],
       isImported: false,
     }

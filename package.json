@@ -1,6 +1,6 @@
 {
   "name": "agentic-automation-canvas",
-  "version": "0.1.0",
+  "version": "0.9.0",
   "description": "Agentic Automation Canvas - Interactive form for capturing project metadata and generating RO-Crate packages",
   "author": "Sebastian Lobentanzer, slolab",
   "license": "Apache-2.0",
@@ -8,7 +8,11 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
+    "build:all": "./scripts/build-all.sh",
     "preview": "vite preview",
+    "preview:all": "npx serve dist -p 4173",
+    "docs:dev": "uv run mkdocs serve",
+    "docs:build": "uv run python tools/generate-reference.py && uv run mkdocs build",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
   },
   "dependencies": {

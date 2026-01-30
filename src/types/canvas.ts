@@ -12,7 +12,7 @@ export interface CanvasData {
   dataAccess?: DataAccessSensitivity
   outcomes?: OutcomesEvaluation
   // Version management
-  version?: string // Semantic version (e.g., "0.1.0")
+  version?: string // Semantic version (e.g., "0.9.0")
   versionDate?: string // ISO date string when version was downloaded/created
   isImported?: boolean // true if form was imported from ROcrate, false if created from scratch
 }
@@ -36,7 +36,7 @@ export interface ProjectDefinition {
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
   aggregateBenefits?: AggregateBenefit[] // Structured aggregates for multiple benefit types
   // Version management (stored at project level for ROcrate compatibility)
-  version?: string // Semantic version (e.g., "0.1.0")
+  version?: string // Semantic version (e.g., "0.9.0")
   versionDate?: string // ISO date string when version was downloaded/created
 }
 

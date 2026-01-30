@@ -1,0 +1,234 @@
+{
+  "version": "0.9.0",
+  "versionDate": "2025-01-30",
+  "isImported": false,
+  "persons": [
+    {
+      "id": "person-0",
+      "name": "Dr. Jane Smith",
+      "affiliation": "Biomedical Research Institute"
+    },
+    {
+      "id": "person-1",
+      "name": "Dr. John Doe",
+      "orcid": "https://orcid.org/0000-0000-0000-0001",
+      "affiliation": "AI Research Lab"
+    }
+  ],
+  "project": {
+    "title": "Biomedical AI Automation Project",
+    "description": "An agentic automation system for processing biomedical data using AI to reduce manual effort and improve data quality.",
+    "objective": "Automate data processing workflows to reduce time spent on repetitive tasks.",
+    "projectStage": "Development",
+    "startDate": "2025-01-01",
+    "endDate": "2025-12-31",
+    "domain": ["Biomedical", "AI"],
+    "keywords": ["AI", "biomedical", "automation", "data processing"],
+    "headlineValue": "Saves time through automated data processing",
+    "aggregateBenefitValue": 10,
+    "aggregateBenefitUnit": "hours/month",
+    "primaryValueDriver": "time",
+    "aggregateBenefits": [
+      {
+        "benefitType": "time",
+        "metricId": "timeSavedTotal",
+        "aggregationBasis": "perMonth",
+        "unit": "hours/month",
+        "value": 10,
+        "method": "computed"
+      },
+      {
+        "benefitType": "quality",
+        "metricId": "errorReduction",
+        "aggregationBasis": "perMonth",
+        "unit": "% error reduction",
+        "value": 25,
+        "method": "manualOverride",
+        "rationale": "Based on pilot study comparing manual vs automated processing error rates"
+      }
+    ],
+    "version": "0.9.0",
+    "versionDate": "2025-01-30"
+  },
+  "userExpectations": {
+    "requirements": [
+      {
+        "id": "requirement-0",
+        "description": "As a researcher, I want automated data processing so that I can focus on analysis",
+        "userStory": "Automated data processing",
+        "priority": "high",
+        "status": "in-progress",
+        "unitOfWork": "one data processing task",
+        "unitCategory": "analysisRun",
+        "volumePerMonth": 120,
+        "humanOversightMinutesPerUnit": 2,
+        "benefits": [
+          {
+            "benefitType": "time",
+            "metricId": "timeSaved",
+            "metricLabel": "Time Saved",
+            "direction": "increaseIsBetter",
+            "valueMeaning": "delta",
+            "aggregationBasis": "perUnit",
+            "benefitUnit": "minutes",
+            "baseline": {
+              "type": "numeric",
+              "value": 10
+            },
+            "expected": {
+              "type": "threePoint",
+              "best": 8,
+              "likely": 5,
+              "worst": 1
+            },
+            "confidenceUser": "high",
+            "confidenceDev": "medium",
+            "assumptions": "Assumes standard data formats and no major edge cases"
+          },
+          {
+            "benefitType": "quality",
+            "metricId": "errorRate",
+            "metricLabel": "Error Rate",
+            "direction": "decreaseIsBetter",
+            "valueMeaning": "absolute",
+            "aggregationBasis": "perUnit",
+            "benefitUnit": "%",
+            "baseline": {
+              "type": "numeric",
+              "value": 15
+            },
+            "expected": {
+              "type": "numeric",
+              "value": 3
+            },
+            "confidenceUser": "medium",
+            "confidenceDev": "medium"
+          }
+        ]
+      }
+    ],
+    "stakeholders": [
+      {
+        "personId": "person-0",
+        "role": "Principal Investigator",
+        "values": ["data quality", "time savings"]
+      },
+      {
+        "personId": "person-1",
+        "role": "Technical Lead",
+        "values": ["system reliability", "scalability"]
+      }
+    ]
+  },
+  "developerFeasibility": {
+    "trlLevel": {
+      "current": 4,
+      "target": 7
+    },
+    "technicalRisk": "medium",
+    "algorithms": ["Machine Learning", "Natural Language Processing"],
+    "tools": ["Python", "TensorFlow", "Biomedical Data APIs"],
+    "effortEstimate": "6-8 months",
+    "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling.",
+    "modelSelection": "frontier-model",
+    "modelName": "GPT-4",
+    "baselineCapability": {
+      "taskPerformance": "moderate",
+      "successRate": 65,
+      "limitations": "Naive model struggles with domain-specific terminology and complex multi-step workflows",
+      "requiresCustomInstructions": true,
+      "customInstructionsComplexity": "high"
+    },
+    "expectedGains": {
+      "performanceImprovement": "significant",
+      "headroom": "high",
+      "justification": "Agentic capabilities will enable complex workflows that naive models cannot handle"
+    },
+    "implementationDifficulty": {
+      "skillAdditionDifficulty": "moderate",
+      "baselineComparisonRequired": true,
+      "validationMonitoringRequired": true,
+      "securityLevel": "medium"
+    },
+    "agenticExplanation": "Agentic capabilities added through tool use, structured workflows, and domain-specific instructions"
+  },
+  "governance": {
+    "stages": [
+      {
+        "id": "stage-0",
+        "name": "Development Stage",
+        "startDate": "2025-02-01",
+        "endDate": "2025-06-30",
+        "agents": [
+          {
+            "personId": "person-1",
+            "role": "Technical Lead",
+            "type": "person"
+          },
+          {
+            "name": "Development Team",
+            "role": "Developers",
+            "type": "organization"
+          }
+        ],
+        "milestones": [
+          "Core processing engine completed",
+          "Integration testing passed"
+        ],
+        "complianceStandards": ["GDPR", "HIPAA"]
+      }
+    ]
+  },
+  "dataAccess": {
+    "datasets": [
+      {
+        "id": "dataset-0",
+        "title": "Biomedical Research Dataset",
+        "description": "Anonymized biomedical research data for processing",
+        "format": "CSV",
+        "license": "https://creativecommons.org/licenses/by/4.0/",
+        "accessRights": "restricted",
+        "duoTerms": [
+          "https://purl.org/ga4gh/duo.owl#DUO:0000006"
+        ],
+        "pid": "https://example.org/datasets/bio-research-2025",
+        "publisher": "Biomedical Research Institute",
+        "containsPersonalData": false,
+        "sensitivityLevel": "medium"
+      }
+    ]
+  },
+  "outcomes": {
+    "deliverables": [
+      {
+        "id": "outcome-0",
+        "title": "Automated Data Processing System",
+        "type": "SoftwareApplication",
+        "description": "Complete automated data processing system",
+        "date": "2025-06-30",
+        "pid": "https://example.org/deliverables/auto-processing-system"
+      }
+    ],
+    "publications": [
+      {
+        "id": "pub-1",
+        "title": "Biomedical AI Automation: A Case Study",
+        "doi": "https://doi.org/10.1234/example.2025.001",
+        "authors": ["Dr. Jane Smith", "Dr. John Doe"],
+        "date": "2025-07-15"
+      }
+    ],
+    "evaluations": [
+      {
+        "id": "eval-1",
+        "type": "Performance Evaluation",
+        "date": "2025-06-20",
+        "results": "System achieved 90% accuracy and reduced processing time by 60%",
+        "metrics": {
+          "accuracy": 0.9,
+          "timeReduction": 0.6
+        }
+      }
+    ]
+  }
+}

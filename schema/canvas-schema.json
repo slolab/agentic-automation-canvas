@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/slolab/agentic-automation-canvas/schema/canvas-schema.json",
+  "$id": "https://w3id.org/aac/schema/aac.schema.json",
   "title": "Agentic Automation Canvas Schema",
   "description": "JSON Schema for validating Agentic Automation Canvas data structure",
   "type": "object",
@@ -8,7 +8,7 @@
   "properties": {
     "version": {
       "type": "string",
-      "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
+      "description": "Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/).",
       "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
     },
     "versionDate": {
@@ -73,7 +73,7 @@
         },
         "version": {
           "type": "string",
-          "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
+          "description": "Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/).",
           "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
         },
         "versionDate": {

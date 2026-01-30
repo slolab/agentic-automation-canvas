@@ -98,6 +98,23 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 | `confidenceDev` | `confidenceDev` | Optional: low, medium, high |
 | `assumptions` | `assumptions` | Optional |
 
+### Developer Feasibility
+
+Developer feasibility assessment is exported as a separate JSON file (`developer-feasibility.json`) in the RO-Crate package, following RO-Crate best practices for complex structured data.
+
+| Canvas Field | RO-Crate Representation | Notes |
+|-------------|-------------------------|-------|
+| `developerFeasibility` | Separate file entity | `schema:File` entity with `@id: "developer-feasibility.json"` |
+| File content | JSON structure | All `developerFeasibility` fields preserved as-is in JSON file |
+
+**File Entity Properties:**
+- `@type`: `schema:File`
+- `name`: "Developer Feasibility Assessment"
+- `description`: "Technical feasibility assessment including Technology Readiness Level (TRL), risk assessment, and technology choices"
+- `schema:encodingFormat`: "application/json"
+
+**Note:** The developer feasibility data is not embedded in the RO-Crate metadata graph. It is included as a separate file that can be imported back into the canvas application.
+
 ### Governance Stage Entities
 
 | Canvas Field | RO-Crate Property | Notes |
@@ -122,8 +139,10 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 | `datasets[].license` | `license` | `{ @id: "URL" }` |
 | `datasets[].accessRights` | `dct:accessRights` | Access level |
 | `datasets[].pid` | `identifier` | PID/DOI |
+| `datasets[].publisher` | `publisher` | Publisher name |
 | `datasets[].duoTerms` | `dct:conformsTo` | Array of `{ @id: DUO_URL }` |
 | `datasets[].containsPersonalData` | `aac:containsPersonalData` | Boolean |
+| `datasets[].sensitivityLevel` | `aac:sensitivityLevel` | Sensitivity classification |
 
 ### Outcome Entities
 
@@ -155,6 +174,7 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 | `evaluations[].id` | `@id` | Format: `#evaluation-N` |
 | `evaluations[].type` | `name`, `aac:evaluationType` | Type string |
 | `evaluations[].date` | `datePublished` | ISO date |
+| `evaluations[].metrics` | `aac:metrics` | Object with additional properties |
 | `evaluations[].results` | `description` | Results text |
 
 ## Namespace Prefixes
@@ -168,7 +188,7 @@ The RO-Crate export uses the following namespace prefixes:
   "p-plan": "http://purl.org/net/p-plan#",
   "dct": "http://purl.org/dc/terms/",
   "dcat": "http://www.w3.org/ns/dcat#",
-  "aac": "https://github.com/slolab/agentic-automation-canvas/schema/"
+  "aac": "https://w3id.org/aac/"
 }
 ```
 
@@ -213,8 +233,8 @@ For older exports without `direction`/`valueMeaning`:
 
 ## Related Documentation
 
-- [Schema.org mappings](../schema/mappings/schema.org.md)
-- [PROV-O mappings](../schema/mappings/prov-o.md)
-- [DCAT mappings](../schema/mappings/dcat.md)
-- [DUO mappings](../schema/mappings/duo.md)
-- [FRAPO mappings](../schema/mappings/frapo.md)
+- [Schema.org mappings](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/mappings/schema.org.md)
+- [PROV-O mappings](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/mappings/prov-o.md)
+- [DCAT mappings](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/mappings/dcat.md)
+- [DUO mappings](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/mappings/duo.md)
+- [FRAPO mappings](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/mappings/frapo.md)
