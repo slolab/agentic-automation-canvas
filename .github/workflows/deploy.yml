@@ -87,10 +87,11 @@ jobs:
 
       - name: Build MkDocs
         run: |
-          # Temporarily update site_url for GitHub Pages subdirectory deployment
+          # Temporarily update site_url for deployment
           # The canonical URL (w3id.org) will be set up via redirect
           # Use sed to update site_url without parsing custom YAML tags
-          sed 's|site_url: https://w3id.org/aac/|site_url: https://slolab.github.io/agentic-automation-canvas/docs/|' mkdocs.yml > mkdocs.yml.tmp
+          # For custom domain (aac.slolab.ai), docs will be at root /docs/
+          sed 's|site_url: https://w3id.org/aac/|site_url: https://aac.slolab.ai/docs/|' mkdocs.yml > mkdocs.yml.tmp
           uv run mkdocs build --quiet --config-file mkdocs.yml.tmp
           rm -f mkdocs.yml.tmp
 
@@ -123,16 +124,10 @@ jobs:
 
       - name: Combine builds
         run: |
-          # Reorganize to match GitHub Pages structure
-          # Create the base path directory
-          mkdir -p dist/agentic-automation-canvas
-          # Move Vue app files to the base path
-          mv dist/index.html dist/agentic-automation-canvas/ 2>/dev/null || true
-          mv dist/assets dist/agentic-automation-canvas/ 2>/dev/null || true
-          mv dist/favicon.svg dist/agentic-automation-canvas/ 2>/dev/null || true
-          # Copy docs to the base path subdirectory
-          mkdir -p dist/agentic-automation-canvas/docs
-          cp -r site/* dist/agentic-automation-canvas/docs/
+          # Copy docs to dist/docs subdirectory
+          # Vue app is already at dist/ root (for custom domain serving)
+          mkdir -p dist/docs
+          cp -r site/* dist/docs/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4

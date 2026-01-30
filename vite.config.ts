@@ -5,7 +5,7 @@ import { resolve } from 'path'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  base: '/agentic-automation-canvas/',
+  base: '/',
   resolve: {
     alias: {
       '@': resolve(__dirname, './src'),

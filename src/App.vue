@@ -170,7 +170,7 @@ import InfoOverlay from './components/InfoOverlay.vue'
 
 const { canvasData, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
-const baseUrl = import.meta.env.BASE_URL
+const baseUrl = import.meta.env.BASE_URL || '/'
 
 const loadExample = () => {
   if (confirm('This will replace your current data with an example dataset. Continue?')) {

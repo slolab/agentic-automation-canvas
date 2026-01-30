@@ -4,6 +4,8 @@ site_url: https://w3id.org/aac/
 repo_url: https://github.com/slolab/agentic-automation-canvas
 repo_name: slolab/agentic-automation-canvas
 edit_uri: edit/main/docs/
+# Note: site_url is temporarily overridden in CI for deployment
+# Canonical URL is w3id.org/aac/, actual deployment uses aac.slolab.ai
 
 theme:
   name: material

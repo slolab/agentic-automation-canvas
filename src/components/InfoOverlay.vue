@@ -148,7 +148,7 @@ import { ref, watch, onUnmounted } from 'vue'
 
 const isOpen = ref(false)
 const savedScrollPosition = ref(0)
-const baseUrl = import.meta.env.BASE_URL
+const baseUrl = import.meta.env.BASE_URL || '/'
 
 watch(isOpen, (open) => {
   if (open) {
