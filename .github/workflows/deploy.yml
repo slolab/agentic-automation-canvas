@@ -126,16 +126,11 @@ jobs:
 
       - name: Combine builds
         run: |
-          # Reorganize to match GitHub Pages project site structure
-          # Vue app needs to be in subdirectory for GitHub Pages compatibility
-          mkdir -p dist/agentic-automation-canvas
-          # Move Vue app files to the base path
-          mv dist/index.html dist/agentic-automation-canvas/ 2>/dev/null || true
-          mv dist/assets dist/agentic-automation-canvas/ 2>/dev/null || true
-          mv dist/favicon.svg dist/agentic-automation-canvas/ 2>/dev/null || true
-          # Copy docs to the base path subdirectory
-          mkdir -p dist/agentic-automation-canvas/docs
-          cp -r site/* dist/agentic-automation-canvas/docs/
+          # Vue app is already built to dist/ with correct base path
+          # GitHub Pages serves at /<repo-name>/ so no subdirectory needed
+          # Just add the docs to the dist folder
+          mkdir -p dist/docs
+          cp -r site/* dist/docs/
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
