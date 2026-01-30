@@ -71,8 +71,7 @@ jobs:
 
       - name: Build Vue app
         run: |
-          # Build Vue app with base path for GitHub Pages compatibility
-          # This allows both GitHub Pages URL and custom domain to work
+          # Build Vue app with relative paths for custom domain deployment
           npm run build
 
       - name: Install uv
@@ -91,10 +90,9 @@ jobs:
 
       - name: Build MkDocs
         run: |
-          # Temporarily update site_url for GitHub Pages deployment
-          # The canonical URL (w3id.org) will be set up via redirect
+          # Update site_url for custom domain deployment
           # Use sed to update site_url without parsing custom YAML tags
-          sed 's|site_url: https://w3id.org/aac/|site_url: https://slolab.github.io/agentic-automation-canvas/docs/|' mkdocs.yml > mkdocs.yml.tmp
+          sed 's|site_url: https://w3id.org/aac/|site_url: https://aac.slolab.ai/docs/|' mkdocs.yml > mkdocs.yml.tmp
           uv run mkdocs build --quiet --config-file mkdocs.yml.tmp
           rm -f mkdocs.yml.tmp
 
@@ -127,11 +125,14 @@ jobs:
 
       - name: Combine builds
         run: |
-          # Vue app is already built to dist/ with correct base path
-          # GitHub Pages serves at /<repo-name>/ so no subdirectory needed
-          # Just add the docs to the dist folder
+          # Vue app is built to dist/ with relative paths
+          # Add docs to the dist folder
           mkdir -p dist/docs
           cp -r site/* dist/docs/
+          # Add CNAME file for custom domain
+          # This tells GitHub Pages to serve at aac.slolab.ai
+          # and redirect github.io URLs to the custom domain
+          echo "aac.slolab.ai" > dist/CNAME
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
