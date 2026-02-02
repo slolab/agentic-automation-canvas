@@ -374,6 +374,8 @@ function isValidDate(dateStr: string | undefined): boolean {
 
 export interface GenerateROCrateOptions {
   benefitDisplay?: BenefitDisplayState
+  /** Schema version at export time (for import mismatch warning) */
+  schemaVersion?: string
 }
 
 /**
@@ -459,6 +461,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   // Also add to root dataset for easy access
   rootDataset['aac:version'] = version
   rootDataset['aac:versionDate'] = versionDate
+  if (options?.schemaVersion) {
+    rootDataset['aac:schemaVersion'] = options.schemaVersion
+  }
 
   graph.push(projectEntity)
 

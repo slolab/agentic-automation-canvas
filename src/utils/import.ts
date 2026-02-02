@@ -580,6 +580,8 @@ export async function importROCrateFromJSON(rocrate: ROCrateJSONLD): Promise<Can
 export interface ImportROCrateResult {
   canvasData: CanvasData
   benefitDisplay?: BenefitDisplayState
+  /** Schema version of the crate (from aac:schemaVersion in root dataset) */
+  crateSchemaVersion?: string
 }
 
 export async function importROCrateFromZip(file: File): Promise<ImportROCrateResult> {
@@ -593,6 +595,9 @@ export async function importROCrateFromZip(file: File): Promise<ImportROCrateRes
 
     const metadataContent = await metadataFile.async('string')
     const rocrate: ROCrateJSONLD = JSON.parse(metadataContent)
+
+    const rootDataset = rocrate['@graph']?.find((e: ROCrateEntity) => e['@id'] === './')
+    const crateSchemaVersion = rootDataset?.['aac:schemaVersion'] as string | undefined
 
     const canvasData = await importROCrateFromJSON(rocrate)
 
@@ -610,7 +615,7 @@ export async function importROCrateFromZip(file: File): Promise<ImportROCrateRes
       }
     }
 
-    return { canvasData, benefitDisplay }
+    return { canvasData, benefitDisplay, crateSchemaVersion }
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to import RO-Crate: ${error.message}`)

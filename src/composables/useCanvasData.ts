@@ -26,6 +26,12 @@ const lastImportedVersion = ref<string | null>(null)
 // App-only: true after first user edit since last import; reminder only shown when true
 const hasChangedSinceImport = ref(false)
 
+// App-only: schema version of the last imported crate (for version-mismatch warning)
+const lastImportedCrateSchemaVersion = ref<string | null>(null)
+
+// App-only: true when last import was from a crate with no aac:schemaVersion (treat as prior/legacy)
+const importedCrateHadNoSchemaVersion = ref(false)
+
 // App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
 const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
 
@@ -253,6 +259,8 @@ export function useCanvasData() {
       versionDate: new Date().toISOString().split('T')[0],
     }
     lastImportedVersion.value = null
+    lastImportedCrateSchemaVersion.value = null
+    importedCrateHadNoSchemaVersion.value = false
     hasChangedSinceImport.value = false
     benefitDisplay.value = { displayGroups: [] }
     localStorage.removeItem(STORAGE_KEY)
@@ -271,7 +279,12 @@ export function useCanvasData() {
     }
   }
 
-  const importFromROCrate = (data: CanvasData, importedBenefitDisplay?: BenefitDisplayState) => {
+  const importFromROCrate = (
+    data: CanvasData,
+    importedBenefitDisplay?: BenefitDisplayState,
+    crateSchemaVersion?: string,
+    fromCrateFile = false
+  ) => {
     // Deep copy the data to ensure reactivity works properly
     const newData = JSON.parse(JSON.stringify(data))
     // Clear existing data first to ensure watchers trigger
@@ -294,6 +307,13 @@ export function useCanvasData() {
     newData.project.versionDate = today
     canvasData.value = newData
     lastImportedVersion.value = newData.project?.version ?? newData.version ?? null
+    if (fromCrateFile) {
+      lastImportedCrateSchemaVersion.value = crateSchemaVersion ?? null
+      importedCrateHadNoSchemaVersion.value = crateSchemaVersion === undefined || crateSchemaVersion === ''
+    } else {
+      lastImportedCrateSchemaVersion.value = null
+      importedCrateHadNoSchemaVersion.value = false
+    }
     hasChangedSinceImport.value = false
     if (importedBenefitDisplay) {
       benefitDisplay.value = importedBenefitDisplay
@@ -343,6 +363,27 @@ export function useCanvasData() {
         message: 'It is recommended to increment the version when modifying an imported canvas. See https://semver.org/ for guidance.',
         severity: 'warning',
       })
+    }
+
+    // Crate has different or missing schema version: schema may have changed; legacy before v1 not supported
+    const currentSchemaVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : null
+    if (currentSchemaVersion != null) {
+      if (importedCrateHadNoSchemaVersion.value) {
+        errors.push({
+          field: 'project',
+          message: `This crate has no schema version (created with an older or unknown schema). The schema may have changed—not all components may have transferred. Support may be limited for crates created before v1—they may not map fully. Downloading the crate again will fix this.`,
+          severity: 'warning',
+        })
+      } else if (
+        lastImportedCrateSchemaVersion.value != null &&
+        lastImportedCrateSchemaVersion.value !== currentSchemaVersion
+      ) {
+        errors.push({
+          field: 'project',
+          message: `This crate uses schema version ${lastImportedCrateSchemaVersion.value}; current schema is ${currentSchemaVersion}. The schema may have changed—not all components may have transferred. Support may be limited for crates created before v1—they may not map fully. Downloading the crate again will fix this.`,
+          severity: 'warning',
+        })
+      }
     }
 
     return errors

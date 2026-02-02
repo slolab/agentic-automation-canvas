@@ -18,7 +18,11 @@ const outDir = join(__dirname, '..', 'tools')
 const outFile = join(outDir, `${projectName}.rocrate.zip`)
 
 async function main() {
-  const rocrate = generateROCrate(devAllBenefitsCanvas, { benefitDisplay: devBenefitDisplay })
+  // Use 0.9.0 so loading this crate in the current app triggers the schema-version mismatch warning
+  const rocrate = generateROCrate(devAllBenefitsCanvas, {
+    benefitDisplay: devBenefitDisplay,
+    schemaVersion: '0.9.0',
+  })
   const buffer = await buildROCrateZipBuffer(rocrate, projectName, devAllBenefitsCanvas, devBenefitDisplay)
   mkdirSync(outDir, { recursive: true })
   writeFileSync(outFile, Buffer.from(buffer))

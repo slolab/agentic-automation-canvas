@@ -294,7 +294,10 @@ const downloadROCrate = async () => {
   }
 
   try {
-    const rocrate = generateROCrate(canvasData.value, { benefitDisplay: benefitDisplay.value })
+    const rocrate = generateROCrate(canvasData.value, {
+      benefitDisplay: benefitDisplay.value,
+      schemaVersion: appVersion !== '—' ? appVersion : undefined,
+    })
     
     // Validate RO-Crate structure: check for null values
     const nullValues: string[] = []
