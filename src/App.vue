@@ -72,7 +72,17 @@
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-center justify-between">
           <div class="flex flex-col sm:flex-row items-start sm:items-center gap-2 sm:gap-4 text-sm text-gray-500">
-            <p>Agentic Automation Canvas - Built with Vue.js and following W3C standards</p>
+            <div class="flex items-center gap-2">
+              <p>Agentic Automation Canvas</p>
+              <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary-100 text-primary-800">
+                v{{ appVersion }}
+              </span>
+            </div>
+            <span class="hidden sm:inline text-gray-300">|</span>
+            <p class="text-xs text-gray-400 italic">
+              Schema subject to change until v1.0 - check back often
+            </p>
+            <span class="hidden sm:inline text-gray-300">|</span>
             <a
               href="https://github.com/slolab/agentic-automation-canvas"
               target="_blank"
@@ -171,6 +181,7 @@ import InfoOverlay from './components/InfoOverlay.vue'
 const { canvasData, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 const baseUrl = import.meta.env.BASE_URL || '/'
+const appVersion = __APP_VERSION__
 
 const loadExample = () => {
   if (confirm('This will replace your current data with an example dataset. Continue?')) {
