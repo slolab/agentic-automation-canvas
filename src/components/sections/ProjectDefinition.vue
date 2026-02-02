@@ -570,7 +570,7 @@ import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 
-const { canvasData, benefitDisplay, updateProject, validateProject: validateProjectFn } = useCanvasData()
+const { canvasData, benefitDisplay, markChangedSinceImport, updateProject, validateProject: validateProjectFn } = useCanvasData()
 
 // Initialize localData with proper array references
 const initLocalData = (): ProjectDefinition => {
@@ -723,6 +723,7 @@ function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
   if (existing) {
     existing.benefitRefs.push(ref)
     benefitDisplay.value = { displayGroups: [...groups] }
+    markChangedSinceImport()
     return
   }
   benefitDisplay.value.displayGroups.push({
@@ -732,6 +733,7 @@ function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
     benefitRefs: [ref],
   })
   benefitDisplay.value = { displayGroups: [...benefitDisplay.value.displayGroups] }
+  markChangedSinceImport()
 }
 
 function removeFromDisplayGroup(row: BenefitRow): void {
@@ -745,6 +747,7 @@ function removeFromDisplayGroup(row: BenefitRow): void {
     }))
     .filter((g) => g.benefitRefs.length > 0)
   benefitDisplay.value = { displayGroups: next }
+  markChangedSinceImport()
 }
 
 // Collapsible state - start collapsed to show the nice overview, expand if project is completely empty

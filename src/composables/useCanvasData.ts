@@ -23,6 +23,9 @@ const canvasData = ref<CanvasData>({
 // App-only: version at last import, for "increment version" reminder (not in schema)
 const lastImportedVersion = ref<string | null>(null)
 
+// App-only: true after first user edit since last import; reminder only shown when true
+const hasChangedSinceImport = ref(false)
+
 // App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
 const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
 
@@ -67,6 +70,7 @@ loadFromStorage()
 
 export function useCanvasData() {
   const updateProject = (updates: Partial<CanvasData['project']>) => {
+    hasChangedSinceImport.value = true
     // Ensure arrays are properly copied to preserve references
     const updatedProject: any = {
       ...canvasData.value.project,
@@ -84,6 +88,7 @@ export function useCanvasData() {
   }
 
   const updateUserExpectations = (updates: Partial<CanvasData['userExpectations']>) => {
+    hasChangedSinceImport.value = true
     if (!canvasData.value.userExpectations) {
       canvasData.value.userExpectations = {}
     }
@@ -104,6 +109,7 @@ export function useCanvasData() {
   }
 
   const updateDeveloperFeasibility = (updates: Partial<CanvasData['developerFeasibility']>) => {
+    hasChangedSinceImport.value = true
     if (!canvasData.value.developerFeasibility) {
       canvasData.value.developerFeasibility = {}
     }
@@ -124,6 +130,7 @@ export function useCanvasData() {
   }
 
   const updateGovernance = (updates: Partial<CanvasData['governance']>) => {
+    hasChangedSinceImport.value = true
     if (!canvasData.value.governance) {
       canvasData.value.governance = {}
     }
@@ -157,6 +164,7 @@ export function useCanvasData() {
   }
 
   const updateDataAccess = (updates: Partial<CanvasData['dataAccess']>) => {
+    hasChangedSinceImport.value = true
     if (!canvasData.value.dataAccess) {
       canvasData.value.dataAccess = {}
     }
@@ -190,10 +198,12 @@ export function useCanvasData() {
   }
 
   const updatePersons = (persons: CanvasData['persons']) => {
+    hasChangedSinceImport.value = true
     canvasData.value.persons = persons ? [...persons] : undefined
   }
 
   const updateOutcomes = (updates: Partial<CanvasData['outcomes']>) => {
+    hasChangedSinceImport.value = true
     if (!canvasData.value.outcomes) {
       canvasData.value.outcomes = {}
     }
@@ -243,6 +253,7 @@ export function useCanvasData() {
       versionDate: new Date().toISOString().split('T')[0],
     }
     lastImportedVersion.value = null
+    hasChangedSinceImport.value = false
     benefitDisplay.value = { displayGroups: [] }
     localStorage.removeItem(STORAGE_KEY)
   }
@@ -283,6 +294,7 @@ export function useCanvasData() {
     newData.project.versionDate = today
     canvasData.value = newData
     lastImportedVersion.value = newData.project?.version ?? newData.version ?? null
+    hasChangedSinceImport.value = false
     if (importedBenefitDisplay) {
       benefitDisplay.value = importedBenefitDisplay
     } else {
@@ -319,8 +331,13 @@ export function useCanvasData() {
       errors.push({ field: 'project.projectStage', message: 'Project stage is required', severity: 'error' })
     }
 
-    // Version management validation: recommend incrementing version if just imported (app state)
-    if (lastImportedVersion.value != null && project.version && project.version === lastImportedVersion.value) {
+    // Version management: recommend incrementing version only after first change since import
+    if (
+      hasChangedSinceImport.value &&
+      lastImportedVersion.value != null &&
+      project.version &&
+      project.version === lastImportedVersion.value
+    ) {
       errors.push({
         field: 'project.version',
         message: 'It is recommended to increment the version when modifying an imported canvas. See https://semver.org/ for guidance.',
@@ -774,10 +791,15 @@ export function useCanvasData() {
     }
   })
 
+  const markChangedSinceImport = () => {
+    hasChangedSinceImport.value = true
+  }
+
   return {
     canvasData,
     lastImportedVersion,
     benefitDisplay,
+    markChangedSinceImport,
     updateProject,
     updatePersons,
     updateUserExpectations,
