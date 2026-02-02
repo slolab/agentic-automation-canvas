@@ -759,7 +759,7 @@ function displayGroupButtonTitle(row: BenefitRow, slotId: number): string {
 function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
   const group = getGroupBySlotId(slotId)
   if (isInGroup(row, group)) {
-    removeFromDisplayGroup(row)
+    removeFromDisplayGroup(row, slotId)
     return
   }
   if (!isCompatibleWithGroup(row, group)) return
@@ -782,16 +782,15 @@ function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
   markChangedSinceImport()
 }
 
-function removeFromDisplayGroup(row: BenefitRow): void {
+function removeFromDisplayGroup(row: BenefitRow, slotId: number): void {
   const ref: BenefitRef = { requirementId: row.requirementId, benefitIndex: row.benefitIndex }
-  const next = benefitDisplay.value.displayGroups
-    .map((g) => ({
-      ...g,
-      benefitRefs: g.benefitRefs.filter(
-        (r) => !(r.requirementId === ref.requirementId && r.benefitIndex === ref.benefitIndex)
-      ),
-    }))
-    .filter((g) => g.benefitRefs.length > 0)
+  const next = benefitDisplay.value.displayGroups.map((g) => {
+    if (g.id !== slotId) return g
+    const benefitRefs = g.benefitRefs.filter(
+      (r) => !(r.requirementId === ref.requirementId && r.benefitIndex === ref.benefitIndex)
+    )
+    return { ...g, benefitRefs }
+  }).filter((g) => g.benefitRefs.length > 0)
   benefitDisplay.value = { ...benefitDisplay.value, displayGroups: next }
   markChangedSinceImport()
 }
