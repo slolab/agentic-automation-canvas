@@ -488,7 +488,7 @@
           <!-- Per-benefit list (read-only): two lines, tag left, display group buttons right -->
           <div class="mt-6 pt-4 border-t border-gray-200">
             <h4 class="text-sm font-semibold text-gray-900 mb-2">Benefits from tasks</h4>
-            <p class="text-xs text-gray-500 mt-0.5 mb-3">Read-only list. Edit benefits in Tasks &amp; Expectations. Add benefits to display groups (1–5) for the collapsed view and Dashboard; same metric only per group.</p>
+            <p class="text-xs text-gray-500 mt-0.5 mb-3">Read-only list. Edit benefits in Tasks &amp; Expectations. Add benefits to display groups for the collapsed view and Dashboard; same metric only per group.</p>
             <div v-if="allBenefitRows.length === 0" class="text-xs text-gray-500 italic py-3 bg-gray-50 rounded-md">
               No task-level benefits yet. Add tasks and benefits in Tasks &amp; Expectations.
             </div>
@@ -534,10 +534,33 @@
 
             <!-- Display groups in collapsed view: preview of what appears when collapsed -->
             <div class="mt-6 pt-4 border-t border-gray-200">
-              <h4 class="text-sm font-semibold text-gray-900 mb-2">Display groups in collapsed view</h4>
-              <p class="text-xs text-gray-500 mt-0.5 mb-3">Groups 1–5 appear in the project collapsed view with metric and value (first benefit). Assign benefits above using the number buttons.</p>
+              <div class="flex items-center justify-between gap-2 mb-2">
+                <h4 class="text-sm font-semibold text-gray-900">Display groups in collapsed view</h4>
+                <div class="flex items-center gap-1">
+                  <button
+                    type="button"
+                    :disabled="(benefitDisplay.displayGroupCount ?? 5) <= MIN_DISPLAY_GROUPS"
+                    @click="setDisplayGroupCount(-1)"
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    title="Decrease number of display groups"
+                  >
+                    −
+                  </button>
+                  <span class="text-xs text-gray-500 min-w-[4rem] text-center">{{ displayGroupSlotIds.length }} group{{ displayGroupSlotIds.length === 1 ? '' : 's' }}</span>
+                  <button
+                    type="button"
+                    :disabled="(benefitDisplay.displayGroupCount ?? 5) >= MAX_DISPLAY_GROUPS"
+                    @click="setDisplayGroupCount(1)"
+                    class="inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
+                    title="Increase number of display groups"
+                  >
+                    +
+                  </button>
+                </div>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5 mb-3">Groups appear in the project collapsed view with metric and value. Assign benefits above using the number buttons.</p>
               <div v-if="displayGroupLinesForCollapsed.length === 0" class="text-xs text-gray-500 italic py-2 bg-gray-50 rounded-md">
-                No display groups yet. Use the 1–5 buttons on benefit rows above to add benefits to groups.
+                No display groups yet. Use the number buttons on benefit rows above to add benefits to groups.
               </div>
               <div v-else class="space-y-1.5">
                 <div
@@ -663,8 +686,31 @@ function benefitTypeBadgeClass(type: string): string {
   return classes[type] || 'bg-gray-100 text-gray-700'
 }
 
-// Fixed display group slots: buttons 1, 2, 3, 4, 5
-const displayGroupSlotIds = [1, 2, 3, 4, 5]
+const MIN_DISPLAY_GROUPS = 1
+const MAX_DISPLAY_GROUPS = 15
+const DEFAULT_DISPLAY_GROUP_COUNT = 5
+
+const displayGroupSlotIds = computed(() => {
+  const count = benefitDisplay.value.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT
+  const n = Math.max(MIN_DISPLAY_GROUPS, Math.min(MAX_DISPLAY_GROUPS, count))
+  return Array.from({ length: n }, (_, i) => i + 1)
+})
+
+function setDisplayGroupCount(delta: number): void {
+  const current = benefitDisplay.value.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT
+  const next = Math.max(MIN_DISPLAY_GROUPS, Math.min(MAX_DISPLAY_GROUPS, current + delta))
+  if (next === current) return
+  let groups = [...(benefitDisplay.value.displayGroups || [])]
+  if (next < current) {
+    groups = groups.filter((g) => g.id <= next)
+  }
+  benefitDisplay.value = {
+    ...benefitDisplay.value,
+    displayGroups: groups,
+    displayGroupCount: next,
+  }
+  markChangedSinceImport()
+}
 
 function getGroupBySlotId(slotId: number): BenefitDisplayGroup | undefined {
   return benefitDisplay.value.displayGroups.find((g) => g.id === slotId)
@@ -722,7 +768,7 @@ function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
   const existing = groups.find((g) => g.id === slotId)
   if (existing) {
     existing.benefitRefs.push(ref)
-    benefitDisplay.value = { displayGroups: [...groups] }
+    benefitDisplay.value = { ...benefitDisplay.value, displayGroups: [...groups] }
     markChangedSinceImport()
     return
   }
@@ -732,7 +778,7 @@ function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
     metricId: row.benefit.metricId,
     benefitRefs: [ref],
   })
-  benefitDisplay.value = { displayGroups: [...benefitDisplay.value.displayGroups] }
+  benefitDisplay.value = { ...benefitDisplay.value, displayGroups: [...benefitDisplay.value.displayGroups] }
   markChangedSinceImport()
 }
 
@@ -746,7 +792,7 @@ function removeFromDisplayGroup(row: BenefitRow): void {
       ),
     }))
     .filter((g) => g.benefitRefs.length > 0)
-  benefitDisplay.value = { displayGroups: next }
+  benefitDisplay.value = { ...benefitDisplay.value, displayGroups: next }
   markChangedSinceImport()
 }
 

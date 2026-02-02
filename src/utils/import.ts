@@ -608,7 +608,10 @@ export async function importROCrateFromZip(file: File): Promise<ImportROCrateRes
         const content = await benefitDisplayFile.async('string')
         const parsed = JSON.parse(content)
         if (parsed && Array.isArray(parsed.displayGroups)) {
-          benefitDisplay = { displayGroups: parsed.displayGroups }
+          benefitDisplay = {
+            displayGroups: parsed.displayGroups,
+            displayGroupCount: parsed.displayGroupCount,
+          }
         }
       } catch (error) {
         console.warn('Failed to parse benefit-display.json:', error)

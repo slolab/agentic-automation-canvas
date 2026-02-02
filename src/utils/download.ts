@@ -70,7 +70,10 @@ export async function downloadROCrateZip(
   // Add ro-crate-metadata.json
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
 
-  if (benefitDisplay?.displayGroups?.length) {
+  const hasBenefitDisplay =
+    (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
+    (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
+  if (hasBenefitDisplay) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
 
@@ -104,7 +107,10 @@ export async function buildROCrateZipBuffer(
 ): Promise<ArrayBuffer> {
   const zip = new JSZip()
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
-  if (benefitDisplay?.displayGroups?.length) {
+  const hasBenefitDisplay =
+    (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
+    (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
+  if (hasBenefitDisplay) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
   const readme = generateReadme(rocrate, projectName)

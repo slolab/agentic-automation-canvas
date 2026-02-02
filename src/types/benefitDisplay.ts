@@ -17,4 +17,6 @@ export interface BenefitDisplayGroup {
 
 export interface BenefitDisplayState {
   displayGroups: BenefitDisplayGroup[]
+  /** Number of display group slots (1–N). Default 5 when omitted. */
+  displayGroupCount?: number
 }

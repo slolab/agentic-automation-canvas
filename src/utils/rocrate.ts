@@ -859,7 +859,10 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   }
 
   // Add benefit-display.json as first-class file entity if present (UI display groups)
-  if (options?.benefitDisplay?.displayGroups?.length) {
+  const hasBenefitDisplay =
+    (options?.benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
+    (options?.benefitDisplay?.displayGroupCount != null && options.benefitDisplay.displayGroupCount !== 5)
+  if (hasBenefitDisplay) {
     const benefitDisplayFileId = 'benefit-display.json'
     hasPart.push({ '@id': benefitDisplayFileId })
     const benefitDisplayFileEntity: ROCrateEntity = {
