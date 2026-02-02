@@ -35,3 +35,6 @@ mkdocs.yml.tmp
 # uv
 .venv/
 # Note: uv.lock should be committed (not ignored) for reproducible builds
+
+# Local PR / release notes (copy into GitHub PR or keep for reference)
+PR_DESCRIPTION.md
