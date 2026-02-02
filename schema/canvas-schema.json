@@ -16,10 +16,6 @@
       "format": "date",
       "description": "Date when the version was downloaded or created (ISO date format)"
     },
-    "isImported": {
-      "type": "boolean",
-      "description": "Indicates whether the form was imported from an ROcrate (true) or created from scratch (false)"
-    },
     "persons": {
       "type": "array",
       "description": "Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents.",
@@ -56,20 +52,15 @@
         "leadOrganization": { "type": "string" },
         "projectId": { "type": "string", "format": "uri" },
         "headlineValue": { "type": "string" },
-        "aggregateBenefitValue": {
+        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
+        "roughEstimateValue": {
           "type": "number",
           "minimum": 0,
-          "description": "Numeric value of the aggregate benefit metric for the project"
+          "description": "Optional manual estimate of project-level benefit value when getting started (before task-level benefits)"
         },
-        "aggregateBenefitUnit": {
+        "roughEstimateUnit": {
           "type": "string",
-          "description": "Unit or description of the benefit metric (e.g., 'hours/month', '% error reduction', 'incidents prevented/month', 'capabilities enabled')"
-        },
-        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
-        "aggregateBenefits": {
-          "type": "array",
-          "description": "Structured aggregate benefits across all requirements, supporting multiple benefit types",
-          "items": { "$ref": "#/$defs/AggregateBenefit" }
+          "description": "Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month')"
         },
         "version": {
           "type": "string",
@@ -375,7 +366,7 @@
   },
   "$defs": {
     "BenefitValue": {
-      "description": "A benefit value that can be numeric, categorical, binary, or a 3-point estimate",
+      "description": "A benefit value: numeric, categorical, or binary",
       "oneOf": [
         {
           "type": "object",
@@ -400,16 +391,6 @@
             "bool": { "type": "boolean" }
           },
           "required": ["type", "bool"]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "type": { "const": "threePoint" },
-            "best": { "type": "number" },
-            "likely": { "type": "number" },
-            "worst": { "type": "number" }
-          },
-          "required": ["type", "best", "likely", "worst"]
         }
       ]
     },
@@ -478,54 +459,6 @@
         }
       },
       "required": ["benefitType", "metricId", "metricLabel", "direction", "valueMeaning", "benefitUnit", "baseline", "expected"]
-    },
-    "AggregateBenefit": {
-      "type": "object",
-      "description": "An aggregate benefit summary for the project",
-      "properties": {
-        "benefitType": {
-          "type": "string",
-          "enum": ["time", "quality", "risk", "enablement"],
-          "description": "Type of benefit"
-        },
-        "metricId": {
-          "type": "string",
-          "description": "Identifier for the aggregated metric"
-        },
-        "aggregationBasis": {
-          "type": "string",
-          "enum": ["perUnit", "perMonth", "oneOff"],
-          "description": "How the aggregate value is expressed"
-        },
-        "unit": {
-          "type": "string",
-          "description": "Unit for the aggregate value"
-        },
-        "value": {
-          "oneOf": [
-            { "type": "number" },
-            { "type": "string" },
-            { "type": "boolean" }
-          ],
-          "description": "The aggregate value (numeric, categorical string, or boolean)"
-        },
-        "method": {
-          "type": "string",
-          "enum": ["computed", "manualOverride"],
-          "description": "Whether this aggregate was computed from individual benefits or manually overridden"
-        },
-        "rationale": {
-          "type": "string",
-          "description": "Explanation for manual overrides or computation methodology"
-        }
-      },
-      "required": ["benefitType", "metricId", "aggregationBasis", "unit", "value", "method"],
-      "if": {
-        "properties": { "method": { "const": "manualOverride" } }
-      },
-      "then": {
-        "required": ["rationale"]
-      }
     }
   }
 }

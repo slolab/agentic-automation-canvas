@@ -4,6 +4,7 @@
  */
 
 import type { CanvasData, Benefit } from '@/types/canvas'
+import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import type { ROCrateJSONLD, ROCrateEntity } from '@/types/rocrate'
 
 /**
@@ -48,8 +49,7 @@ function validateBenefit(benefit: Benefit, requirementId: string, benefitIndex: 
     })
   }
 
-  // Note: Baseline and expected can have different types - this is valid.
-  // E.g., numeric baseline (known current value) + threePoint expected (uncertain estimate)
+  // Note: Baseline and expected can have different types (e.g. numeric, categorical, binary).
 
   return errors
 }
@@ -67,33 +67,6 @@ export function validateForExport(data: CanvasData): ExportValidationError[] {
       if (req.benefits && req.benefits.length > 0) {
         req.benefits.forEach((benefit, benefitIndex) => {
           errors.push(...validateBenefit(benefit, req.id || `${reqIndex}`, benefitIndex))
-        })
-      }
-    })
-  }
-
-  // Validate project aggregation consistency
-  if (data.project.aggregateBenefitValue !== undefined || data.project.aggregateBenefitUnit) {
-    // If scalar aggregates are present, check if structured aggregates exist
-    if (!data.project.aggregateBenefits || data.project.aggregateBenefits.length === 0) {
-      errors.push({
-        path: 'project.aggregateBenefits',
-        message: 'Scalar aggregateBenefitValue/Unit present but structured aggregateBenefits[] is empty. Consider adding structured aggregates for full semantics.',
-        severity: 'warning'
-      })
-    }
-  }
-
-  // Validate aggregateBenefits if present
-  if (data.project.aggregateBenefits) {
-    data.project.aggregateBenefits.forEach((agg, index) => {
-      const path = `project.aggregateBenefits[${index}]`
-      
-      if (agg.method === 'manualOverride' && !agg.rationale) {
-        errors.push({
-          path: `${path}.rationale`,
-          message: `Aggregate benefit with method 'manualOverride' must have a rationale`,
-          severity: 'error'
         })
       }
     })
@@ -399,10 +372,14 @@ function isValidDate(dateStr: string | undefined): boolean {
   return !isNaN(year) && year >= 1000 && year <= 3000
 }
 
+export interface GenerateROCrateOptions {
+  benefitDisplay?: BenefitDisplayState
+}
+
 /**
  * Generate RO-Crate JSON-LD from canvas data
  */
-export function generateROCrate(data: CanvasData): ROCrateJSONLD {
+export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptions): ROCrateJSONLD {
   const graph: ROCrateEntity[] = []
 
   // 1. RO-Crate Metadata File Descriptor
@@ -465,18 +442,14 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   if (data.project.headlineValue) {
     projectEntity['aac:headlineValue'] = data.project.headlineValue
   }
-  if (data.project.aggregateBenefitValue !== undefined) {
-    projectEntity['aac:aggregateBenefitValue'] = data.project.aggregateBenefitValue
-  }
-  if (data.project.aggregateBenefitUnit) {
-    projectEntity['aac:aggregateBenefitUnit'] = data.project.aggregateBenefitUnit
-  }
   if (data.project.primaryValueDriver) {
     projectEntity['aac:primaryValueDriver'] = data.project.primaryValueDriver
   }
-  // Aggregate benefits array (structured aggregation)
-  if (data.project.aggregateBenefits && data.project.aggregateBenefits.length > 0) {
-    projectEntity['aac:aggregateBenefits'] = data.project.aggregateBenefits
+  if (data.project.roughEstimateValue !== undefined) {
+    projectEntity['aac:roughEstimateValue'] = data.project.roughEstimateValue
+  }
+  if (data.project.roughEstimateUnit) {
+    projectEntity['aac:roughEstimateUnit'] = data.project.roughEstimateUnit
   }
   // Version management
   const version = data.project.version || data.version || '0.9.0'
@@ -519,7 +492,9 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     const planStepRefs: Array<{ '@id': string }> = []
 
     data.userExpectations.requirements.forEach((req, index) => {
-      const stepId = generateId('requirement', index)
+      // Preserve req.id so display-group benefitRefs resolve after import (e.g. dev crate uses req-time, req-time-2)
+      const stepId =
+        req.id && /^[\w-]+$/.test(req.id) ? `#${req.id}` : generateId('requirement', index)
       planStepRefs.push({ '@id': stepId })
 
       // Add step entity with value model - define once in graph
@@ -873,20 +848,23 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
     })
   }
 
-  // Add developer-feasibility.json as first-class file entity if present
+  // Embed developer feasibility in root dataset (first-rate membership in main graph)
   if (data.developerFeasibility && Object.keys(data.developerFeasibility).length > 0) {
-    const feasibilityFileId = 'developer-feasibility.json'
-    hasPart.push({ '@id': feasibilityFileId })
-    
-    // Add file entity to graph
-    const feasibilityFileEntity: ROCrateEntity = {
-      '@id': feasibilityFileId,
+    rootDataset['aac:developerFeasibility'] = data.developerFeasibility
+  }
+
+  // Add benefit-display.json as first-class file entity if present (UI display groups)
+  if (options?.benefitDisplay?.displayGroups?.length) {
+    const benefitDisplayFileId = 'benefit-display.json'
+    hasPart.push({ '@id': benefitDisplayFileId })
+    const benefitDisplayFileEntity: ROCrateEntity = {
+      '@id': benefitDisplayFileId,
       '@type': 'schema:File',
-      name: 'Developer Feasibility Assessment',
-      description: 'Technical feasibility assessment including Technology Readiness Level (TRL), risk assessment, and technology choices',
+      name: 'Benefit display groups',
+      description: 'UI display groups for dashboard (which benefits to show together)',
       'schema:encodingFormat': 'application/json',
     }
-    graph.push(feasibilityFileEntity)
+    graph.push(benefitDisplayFileEntity)
   }
 
   // Update root dataset hasPart

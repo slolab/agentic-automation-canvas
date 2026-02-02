@@ -6,6 +6,7 @@
 import JSZip from 'jszip'
 import type { ROCrateJSONLD, ROCrateEntity } from '@/types/rocrate'
 import type { CanvasData } from '@/types/canvas'
+import type { BenefitDisplayState } from '@/types/benefitDisplay'
 
 /**
  * Find entity by ID in RO-Crate graph
@@ -63,12 +64,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           : undefined,
       projectId: (projectEntity.identifier as string) || undefined,
       headlineValue: (projectEntity['aac:headlineValue'] as string) || undefined,
-      aggregateBenefitValue: (projectEntity['aac:aggregateBenefitValue'] as number) || undefined,
-      aggregateBenefitUnit: (projectEntity['aac:aggregateBenefitUnit'] as string) || undefined,
       primaryValueDriver: (projectEntity['aac:primaryValueDriver'] as 'time' | 'quality' | 'risk' | 'enablement') || undefined,
-      aggregateBenefits: Array.isArray(projectEntity['aac:aggregateBenefits']) 
-        ? projectEntity['aac:aggregateBenefits'] as any[]
-        : undefined,
+      roughEstimateValue: (projectEntity['aac:roughEstimateValue'] as number) ?? undefined,
+      roughEstimateUnit: (projectEntity['aac:roughEstimateUnit'] as string) || undefined,
       version: (projectEntity['aac:version'] as string) || undefined,
       versionDate: (projectEntity['aac:versionDate'] as string) || undefined,
     }
@@ -83,6 +81,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     if (!canvasData.project.versionDate && (rootDataset['aac:versionDate'] as string)) {
       canvasData.project.versionDate = rootDataset['aac:versionDate'] as string
     }
+    if (rootDataset['aac:developerFeasibility']) {
+      canvasData.developerFeasibility = rootDataset['aac:developerFeasibility'] as CanvasData['developerFeasibility']
+    }
   }
 
   // Set version at root level for consistency
@@ -93,8 +94,6 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
   const today = new Date().toISOString().split('T')[0]
   canvasData.versionDate = today
   canvasData.project.versionDate = today
-  // Set isImported flag
-  canvasData.isImported = true
 
   // Find user expectations plan (P-Plan) - handle both prefixed and non-prefixed types
   const planEntity = findEntitiesByType(graph, ['Plan', 'p-plan:Plan', 'prov:Plan'])[0]
@@ -472,7 +471,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       return false
     }
     // Exclude file entities (they're referenced but not outcomes)
-    if (entity['@id'] === 'developer-feasibility.json') {
+    if (entity['@id'] === 'benefit-display.json') {
       return false
     }
     // Exclude milestones (they're linked via hasMilestone or have aac:milestoneType)
@@ -578,7 +577,12 @@ export async function importROCrateFromJSON(rocrate: ROCrateJSONLD): Promise<Can
 /**
  * Import RO-Crate from ZIP file
  */
-export async function importROCrateFromZip(file: File): Promise<CanvasData> {
+export interface ImportROCrateResult {
+  canvasData: CanvasData
+  benefitDisplay?: BenefitDisplayState
+}
+
+export async function importROCrateFromZip(file: File): Promise<ImportROCrateResult> {
   try {
     const zip = await JSZip.loadAsync(file)
     const metadataFile = zip.file('ro-crate-metadata.json')
@@ -592,19 +596,21 @@ export async function importROCrateFromZip(file: File): Promise<CanvasData> {
 
     const canvasData = await importROCrateFromJSON(rocrate)
 
-    // Try to load developer feasibility from separate file
-    const feasibilityFile = zip.file('developer-feasibility.json')
-    if (feasibilityFile) {
+    let benefitDisplay: BenefitDisplayState | undefined
+    const benefitDisplayFile = zip.file('benefit-display.json')
+    if (benefitDisplayFile) {
       try {
-        const feasibilityContent = await feasibilityFile.async('string')
-        const feasibility = JSON.parse(feasibilityContent)
-        canvasData.developerFeasibility = feasibility
+        const content = await benefitDisplayFile.async('string')
+        const parsed = JSON.parse(content)
+        if (parsed && Array.isArray(parsed.displayGroups)) {
+          benefitDisplay = { displayGroups: parsed.displayGroups }
+        }
       } catch (error) {
-        console.warn('Failed to parse developer-feasibility.json:', error)
+        console.warn('Failed to parse benefit-display.json:', error)
       }
     }
 
-    return canvasData
+    return { canvasData, benefitDisplay }
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to import RO-Crate: ${error.message}`)

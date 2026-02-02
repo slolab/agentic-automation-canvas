@@ -86,8 +86,8 @@ const handleFileSelect = async (event: Event) => {
   isImporting.value = true
 
   try {
-    const canvasData = await importROCrateFromZip(file)
-    importFromROCrate(canvasData)
+    const result = await importROCrateFromZip(file)
+    importFromROCrate(result.canvasData, result.benefitDisplay)
     alert('RO-Crate imported successfully!')
   } catch (error) {
     alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)

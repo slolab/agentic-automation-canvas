@@ -20,7 +20,7 @@ The Agentic Automation Canvas schema is designed to capture comprehensive metada
 - **`rocrate-profile.json`**: RO-Crate profile definition specifying expected structure
 - **`mappings/`**: Detailed documentation of ontology mappings
 - **`vocabularies/`**: Controlled vocabularies and term lists
-- **`examples/`**: Example RO-Crate files for reference
+- **`examples/`**: Example JSON files for reference (canvas and RO-crate formats)
 
 ## Usage
 
@@ -83,11 +83,17 @@ The schema follows semantic versioning. Changes to the schema structure will be 
 - References persons from the centralized `persons` array
 - Used to establish project ownership and attribution
 
-**Auto-Aggregation**
-- `aggregateExpectedHoursSavedPerMonth` is automatically calculated from all requirements
-- Formula: Σ(volumePerMonth × netTimeSavedLikely / 60)
-- Where `netTimeSavedLikely = timeSavedMinutesPerUnit.likely - humanOversightMinutesPerUnit`
-- This provides a project-level summary of expected time savings
+**Rough estimate (project-level)**
+- `roughEstimateValue` and `roughEstimateUnit` provide an optional manual project-level benefit estimate for getting started (before task-level benefits are defined)
+- The schema does not store aggregate benefit values; the single source of truth is per-requirement benefits
+- The web app may compute or display aggregated values (e.g. time saved per month) for UI purposes only
+
+**Developer feasibility**
+- Developer feasibility is embedded directly in the RO-Crate root dataset (`aac:developerFeasibility`), not in a separate file
+
+**Display groups (app-only)**
+- Grouping benefits for display (e.g. by metric) is application state only, stored in `benefit-display.json` in the crate when present
+- Display groups are not part of the canvas schema; they allow the UI to show combined values (e.g. time saved per month) in the collapsed view and dashboard
 
 ### Savings Model Validation
 

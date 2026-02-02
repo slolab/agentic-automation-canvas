@@ -12,27 +12,12 @@ This section provides detailed reference documentation for all types and propert
 | `dataAccess` | object | No |  |  | — |
 | `developerFeasibility` | object | No |  |  | — |
 | `governance` | object | No |  |  | — |
-| `isImported` | boolean | No | Indicates whether the form was imported from an ROcrate (true) or created from scratch (false) |  | AAC |
 | `outcomes` | object | No |  |  | — |
 | `persons` | array of object | No | Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents. |  | — |
 | `project` | object | Yes |  |  | — |
 | `userExpectations` | object | No |  |  | — |
 | `version` | string | No | Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |
 | `versionDate` | string | No | Date when the version was downloaded or created (ISO date format) | Format: `date` | AAC |
-
-## AggregateBenefit
-
-An aggregate benefit summary for the project
-
-| Property | Type | Required | Description | Constraints | Ontology |
-|----------|------|----------|-------------|-------------|----------|
-| `aggregationBasis` | string | Yes | How the aggregate value is expressed | Enum: `perUnit`, `perMonth`, `oneOff` | AAC |
-| `benefitType` | string | Yes | Type of benefit | Enum: `time`, `quality`, `risk`, `enablement` | AAC |
-| `method` | string | Yes | Whether this aggregate was computed from individual benefits or manually overridden | Enum: `computed`, `manualOverride` | AAC |
-| `metricId` | string | Yes | Identifier for the aggregated metric |  | AAC |
-| `rationale` | string | No | Explanation for manual overrides or computation methodology |  | AAC |
-| `unit` | string | Yes | Unit for the aggregate value |  | AAC |
-| `value` | oneOf | Yes | The aggregate value (numeric, categorical string, or boolean) |  | AAC |
 
 ## Benefit
 
@@ -207,9 +192,6 @@ A benefit metric for a requirement
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `aggregateBenefitUnit` | string | No | Unit or description of the benefit metric (e.g., 'hours/month', '% error reduction', 'incidents prevented/month', 'capabilities enabled') |  | AAC |
-| `aggregateBenefitValue` | number | No | Numeric value of the aggregate benefit metric for the project | Minimum: 0 | AAC |
-| `aggregateBenefits` | array of [AggregateBenefit](#aggregatebenefit) | No | Structured aggregate benefits across all requirements, supporting multiple benefit types |  | AAC |
 | `description` | string | Yes |  | Min length: 1 | Schema.org |
 | `domain` | array of string | No |  |  | AAC |
 | `endDate` | string | No |  | Format: `date` | Schema.org |
@@ -221,6 +203,8 @@ A benefit metric for a requirement
 | `primaryValueDriver` | string | No |  | Enum: `time`, `quality`, `risk`, `enablement` | AAC |
 | `projectId` | string | No |  | Format: `uri` | Schema.org |
 | `projectStage` | string | Yes |  |  | FRAPO |
+| `roughEstimateUnit` | string | No | Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month') |  | AAC |
+| `roughEstimateValue` | number | No | Optional manual estimate of project-level benefit value when getting started (before task-level benefits) | Minimum: 0 | AAC |
 | `startDate` | string | No |  | Format: `date` | Schema.org |
 | `title` | string | Yes |  | Min length: 1 | Schema.org |
 | `version` | string | No | Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |

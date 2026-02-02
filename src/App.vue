@@ -160,7 +160,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasData } from './composables/useCanvasData'
-import { exampleData } from './data/example-data'
+import { exampleData, exampleBenefitDisplay } from './data/example-data'
 import { generateROCrate, validateForExport, hasBlockingErrors } from './utils/rocrate'
 import { downloadROCrateZip } from './utils/download'
 import CanvasForm from './components/CanvasForm.vue'
@@ -168,13 +168,13 @@ import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
 import InfoOverlay from './components/InfoOverlay.vue'
 
-const { canvasData, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
+const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 const baseUrl = import.meta.env.BASE_URL || '/'
 
 const loadExample = () => {
   if (confirm('This will replace your current data with an example dataset. Continue?')) {
-    importFromROCrate(exampleData)
+    importFromROCrate(exampleData, exampleBenefitDisplay)
   }
 }
 
@@ -281,7 +281,7 @@ const downloadROCrate = async () => {
   }
 
   try {
-    const rocrate = generateROCrate(canvasData.value)
+    const rocrate = generateROCrate(canvasData.value, { benefitDisplay: benefitDisplay.value })
     
     // Validate RO-Crate structure: check for null values
     const nullValues: string[] = []
@@ -317,7 +317,7 @@ const downloadROCrate = async () => {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'agentic-automation-project'
     
-    await downloadROCrateZip(rocrate, projectName, canvasData.value)
+    await downloadROCrateZip(rocrate, projectName, canvasData.value, benefitDisplay.value)
   } catch (error) {
     alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
     console.error('RO-Crate generation error:', error)

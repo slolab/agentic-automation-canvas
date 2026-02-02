@@ -4,6 +4,8 @@
 
 import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
+import type { BenefitDisplayState } from '@/types/benefitDisplay'
+import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
 
@@ -16,8 +18,13 @@ const canvasData = ref<CanvasData>({
   },
   version: '0.9.0',
   versionDate: new Date().toISOString().split('T')[0],
-  isImported: false,
 })
+
+// App-only: version at last import, for "increment version" reminder (not in schema)
+const lastImportedVersion = ref<string | null>(null)
+
+// App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
+const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
 
 // Load from localStorage on init
 const loadFromStorage = () => {
@@ -35,9 +42,6 @@ const loadFromStorage = () => {
         const today = new Date().toISOString().split('T')[0]
         canvasData.value.versionDate = today
         canvasData.value.project.versionDate = today
-      }
-      if (canvasData.value.isImported === undefined) {
-        canvasData.value.isImported = false
       }
     }
   } catch (error) {
@@ -237,8 +241,9 @@ export function useCanvasData() {
       outcomes: undefined,
       version: '0.9.0',
       versionDate: new Date().toISOString().split('T')[0],
-      isImported: false,
     }
+    lastImportedVersion.value = null
+    benefitDisplay.value = { displayGroups: [] }
     localStorage.removeItem(STORAGE_KEY)
   }
 
@@ -255,9 +260,8 @@ export function useCanvasData() {
     }
   }
 
-  const importFromROCrate = (data: CanvasData) => {
+  const importFromROCrate = (data: CanvasData, importedBenefitDisplay?: BenefitDisplayState) => {
     // Deep copy the data to ensure reactivity works properly
-    // Use Object.assign to ensure Vue's reactivity system picks up the change
     const newData = JSON.parse(JSON.stringify(data))
     // Clear existing data first to ensure watchers trigger
     canvasData.value = {
@@ -267,10 +271,6 @@ export function useCanvasData() {
         projectStage: '',
       },
     }
-    // Set isImported flag and ensure version fields are set
-    if (newData.isImported === undefined) {
-      newData.isImported = true
-    }
     // Sync version between project and root level
     if (newData.project?.version && !newData.version) {
       newData.version = newData.project.version
@@ -278,12 +278,16 @@ export function useCanvasData() {
       newData.project.version = newData.version
     }
     // Always set versionDate to today's date when importing (download date)
-    // This ensures the download date is always recorded
     const today = new Date().toISOString().split('T')[0]
     newData.versionDate = today
     newData.project.versionDate = today
-    // Then set the new data - this ensures watchers see the change
     canvasData.value = newData
+    lastImportedVersion.value = newData.project?.version ?? newData.version ?? null
+    if (importedBenefitDisplay) {
+      benefitDisplay.value = importedBenefitDisplay
+    } else {
+      benefitDisplay.value = { displayGroups: [] }
+    }
   }
 
   // Validation functions
@@ -315,17 +319,13 @@ export function useCanvasData() {
       errors.push({ field: 'project.projectStage', message: 'Project stage is required', severity: 'error' })
     }
 
-    // Version management validation: recommend incrementing version if imported
-    if (canvasData.value.isImported && project.version) {
-      // Check if version hasn't changed from imported version
-      const importedVersion = canvasData.value.version || project.version
-      if (project.version === importedVersion) {
-        errors.push({
-          field: 'project.version',
-          message: 'It is recommended to increment the version when modifying an imported canvas. See https://semver.org/ for guidance.',
-          severity: 'warning',
-        })
-      }
+    // Version management validation: recommend incrementing version if just imported (app state)
+    if (lastImportedVersion.value != null && project.version && project.version === lastImportedVersion.value) {
+      errors.push({
+        field: 'project.version',
+        message: 'It is recommended to increment the version when modifying an imported canvas. See https://semver.org/ for guidance.',
+        severity: 'warning',
+      })
     }
 
     return errors
@@ -363,13 +363,11 @@ export function useCanvasData() {
       if (!req.benefits || req.benefits.length === 0) {
         errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
       } else {
-        // Check for time benefit and validate net savings
+        // Check for time benefit and validate net savings (baseline − expected − oversight)
         const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
         if (timeBenefit && req.humanOversightMinutesPerUnit !== undefined) {
-          const expected = timeBenefit.expected
-          const likelyValue = expected.type === 'threePoint' ? expected.likely : 
-                             expected.type === 'numeric' ? expected.value : 0
-          const netTimeSaved = likelyValue - req.humanOversightMinutesPerUnit
+          const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+          const netTimeSaved = savedPerUnit - req.humanOversightMinutesPerUnit
           if (netTimeSaved <= 0) {
             errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
           }
@@ -521,10 +519,10 @@ export function useCanvasData() {
       total++
       if (data.project.headlineValue?.trim()) completed++
     }
-    // Check aggregate benefit fields
-    if (data.project.aggregateBenefitValue !== undefined || data.project.aggregateBenefitUnit !== undefined) {
+    // Check rough estimate fields (manual estimate when getting started)
+    if (data.project.roughEstimateValue !== undefined || data.project.roughEstimateUnit !== undefined) {
       total++
-      if (data.project.aggregateBenefitValue !== undefined && data.project.aggregateBenefitValue !== null) {
+      if (data.project.roughEstimateValue !== undefined && data.project.roughEstimateValue !== null) {
         completed++
       }
     }
@@ -778,6 +776,8 @@ export function useCanvasData() {
 
   return {
     canvasData,
+    lastImportedVersion,
+    benefitDisplay,
     updateProject,
     updatePersons,
     updateUserExpectations,

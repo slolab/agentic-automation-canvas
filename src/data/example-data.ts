@@ -4,6 +4,7 @@
  */
 
 import type { CanvasData } from '@/types/canvas'
+import type { BenefitDisplayState } from '@/types/benefitDisplay'
 
 export const exampleData: CanvasData = {
   // Centralized Person management
@@ -31,41 +32,14 @@ export const exampleData: CanvasData = {
     keywords: ['automation', 'document processing', 'AI', 'workflow'],
     projectId: 'https://example.org/projects/doc-processing-2024',
     headlineValue: 'Saves time through automated document processing',
-    aggregateBenefitValue: 40,
-    aggregateBenefitUnit: 'hours/month',
     primaryValueDriver: 'time',
-    aggregateBenefits: [
-      {
-        benefitType: 'time',
-        metricId: 'timeSavedTotal',
-        aggregationBasis: 'perMonth',
-        unit: 'hours/month',
-        value: 40,
-        method: 'computed',
-      },
-      {
-        benefitType: 'quality',
-        metricId: 'errorRateReduction',
-        aggregationBasis: 'perMonth',
-        unit: '% reduction',
-        value: 80,
-        method: 'computed',
-      },
-      {
-        benefitType: 'risk',
-        metricId: 'complianceIncidentsReduction',
-        aggregationBasis: 'perMonth',
-        unit: 'incidents prevented/month',
-        value: 2.5,
-        method: 'computed',
-      },
-    ],
+    roughEstimateValue: 40,
+    roughEstimateUnit: 'hours/month',
     version: '1.2.8',
     versionDate: '2024-06-15',
   },
   version: '1.2.8',
   versionDate: '2024-06-15',
-  isImported: false, // Example data is not imported, it's loaded as example
   userExpectations: {
     requirements: [
       {
@@ -81,14 +55,14 @@ export const exampleData: CanvasData = {
         benefits: [
           {
             benefitType: 'time',
-            metricId: 'timeSaved',
-            metricLabel: 'Time Saved',
-            direction: 'increaseIsBetter',
-            valueMeaning: 'delta',
+            metricId: 'processingTime',
+            metricLabel: 'Processing time',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 8 },
-            expected: { type: 'threePoint', best: 7, likely: 6, worst: 5 },
+            expected: { type: 'numeric', value: 2 },
             confidenceUser: 'high',
             confidenceDev: 'medium',
             assumptions: 'Documents are mostly standardized formats. Complex documents may require more oversight.',
@@ -136,14 +110,14 @@ export const exampleData: CanvasData = {
         benefits: [
           {
             benefitType: 'time',
-            metricId: 'timeSaved',
-            metricLabel: 'Time Saved',
-            direction: 'increaseIsBetter',
-            valueMeaning: 'delta',
+            metricId: 'processingTime',
+            metricLabel: 'Processing time',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 3 },
-            expected: { type: 'threePoint', best: 2.5, likely: 2, worst: 1.5 },
+            expected: { type: 'numeric', value: 1 },
             confidenceUser: 'medium',
             confidenceDev: 'medium',
             assumptions: 'Document types are well-defined and distinguishable',
@@ -176,14 +150,14 @@ export const exampleData: CanvasData = {
         benefits: [
           {
             benefitType: 'time',
-            metricId: 'timeSaved',
-            metricLabel: 'Time Saved',
-            direction: 'increaseIsBetter',
-            valueMeaning: 'delta',
+            metricId: 'processingTime',
+            metricLabel: 'Processing time',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 2 },
-            expected: { type: 'threePoint', best: 1.8, likely: 1.5, worst: 1 },
+            expected: { type: 'numeric', value: 0.5 },
             confidenceUser: 'high',
             confidenceDev: 'high',
             assumptions: 'Routing rules are clear and can be automated',
@@ -419,4 +393,44 @@ export const exampleData: CanvasData = {
       },
     ],
   },
+}
+
+/** Default display groups for the example: time, quality, quality, risk, enablement (1–5). */
+export const exampleBenefitDisplay: BenefitDisplayState = {
+  displayGroups: [
+    {
+      id: 1,
+      benefitType: 'time',
+      metricId: 'processingTime',
+      benefitRefs: [
+        { requirementId: 'req-1', benefitIndex: 0 },
+        { requirementId: 'req-2', benefitIndex: 0 },
+        { requirementId: 'req-3', benefitIndex: 0 },
+      ],
+    },
+    {
+      id: 2,
+      benefitType: 'quality',
+      metricId: 'errorRate',
+      benefitRefs: [{ requirementId: 'req-1', benefitIndex: 1 }],
+    },
+    {
+      id: 3,
+      benefitType: 'quality',
+      metricId: 'reworkRate',
+      benefitRefs: [{ requirementId: 'req-2', benefitIndex: 1 }],
+    },
+    {
+      id: 4,
+      benefitType: 'risk',
+      metricId: 'complianceIncidents',
+      benefitRefs: [{ requirementId: 'req-1', benefitIndex: 2 }],
+    },
+    {
+      id: 5,
+      benefitType: 'enablement',
+      metricId: 'newCapability',
+      benefitRefs: [{ requirementId: 'req-3', benefitIndex: 1 }],
+    },
+  ],
 }
