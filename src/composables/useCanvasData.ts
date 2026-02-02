@@ -4,6 +4,7 @@
 
 import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
+import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
 
@@ -363,13 +364,11 @@ export function useCanvasData() {
       if (!req.benefits || req.benefits.length === 0) {
         errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
       } else {
-        // Check for time benefit and validate net savings
+        // Check for time benefit and validate net savings (baseline − expected − oversight)
         const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
         if (timeBenefit && req.humanOversightMinutesPerUnit !== undefined) {
-          const expected = timeBenefit.expected
-          const likelyValue = expected.type === 'threePoint' ? expected.likely : 
-                             expected.type === 'numeric' ? expected.value : 0
-          const netTimeSaved = likelyValue - req.humanOversightMinutesPerUnit
+          const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+          const netTimeSaved = savedPerUnit - req.humanOversightMinutesPerUnit
           if (netTimeSaved <= 0) {
             errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
           }

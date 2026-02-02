@@ -375,7 +375,7 @@
   },
   "$defs": {
     "BenefitValue": {
-      "description": "A benefit value that can be numeric, categorical, binary, or a 3-point estimate",
+      "description": "A benefit value: numeric, categorical, or binary",
       "oneOf": [
         {
           "type": "object",
@@ -400,16 +400,6 @@
             "bool": { "type": "boolean" }
           },
           "required": ["type", "bool"]
-        },
-        {
-          "type": "object",
-          "properties": {
-            "type": { "const": "threePoint" },
-            "best": { "type": "number" },
-            "likely": { "type": "number" },
-            "worst": { "type": "number" }
-          },
-          "required": ["type", "best", "likely", "worst"]
         }
       ]
     },
@@ -481,7 +471,7 @@
     },
     "AggregateBenefit": {
       "type": "object",
-      "description": "An aggregate benefit summary for the project",
+      "description": "An aggregate benefit summary for the project. When computed from requirements, value is baseline → expected (first occurrence per metric); user interprets the delta.",
       "properties": {
         "benefitType": {
           "type": "string",

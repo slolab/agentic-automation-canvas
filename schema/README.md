@@ -20,7 +20,7 @@ The Agentic Automation Canvas schema is designed to capture comprehensive metada
 - **`rocrate-profile.json`**: RO-Crate profile definition specifying expected structure
 - **`mappings/`**: Detailed documentation of ontology mappings
 - **`vocabularies/`**: Controlled vocabularies and term lists
-- **`examples/`**: Example RO-Crate files for reference
+- **`examples/`**: Example JSON files for reference (canvas and RO-crate formats)
 
 ## Usage
 

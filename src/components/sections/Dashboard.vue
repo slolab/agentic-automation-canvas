@@ -189,7 +189,8 @@
 import { computed } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { Requirement, Benefit, BenefitValue } from '@/types/canvas'
+import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import type { Requirement, Benefit } from '@/types/canvas'
 
 const { canvasData } = useCanvasData()
 
@@ -206,21 +207,15 @@ function getTimeBenefit(req: Requirement): Benefit | undefined {
   return (req.benefits || []).find(b => b.benefitType === 'time')
 }
 
-// Helper to get likely value from a BenefitValue
-function getExpectedLikely(value: BenefitValue): number {
-  if (value.type === 'threePoint') return value.likely
-  if (value.type === 'numeric') return value.value
-  return 0
-}
 
-// Calculate total time saved per month (from time benefits)
+// Calculate total time saved per month (baseline − expected) × volume
 const totalMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
-    const timeSaved = getExpectedLikely(timeBenefit.expected)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
     const volume = req.volumePerMonth || 0
-    return total + (timeSaved * volume)
+    return total + (savedPerUnit * volume)
   }, 0)
 })
 
@@ -228,15 +223,15 @@ const totalHoursSavedPerMonth = computed(() => {
   return Math.round((totalMinutesSavedPerMonth.value / 60) * 10) / 10
 })
 
-// Calculate net time saved (after oversight)
+// Calculate net time saved (saved per unit − oversight) × volume
 const netMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
-    const timeSaved = getExpectedLikely(timeBenefit.expected)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
     const oversight = req.humanOversightMinutesPerUnit || 0
     const volume = req.volumePerMonth || 0
-    const netSaved = timeSaved - oversight
+    const netSaved = Math.max(0, savedPerUnit - oversight)
     return total + (netSaved * volume)
   }, 0)
 })
@@ -302,17 +297,15 @@ function formatDate(dateStr: string): string {
 function getBaselineMinutes(req: Requirement): number {
   const timeBenefit = getTimeBenefit(req)
   if (!timeBenefit) return 0
-  
   const baseline = timeBenefit.baseline
   if (baseline.type === 'numeric') return baseline.value
-  if (baseline.type === 'threePoint') return baseline.likely
   return 0
 }
 
 function getTimeSavedMinutes(req: Requirement): number {
   const timeBenefit = getTimeBenefit(req)
   if (!timeBenefit) return 0
-  return getExpectedLikely(timeBenefit.expected)
+  return getTimeSavedPerUnit(timeBenefit)
 }
 
 function getNetTimeSaved(req: Requirement): number {

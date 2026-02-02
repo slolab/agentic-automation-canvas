@@ -92,3 +92,22 @@ export async function downloadROCrateZip(
   document.body.removeChild(link)
   URL.revokeObjectURL(url)
 }
+
+/**
+ * Build RO-Crate ZIP as ArrayBuffer (for use in scripts or server-side).
+ * Same contents as downloadROCrateZip but returns the buffer instead of triggering a download.
+ */
+export async function buildROCrateZipBuffer(
+  rocrate: ROCrateJSONLD,
+  projectName: string,
+  canvasData?: CanvasData
+): Promise<ArrayBuffer> {
+  const zip = new JSZip()
+  zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
+  if (canvasData?.developerFeasibility && Object.keys(canvasData.developerFeasibility).length > 0) {
+    zip.file('developer-feasibility.json', JSON.stringify(canvasData.developerFeasibility, null, 2))
+  }
+  const readme = generateReadme(rocrate, projectName)
+  zip.file('README.md', readme)
+  return zip.generateAsync({ type: 'arraybuffer' })
+}

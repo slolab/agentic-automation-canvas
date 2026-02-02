@@ -56,10 +56,10 @@
       "aac:aggregateBenefits": [
         {
           "benefitType": "time",
-          "metricId": "timeSavedTotal",
-          "aggregationBasis": "perMonth",
-          "unit": "hours/month",
-          "value": 10,
+          "metricId": "processingTime",
+          "aggregationBasis": "perUnit",
+          "unit": "minutes",
+          "value": "10 → 5",
           "method": "computed"
         },
         {
@@ -103,14 +103,14 @@
       "aac:benefits": [
         {
           "benefitType": "time",
-          "metricId": "timeSaved",
-          "metricLabel": "Time Saved",
-          "direction": "increaseIsBetter",
-          "valueMeaning": "delta",
+          "metricId": "processingTime",
+          "metricLabel": "Processing time",
+          "direction": "decreaseIsBetter",
+          "valueMeaning": "absolute",
           "aggregationBasis": "perUnit",
           "benefitUnit": "minutes",
           "baseline": { "type": "numeric", "value": 10 },
-          "expected": { "type": "threePoint", "best": 8, "likely": 5, "worst": 1 },
+          "expected": { "type": "numeric", "value": 5 },
           "confidenceUser": "high",
           "confidenceDev": "medium",
           "assumptions": "Assumes standard data formats and no major edge cases"

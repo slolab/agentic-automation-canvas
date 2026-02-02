@@ -55,6 +55,20 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="valueDriverIconPath" />
                   </svg>
                   {{ aggregatedValueDisplay }}
+                  <span
+                    v-if="benefitDisplaySource === 'tasks'"
+                    class="text-gray-500 font-normal text-xs"
+                    title="Calculated from task-level benefits"
+                  >
+                    (from tasks)
+                  </span>
+                  <span
+                    v-else-if="benefitDisplaySource === 'estimate'"
+                    class="text-gray-400 font-normal text-xs"
+                    title="Manual rough estimate; add task benefits to show calculated value"
+                  >
+                    (rough estimate)
+                  </span>
                 </span>
               </div>
               <div v-if="localDomains.length > 0 || localKeywords.length > 0" class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
@@ -448,127 +462,131 @@
               />
             </FormField>
           </div>
+          <p class="text-xs text-gray-500 mt-1">
+            The project header shows one benefit metric: when you have task-level time benefits, the header uses the <strong>calculated total from tasks</strong>; otherwise it shows your <strong>rough estimate</strong> above.
+          </p>
 
-          <!-- Aggregate Benefits Section -->
+          <!-- Aggregate Benefits Section: always four panels (tag left, content middle, override right) -->
           <div class="mt-6 pt-4 border-t border-gray-200">
-            <div class="flex items-center justify-between mb-3">
-              <div>
-                <h4 class="text-sm font-semibold text-gray-900">Structured Aggregate Benefits</h4>
-                <p class="text-xs text-gray-500 mt-0.5">Optional structured aggregates for analytics and reporting</p>
-              </div>
-              <button
-                type="button"
-                @click="addAggregateBenefit"
-                class="btn-secondary text-xs"
-              >
-                Add Aggregate
-              </button>
+            <div class="mb-3">
+              <h4 class="text-sm font-semibold text-gray-900">Structured Aggregate Benefits</h4>
+              <p class="text-xs text-gray-500 mt-0.5">Filled from task-level benefits. Use Override when the true aggregate differs (e.g. overlapping savings).</p>
             </div>
             
-            <div v-if="!localAggregateBenefits.length" class="text-xs text-gray-400 italic py-2">
-              No structured aggregates. The scalar Benefit Value/Unit above serves as the primary headline metric.
-            </div>
-            
-            <div v-else class="space-y-3">
+            <div class="space-y-2.5">
               <div
-                v-for="(agg, index) in localAggregateBenefits"
-                :key="index"
-                class="border border-gray-200 rounded-md p-3 bg-gray-50"
+                v-for="row in aggregateBenefitRows"
+                :key="row.metricId ? `${row.benefitType}-${row.metricId}` : row.benefitType"
+                class="flex text-xs bg-gray-50 rounded-md border border-gray-200 min-h-[2.5rem] py-1.5 px-2 gap-2 items-center"
               >
-                <div class="flex items-start justify-between mb-2">
-                  <span class="text-xs font-medium text-gray-700">Aggregate {{ index + 1 }}</span>
-                  <button
-                    type="button"
-                    @click="removeAggregateBenefit(index)"
-                    class="text-red-500 hover:text-red-700 text-xs"
+                <!-- Left: tag (rounded corners, margin from container) -->
+                <div class="flex-shrink-0 flex items-stretch ml-1 my-0.5">
+                  <span
+                    class="rounded-md flex items-center justify-center px-2 min-h-[2rem] capitalize font-medium text-xs w-20"
+                    :class="row.present ? aggregateBenefitTypeBadgeClass(row.benefitType) : 'bg-gray-200 text-gray-400'"
                   >
-                    Remove
-                  </button>
+                    {{ row.benefitType }}
+                  </span>
                 </div>
-                
-                <div class="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <label class="form-label text-xs">Benefit Type</label>
-                    <select
-                      v-model="agg.benefitType"
-                      class="form-input text-xs py-1"
-                      @change="updateAggregateBenefits"
-                    >
-                      <option value="time">Time</option>
-                      <option value="quality">Quality</option>
-                      <option value="risk">Risk</option>
-                      <option value="enablement">Enablement</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label class="form-label text-xs">Metric ID</label>
-                    <input
-                      v-model="agg.metricId"
-                      type="text"
-                      class="form-input text-xs py-1"
-                      placeholder="e.g., timeSavedTotal"
-                      @blur="updateAggregateBenefits"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label class="form-label text-xs">Aggregation Basis</label>
-                    <select
-                      v-model="agg.aggregationBasis"
-                      class="form-input text-xs py-1"
-                      @change="updateAggregateBenefits"
-                    >
-                      <option value="perUnit">Per Unit</option>
-                      <option value="perMonth">Per Month</option>
-                      <option value="oneOff">One-off</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label class="form-label text-xs">Unit</label>
-                    <input
-                      v-model="agg.unit"
-                      type="text"
-                      class="form-input text-xs py-1"
-                      placeholder="e.g., hours/month"
-                      @blur="updateAggregateBenefits"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label class="form-label text-xs">Value</label>
-                    <input
-                      v-model="agg.value"
-                      type="text"
-                      class="form-input text-xs py-1"
-                      placeholder="e.g., 40"
-                      @blur="updateAggregateBenefits"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label class="form-label text-xs">Method</label>
-                    <select
-                      v-model="agg.method"
-                      class="form-input text-xs py-1"
-                      @change="updateAggregateBenefits"
-                    >
-                      <option value="computed">Computed</option>
-                      <option value="manualOverride">Manual Override</option>
-                    </select>
-                  </div>
+                <!-- Middle: content (metric label + value, or "Not a benefit") -->
+                <div class="flex-1 py-1 px-2 text-gray-600 flex flex-col justify-center min-w-0">
+                  <template v-if="!row.agg">
+                    <span class="italic text-gray-500">Not a benefit of the current plan.</span>
+                    <span class="text-gray-500 text-xs mt-0.5">Add in Tasks &amp; Expectations.</span>
+                  </template>
+                  <template v-else-if="row.agg.method === 'computed'">
+                    <span v-if="getMetricLabel(row.benefitType, row.metricId)" class="text-gray-700 text-xs">{{ getMetricLabel(row.benefitType, row.metricId) }}:</span>
+                    <span class="font-medium text-gray-900">{{ formatAggregateValueDisplay(row.agg.value, row.agg.unit) }}</span>
+                    <span class="text-gray-500 text-xs">from tasks. Modify in Tasks &amp; Expectations.</span>
+                  </template>
+                  <template v-else>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                      <div>
+                        <label class="form-label text-xs">Metric ID</label>
+                        <input
+                          :value="getOverride(row.benefitType, row.metricId)?.metricId"
+                          type="text"
+                          class="form-input text-xs py-1"
+                          placeholder="e.g., processingTime"
+                          @input="updateOverride(row.benefitType, row.metricId!, 'metricId', ($event.target as HTMLInputElement).value)"
+                        />
+                      </div>
+                      <div>
+                        <label class="form-label text-xs">Aggregation Basis</label>
+                        <select
+                          :value="getOverride(row.benefitType, row.metricId)?.aggregationBasis"
+                          class="form-input text-xs py-1"
+                          @change="updateOverride(row.benefitType, row.metricId!, 'aggregationBasis', ($event.target as HTMLSelectElement).value)"
+                        >
+                          <option value="perUnit">Per Unit</option>
+                          <option value="perMonth">Per Month</option>
+                          <option value="oneOff">One-off</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="form-label text-xs">Unit</label>
+                        <input
+                          :value="getOverride(row.benefitType, row.metricId)?.unit"
+                          type="text"
+                          class="form-input text-xs py-1"
+                          placeholder="e.g., hours/month"
+                          @input="updateOverride(row.benefitType, row.metricId!, 'unit', ($event.target as HTMLInputElement).value)"
+                        />
+                      </div>
+                      <div>
+                        <label class="form-label text-xs">Value</label>
+                        <input
+                          :value="getOverride(row.benefitType, row.metricId)?.value"
+                          type="text"
+                          class="form-input text-xs py-1"
+                          placeholder="e.g., 40"
+                          @input="updateOverride(row.benefitType, row.metricId!, 'value', ($event.target as HTMLInputElement).value)"
+                        />
+                      </div>
+                    </div>
+                    <div class="mt-2">
+                      <label class="form-label text-xs">Rationale (required for manual override)</label>
+                      <textarea
+                        :value="getOverride(row.benefitType, row.metricId)?.rationale"
+                        rows="2"
+                        class="form-input text-xs py-1"
+                        placeholder="Explain why this value was manually set"
+                        @input="updateOverride(row.benefitType, row.metricId!, 'rationale', ($event.target as HTMLTextAreaElement).value)"
+                      />
+                    </div>
+                  </template>
                 </div>
-                
-                <div v-if="agg.method === 'manualOverride'" class="mt-2">
-                  <label class="form-label text-xs">Rationale (required for manual override)</label>
-                  <textarea
-                    v-model="agg.rationale"
-                    rows="2"
-                    class="form-input text-xs py-1"
-                    placeholder="Explain why this value was manually set"
-                    @blur="updateAggregateBenefits"
-                  />
+                <!-- Right: override button -->
+                <div class="flex-shrink-0 flex items-center pr-2">
+                  <template v-if="!row.agg">
+                    <button
+                      type="button"
+                      class="btn-secondary text-xs"
+                      title="Add a manual value for this benefit type"
+                      @click="addOverrideForType(row.benefitType, null)"
+                    >
+                      Override
+                    </button>
+                  </template>
+                  <template v-else-if="row.agg.method === 'computed'">
+                    <button
+                      type="button"
+                      class="btn-secondary text-xs"
+                      title="Set a manual value for this aggregate"
+                      @click="addOverrideForType(row.benefitType, row.metricId)"
+                    >
+                      Override
+                    </button>
+                  </template>
+                  <template v-else>
+                    <button
+                      type="button"
+                      @click="removeOverride(row.benefitType, row.metricId!)"
+                      class="text-red-500 hover:text-red-700 text-xs"
+                    >
+                      Remove override
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -584,8 +602,11 @@ import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { ProjectDefinition, Requirement, AggregateBenefit } from '@/types/canvas'
+import type { ProjectDefinition, Requirement, AggregateBenefit, BenefitValue } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { computeAggregateBenefitsFromRequirements, getEffectiveAggregateBenefits } from '@/utils/aggregateBenefits'
+import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import { getMetricDisplayLabel, formatAggregateValueDisplay } from '@/data/benefitMetrics'
 
 const { canvasData, updateProject, validateProject: validateProjectFn } = useCanvasData()
 
@@ -632,9 +653,10 @@ const initKeywords = () => {
 const localDomains = ref<Array<{ value: string }>>(initDomains())
 const localKeywords = ref<Array<{ value: string }>>(initKeywords())
 
-// Initialize aggregate benefits
+// Manual overrides only (single ground truth: computed aggregates come from tasks)
 const initAggregateBenefits = (): AggregateBenefit[] => {
-  return canvasData.value.project.aggregateBenefits || []
+  const stored = canvasData.value.project.aggregateBenefits || []
+  return stored.filter((a) => a.method === 'manualOverride')
 }
 const localAggregateBenefits = ref<AggregateBenefit[]>(initAggregateBenefits())
 
@@ -642,32 +664,99 @@ const localAggregateBenefits = ref<AggregateBenefit[]>(initAggregateBenefits())
 let isLocalUpdate = false
 let isSyncingFromCanvas = false
 
-// Aggregate benefits management
-function addAggregateBenefit() {
+// Effective list: computed from tasks + overrides, keyed by (benefitType, metricId) so each metric is separate
+const benefitTypeOrder = ['time', 'quality', 'risk', 'enablement'] as const
+const effectiveAggregateBenefits = computed(() => getEffectiveAggregateBenefits(canvasData.value))
+
+// Sections by benefit type; each section has 0+ entries (one per metric). When 0 entries, one placeholder row "Not a benefit".
+const aggregateBenefitPanels = computed(() => {
+  const effective = effectiveAggregateBenefits.value
+  return benefitTypeOrder.map((benefitType) => {
+    const entries = effective.filter((a) => a.benefitType === benefitType)
+    return { benefitType, entries }
+  })
+})
+
+// Flatten to rows: one row per metric, or one "Not a benefit" row per type when no metrics
+const aggregateBenefitRows = computed(() => {
+  const rows: { benefitType: string; metricId: string | null; agg: AggregateBenefit | null; present: boolean }[] = []
+  for (const section of aggregateBenefitPanels.value) {
+    if (section.entries.length === 0) {
+      rows.push({ benefitType: section.benefitType, metricId: null, agg: null, present: false })
+    } else {
+      for (const agg of section.entries) {
+        rows.push({ benefitType: section.benefitType, metricId: agg.metricId, agg, present: true })
+      }
+    }
+  }
+  return rows
+})
+
+// Display label for a metric (central mapping; no raw metricId in UI)
+function getMetricLabel(benefitType: string, metricId: string | null): string {
+  return getMetricDisplayLabel(benefitType, metricId)
+}
+
+// Benefit type badge colours (match task collapsed view / RequirementItem)
+function aggregateBenefitTypeBadgeClass(type: string): string {
+  const classes: Record<string, string> = {
+    time: 'bg-green-100 text-green-700',
+    quality: 'bg-blue-100 text-blue-700',
+    risk: 'bg-orange-100 text-orange-700',
+    enablement: 'bg-purple-100 text-purple-700',
+  }
+  return classes[type] || 'bg-gray-100 text-gray-700'
+}
+
+// Add manual override for a specific (benefitType, metricId). metricId null = "Not a benefit" row → use default id.
+function addOverrideForType(benefitType: string, metricId: string | null) {
+  const id = metricId ?? `${benefitType}ManualOverride`
+  if (localAggregateBenefits.value.some((o) => o.benefitType === benefitType && o.metricId === id)) return
+  const computedList = computeAggregateBenefitsFromRequirements(canvasData.value)
+  const existing = computedList.find((c) => c.benefitType === benefitType && c.metricId === id)
   localAggregateBenefits.value.push({
-    benefitType: 'time',
-    metricId: '',
-    aggregationBasis: 'perMonth',
-    unit: '',
-    value: 0,
-    method: 'computed',
+    benefitType: benefitType as AggregateBenefit['benefitType'],
+    metricId: existing?.metricId ?? id,
+    aggregationBasis: existing?.aggregationBasis ?? 'perMonth',
+    unit: existing?.unit ?? '',
+    value: existing?.value ?? 0,
+    method: 'manualOverride',
+    rationale: '',
   })
   updateAggregateBenefits()
 }
 
-function removeAggregateBenefit(index: number) {
-  localAggregateBenefits.value.splice(index, 1)
+function getOverride(benefitType: string, metricId: string | null): AggregateBenefit | undefined {
+  if (!metricId) return undefined
+  return localAggregateBenefits.value.find((o) => o.benefitType === benefitType && o.metricId === metricId)
+}
+
+function updateOverride(benefitType: string, metricId: string, field: keyof AggregateBenefit, value: string | number) {
+  const i = localAggregateBenefits.value.findIndex((o) => o.benefitType === benefitType && o.metricId === metricId)
+  if (i < 0) return
+  const next = { ...localAggregateBenefits.value[i], [field]: value }
+  if (field === 'value' && typeof value === 'string' && !isNaN(Number(value))) {
+    next.value = Number(value)
+  } else if (field === 'value') {
+    next.value = value as number
+  }
+  localAggregateBenefits.value[i] = next
+  updateAggregateBenefits()
+}
+
+function removeOverride(benefitType: string, metricId: string) {
+  localAggregateBenefits.value = localAggregateBenefits.value.filter(
+    (o) => !(o.benefitType === benefitType && o.metricId === metricId)
+  )
   updateAggregateBenefits()
 }
 
 async function updateAggregateBenefits() {
   if (isSyncingFromCanvas) return
-  
   isLocalUpdate = true
-  // Convert values to appropriate types
-  const benefits = localAggregateBenefits.value.map(agg => ({
+  const benefits = localAggregateBenefits.value.map((agg) => ({
     ...agg,
-    value: isNaN(Number(agg.value)) ? agg.value : Number(agg.value)
+    value: typeof agg.value === 'string' && !isNaN(Number(agg.value)) ? Number(agg.value) : agg.value,
   }))
   updateProject({
     aggregateBenefits: benefits.length > 0 ? benefits : undefined,
@@ -692,19 +781,16 @@ function formatDate(dateStr: string): string {
   }
 }
 
-// Format task time saved for display
+// Format task time saved for display (baseline − expected) × volume
 function getTaskTimeSaved(task: Requirement): string | null {
-  // Find time benefit from benefits array
   const timeBenefit = (task.benefits || []).find(b => b.benefitType === 'time')
   if (!timeBenefit) return null
   
-  const expected = timeBenefit.expected
-  const likely = expected.type === 'threePoint' ? expected.likely : 
-                 expected.type === 'numeric' ? expected.value : 0
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
   const volume = task.volumePerMonth
   
-  if (likely && volume) {
-    const totalMinutes = likely * volume
+  if (savedPerUnit > 0 && volume) {
+    const totalMinutes = savedPerUnit * volume
     if (totalMinutes >= 60) {
       const hours = Math.floor(totalMinutes / 60)
       const mins = Math.round(totalMinutes % 60)
@@ -721,6 +807,26 @@ function getTaskBenefitTypes(task: Requirement): string[] {
   return Array.from(types)
 }
 
+// --- Single ground truth: task-level benefits drive project-level display when available ---
+// Computed benefit from tasks: time saved = (baseline − expected) × volume summed
+const computedBenefitFromTasks = computed<{ value: number; unit: string; source: 'tasks' } | null>(() => {
+  if (localData.value.primaryValueDriver !== 'time') return null
+  const reqs = canvasData.value.userExpectations?.requirements || []
+  let totalMinutes = 0
+  for (const req of reqs) {
+    const timeBenefit = (req.benefits || []).find(b => b.benefitType === 'time')
+    if (!timeBenefit) continue
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+    const volume = req.volumePerMonth || 0
+    totalMinutes += savedPerUnit * volume
+  }
+  if (totalMinutes <= 0) return null
+  if (totalMinutes >= 60) {
+    const hours = Math.round((totalMinutes / 60) * 10) / 10
+    return { value: hours, unit: 'hours/month', source: 'tasks' }
+  }
+  return { value: Math.round(totalMinutes), unit: 'minutes/month', source: 'tasks' }
+})
 
 // Dynamic benefit field configuration based on primary value driver
 const benefitValueHelpText = computed(() => {
@@ -813,30 +919,36 @@ const benefitUnitTooltip = computed(() => {
   }
 })
 
-// Display benefit metric in collapsed view
+// Display benefit metric in collapsed view: prefer computed from tasks when available (single ground truth)
 const displayBenefitMetric = computed(() => {
+  const fromTasks = computedBenefitFromTasks.value
+  if (fromTasks) {
+    return `${fromTasks.value} ${fromTasks.unit}`
+  }
   const value = localData.value.aggregateBenefitValue
   const unit = localData.value.aggregateBenefitUnit
-  
-  if (value === undefined || value === null) {
-    return ''
-  }
-  
-  if (unit) {
-    return `${value} ${unit}`
-  }
+  if (value === undefined || value === null) return ''
+  if (unit) return `${value} ${unit}`
   return String(value)
+})
+
+// Whether the displayed benefit comes from task aggregation (ground truth) or manual rough estimate
+const benefitDisplaySource = computed<'tasks' | 'estimate' | null>(() => {
+  if (computedBenefitFromTasks.value) return 'tasks'
+  const value = localData.value.aggregateBenefitValue
+  if (value !== undefined && value !== null) return 'estimate'
+  return null
 })
 
 // Aggregated value display: headline value + benefit metric
 const aggregatedValueDisplay = computed(() => {
   const headline = localData.value.headlineValue
   const benefit = displayBenefitMetric.value
-  
+
   if (!headline && !benefit) return ''
   if (!headline) return benefit
   if (!benefit) return headline
-  
+
   return `${headline}: ${benefit}`
 })
 
@@ -893,8 +1005,8 @@ watch(
       // Sync domain and keywords arrays
       localDomains.value = (newProject.domain || []).map((d: string) => ({ value: d }))
       localKeywords.value = (newProject.keywords || []).map((k: string) => ({ value: k }))
-      // Sync aggregate benefits
-      localAggregateBenefits.value = newProject.aggregateBenefits || []
+      // Sync manual overrides only (computed are derived from tasks)
+      localAggregateBenefits.value = (newProject.aggregateBenefits || []).filter((a) => a.method === 'manualOverride')
       // Reset flag after syncing
       nextTick(() => {
         isSyncingFromCanvas = false

@@ -284,10 +284,10 @@
               <span :class="benefitTypeBadgeClass(benefit.benefitType)" class="px-2 py-1 rounded text-xs font-medium">
                 {{ benefit.benefitType.charAt(0).toUpperCase() + benefit.benefitType.slice(1) }}
               </span>
-              <span class="text-sm font-medium text-gray-900">{{ benefit.metricLabel }}</span>
+              <span class="text-sm font-medium text-gray-900">{{ getMetricDisplayLabel(benefit.benefitType, benefit.metricId, benefit.metricLabel) || benefit.metricLabel }}</span>
             </div>
             <div class="text-sm text-gray-600">
-              {{ formatBenefitValue(benefit) }}
+              {{ formatBenefitValueDisplay(benefit) }}
             </div>
           </div>
         </div>
@@ -310,6 +310,8 @@ import FormField from './FormField.vue'
 import BenefitsModal from './BenefitsModal.vue'
 import type { Requirement, Benefit, BenefitValue } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
+import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 
 interface Props {
   requirement: Requirement
@@ -341,34 +343,27 @@ const timeBenefit = computed(() => {
   return benefits.value.find(b => b.benefitType === 'time')
 })
 
-// Calculate maximum total time saved across all tasks for normalization
+// Calculate maximum total time saved across all tasks for normalization (baseline − expected) × volume
 const maxTotalTimeSaved = computed(() => {
   if (allRequirements.value.length === 0) return 0
   return Math.max(...allRequirements.value.map(req => {
     const timeBen = (req.benefits || []).find(b => b.benefitType === 'time')
     if (!timeBen) return 0
-    const timeSaved = getExpectedLikely(timeBen.expected)
+    const savedPerUnit = getTimeSavedPerUnit(timeBen)
     const volume = req.volumePerMonth || 0
-    return timeSaved * volume
+    return savedPerUnit * volume
   }))
 })
-
-// Get likely value from expected (for time benefits)
-function getExpectedLikely(expected: BenefitValue): number {
-  if (expected.type === 'threePoint') return expected.likely
-  if (expected.type === 'numeric') return expected.value
-  return 0
-}
 
 // Get net savings percentage (green bar)
 function getNetSavingsPercentage(): number {
   if (maxTotalTimeSaved.value === 0) return 0
   if (!timeBenefit.value) return 0
   
-  const timeSaved = getExpectedLikely(timeBenefit.value.expected)
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value)
   const oversight = props.requirement.humanOversightMinutesPerUnit || 0
   const volume = props.requirement.volumePerMonth || 0
-  const netTimeSaved = Math.max(0, timeSaved - oversight) * volume
+  const netTimeSaved = Math.max(0, savedPerUnit - oversight) * volume
   return Math.round((netTimeSaved / maxTotalTimeSaved.value) * 100)
 }
 
@@ -381,15 +376,15 @@ function getOversightPercentage(): number {
   return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 
-// Format time saved text for collapsed view
+// Format time saved text for collapsed view (baseline − expected) × volume
 const timeSavedText = computed(() => {
   if (!timeBenefit.value) return null
   
-  const likely = getExpectedLikely(timeBenefit.value.expected)
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value)
   const volume = props.requirement.volumePerMonth
   
-  if (likely && volume) {
-    const totalMinutes = likely * volume
+  if (savedPerUnit > 0 && volume) {
+    const totalMinutes = savedPerUnit * volume
     if (totalMinutes >= 60) {
       const hours = Math.floor(totalMinutes / 60)
       const mins = Math.round(totalMinutes % 60)
@@ -409,26 +404,6 @@ function benefitTypeBadgeClass(type: string): string {
     'enablement': 'bg-purple-100 text-purple-700'
   }
   return classes[type] || 'bg-gray-100 text-gray-700'
-}
-
-// Format benefit value for display
-function formatBenefitValue(benefit: Benefit): string {
-  const baseline = formatValue(benefit.baseline)
-  const expected = formatValue(benefit.expected)
-  return `${baseline} → ${expected} ${benefit.benefitUnit}`
-}
-
-function formatValue(value: BenefitValue): string {
-  switch (value.type) {
-    case 'numeric':
-      return String(value.value)
-    case 'categorical':
-      return value.category.charAt(0).toUpperCase() + value.category.slice(1)
-    case 'binary':
-      return value.bool ? 'Yes' : 'No'
-    case 'threePoint':
-      return `${value.likely} (${value.worst}-${value.best})`
-  }
 }
 
 // Open benefits modal

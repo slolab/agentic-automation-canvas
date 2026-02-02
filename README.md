@@ -30,11 +30,11 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 
 ## Quick Start
 
-### Using the Web Application
-
 Visit the [live application](https://slolab.github.io/agentic-automation-canvas/) to start filling out your canvas.
 
-### Development Setup
+## Development
+
+### Setup
 
 1. **Clone the repository**
    ```bash
@@ -51,7 +51,7 @@ Visit the [live application](https://slolab.github.io/agentic-automation-canvas/
    uv sync
    ```
 
-3. **Development**
+3. **Run development servers**
    ```bash
    # Start Vue app development server
    npm run dev
@@ -77,6 +77,10 @@ Visit the [live application](https://slolab.github.io/agentic-automation-canvas/
    # Vue app: http://localhost:4173/agentic-automation-canvas/
    # Documentation: http://localhost:4173/agentic-automation-canvas/docs/
    ```
+
+### Dev RO-Crate
+
+Build a dev aid zip with every benefit metric represented once: `npm run build:dev-rocrate`. Output is `tools/dev-all-benefits.rocrate.zip`; upload it in the app to test display and aggregation.
 
 ## Project Structure
 

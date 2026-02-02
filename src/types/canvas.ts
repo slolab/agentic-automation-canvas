@@ -45,12 +45,11 @@ export interface UserExpectations {
   stakeholders?: Stakeholder[]
 }
 
-// Benefit value types - supports numeric, categorical, binary, and 3-point estimates
+// Benefit value types - numeric, categorical, or binary
 export type BenefitValue =
   | { type: 'numeric'; value: number }
   | { type: 'categorical'; category: 'low' | 'medium' | 'high' }
   | { type: 'binary'; bool: boolean }
-  | { type: 'threePoint'; best: number; likely: number; worst: number }
 
 // Benefit interpretation direction
 export type BenefitDirection = 'increaseIsBetter' | 'decreaseIsBetter' | 'targetIsBetter' | 'boolIsBetter'

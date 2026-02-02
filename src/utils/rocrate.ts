@@ -4,6 +4,7 @@
  */
 
 import type { CanvasData, Benefit } from '@/types/canvas'
+import { getEffectiveAggregateBenefits } from '@/utils/aggregateBenefits'
 import type { ROCrateJSONLD, ROCrateEntity } from '@/types/rocrate'
 
 /**
@@ -48,8 +49,7 @@ function validateBenefit(benefit: Benefit, requirementId: string, benefitIndex: 
     })
   }
 
-  // Note: Baseline and expected can have different types - this is valid.
-  // E.g., numeric baseline (known current value) + threePoint expected (uncertain estimate)
+  // Note: Baseline and expected can have different types (e.g. numeric, categorical, binary).
 
   return errors
 }
@@ -72,13 +72,13 @@ export function validateForExport(data: CanvasData): ExportValidationError[] {
     })
   }
 
-  // Validate project aggregation consistency
+  // Validate project aggregation consistency (effective = computed from tasks + manual overrides)
   if (data.project.aggregateBenefitValue !== undefined || data.project.aggregateBenefitUnit) {
-    // If scalar aggregates are present, check if structured aggregates exist
-    if (!data.project.aggregateBenefits || data.project.aggregateBenefits.length === 0) {
+    const effective = getEffectiveAggregateBenefits(data)
+    if (effective.length === 0) {
       errors.push({
         path: 'project.aggregateBenefits',
-        message: 'Scalar aggregateBenefitValue/Unit present but structured aggregateBenefits[] is empty. Consider adding structured aggregates for full semantics.',
+        message: 'Scalar benefit value/unit set but no aggregate benefits (add task-level benefits or manual overrides).',
         severity: 'warning'
       })
     }
@@ -474,9 +474,10 @@ export function generateROCrate(data: CanvasData): ROCrateJSONLD {
   if (data.project.primaryValueDriver) {
     projectEntity['aac:primaryValueDriver'] = data.project.primaryValueDriver
   }
-  // Aggregate benefits array (structured aggregation)
-  if (data.project.aggregateBenefits && data.project.aggregateBenefits.length > 0) {
-    projectEntity['aac:aggregateBenefits'] = data.project.aggregateBenefits
+  // Aggregate benefits: effective list (computed from tasks + manual overrides)
+  const effectiveAggregates = getEffectiveAggregateBenefits(data)
+  if (effectiveAggregates.length > 0) {
+    projectEntity['aac:aggregateBenefits'] = effectiveAggregates
   }
   // Version management
   const version = data.project.version || data.version || '0.9.0'
