@@ -308,7 +308,7 @@
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
 import BenefitsModal from './BenefitsModal.vue'
-import type { Requirement, Benefit, BenefitValue } from '@/types/canvas'
+import type { Requirement, Benefit } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'

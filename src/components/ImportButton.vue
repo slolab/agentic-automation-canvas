@@ -53,7 +53,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, nextTick } from 'vue'
+import { ref } from 'vue'
 import { importROCrateFromZip } from '@/utils/import'
 import { useCanvasData } from '@/composables/useCanvasData'
 

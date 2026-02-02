@@ -20,7 +20,7 @@ function timeBenefit(baselineMin: number, expectedMin: number) {
   }
 }
 
-function qualityBenefit(display: string) {
+function qualityBenefit() {
   return {
     benefitType: 'quality' as const,
     metricId: 'errorRate',
@@ -89,7 +89,7 @@ describe('formatDisplayGroupValue', () => {
 
   it('non-time single benefit → one value', () => {
     const reqs: Requirement[] = [
-      req('r1', 0, [qualityBenefit('10%')]),
+      req('r1', 0, [qualityBenefit()]),
     ]
     const group: BenefitDisplayGroup = {
       id: 0,
@@ -101,9 +101,9 @@ describe('formatDisplayGroupValue', () => {
   })
 
   it('non-time multiple benefits → comma-separated list', () => {
-    const b1 = qualityBenefit('x')
+    const b1 = qualityBenefit()
     const b2 = {
-      ...qualityBenefit('y'),
+      ...qualityBenefit(),
       baseline: { type: 'numeric' as const, value: 20 },
       expected: { type: 'numeric' as const, value: 5 },
     }

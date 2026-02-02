@@ -994,14 +994,6 @@ const displayBenefitMetric = computed(() => {
   return String(value)
 })
 
-// Whether the displayed benefit comes from task calculation or manual rough estimate
-const benefitDisplaySource = computed<'tasks' | 'estimate' | null>(() => {
-  if (computedBenefitFromTasks.value) return 'tasks'
-  const value = localData.value.roughEstimateValue
-  if (value !== undefined && value !== null) return 'estimate'
-  return null
-})
-
 // Aggregated value display: headline value + benefit metric (for rough-estimate-only collapsed view)
 const aggregatedValueDisplay = computed(() => {
   const headline = localData.value.headlineValue

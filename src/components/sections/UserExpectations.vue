@@ -54,7 +54,6 @@
 
 <script setup lang="ts">
 import { ref, watch, nextTick } from 'vue'
-import FormField from '../FormField.vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import RequirementItem from '../RequirementItem.vue'
 import StakeholderItem from '../StakeholderItem.vue'

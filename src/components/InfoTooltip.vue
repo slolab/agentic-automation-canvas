@@ -56,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { ref, onMounted, onUnmounted, nextTick, watch } from 'vue'
 
 const savedScrollPosition = ref(0)
 
@@ -173,10 +173,6 @@ const calculateBestPosition = async () => {
   }
   
   actualPosition.value = bestPosition
-  
-  // Calculate tooltip position using fixed positioning (relative to viewport)
-  const triggerCenterX = triggerRect.left + triggerRect.width / 2
-  const triggerCenterY = triggerRect.top + triggerRect.height / 2
   
   let left = 0
   let top = 0

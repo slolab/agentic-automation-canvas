@@ -65,7 +65,7 @@ function humanizeMetricId(id: string): string {
   return id
     .replace(/([A-Z])/g, ' $1')
     .replace(/^./, (s) => s.toUpperCase())
-    .replace(/[_\-]/g, ' ')
+    .replace(/[_-]/g, ' ')
     .trim()
 }
 

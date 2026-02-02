@@ -223,9 +223,6 @@ const governanceStages = computed(() => canvasData.value.governance?.stages || [
 
 const taskCount = computed(() => requirements.value.length)
 
-// Alias for clarity - requirements are tasks
-const tasks = computed(() => requirements.value)
-
 // Resolve display groups to task names + aggregated value + per-benefit display
 const displayGroupsWithBenefits = computed(() => {
   const reqs = requirements.value
@@ -372,15 +369,6 @@ const maxTotalTimeSaved = computed(() => {
     return timeSaved * volume
   }))
 })
-
-// Get total savings percentage (full bar width)
-function getTotalSavingsPercentage(req: Requirement): number {
-  if (maxTotalTimeSaved.value === 0) return 0
-  const timeSaved = getTimeSavedMinutes(req)
-  const volume = req.volumePerMonth || 0
-  const totalTimeSaved = timeSaved * volume
-  return Math.round((totalTimeSaved / maxTotalTimeSaved.value) * 100)
-}
 
 // Get net savings percentage (green bar)
 function getNetSavingsPercentage(req: Requirement): number {
