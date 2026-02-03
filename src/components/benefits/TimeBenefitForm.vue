@@ -2,7 +2,7 @@
   <div class="space-y-4">
     <div class="flex items-center justify-between gap-4">
       <p class="text-sm text-gray-600 flex-1">
-        Track time savings from automation. Use 3-point estimates (best/likely/worst) for expected savings.
+        Track task duration before and after automation. Baseline = duration before; expected = duration after. Time savings can be derived as (baseline − expected) × volume.
       </p>
       <button
         @click="addBenefit"
@@ -43,9 +43,8 @@
             class="form-input"
             @change="handleMetricChange(index, ($event.target as HTMLSelectElement).value)"
           >
-            <option value="timeSaved">Time Saved</option>
-            <option value="processingTime">Processing Time Reduction</option>
-            <option value="cycleTime">Cycle Time Improvement</option>
+            <option value="processingTime">Processing time</option>
+            <option value="cycleTime">Cycle time</option>
             <option value="custom">Custom</option>
           </select>
         </div>
@@ -88,55 +87,28 @@
 
       <!-- Baseline -->
       <div>
-        <label class="form-label">Baseline (Current Time)</label>
+        <label class="form-label">Baseline (task duration before automation)</label>
         <input
           :value="getNumericValue(benefit.baseline)"
           type="number"
           min="0"
           class="form-input"
-          placeholder="Minutes currently spent"
+          placeholder="e.g. minutes per unit"
           @input="updateBenefit(index, { baseline: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
         />
       </div>
 
-      <!-- Expected (3-point estimate) -->
+      <!-- Expected -->
       <div>
-        <label class="form-label">Expected Time Saved (3-point estimate)</label>
-        <div class="grid grid-cols-3 gap-2">
-          <div>
-            <label class="text-xs text-gray-500">Best Case</label>
-            <input
-              :value="getThreePointValue(benefit.expected, 'best')"
-              type="number"
-              min="0"
-              class="form-input"
-              placeholder="Best"
-              @input="updateThreePoint(index, 'best', ($event.target as HTMLInputElement).value)"
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500">Likely</label>
-            <input
-              :value="getThreePointValue(benefit.expected, 'likely')"
-              type="number"
-              min="0"
-              class="form-input"
-              placeholder="Likely"
-              @input="updateThreePoint(index, 'likely', ($event.target as HTMLInputElement).value)"
-            />
-          </div>
-          <div>
-            <label class="text-xs text-gray-500">Worst Case</label>
-            <input
-              :value="getThreePointValue(benefit.expected, 'worst')"
-              type="number"
-              min="0"
-              class="form-input"
-              placeholder="Worst"
-              @input="updateThreePoint(index, 'worst', ($event.target as HTMLInputElement).value)"
-            />
-          </div>
-        </div>
+        <label class="form-label">Expected (task duration after automation)</label>
+        <input
+          :value="getNumericValue(benefit.expected)"
+          type="number"
+          min="0"
+          class="form-input"
+          placeholder="e.g. minutes per unit"
+          @input="updateBenefit(index, { expected: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
+        />
       </div>
 
       <!-- Confidence -->
@@ -176,7 +148,7 @@
           :value="benefit.assumptions || ''"
           rows="2"
           class="form-input"
-          placeholder="Key assumptions underlying the time savings estimate"
+          placeholder="Key assumptions underlying the duration estimate"
           @input="updateBenefit(index, { assumptions: ($event.target as HTMLTextAreaElement).value || undefined })"
         />
       </div>
@@ -211,10 +183,9 @@ interface MetricDefaults {
 }
 
 const metricDefaults: Record<string, MetricDefaults> = {
-  'timeSaved': { label: 'Time Saved', direction: 'increaseIsBetter', valueMeaning: 'delta' },
-  'processingTime': { label: 'Processing Time Reduction', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
-  'cycleTime': { label: 'Cycle Time Improvement', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
-  'custom': { label: '', direction: 'increaseIsBetter', valueMeaning: 'delta' }
+  'processingTime': { label: 'Processing time', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
+  'cycleTime': { label: 'Cycle time', direction: 'decreaseIsBetter', valueMeaning: 'absolute' },
+  'custom': { label: '', direction: 'decreaseIsBetter', valueMeaning: 'absolute' }
 }
 
 function getMetricLabel(metricId: string): string {
@@ -227,17 +198,17 @@ function getMetricDefaults(metricId: string): { direction: BenefitDirection; val
 }
 
 function createDefaultBenefit(): Benefit {
-  const defaults = getMetricDefaults('timeSaved')
+  const defaults = getMetricDefaults('processingTime')
   return {
     benefitType: 'time',
-    metricId: 'timeSaved',
-    metricLabel: 'Time Saved',
+    metricId: 'processingTime',
+    metricLabel: 'Processing time',
     direction: defaults.direction,
     valueMeaning: defaults.valueMeaning,
     aggregationBasis: 'perUnit',
     benefitUnit: 'minutes',
     baseline: { type: 'numeric', value: 0 },
-    expected: { type: 'threePoint', best: 0, likely: 0, worst: 0 }
+    expected: { type: 'numeric', value: 0 }
   }
 }
 
@@ -271,21 +242,6 @@ function updateBenefit(index: number, updates: Partial<Benefit>) {
 function getNumericValue(value: BenefitValue): number {
   if (value.type === 'numeric') return value.value
   return 0
-}
-
-function getThreePointValue(value: BenefitValue, key: 'best' | 'likely' | 'worst'): number {
-  if (value.type === 'threePoint') return value[key]
-  return 0
-}
-
-function updateThreePoint(index: number, key: 'best' | 'likely' | 'worst', valueStr: string) {
-  const numValue = parseFloat(valueStr) || 0
-  const current = localBenefits.value[index].expected
-  const newExpected: BenefitValue = current.type === 'threePoint' 
-    ? { ...current, [key]: numValue }
-    : { type: 'threePoint', best: 0, likely: 0, worst: 0, [key]: numValue }
-  
-  updateBenefit(index, { expected: newExpected })
 }
 
 function emitUpdate() {

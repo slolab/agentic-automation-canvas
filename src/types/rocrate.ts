@@ -44,9 +44,9 @@ export interface ProjectEntity extends ROCrateEntity {
   endDate?: string
   keywords?: string | string[]
   'aac:headlineValue'?: string
-  'aac:aggregateBenefitValue'?: number
-  'aac:aggregateBenefitUnit'?: string
   'aac:primaryValueDriver'?: 'time' | 'quality' | 'risk' | 'enablement'
+  'aac:roughEstimateValue'?: number
+  'aac:roughEstimateUnit'?: string
 }
 
 export interface PlanEntity extends ROCrateEntity {

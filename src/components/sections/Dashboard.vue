@@ -172,6 +172,28 @@
       </div>
     </div>
 
+    <!-- Benefit display groups (from Project Definition) -->
+    <div v-if="displayGroupsWithBenefits.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Display groups</h3>
+      <p class="text-xs text-gray-500 mb-4">Groups of benefits (same metric) for display. Define in Project Definition.</p>
+      <div class="space-y-4">
+        <div
+          v-for="group in displayGroupsWithBenefits"
+          :key="group.id"
+          class="border border-gray-200 rounded-lg p-4"
+        >
+          <h4 class="text-sm font-semibold text-gray-900 mb-2">
+            Display group {{ group.id }}: {{ group.metricLabel }} — {{ group.aggregatedValueDisplay }} ({{ group.benefits.length }} benefit{{ group.benefits.length === 1 ? '' : 's' }})
+          </h4>
+          <ul class="list-disc list-inside space-y-1 text-sm text-gray-600">
+            <li v-for="(item, idx) in group.benefits" :key="idx">
+              {{ item.taskDescription }}: {{ item.valueDisplay }}
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
     <!-- Empty State -->
     <div v-if="requirements.length === 0 && governanceStages.length === 0" class="bg-gray-50 border border-gray-200 rounded-lg p-12 text-center">
       <svg class="mx-auto h-12 w-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,38 +211,57 @@
 import { computed } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { Requirement, Benefit, BenefitValue } from '@/types/canvas'
+import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
+import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
+import type { Requirement, Benefit } from '@/types/canvas'
 
-const { canvasData } = useCanvasData()
+const { canvasData, benefitDisplay } = useCanvasData()
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 const governanceStages = computed(() => canvasData.value.governance?.stages || [])
 
 const taskCount = computed(() => requirements.value.length)
 
-// Alias for clarity - requirements are tasks
-const tasks = computed(() => requirements.value)
+// Resolve display groups to task names + aggregated value + per-benefit display
+const displayGroupsWithBenefits = computed(() => {
+  const reqs = requirements.value
+  return benefitDisplay.value.displayGroups
+    .filter((g) => g.benefitRefs.length > 0)
+    .map((group) => {
+      const metricLabel =
+        getMetricDisplayLabel(group.benefitType, group.metricId) ||
+        group.metricId ||
+        `${group.benefitType} / ${group.metricId}`
+      const aggregatedValueDisplay = formatDisplayGroupValue(group, reqs)
+      const benefits = group.benefitRefs
+        .map((ref) => {
+          const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
+          const benefit = req?.benefits?.[ref.benefitIndex]
+          if (!req || !benefit) return null
+          const taskDescription = req.description || ref.requirementId
+          const valueDisplay = formatBenefitValueDisplay(benefit)
+          return { taskDescription, valueDisplay }
+        })
+        .filter((b): b is { taskDescription: string; valueDisplay: string } => b != null)
+      return { id: group.id, metricLabel, aggregatedValueDisplay, benefits }
+    })
+})
 
 // Helper to get time benefit from a requirement
 function getTimeBenefit(req: Requirement): Benefit | undefined {
   return (req.benefits || []).find(b => b.benefitType === 'time')
 }
 
-// Helper to get likely value from a BenefitValue
-function getExpectedLikely(value: BenefitValue): number {
-  if (value.type === 'threePoint') return value.likely
-  if (value.type === 'numeric') return value.value
-  return 0
-}
 
-// Calculate total time saved per month (from time benefits)
+// Calculate total time saved per month (baseline − expected) × volume
 const totalMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
-    const timeSaved = getExpectedLikely(timeBenefit.expected)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
     const volume = req.volumePerMonth || 0
-    return total + (timeSaved * volume)
+    return total + (savedPerUnit * volume)
   }, 0)
 })
 
@@ -228,15 +269,15 @@ const totalHoursSavedPerMonth = computed(() => {
   return Math.round((totalMinutesSavedPerMonth.value / 60) * 10) / 10
 })
 
-// Calculate net time saved (after oversight)
+// Calculate net time saved (saved per unit − oversight) × volume
 const netMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
-    const timeSaved = getExpectedLikely(timeBenefit.expected)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
     const oversight = req.humanOversightMinutesPerUnit || 0
     const volume = req.volumePerMonth || 0
-    const netSaved = timeSaved - oversight
+    const netSaved = Math.max(0, savedPerUnit - oversight)
     return total + (netSaved * volume)
   }, 0)
 })
@@ -302,17 +343,15 @@ function formatDate(dateStr: string): string {
 function getBaselineMinutes(req: Requirement): number {
   const timeBenefit = getTimeBenefit(req)
   if (!timeBenefit) return 0
-  
   const baseline = timeBenefit.baseline
   if (baseline.type === 'numeric') return baseline.value
-  if (baseline.type === 'threePoint') return baseline.likely
   return 0
 }
 
 function getTimeSavedMinutes(req: Requirement): number {
   const timeBenefit = getTimeBenefit(req)
   if (!timeBenefit) return 0
-  return getExpectedLikely(timeBenefit.expected)
+  return getTimeSavedPerUnit(timeBenefit)
 }
 
 function getNetTimeSaved(req: Requirement): number {
@@ -330,15 +369,6 @@ const maxTotalTimeSaved = computed(() => {
     return timeSaved * volume
   }))
 })
-
-// Get total savings percentage (full bar width)
-function getTotalSavingsPercentage(req: Requirement): number {
-  if (maxTotalTimeSaved.value === 0) return 0
-  const timeSaved = getTimeSavedMinutes(req)
-  const volume = req.volumePerMonth || 0
-  const totalTimeSaved = timeSaved * volume
-  return Math.round((totalTimeSaved / maxTotalTimeSaved.value) * 100)
-}
 
 // Get net savings percentage (green bar)
 function getNetSavingsPercentage(req: Requirement): number {

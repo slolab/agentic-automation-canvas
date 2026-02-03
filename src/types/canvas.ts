@@ -14,7 +14,6 @@ export interface CanvasData {
   // Version management
   version?: string // Semantic version (e.g., "0.9.0")
   versionDate?: string // ISO date string when version was downloaded/created
-  isImported?: boolean // true if form was imported from ROcrate, false if created from scratch
 }
 
 export interface ProjectDefinition {
@@ -31,10 +30,9 @@ export interface ProjectDefinition {
   projectId?: string
   // Project-level value summary
   headlineValue?: string
-  aggregateBenefitValue?: number // Numeric value of the aggregate benefit metric (legacy scalar)
-  aggregateBenefitUnit?: string // Unit/description of the benefit metric (e.g., "hours/month", "% error reduction", "incidents prevented/month")
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
-  aggregateBenefits?: AggregateBenefit[] // Structured aggregates for multiple benefit types
+  roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
+  roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
   // Version management (stored at project level for ROcrate compatibility)
   version?: string // Semantic version (e.g., "0.9.0")
   versionDate?: string // ISO date string when version was downloaded/created
@@ -45,12 +43,11 @@ export interface UserExpectations {
   stakeholders?: Stakeholder[]
 }
 
-// Benefit value types - supports numeric, categorical, binary, and 3-point estimates
+// Benefit value types - numeric, categorical, or binary
 export type BenefitValue =
   | { type: 'numeric'; value: number }
   | { type: 'categorical'; category: 'low' | 'medium' | 'high' }
   | { type: 'binary'; bool: boolean }
-  | { type: 'threePoint'; best: number; likely: number; worst: number }
 
 // Benefit interpretation direction
 export type BenefitDirection = 'increaseIsBetter' | 'decreaseIsBetter' | 'targetIsBetter' | 'boolIsBetter'
@@ -73,17 +70,6 @@ export interface Benefit {
   confidenceUser?: 'low' | 'medium' | 'high'
   confidenceDev?: 'low' | 'medium' | 'high'
   assumptions?: string
-}
-
-// Aggregate benefit for project-level summaries
-export interface AggregateBenefit {
-  benefitType: 'time' | 'quality' | 'risk' | 'enablement'
-  metricId: string
-  aggregationBasis: 'perUnit' | 'perMonth' | 'oneOff'
-  unit: string
-  value: number | string | boolean
-  method: 'computed' | 'manualOverride'
-  rationale?: string // Required when method is 'manualOverride'
 }
 
 export interface Requirement {

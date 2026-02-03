@@ -50,28 +50,9 @@
       "keywords": ["AI", "biomedical", "automation", "data processing"],
       "aac:domain": ["Biomedical", "AI"],
       "aac:headlineValue": "Saves time through automated data processing",
-      "aac:aggregateBenefitValue": 10,
-      "aac:aggregateBenefitUnit": "hours/month",
       "aac:primaryValueDriver": "time",
-      "aac:aggregateBenefits": [
-        {
-          "benefitType": "time",
-          "metricId": "timeSavedTotal",
-          "aggregationBasis": "perMonth",
-          "unit": "hours/month",
-          "value": 10,
-          "method": "computed"
-        },
-        {
-          "benefitType": "quality",
-          "metricId": "errorReduction",
-          "aggregationBasis": "perMonth",
-          "unit": "% error reduction",
-          "value": 25,
-          "method": "manualOverride",
-          "rationale": "Based on pilot study comparing manual vs automated processing error rates"
-        }
-      ],
+      "aac:roughEstimateValue": 10,
+      "aac:roughEstimateUnit": "hours/month",
       "aac:version": "0.2.0",
       "aac:versionDate": "2025-01-30",
       "contributor": [
@@ -103,14 +84,14 @@
       "aac:benefits": [
         {
           "benefitType": "time",
-          "metricId": "timeSaved",
-          "metricLabel": "Time Saved",
-          "direction": "increaseIsBetter",
-          "valueMeaning": "delta",
+          "metricId": "processingTime",
+          "metricLabel": "Processing time",
+          "direction": "decreaseIsBetter",
+          "valueMeaning": "absolute",
           "aggregationBasis": "perUnit",
           "benefitUnit": "minutes",
           "baseline": { "type": "numeric", "value": 10 },
-          "expected": { "type": "threePoint", "best": 8, "likely": 5, "worst": 1 },
+          "expected": { "type": "numeric", "value": 5 },
           "confidenceUser": "high",
           "confidenceDev": "medium",
           "assumptions": "Assumes standard data formats and no major edge cases"
