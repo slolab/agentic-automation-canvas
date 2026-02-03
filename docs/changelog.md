@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Bumped AAC schema version to 0.10.1 after merging substantial schema changes.
+- New projects default to project version 0.1.0; changelog ordered latest-first; RO-Crate download filename includes project version (`name-version-rocrate.zip`); chat placeholder updated to “We are currently evaluating the need for a chatbot.”
 
 ## [0.10.0] - 2025-02-02
 
