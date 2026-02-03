@@ -84,7 +84,7 @@
           <p class="text-yellow-700 text-xs">This assistant is currently a placeholder. No LLM is connected and contextual help is not yet implemented. The assistant will always respond with the same default message regardless of your question.</p>
         </div>
         <p class="text-gray-700 font-medium">Canvas Assistant</p>
-        <p class="mt-2 text-gray-600">Full LLM integration with contextual help coming soon.</p>
+        <p class="mt-2 text-gray-600">We are currently evaluating the need for a chatbot.</p>
       </div>
       <div
         v-for="message in messages"

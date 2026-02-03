@@ -454,7 +454,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     projectEntity['aac:roughEstimateUnit'] = data.project.roughEstimateUnit
   }
   // Version management
-  const version = data.project.version || data.version || '0.9.0'
+  const version = data.project.version || data.version || '0.1.0'
   const versionDate = data.project.versionDate || data.versionDate || new Date().toISOString().split('T')[0]
   projectEntity['aac:version'] = version
   projectEntity['aac:versionDate'] = versionDate

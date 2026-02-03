@@ -12,7 +12,7 @@ export interface CanvasData {
   dataAccess?: DataAccessSensitivity
   outcomes?: OutcomesEvaluation
   // Version management
-  version?: string // Semantic version (e.g., "0.9.0")
+  version?: string // Semantic version (e.g., "0.1.0")
   versionDate?: string // ISO date string when version was downloaded/created
 }
 
@@ -34,7 +34,7 @@ export interface ProjectDefinition {
   roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
   roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
   // Version management (stored at project level for ROcrate compatibility)
-  version?: string // Semantic version (e.g., "0.9.0")
+  version?: string // Semantic version (e.g., "0.1.0")
   versionDate?: string // ISO date string when version was downloaded/created
 }
 

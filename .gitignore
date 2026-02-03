@@ -38,3 +38,4 @@ mkdocs.yml.tmp
 
 # Local PR / release notes (copy into GitHub PR or keep for reference)
 PR_DESCRIPTION.md
+PR_SUMMARY.md

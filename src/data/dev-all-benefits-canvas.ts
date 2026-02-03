@@ -22,10 +22,10 @@ export const devAllBenefitsCanvas: CanvasData = {
     primaryValueDriver: 'time',
     roughEstimateValue: 40,
     roughEstimateUnit: 'hours/month',
-    version: '0.9.0',
+    version: '0.1.0',
     versionDate: new Date().toISOString().split('T')[0],
   },
-  version: '0.9.0',
+  version: '0.1.0',
   versionDate: new Date().toISOString().split('T')[0],
   userExpectations: {
     requirements: [

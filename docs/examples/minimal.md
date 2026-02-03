@@ -14,7 +14,7 @@ The minimal example shows:
 
 ```json
 {
-  "version": "0.9.0",
+  "version": "0.1.0",
   "versionDate": "2025-01-30",
   "isImported": false,
   "project": {

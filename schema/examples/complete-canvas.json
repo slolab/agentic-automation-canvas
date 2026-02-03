@@ -1,5 +1,5 @@
 {
-  "version": "0.9.0",
+  "version": "0.1.0",
   "versionDate": "2025-01-30",
   "persons": [
     {
@@ -27,7 +27,7 @@
     "primaryValueDriver": "time",
     "roughEstimateValue": 10,
     "roughEstimateUnit": "hours/month",
-    "version": "0.9.0",
+    "version": "0.1.0",
     "versionDate": "2025-01-30"
   },
   "userExpectations": {

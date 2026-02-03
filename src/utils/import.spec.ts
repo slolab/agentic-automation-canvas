@@ -16,7 +16,7 @@ const minimalRocrateFixture: ROCrateJSONLD = {
       '@id': './',
       '@type': ['schema:Dataset', 'dcat:Dataset'],
       name: 'Crate',
-      'aac:version': '0.9.0',
+      'aac:version': '0.1.0',
       'aac:versionDate': '2025-01-01',
       about: { '@id': '#project' },
     },
@@ -25,7 +25,7 @@ const minimalRocrateFixture: ROCrateJSONLD = {
       '@type': ['schema:Project', 'schema:ResearchProject'],
       name: 'Fixture Project Title',
       description: 'Fixture description',
-      'aac:version': '0.9.0',
+      'aac:version': '0.1.0',
       'aac:versionDate': '2025-01-01',
     },
   ],
@@ -36,7 +36,7 @@ describe('parseROCrateToCanvas', () => {
     const canvasData = parseROCrateToCanvas(minimalRocrateFixture)
     expect(canvasData.project.title).toBe('Fixture Project Title')
     expect(canvasData.project.description).toBe('Fixture description')
-    expect(canvasData.project.version).toBe('0.9.0')
+    expect(canvasData.project.version).toBe('0.1.0')
   })
 
   it('graph with root + project only yields no requirements', () => {
