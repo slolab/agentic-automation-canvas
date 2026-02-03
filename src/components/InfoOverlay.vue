@@ -74,10 +74,10 @@
                   The canvas uses semantic versioning to keep your package synchronized with your implementation. Here's the recommended workflow:
                 </p>
                 <ol class="list-decimal list-inside space-y-1 ml-2">
-                  <li><strong>Create from scratch:</strong> Start a new canvas (initializes with version 0.9.0)</li>
+                  <li><strong>Create from scratch:</strong> Start a new canvas (initializes with version 0.1.0)</li>
                   <li><strong>Download:</strong> Export your canvas as an RO-Crate when you reach a milestone</li>
                   <li><strong>Upload for modification:</strong> Import a previous version of your RO-Crate to continue working</li>
-                  <li><strong>Update version:</strong> When you make changes, increment the version number (e.g., 0.9.0 → 0.9.1) to reflect the changes</li>
+                  <li><strong>Update version:</strong> When you make changes, increment the version number (e.g., 0.1.0 → 0.1.1) to reflect the changes</li>
                   <li><strong>Synchronize with implementation:</strong> Keep the canvas version aligned with your actual implementation version - when you release v1.0.0 of your system, update the canvas to v1.0.0 as well</li>
                 </ol>
                 <p class="mt-2">

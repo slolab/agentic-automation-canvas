@@ -8,7 +8,7 @@
   "properties": {
     "version": {
       "type": "string",
-      "description": "Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/).",
+      "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
       "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
     },
     "versionDate": {
@@ -64,7 +64,7 @@
         },
         "version": {
           "type": "string",
-          "description": "Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/).",
+          "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
           "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
         },
         "versionDate": {

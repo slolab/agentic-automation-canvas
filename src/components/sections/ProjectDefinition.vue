@@ -373,8 +373,8 @@
             <FormField
               id="project-version"
               label="Version"
-              help-text="Semantic version (e.g., 0.9.0). Format: MAJOR.MINOR.PATCH. See <a href='https://semver.org/' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline font-medium'>semantic versioning standards</a> for details."
-              tooltip="Use semantic versioning (MAJOR.MINOR.PATCH) to track changes: <strong>MAJOR</strong> - Breaking changes (1.0.0); <strong>MINOR</strong> - New features, backward compatible (0.9.1); <strong>PATCH</strong> - Bug fixes (0.9.1). Increment the version when you modify an imported RO-Crate. Keep it synchronized with your implementation version - when you release v1.0.0 of your system, update the canvas to v1.0.0."
+              help-text="Semantic version (e.g., 0.1.0). Format: MAJOR.MINOR.PATCH. See <a href='https://semver.org/' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline font-medium'>semantic versioning standards</a> for details."
+              tooltip="Use semantic versioning (MAJOR.MINOR.PATCH) to track changes: <strong>MAJOR</strong> - Breaking changes (1.0.0); <strong>MINOR</strong> - New features, backward compatible (0.1.1); <strong>PATCH</strong> - Bug fixes (0.1.1). Increment the version when you modify an imported RO-Crate. Keep it synchronized with your implementation version - when you release v1.0.0 of your system, update the canvas to v1.0.0."
               :error="versionError"
             >
               <input
@@ -382,7 +382,7 @@
                 v-model="localData.version"
                 type="text"
                 class="form-input"
-                placeholder="0.9.0"
+                placeholder="0.1.0"
                 pattern="^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$"
                 @blur="update"
               />
@@ -610,7 +610,7 @@ const initLocalData = (): ProjectDefinition => {
     primaryValueDriver: project.primaryValueDriver,
     roughEstimateValue: project.roughEstimateValue,
     roughEstimateUnit: project.roughEstimateUnit,
-    version: project.version || canvasData.value.version || '0.9.0',
+    version: project.version || canvasData.value.version || '0.1.0',
     versionDate: project.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],
   }
 }
@@ -1052,7 +1052,7 @@ watch(
         primaryValueDriver: newProject.primaryValueDriver,
         roughEstimateValue: newProject.roughEstimateValue,
         roughEstimateUnit: newProject.roughEstimateUnit,
-        version: newProject.version || canvasData.value.version || '0.9.0',
+        version: newProject.version || canvasData.value.version || '0.1.0',
         versionDate: newProject.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],
       }
       // Sync domain and keywords arrays

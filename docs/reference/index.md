@@ -16,7 +16,7 @@ This section provides detailed reference documentation for all types and propert
 | `persons` | array of object | No | Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents. |  | — |
 | `project` | object | Yes |  |  | — |
 | `userExpectations` | object | No |  |  | — |
-| `version` | string | No | Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |
+| `version` | string | No | Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |
 | `versionDate` | string | No | Date when the version was downloaded or created (ISO date format) | Format: `date` | AAC |
 
 ## Benefit
@@ -207,7 +207,7 @@ A benefit metric for a requirement
 | `roughEstimateValue` | number | No | Optional manual estimate of project-level benefit value when getting started (before task-level benefits) | Minimum: 0 | AAC |
 | `startDate` | string | No |  | Format: `date` | Schema.org |
 | `title` | string | Yes |  | Min length: 1 | Schema.org |
-| `version` | string | No | Semantic version of the canvas (e.g., '0.9.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |
+| `version` | string | No | Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |
 | `versionDate` | string | No | Date when the version was downloaded or created (ISO date format) | Format: `date` | AAC |
 
 ## UserExpectations

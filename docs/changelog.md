@@ -5,10 +5,45 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.1] - 2025-02-03
+
+### Changed
+- Bumped AAC schema version to 0.10.1 after merging substantial schema changes.
+
+## [0.10.0] - 2025-02-02
+
+!!! warning "Beta Release"
+    This is a **beta release**. The schema structure may change before 1.0.0.
+
+### Schema and RO-Crate
+- **Removed:** `aggregateBenefits`, `aggregateBenefitValue`, `aggregateBenefitUnit`, `isImported`
+- **Added:** Project-level `roughEstimateValue` and `roughEstimateUnit` for getting started before task-level benefits
+- Developer feasibility embedded in RO-Crate root dataset (`aac:developerFeasibility`) instead of separate file
+- Requirement IDs preserved in P-Plan step `@id` on export for display group resolution on import
+- **Added:** `aac:schemaVersion` in root dataset on export; read on import for version-mismatch warning
+
+### Display groups (app-only)
+- Display group state (`BenefitDisplayState`, `benefit-display.json`): group benefits by metric for collapsed view and dashboard
+- Configurable slot count (1–15, default 5) via +/− in display group overview; persisted in `benefit-display.json`
+- Per-benefit number buttons to add/remove from groups; same metric per group; aggregated value (time = sum saved/month; non-time = list)
+- Collapsed view: one line per display group (type tag + metric: value); Dashboard: display groups section with aggregated and per-benefit list
+- Example dataset and dev RO-Crate include default display groups for testing
+
+### Version and import UX
+- Footer: app version (from package at build time) and “Schema subject to change until v1.0 release”
+- Increment-version reminder only after first change since import; display-group edits count as change
+- Schema-version mismatch warning when importing crate with different or missing `aac:schemaVersion`; support-may-be-limited wording; “Downloading the crate again will fix this”
+
+### Docs
+- README and schema/README updated: rough estimate, no aggregate in schema, developer feasibility embedded, display groups app-only
+
 ## [0.9.0] - 2025-01-30
 
 !!! warning "Beta Release"
     This is a **beta release** for testing and feedback. The schema structure may change before 1.0.0.
+
+### Changed
+- New projects (create from scratch / clear form) are initialized with **project version** `0.1.0`. This is the canvas/project's own version field, independent of the schema version (0.9.0).
 
 ### Added
 - Initial w3id.org namespace deployment
@@ -42,33 +77,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - P-Plan for user expectations
 - FRAPO for funding and projects
 - DUO for data use restrictions
-
-## [0.10.0] - 2025-02-02
-
-!!! warning "Beta Release"
-    This is a **beta release**. The schema structure may change before 1.0.0.
-
-### Schema and RO-Crate
-- **Removed:** `aggregateBenefits`, `aggregateBenefitValue`, `aggregateBenefitUnit`, `isImported`
-- **Added:** Project-level `roughEstimateValue` and `roughEstimateUnit` for getting started before task-level benefits
-- Developer feasibility embedded in RO-Crate root dataset (`aac:developerFeasibility`) instead of separate file
-- Requirement IDs preserved in P-Plan step `@id` on export for display group resolution on import
-- **Added:** `aac:schemaVersion` in root dataset on export; read on import for version-mismatch warning
-
-### Display groups (app-only)
-- Display group state (`BenefitDisplayState`, `benefit-display.json`): group benefits by metric for collapsed view and dashboard
-- Configurable slot count (1–15, default 5) via +/− in display group overview; persisted in `benefit-display.json`
-- Per-benefit number buttons to add/remove from groups; same metric per group; aggregated value (time = sum saved/month; non-time = list)
-- Collapsed view: one line per display group (type tag + metric: value); Dashboard: display groups section with aggregated and per-benefit list
-- Example dataset and dev RO-Crate include default display groups for testing
-
-### Version and import UX
-- Footer: app version (from package at build time) and “Schema subject to change until v1.0 release”
-- Increment-version reminder only after first change since import; display-group edits count as change
-- Schema-version mismatch warning when importing crate with different or missing `aac:schemaVersion`; support-may-be-limited wording; “Downloading the crate again will fix this”
-
-### Docs
-- README and schema/README updated: rough estimate, no aggregate in schema, developer feasibility embedded, display groups app-only
 
 ## [1.0.0] - TBD
 
