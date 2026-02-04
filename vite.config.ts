@@ -7,7 +7,15 @@ const pkg = JSON.parse(readFileSync(resolve(__dirname, 'package.json'), 'utf-8')
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [vue()],
+  plugins: [
+    vue(),
+    {
+      name: 'favicon-version',
+      transformIndexHtml(html) {
+        return html.replace('__FAVICON_VERSION__', pkg.version)
+      },
+    },
+  ],
   // Use relative paths for custom domain compatibility
   // This allows the site to work at both github.io/repo and custom domain root
   base: './',
