@@ -8,6 +8,7 @@ import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
+const BENEFIT_DISPLAY_STORAGE_KEY = 'agentic-automation-canvas-benefit-display'
 
 // Initialize with default structure
 const canvasData = ref<CanvasData>({
@@ -56,6 +57,20 @@ const loadFromStorage = () => {
   } catch (error) {
     console.warn('Failed to load canvas data from storage:', error)
   }
+  try {
+    const stored = localStorage.getItem(BENEFIT_DISPLAY_STORAGE_KEY)
+    if (stored) {
+      const parsed = JSON.parse(stored) as BenefitDisplayState
+      if (parsed && Array.isArray(parsed.displayGroups)) {
+        benefitDisplay.value = {
+          displayGroups: parsed.displayGroups,
+          displayGroupCount: parsed.displayGroupCount,
+        }
+      }
+    }
+  } catch (error) {
+    console.warn('Failed to load benefit display from storage:', error)
+  }
 }
 
 // Save to localStorage whenever data changes
@@ -66,6 +81,18 @@ watch(
       localStorage.setItem(STORAGE_KEY, JSON.stringify(newData))
     } catch (error) {
       console.warn('Failed to save canvas data to storage:', error)
+    }
+  },
+  { deep: true }
+)
+
+watch(
+  benefitDisplay,
+  (newData) => {
+    try {
+      localStorage.setItem(BENEFIT_DISPLAY_STORAGE_KEY, JSON.stringify(newData))
+    } catch (error) {
+      console.warn('Failed to save benefit display to storage:', error)
     }
   },
   { deep: true }
@@ -264,6 +291,7 @@ export function useCanvasData() {
     hasChangedSinceImport.value = false
     benefitDisplay.value = { displayGroups: [] }
     localStorage.removeItem(STORAGE_KEY)
+    localStorage.removeItem(BENEFIT_DISPLAY_STORAGE_KEY)
   }
 
   const exportData = (): string => {

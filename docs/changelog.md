@@ -5,6 +5,16 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.10.2] - 2025-02-04
+
+### Added
+- Logo in page header (SVG from `public/logo.svg`).
+
+### Changed
+- Header action buttons (What is this?, Load Example, Import RO-Crate) adapt to available width: full labels → short labels (About, Example, Import RO-Crate) → icon-only; avoids wrapping and keeps header one line.
+- Import RO-Crate button label is always two lines (full: "Import RO-Crate" / "(ZIP)", short: "Import" / "RO-Crate"), centered.
+- Display group assignments are persisted to localStorage and restored on reload (same key pattern as canvas data; cleared with "Clear form").
+
 ## [0.10.1] - 2025-02-03
 
 ### Changed

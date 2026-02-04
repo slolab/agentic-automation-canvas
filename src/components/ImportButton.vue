@@ -10,12 +10,13 @@
     <button
       type="button"
       @click="openFileDialog"
-      class="flex items-center gap-2 px-4 py-2 rounded-md font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      class="flex shrink-0 items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       :disabled="isImporting"
+      title="Import RO-Crate (ZIP)"
     >
       <svg
         v-if="!isImporting"
-        class="w-5 h-5"
+        class="w-5 h-5 shrink-0"
         fill="none"
         stroke="currentColor"
         viewBox="0 0 24 24"
@@ -29,7 +30,7 @@
       </svg>
       <svg
         v-else
-        class="animate-spin w-5 h-5"
+        class="animate-spin w-5 h-5 shrink-0"
         fill="none"
         viewBox="0 0 24 24"
       >
@@ -47,15 +48,30 @@
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
         />
       </svg>
-      <span>{{ isImporting ? 'Importing...' : 'Import RO-Crate (ZIP)' }}</span>
+      <span v-show="headerActionsMode === 'full'" class="text-center leading-tight">
+        <span class="block">{{ isImporting ? 'Importing' : 'Import RO-Crate' }}</span>
+        <span class="block">{{ isImporting ? '…' : '(ZIP)' }}</span>
+      </span>
+      <span v-show="headerActionsMode === 'short'" class="text-center leading-tight">
+        <span class="block">{{ isImporting ? 'Importing' : 'Import' }}</span>
+        <span class="block">{{ isImporting ? '…' : 'RO-Crate' }}</span>
+      </span>
     </button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import type { HeaderActionsMode } from '@/composables/useHeaderActionsMode'
 import { importROCrateFromZip } from '@/utils/import'
 import { useCanvasData } from '@/composables/useCanvasData'
+
+withDefaults(
+  defineProps<{
+    headerActionsMode?: HeaderActionsMode
+  }>(),
+  { headerActionsMode: 'full' }
+)
 
 const { importFromROCrate } = useCanvasData()
 const fileInput = ref<HTMLInputElement | null>(null)
