@@ -3,21 +3,24 @@
     <header class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-start justify-between">
-          <div>
-            <h1 class="text-2xl font-bold text-gray-900">Agentic Automation Canvas</h1>
+          <div class="flex items-center gap-3">
+            <img :src="`${baseUrl}logo.svg`" alt="" class="h-10 w-10 shrink-0" />
+            <div>
+              <h1 class="text-2xl font-bold text-gray-900">Agentic Automation Canvas</h1>
             <p class="text-sm text-gray-600 mt-1">
               Stop guessing—structured guidance for expectations, progress, and governance
             </p>
+            </div>
           </div>
-          <div class="flex items-center gap-3">
+          <div ref="headerActionsRef" class="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-3">
             <button
               type="button"
               @click="openInfo"
-              class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              class="flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               title="Learn about Agentic Automation Canvas"
             >
               <svg
-                class="w-4 h-4"
+                class="w-4 h-4 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -29,16 +32,17 @@
                   d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span>What is this?</span>
+              <span v-show="headerActionsMode === 'full'">What is this?</span>
+              <span v-show="headerActionsMode === 'short'">About</span>
             </button>
             <button
               type="button"
               @click="loadExample"
-              class="flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              class="flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               title="Load example dataset"
             >
               <svg
-                class="w-4 h-4"
+                class="w-4 h-4 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -50,9 +54,10 @@
                   d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
                 />
               </svg>
-              <span>Load Example</span>
+              <span v-show="headerActionsMode === 'full'">Load Example</span>
+              <span v-show="headerActionsMode === 'short'">Example</span>
             </button>
-            <ImportButton />
+            <ImportButton :header-actions-mode="headerActionsMode" />
           </div>
         </div>
       </div>
@@ -171,6 +176,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useCanvasData } from './composables/useCanvasData'
+import { useHeaderActionsMode } from './composables/useHeaderActionsMode'
 import { exampleData, exampleBenefitDisplay } from './data/example-data'
 import { generateROCrate, validateForExport, hasBlockingErrors } from './utils/rocrate'
 import { downloadROCrateZip } from './utils/download'
@@ -181,6 +187,8 @@ import InfoOverlay from './components/InfoOverlay.vue'
 
 const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
+const headerActionsRef = ref<HTMLElement | null>(null)
+const headerActionsMode = useHeaderActionsMode(headerActionsRef)
 const baseUrl = import.meta.env.BASE_URL || '/'
 // Injected at build time from package.json (vite.config.ts define)
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
