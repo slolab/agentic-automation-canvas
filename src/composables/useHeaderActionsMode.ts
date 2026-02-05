@@ -5,19 +5,31 @@ export type HeaderActionsMode = 'full' | 'short' | 'icon'
 const WIDTH_FULL = 560
 const WIDTH_SHORT = 340
 
+export type UseHeaderActionsModeOptions = {
+  /** Min width (px) for full labels. Default 560. Use lower for footer (observed column is ~half row). */
+  widthFull?: number
+  /** Min width (px) for short labels. Default 340. */
+  widthShort?: number
+}
+
 /**
  * Observes a container element (must have flex-1 so its width = available space) and returns a mode:
- * - full: show full button labels (container >= 560px) — high enough to avoid RO-Crate button wrapping
- * - short: show shortened labels (340px <= container < 560px)
- * - icon: show only icons (container < 340px) — before short labels can wrap to two/three lines
+ * - full: show full button labels (container >= widthFull)
+ * - short: show shortened labels (widthShort <= container < widthFull)
+ * - icon: show only icons (container < widthShort)
  */
-export function useHeaderActionsMode(containerRef: Ref<HTMLElement | null>): Ref<HeaderActionsMode> {
+export function useHeaderActionsMode(
+  containerRef: Ref<HTMLElement | null>,
+  options: UseHeaderActionsModeOptions = {}
+): Ref<HeaderActionsMode> {
+  const widthFull = options.widthFull ?? WIDTH_FULL
+  const widthShort = options.widthShort ?? WIDTH_SHORT
   const mode = ref<HeaderActionsMode>('full')
 
   const updateMode = (width: number) => {
-    if (width >= WIDTH_FULL) {
+    if (width >= widthFull) {
       mode.value = 'full'
-    } else if (width >= WIDTH_SHORT) {
+    } else if (width >= widthShort) {
       mode.value = 'short'
     } else {
       mode.value = 'icon'
