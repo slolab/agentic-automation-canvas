@@ -75,8 +75,11 @@
     
     <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 min-w-0">
-        <div class="flex flex-nowrap justify-between items-center gap-4 min-w-0">
-          <div class="min-w-0 flex flex-col gap-1 text-sm text-gray-500 shrink">
+        <div class="flex flex-nowrap items-center gap-4 min-w-0">
+          <div
+            class="flex min-w-0 flex-col gap-1 text-sm text-gray-500"
+            :class="footerActionsMode === 'icon' ? 'flex-[2]' : 'flex-1'"
+          >
             <div class="flex flex-wrap items-center gap-2 sm:gap-3">
               <p class="font-medium text-gray-700">Agentic Automation Canvas</p>
               <a
@@ -105,7 +108,7 @@
             href="https://slolab.ai"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex items-center shrink-0 gap-1.5"
+            class="flex shrink-0 items-center gap-1.5"
             title="slolab"
           >
             <img src="/slolab.png" alt="slolab" class="h-8 w-auto" />
@@ -113,7 +116,7 @@
               made by<br />slolab
             </span>
           </a>
-          <div class="flex flex-nowrap items-center gap-3 shrink-0">
+          <div ref="footerActionsRef" class="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-3">
             <a
               :href="`${baseUrl}docs/`"
               target="_blank"
@@ -122,7 +125,7 @@
               title="View documentation"
             >
               <svg
-                class="w-4 h-4"
+                class="w-4 h-4 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -134,7 +137,8 @@
                   d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
                 />
               </svg>
-              <span>Documentation</span>
+              <span v-show="footerActionsMode === 'full'">Documentation</span>
+              <span v-show="footerActionsMode === 'short'">Docs</span>
             </a>
             <button
               type="button"
@@ -143,7 +147,7 @@
               title="Clear all form data"
             >
               <svg
-                class="w-4 h-4"
+                class="w-4 h-4 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -155,7 +159,8 @@
                   d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
                 />
               </svg>
-              <span>Clear Form</span>
+              <span v-show="footerActionsMode === 'full'">Clear Form</span>
+              <span v-show="footerActionsMode === 'short'">Clear</span>
             </button>
             <button
               type="button"
@@ -164,7 +169,7 @@
               class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex shrink-0 items-center gap-2"
             >
               <svg
-                class="w-5 h-5"
+                class="w-5 h-5 shrink-0"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -176,7 +181,8 @@
                   d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
                 />
               </svg>
-              <span>Download RO-Crate</span>
+              <span v-show="footerActionsMode === 'full'">Download RO-Crate</span>
+              <span v-show="footerActionsMode === 'short'">Download</span>
             </button>
           </div>
         </div>
@@ -201,6 +207,9 @@ const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasDat
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 const headerActionsRef = ref<HTMLElement | null>(null)
 const headerActionsMode = useHeaderActionsMode(headerActionsRef)
+const footerActionsRef = ref<HTMLElement | null>(null)
+// Footer right column is ~half the row; use lower breakpoints so full labels can show
+const footerActionsMode = useHeaderActionsMode(footerActionsRef, { widthFull: 480, widthShort: 260 })
 const baseUrl = import.meta.env.BASE_URL || '/'
 // Injected at build time from package.json (vite.config.ts define)
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
