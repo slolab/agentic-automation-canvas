@@ -67,6 +67,7 @@
             <div v-show="activeTab === 'time'">
               <TimeBenefitForm
                 :benefits="getTypedBenefits('time')"
+                :requirement-time-unit="requirement?.timeUnit"
                 @update="updateTypedBenefits('time', $event)"
               />
             </div>
@@ -137,6 +138,7 @@ import CostBenefitForm from './benefits/CostBenefitForm.vue'
 interface Props {
   isOpen: boolean
   benefits: Benefit[]
+  requirement?: { timeUnit?: 'minutes' | 'hours' | 'days' }
 }
 
 const props = defineProps<Props>()

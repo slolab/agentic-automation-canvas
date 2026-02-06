@@ -475,7 +475,7 @@ export function useCanvasData() {
         // Check for time benefit and validate net savings (baseline − expected − oversight)
         const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
         if (timeBenefit && req.humanOversightMinutesPerUnit !== undefined) {
-          const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+          const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
           const netTimeSaved = savedPerUnit - req.humanOversightMinutesPerUnit
           if (netTimeSaved <= 0) {
             errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })

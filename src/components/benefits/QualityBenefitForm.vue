@@ -65,7 +65,12 @@
         </div>
 
         <div>
-          <label class="form-label">Aggregation Basis</label>
+          <label class="form-label flex items-center gap-1">
+            Aggregation Basis
+            <InfoTooltip
+              content="<strong>Per Unit:</strong> Benefit applies per unit of work (e.g., 8 minutes per document, $5 per transaction). Multiply by volume for total impact.<br/><br/><strong>Per Month:</strong> Benefit is already aggregated per month (e.g., 3 compliance incidents per month, $2500 operational cost per month). Don't multiply by volume.<br/><br/><strong>One-off:</strong> Benefit is a one-time occurrence (e.g., new capability enabled, one-time setup cost). Not per unit or per month."
+            />
+          </label>
           <select
             :value="benefit.aggregationBasis || 'perUnit'"
             class="form-input"
@@ -163,6 +168,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue'
 import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
+import InfoTooltip from '../InfoTooltip.vue'
 
 interface Props {
   benefits: Benefit[]

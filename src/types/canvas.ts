@@ -113,7 +113,9 @@ export interface Requirement {
   unitOfWork?: string
   unitCategory?: 'item' | 'interaction' | 'computation' | 'other'
   volumePerMonth?: number
-  humanOversightMinutesPerUnit?: number // Applies globally to time benefits
+  /** Time unit for this requirement's time benefits and oversight. Standardizes all time values. */
+  timeUnit?: 'minutes' | 'hours' | 'days'
+  humanOversightMinutesPerUnit?: number // Applies globally to time benefits (stored in minutes, converted for display)
   // Generalized benefits array - replaces legacy time/quality/risk fields
   benefits: Benefit[]
   /** IDs of requirements this task depends on (workflow order) */

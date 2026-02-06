@@ -93,6 +93,11 @@
               "unitOfWork": { "type": "string", "minLength": 1 },
               "unitCategory": { "type": "string", "enum": ["item", "interaction", "computation", "other"] },
               "volumePerMonth": { "type": "number", "minimum": 1 },
+              "timeUnit": {
+                "type": "string",
+                "enum": ["minutes", "hours", "days"],
+                "description": "Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency."
+              },
               "humanOversightMinutesPerUnit": { "type": "number", "minimum": 0 },
               "benefits": {
                 "type": "array",

@@ -61,7 +61,12 @@
         </div>
 
         <div>
-          <label class="form-label">Aggregation Basis</label>
+          <label class="form-label flex items-center gap-1">
+            Aggregation Basis
+            <InfoTooltip
+              content="<strong>Per Unit:</strong> Benefit applies per unit of work (e.g., 8 minutes per document, $5 per transaction). Multiply by volume for total impact.<br/><br/><strong>Per Month:</strong> Benefit is already aggregated per month (e.g., 3 compliance incidents per month, $2500 operational cost per month). Don't multiply by volume.<br/><br/><strong>One-off:</strong> Benefit is a one-time occurrence (e.g., new capability enabled, one-time setup cost). Not per unit or per month."
+            />
+          </label>
           <select
             :value="benefit.aggregationBasis || 'perUnit'"
             class="form-input"
@@ -75,13 +80,27 @@
 
         <div>
           <label class="form-label">Unit</label>
-          <input
-            :value="benefit.benefitUnit"
-            type="text"
-            class="form-input"
-            placeholder="e.g., minutes"
-            @input="updateBenefit(index, { benefitUnit: ($event.target as HTMLInputElement).value })"
-          />
+          <div class="flex items-center gap-2">
+            <select
+              :value="getTimeUnitForBenefit(benefit)"
+              :disabled="index > 0"
+              :class="[
+                'form-input',
+                index > 0 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+              ]"
+              @change="handleUnitChange(index, ($event.target as HTMLSelectElement).value)"
+            >
+              <option value="minutes">minutes</option>
+              <option value="hours">hours</option>
+              <option value="days">days</option>
+            </select>
+            <span v-if="index > 0" class="text-xs text-gray-500 whitespace-nowrap">
+              (same as first)
+            </span>
+            <span v-else-if="localBenefits.length > 1" class="text-xs text-gray-500 whitespace-nowrap">
+              (applies to all)
+            </span>
+          </div>
         </div>
       </div>
 
@@ -157,11 +176,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, computed } from 'vue'
 import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
+import { parseTimeUnit, type TimeUnit } from '@/utils/timeUnitConversion'
+import InfoTooltip from '../InfoTooltip.vue'
 
 interface Props {
   benefits: Benefit[]
+  requirementTimeUnit?: 'minutes' | 'hours' | 'days'
 }
 
 const props = defineProps<Props>()
@@ -174,6 +196,43 @@ const localBenefits = ref<Benefit[]>([])
 watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
 }, { immediate: true, deep: true })
+
+// Get the standardized time unit for all time benefits
+const standardizedTimeUnit = computed((): TimeUnit => {
+  // Use requirement's timeUnit if set
+  if (props.requirementTimeUnit) {
+    return props.requirementTimeUnit
+  }
+  
+  // Otherwise, parse from first time benefit's unit
+  if (localBenefits.value.length > 0 && localBenefits.value[0].benefitUnit) {
+    const parsed = parseTimeUnit(localBenefits.value[0].benefitUnit)
+    if (parsed) {
+      return parsed
+    }
+  }
+  
+  // Default to minutes
+  return 'minutes'
+})
+
+// Get time unit for a specific benefit (for display)
+// All time benefits should use the same unit, so return the standardized unit
+function getTimeUnitForBenefit(benefit: Benefit): TimeUnit {
+  // Always return the standardized unit to ensure consistency
+  return standardizedTimeUnit.value
+}
+
+// Handle unit change - update all time benefits to use the same unit
+function handleUnitChange(index: number, unit: TimeUnit) {
+  const newUnit = unit as TimeUnit
+  // Update all time benefits to use the same unit
+  localBenefits.value = localBenefits.value.map((b, i) => ({
+    ...b,
+    benefitUnit: newUnit
+  }))
+  emitUpdate()
+}
 
 // Metric defaults for direction and valueMeaning
 interface MetricDefaults {
@@ -206,7 +265,7 @@ function createDefaultBenefit(): Benefit {
     direction: defaults.direction,
     valueMeaning: defaults.valueMeaning,
     aggregationBasis: 'perUnit',
-    benefitUnit: 'minutes',
+    benefitUnit: standardizedTimeUnit.value,
     baseline: { type: 'numeric', value: 0 },
     expected: { type: 'numeric', value: 0 }
   }

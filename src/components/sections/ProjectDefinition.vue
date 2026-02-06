@@ -831,7 +831,7 @@ function getTaskTimeSaved(task: Requirement): string | null {
   const timeBenefit = (task.benefits || []).find(b => b.benefitType === 'time')
   if (!timeBenefit) return null
   
-  const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit, task)
   const volume = task.volumePerMonth
   
   if (savedPerUnit > 0 && volume) {
@@ -861,7 +861,7 @@ const computedBenefitFromTasks = computed<{ value: number; unit: string; source:
   for (const req of reqs) {
     const timeBenefit = (req.benefits || []).find(b => b.benefitType === 'time')
     if (!timeBenefit) continue
-    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
     const volume = req.volumePerMonth || 0
     totalMinutes += savedPerUnit * volume
   }

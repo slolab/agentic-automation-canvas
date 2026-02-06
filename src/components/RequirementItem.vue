@@ -272,17 +272,18 @@
 
           <FormField
             :id="`req-oversight-${index}`"
-            label="Human Oversight After Automation (min/unit)"
-            help-text="Time required for human review per unit after the system is deployed. Subtracted from time savings."
-            tooltip="Time required for human review or oversight per unit after the envisioned system is deployed. This represents ongoing oversight costs and is subtracted from time savings."
+            :label="`Human Oversight After Automation (${requirement.timeUnit || 'minutes'}/unit)`"
+            help-text="Time required for human review per unit after the system is deployed. Subtracted from time savings. Unit matches your time benefit unit."
+            tooltip="Time required for human review or oversight per unit after the envisioned system is deployed. This represents ongoing oversight costs and is subtracted from time savings. The unit automatically matches your time benefit unit."
           >
             <input
               :id="`req-oversight-${index}`"
-              :value="requirement.humanOversightMinutesPerUnit || ''"
+              :value="getOversightDisplayValue()"
               type="number"
               min="0"
+              step="0.1"
               class="form-input"
-              @input="update({ ...requirement, humanOversightMinutesPerUnit: ($event.target as HTMLInputElement).value ? parseFloat(($event.target as HTMLInputElement).value) : undefined })"
+              @input="handleOversightChange($event)"
             />
           </FormField>
         </div>
@@ -442,6 +443,7 @@
     <BenefitsModal
       :is-open="isBenefitsModalOpen"
       :benefits="benefits"
+      :requirement="{ timeUnit: requirement.timeUnit }"
       @update:is-open="isBenefitsModalOpen = $event"
       @save="saveBenefits"
     />
@@ -456,6 +458,7 @@ import type { Requirement, Benefit, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import { parseTimeUnit, fromMinutes, toMinutes, type TimeUnit } from '@/utils/timeUnitConversion'
 
 interface Props {
   requirement: Requirement
@@ -551,7 +554,7 @@ const maxTotalTimeSaved = computed(() => {
   return Math.max(...allRequirements.value.map(req => {
     const timeBen = (req.benefits || []).find(b => b.benefitType === 'time')
     if (!timeBen) return 0
-    const savedPerUnit = getTimeSavedPerUnit(timeBen)
+    const savedPerUnit = getTimeSavedPerUnit(timeBen, req)
     const volume = req.volumePerMonth || 0
     return savedPerUnit * volume
   }))
@@ -562,7 +565,7 @@ function getNetSavingsPercentage(): number {
   if (maxTotalTimeSaved.value === 0) return 0
   if (!timeBenefit.value) return 0
   
-  const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value)
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value, props.requirement)
   const oversight = props.requirement.humanOversightMinutesPerUnit || 0
   const volume = props.requirement.volumePerMonth || 0
   const netTimeSaved = Math.max(0, savedPerUnit - oversight) * volume
@@ -578,11 +581,43 @@ function getOversightPercentage(): number {
   return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 
+// Get oversight display value (convert from minutes to requirement's time unit)
+function getOversightDisplayValue(): number | string {
+  if (props.requirement.humanOversightMinutesPerUnit === undefined) {
+    return ''
+  }
+  
+  const timeUnit: TimeUnit = props.requirement.timeUnit || 'minutes'
+  if (timeUnit === 'minutes') {
+    return props.requirement.humanOversightMinutesPerUnit
+  }
+  
+  // Convert from minutes to the requirement's time unit
+  return fromMinutes(props.requirement.humanOversightMinutesPerUnit, timeUnit)
+}
+
+// Handle oversight change (convert from requirement's time unit to minutes for storage)
+function handleOversightChange(event: Event) {
+  const input = event.target as HTMLInputElement
+  const value = input.value ? parseFloat(input.value) : undefined
+  
+  if (value === undefined) {
+    props.update({ ...props.requirement, humanOversightMinutesPerUnit: undefined })
+    return
+  }
+  
+  const timeUnit: TimeUnit = props.requirement.timeUnit || 'minutes'
+  // Convert from requirement's time unit to minutes for storage
+  const minutesValue = toMinutes(value, timeUnit)
+  
+  props.update({ ...props.requirement, humanOversightMinutesPerUnit: minutesValue })
+}
+
 // Format time saved text for collapsed view (baseline − expected) × volume
 const timeSavedText = computed(() => {
   if (!timeBenefit.value) return null
   
-  const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value)
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value, props.requirement)
   const volume = props.requirement.volumePerMonth
   
   if (savedPerUnit > 0 && volume) {
@@ -616,6 +651,24 @@ function openBenefitsModal() {
 
 // Save benefits from modal
 function saveBenefits(newBenefits: Benefit[]) {
-  props.update({ ...props.requirement, benefits: newBenefits })
+  // Determine time unit from time benefits
+  const timeBenefits = newBenefits.filter(b => b.benefitType === 'time')
+  let timeUnit: 'minutes' | 'hours' | 'days' | undefined = props.requirement.timeUnit
+  
+  if (timeBenefits.length > 0) {
+    // Parse unit from first time benefit
+    const firstTimeBenefit = timeBenefits[0]
+    if (firstTimeBenefit.benefitUnit) {
+      const parsed = parseTimeUnit(firstTimeBenefit.benefitUnit)
+      if (parsed) {
+        timeUnit = parsed
+      }
+    }
+  } else if (timeBenefits.length === 0) {
+    // No time benefits, clear time unit
+    timeUnit = undefined
+  }
+  
+  props.update({ ...props.requirement, benefits: newBenefits, timeUnit })
 }
 </script>

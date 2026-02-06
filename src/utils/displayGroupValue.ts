@@ -18,8 +18,8 @@ export function formatDisplayGroupValue(
     for (const ref of refs) {
       const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
       const benefit = req?.benefits?.[ref.benefitIndex]
-      if (!benefit) continue
-      const savedPerUnit = getTimeSavedPerUnit(benefit)
+      if (!benefit || !req) continue
+      const savedPerUnit = getTimeSavedPerUnit(benefit, req)
       const volume = req?.volumePerMonth || 0
       totalMinutes += savedPerUnit * volume
     }

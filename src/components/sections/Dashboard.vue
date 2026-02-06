@@ -300,7 +300,7 @@ const totalMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
-    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
     const volume = req.volumePerMonth || 0
     return total + (savedPerUnit * volume)
   }, 0)
@@ -315,7 +315,7 @@ const netMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
-    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
     const oversight = req.humanOversightMinutesPerUnit || 0
     const volume = req.volumePerMonth || 0
     const netSaved = Math.max(0, savedPerUnit - oversight)
@@ -392,7 +392,7 @@ function getBaselineMinutes(req: Requirement): number {
 function getTimeSavedMinutes(req: Requirement): number {
   const timeBenefit = getTimeBenefit(req)
   if (!timeBenefit) return 0
-  return getTimeSavedPerUnit(timeBenefit)
+  return getTimeSavedPerUnit(timeBenefit, req)
 }
 
 function getNetTimeSaved(req: Requirement): number {
