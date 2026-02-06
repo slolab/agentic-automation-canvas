@@ -61,7 +61,7 @@ Thank you for your interest in contributing to the Agentic Automation Canvas pro
 When releasing a new app/schema version, use [bump2version](https://github.com/c4urself/bump2version):
 
 1. **Install** (if needed): `uv sync`
-2. **Bump** (e.g. patch 0.11.0 → 0.10.3): `bump2version patch`
+2. **Bump** (e.g. patch 0.10.2 → 0.10.3): `bump2version patch`
    - Or: `bump2version minor` / `bump2version major`
    - Or explicit: `bump2version --new-version 0.10.3 patch`
    - Use `--allow-dirty` if the working directory has uncommitted changes (e.g. changelog edits)
