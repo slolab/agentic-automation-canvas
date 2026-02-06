@@ -168,6 +168,20 @@ export const exampleData: CanvasData = {
             confidenceUser: 'medium',
             confidenceDev: 'medium',
           },
+          {
+            benefitType: 'cost',
+            metricId: 'operationalCost',
+            metricLabel: 'Operational cost',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'USD',
+            baseline: { type: 'numeric', value: 2500 },
+            expected: { type: 'numeric', value: 0 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Previously done by external contractor at a flat monthly fee. With automation, no external contractor needed.',
+          },
         ],
       },
       {
@@ -412,8 +426,9 @@ export const exampleData: CanvasData = {
   },
 }
 
-/** Default display groups for the example: time, quality, quality, risk, enablement (1–5). */
+/** Default display groups for the example: time, quality, quality, risk, enablement, cost (1–6). */
 export const exampleBenefitDisplay: BenefitDisplayState = {
+  displayGroupCount: 6,
   displayGroups: [
     {
       id: 1,
@@ -448,6 +463,12 @@ export const exampleBenefitDisplay: BenefitDisplayState = {
       benefitType: 'enablement',
       metricId: 'newCapability',
       benefitRefs: [{ requirementId: 'req-3', benefitIndex: 1 }],
+    },
+    {
+      id: 6,
+      benefitType: 'cost',
+      metricId: 'operationalCost',
+      benefitRefs: [{ requirementId: 'req-2', benefitIndex: 2 }],
     },
   ],
 }

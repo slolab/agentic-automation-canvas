@@ -55,14 +55,16 @@
                   <span v-if="localData.headlineValue" class="font-medium text-gray-800">
                     {{ localData.headlineValue }}
                   </span>
-                  <span
-                    v-for="tag in benefitCountTags"
-                    :key="tag.type"
-                    :class="benefitTypeBadgeClass(tag.type)"
-                    class="rounded px-2 py-0.5 text-xs font-medium capitalize"
-                  >
-                    {{ tag.type }} {{ tag.count }}
-                  </span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      v-for="tag in benefitCountTags"
+                      :key="tag.type"
+                      :class="benefitTypeBadgeClass(tag.type)"
+                      class="rounded px-2 py-0.5 text-xs font-medium capitalize"
+                    >
+                      {{ tag.type }} {{ tag.count }}
+                    </span>
+                  </div>
                   <!-- Display groups: one line each — tag then metric + value -->
                   <template v-for="line in displayGroupLinesForCollapsed" :key="'dg-' + line.id">
                     <div class="flex items-center gap-2 w-full text-xs mt-1.5 first:mt-2">
@@ -998,7 +1000,15 @@ const benefitCountTags = computed(() => {
 const displayGroupLinesForCollapsed = computed(() => {
   const reqs = canvasData.value.userExpectations?.requirements || []
   return benefitDisplay.value.displayGroups
-    .filter((g) => g.benefitRefs.length > 0)
+    .filter((g) => {
+      // Filter out groups with no benefit references
+      if (g.benefitRefs.length === 0) return false
+      // Filter out groups where all references point to non-existent tasks
+      return g.benefitRefs.some((ref) => {
+        const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
+        return req && req.benefits && req.benefits[ref.benefitIndex]
+      })
+    })
     .map((g) => {
       const metricLabel = g.metricId
         ? (getMetricDisplayLabel(g.benefitType, g.metricId) || g.metricId)
@@ -1006,6 +1016,7 @@ const displayGroupLinesForCollapsed = computed(() => {
       const valueDisplay = formatDisplayGroupValue(g, reqs)
       return { id: g.id, benefitType: g.benefitType, metricLabel, valueDisplay }
     })
+    .filter((line) => line.valueDisplay !== '—') // Filter out lines that would show only dashes
 })
 
 // Display benefit metric in collapsed view (rough estimate only, when no task benefits)
