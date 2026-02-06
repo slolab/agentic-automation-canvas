@@ -11,19 +11,17 @@
       <p class="section-description">
         What are the essential tasks you need to automate to achieve the project goal? Capture tasks and their requirements as <a href="http://purl.org/net/p-plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="P-Plan (Plan Ontology) - extends PROV-O for representing plans and steps">P-Plan</a> elements (using <a href="https://www.w3.org/TR/prov-o/#Plan" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="PROV-O Plan type">PROV-O Plan</a> and <a href="http://purl.org/net/p-plan#Step" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline font-medium" title="P-Plan Step type">p-plan:Step</a>), including user stories and stakeholder values.
       </p>
-      <div class="mt-4 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-800">
-        <p class="font-medium">Deployment context and benefit estimates</p>
-        <p class="mt-1 text-blue-700">
-          Benefit estimates depend on your deployment context (e.g. team size, process maturity, integration depth). Use the Edit Benefits button to define baseline vs expected values per task. Time savings scale with <strong>Volume Per Month</strong>; quality, risk, and enablement benefits can use per-unit or per-month aggregation. Review Developer Feasibility to align estimates with technical effort.
-        </p>
-      </div>
     </div>
 
     <div>
-      <h3 class="subsection-header">Tasks</h3>
-      <p class="text-sm text-gray-600 mb-4">
-        Tasks are elements of the project process. Each task represents a specific automation task that contributes to the overall project goals. Define what needs to be automated, estimate the value it will deliver, and track its progress.
+      <p class="text-sm text-gray-600 mb-2">
+        Tasks are elements of the project process. Each element represents a specific automation task that contributes to the overall project goals.
       </p>
+      <ul class="text-sm text-gray-600 mb-4 list-disc ml-6 space-y-1">
+        <li><strong>Capture benefits</strong> to communicate value to stakeholders—baseline vs expected values show improvement at a glance</li>
+        <li>The <strong>visual progress bars</strong> in collapsed task view (green = net savings) provide immediate impact visualization</li>
+        <li>Define <strong>volume per month</strong> to calculate total monthly impact from per-unit benefits</li>
+      </ul>
       <MultiValueInput
         v-model="localRequirements"
         label="task"

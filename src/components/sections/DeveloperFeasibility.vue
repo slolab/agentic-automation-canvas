@@ -13,6 +13,14 @@
       <p class="section-description">
         Assess technical feasibility at project and task levels. Project-level provides simple defaults; task-level allows detailed overrides when needed.
       </p>
+      <p class="mt-3 text-sm text-gray-600 mb-2">
+        This canvas balances user expectations and task outcomes with technical feasibility and developer burden. While the Tasks & Expectations section captures desired benefits and value, this section assesses what's technically achievable and at what cost.
+      </p>
+      <ul class="text-sm text-gray-600 mb-4 list-disc ml-6 space-y-1">
+        <li><strong>Project-level feasibility</strong> sets realistic defaults for technical risk, effort, and maturity that apply across all tasks</li>
+        <li><strong>Task-level feasibility</strong> allows fine-tuning when individual tasks differ significantly in complexity or technology requirements</li>
+        <li><strong>Align estimates</strong> between expected benefits and technical effort to ensure realistic project planning</li>
+      </ul>
     </div>
 
     <!-- Project-Level Feasibility -->
@@ -225,9 +233,6 @@
             </svg>
           </button>
         </div>
-        <p class="text-sm text-gray-600 mb-4">
-          Optional detailed feasibility assessments for individual tasks. Use these when tasks differ significantly from project defaults or require specific technologies. Tasks that are deterministic and don't require LLMs can be marked accordingly.
-        </p>
 
         <div class="space-y-6">
           <div
@@ -236,9 +241,12 @@
             class="border border-gray-200 rounded-lg p-4"
           >
             <div class="flex items-start justify-between mb-3">
-              <div>
+              <div class="flex-1">
                 <h4 class="font-medium text-gray-900">{{ requirement.title || requirement.id }}</h4>
-                <p v-if="requirement.description" class="text-sm text-gray-600 mt-1">{{ requirement.description }}</p>
+                <div v-if="requirement.description" class="text-sm text-gray-600 mt-1">
+                  <p class="text-xs text-gray-500 mb-1 italic">From task description:</p>
+                  <div class="markdown-content" v-html="formatDescription(requirement.description)"></div>
+                </div>
               </div>
               <button
                 v-if="requirement.feasibility"
@@ -662,6 +670,7 @@ import InfoTooltip from '../InfoTooltip.vue'
 import type { DeveloperFeasibility, RequirementFeasibility } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import type { Requirement } from '@/types/canvas'
+import { markdownToHtml } from '@/utils/markdown'
 
 const { canvasData, updateDeveloperFeasibility, updateUserExpectations } = useCanvasData()
 
@@ -790,6 +799,11 @@ const update = () => {
   setTimeout(() => {
     isLocalUpdate = false
   }, 0)
+}
+
+// Format description with markdown
+function formatDescription(description: string): string {
+  return markdownToHtml(description)
 }
 
 // Task-level feasibility helpers
@@ -1093,3 +1107,31 @@ function removeTool(taskId: string, tool: string) {
   updateTaskFeasibility(taskId, { tools: updatedTools.length > 0 ? updatedTools : undefined })
 }
 </script>
+
+<style scoped>
+.markdown-content :deep(strong) {
+  @apply font-semibold text-gray-900;
+}
+
+.markdown-content :deep(em) {
+  @apply italic;
+}
+
+.markdown-content :deep(ul) {
+  @apply list-disc ml-6 space-y-1 mt-2 mb-2;
+}
+
+.markdown-content :deep(ol) {
+  @apply list-decimal ml-6 space-y-1 mt-2 mb-2;
+}
+
+.markdown-content :deep(li) {
+  @apply text-gray-600;
+}
+
+.markdown-content :deep(br) {
+  @apply block;
+  content: '';
+  margin-top: 0.5rem;
+}
+</style>

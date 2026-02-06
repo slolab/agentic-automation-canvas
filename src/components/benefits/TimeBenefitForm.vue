@@ -64,7 +64,7 @@
           <label class="form-label flex items-center gap-1">
             Aggregation Basis
             <InfoTooltip
-              content="<strong>Per Unit:</strong> Benefit applies per unit of work (e.g., 8 minutes per document, $5 per transaction). Multiply by volume for total impact.<br/><br/><strong>Per Month:</strong> Benefit is already aggregated per month (e.g., 3 compliance incidents per month, $2500 operational cost per month). Don't multiply by volume.<br/><br/><strong>One-off:</strong> Benefit is a one-time occurrence (e.g., new capability enabled, one-time setup cost). Not per unit or per month."
+              content="<strong>Per Unit:</strong> Benefit applies per unit of work (e.g., 8 minutes per document, $5 per transaction). Multiply by volume for total impact.<br/><br/><strong>Per Month:</strong> Benefit is already aggregated per month (e.g., 3 compliance incidents per month, $2500 operational cost per month). Don't multiply by volume.<br/><br/><strong>One-off:</strong> Benefit is a one-time occurrence (e.g., new capability enabled, one-time setup cost). Not per unit or per month.<br/><br/><strong>Tip:</strong> Benefit estimates should reflect your deployment context (team size, process maturity, integration depth) and align with the technical effort outlined in Developer Feasibility."
             />
           </label>
           <select
@@ -105,7 +105,12 @@
 
       <!-- Baseline -->
       <div>
-        <label class="form-label">Baseline (task duration before automation)</label>
+        <label class="form-label flex items-center gap-1">
+          Baseline (task duration before automation)
+          <InfoTooltip
+            content="Current state before automation. This value, compared to Expected, shows improvement and is visualized in the progress bars. The difference (baseline - expected) represents gross time savings per unit."
+          />
+        </label>
         <input
           :value="getNumericValue(benefit.baseline)"
           type="number"
@@ -118,7 +123,12 @@
 
       <!-- Expected -->
       <div>
-        <label class="form-label">Expected (task duration after automation)</label>
+        <label class="form-label flex items-center gap-1">
+          Expected (task duration after automation)
+          <InfoTooltip
+            content="Projected state after automation. The visual progress bars show baseline (full bar), gross savings (green), and oversight (grey). Net savings = gross savings - oversight, providing a clear value proposition for stakeholders."
+          />
+        </label>
         <input
           :value="getNumericValue(benefit.expected)"
           type="number"

@@ -252,7 +252,7 @@
             :id="`req-volume-${index}`"
             label="Volume Per Month"
             help-text="Average number of units processed per month. Used to calculate total benefit values."
-            tooltip="Enter the average number of units processed per month. This is multiplied by per-unit benefits to calculate total monthly impact."
+            tooltip="Enter the average number of units processed per month. This is multiplied by per-unit benefits to calculate total monthly impact. For example, if a task saves 5 minutes per document and processes 500 documents/month, total monthly savings = 2,500 minutes (41.7 hours). Benefit estimates should reflect your deployment context (team size, process maturity, integration depth)."
             required
           >
             <div>
