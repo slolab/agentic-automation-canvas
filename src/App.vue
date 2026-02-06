@@ -203,7 +203,7 @@ import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
 import InfoOverlay from './components/InfoOverlay.vue'
 
-const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll, requestSection } = useCanvasData()
+const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 const headerActionsRef = ref<HTMLElement | null>(null)
 const headerActionsMode = useHeaderActionsMode(headerActionsRef)

@@ -819,7 +819,8 @@ function addTaskFeasibility(taskId: string) {
 function removeTaskFeasibility(taskId: string) {
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
-  const { feasibility, ...rest } = requirement
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { feasibility: _feasibility, ...rest } = requirement
   updateRequirement(taskId, rest)
 }
 

@@ -260,7 +260,8 @@ const standardizedTimeUnit = computed((): TimeUnit => {
 
 // Get time unit for a specific benefit (for display)
 // All time benefits should use the same unit, so return the standardized unit
-function getTimeUnitForBenefit(benefit: Benefit): TimeUnit {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function getTimeUnitForBenefit(_benefit: Benefit): TimeUnit {
   // Always return the standardized unit to ensure consistency
   return standardizedTimeUnit.value
 }
@@ -269,7 +270,7 @@ function getTimeUnitForBenefit(benefit: Benefit): TimeUnit {
 function handleUnitChange(index: number, unit: TimeUnit) {
   const newUnit = unit as TimeUnit
   // Update all time benefits to use the same unit
-  localBenefits.value = localBenefits.value.map((b, i) => ({
+  localBenefits.value = localBenefits.value.map((b) => ({
     ...b,
     benefitUnit: newUnit
   }))

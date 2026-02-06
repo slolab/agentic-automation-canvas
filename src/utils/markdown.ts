@@ -6,7 +6,7 @@
 export function markdownToHtml(markdown: string): string {
   if (!markdown) return ''
   
-  let html = markdown
+  const html = markdown
   
   // Split into lines for processing
   const lines = html.split('\n')
@@ -30,8 +30,8 @@ export function markdownToHtml(markdown: string): string {
     const line = lines[i].trim()
     
     // Check for bullet list (- or *)
-    if (/^[\-\*]\s+/.test(line)) {
-      const content = line.replace(/^[\-\*]\s+/, '')
+    if (/^[-*]\s+/.test(line)) {
+      const content = line.replace(/^[-*]\s+/, '')
       if (!inList || listType !== 'ul') {
         closeList()
         inList = true
@@ -42,8 +42,8 @@ export function markdownToHtml(markdown: string): string {
     }
     
     // Check for numbered list (1. or 1))
-    if (/^\d+[\.\)]\s+/.test(line)) {
-      const content = line.replace(/^\d+[\.\)]\s+/, '')
+    if (/^\d+[.)]\s+/.test(line)) {
+      const content = line.replace(/^\d+[.)]\s+/, '')
       if (!inList || listType !== 'ol') {
         closeList()
         inList = true
