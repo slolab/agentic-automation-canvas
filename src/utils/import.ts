@@ -130,7 +130,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           const oversightValue = step!['aac:humanOversightMinutesPerUnit'] as number
           // Find first time benefit and add oversight
           if (req.benefits && req.benefits.length > 0) {
-            const firstTimeBenefitIndex = req.benefits.findIndex(b => b.benefitType === 'time')
+            const firstTimeBenefitIndex = req.benefits.findIndex((b: any) => b.benefitType === 'time')
             if (firstTimeBenefitIndex >= 0) {
               req.benefits[firstTimeBenefitIndex] = {
                 ...req.benefits[firstTimeBenefitIndex],

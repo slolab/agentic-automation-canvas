@@ -133,6 +133,7 @@ export interface Person {
   name: string
   affiliation?: string // Optional disambiguation
   orcid?: string // Optional stable identifier (e.g., ORCID)
+  functionRoles?: string[] // Functional roles from controlled vocabulary
 }
 
 export interface Stakeholder {

@@ -724,14 +724,6 @@ export function useCanvasData() {
         total++
         if (data.developerFeasibility.technicalRisk) completed++
       }
-      if (data.developerFeasibility.algorithms !== undefined && data.developerFeasibility.algorithms.length > 0) {
-        total += data.developerFeasibility.algorithms.length
-        completed += data.developerFeasibility.algorithms.filter(a => a?.trim()).length
-      }
-      if (data.developerFeasibility.tools !== undefined && data.developerFeasibility.tools.length > 0) {
-        total += data.developerFeasibility.tools.length
-        completed += data.developerFeasibility.tools.filter(t => t?.trim()).length
-      }
       if (data.developerFeasibility.effortEstimate !== undefined) {
         total++
         if (data.developerFeasibility.effortEstimate?.trim()) completed++
