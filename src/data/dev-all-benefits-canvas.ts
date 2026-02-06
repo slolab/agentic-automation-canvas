@@ -36,7 +36,6 @@ export const devAllBenefitsCanvas: CanvasData = {
         unitOfWork: 'one unit',
         unitCategory: 'other',
         volumePerMonth: 100,
-        humanOversightMinutesPerUnit: 0,
         benefits: [
           {
             benefitType: 'time',
@@ -56,7 +55,7 @@ export const devAllBenefitsCanvas: CanvasData = {
             direction: 'decreaseIsBetter',
             valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
-            benefitUnit: 'days',
+            benefitUnit: 'hours',
             baseline: { type: 'numeric', value: 7 },
             expected: { type: 'numeric', value: 2 },
           },
@@ -69,7 +68,6 @@ export const devAllBenefitsCanvas: CanvasData = {
         unitOfWork: 'one unit',
         unitCategory: 'other',
         volumePerMonth: 80,
-        humanOversightMinutesPerUnit: 0,
         benefits: [
           {
             benefitType: 'time',

@@ -70,7 +70,7 @@
           <select
             :value="benefit.aggregationBasis || 'perUnit'"
             class="form-input"
-            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as any })"
+            @change="handleAggregationBasisChange(index, ($event.target as HTMLSelectElement).value)"
           >
             <option value="perUnit">Per Unit</option>
             <option value="perMonth">Per Month</option>
@@ -81,19 +81,18 @@
         <div>
           <label class="form-label">Unit</label>
           <div class="flex items-center gap-2">
-            <select
-              :value="getTimeUnitForBenefit(benefit)"
-              :disabled="index > 0"
-              :class="[
-                'form-input',
-                index > 0 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
-              ]"
-              @change="handleUnitChange(index, ($event.target as HTMLSelectElement).value)"
-            >
-              <option value="minutes">minutes</option>
-              <option value="hours">hours</option>
-              <option value="days">days</option>
-            </select>
+          <select
+            :value="getTimeUnitForBenefit(benefit)"
+            :disabled="index > 0"
+            :class="[
+              'form-input',
+              index > 0 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
+            ]"
+            @change="handleUnitChange(index, ($event.target as HTMLSelectElement).value)"
+          >
+            <option value="minutes">minutes</option>
+            <option value="hours">hours</option>
+          </select>
             <span v-if="index > 0" class="text-xs text-gray-500 whitespace-nowrap">
               (same as first)
             </span>
@@ -128,6 +127,39 @@
           placeholder="e.g. minutes per unit"
           @input="updateBenefit(index, { expected: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
         />
+      </div>
+
+      <!-- Oversight -->
+      <div v-if="benefit.aggregationBasis !== 'oneOff'">
+        <label class="form-label flex items-center gap-1">
+          Human Oversight (minutes{{ benefit.aggregationBasis === 'perUnit' ? '/unit' : '/month' }})
+          <InfoTooltip
+            content="Time required for human review or oversight. This is subtracted from the gross time benefit to calculate net savings. Always measured in minutes, regardless of your time benefit unit. For per-unit benefits, enter oversight per unit (multiply by volume yourself if you need monthly oversight)."
+          />
+        </label>
+        <input
+          v-if="benefit.aggregationBasis === 'perUnit'"
+          :value="benefit.oversightMinutesPerUnit ?? ''"
+          type="number"
+          min="0"
+          step="0.1"
+          class="form-input"
+          placeholder="e.g., 1 minute per unit"
+          @input="handleOversightChange(index, $event, 'perUnit')"
+        />
+        <input
+          v-else
+          :value="benefit.oversightMinutesPerMonth ?? ''"
+          type="number"
+          min="0"
+          step="0.1"
+          class="form-input"
+          placeholder="e.g., 30 minutes per month"
+          @input="handleOversightChange(index, $event, 'perMonth')"
+        />
+        <p class="text-xs text-gray-500 mt-1">
+          This will be subtracted from the gross time benefit to calculate net savings.
+        </p>
       </div>
 
       <!-- Confidence -->
@@ -183,7 +215,7 @@ import InfoTooltip from '../InfoTooltip.vue'
 
 interface Props {
   benefits: Benefit[]
-  requirementTimeUnit?: 'minutes' | 'hours' | 'days'
+  requirementTimeUnit?: 'minutes' | 'hours'
 }
 
 const props = defineProps<Props>()
@@ -199,17 +231,17 @@ watch(() => props.benefits, (newBenefits) => {
 
 // Get the standardized time unit for all time benefits
 const standardizedTimeUnit = computed((): TimeUnit => {
-  // Use requirement's timeUnit if set
-  if (props.requirementTimeUnit) {
-    return props.requirementTimeUnit
-  }
-  
-  // Otherwise, parse from first time benefit's unit
+  // First check local benefits (current editing state) - this takes priority
   if (localBenefits.value.length > 0 && localBenefits.value[0].benefitUnit) {
     const parsed = parseTimeUnit(localBenefits.value[0].benefitUnit)
     if (parsed) {
       return parsed
     }
+  }
+  
+  // Fall back to requirement's timeUnit if set
+  if (props.requirementTimeUnit) {
+    return props.requirementTimeUnit
   }
   
   // Default to minutes
@@ -232,6 +264,24 @@ function handleUnitChange(index: number, unit: TimeUnit) {
     benefitUnit: newUnit
   }))
   emitUpdate()
+}
+
+// Handle aggregation basis change - clear opposite oversight field
+function handleAggregationBasisChange(index: number, aggregationBasis: string) {
+  const basis = aggregationBasis as 'perUnit' | 'perMonth' | 'oneOff'
+  const updates: Partial<Benefit> = { aggregationBasis: basis }
+  
+  // Clear oversight fields when switching aggregation basis
+  if (basis === 'perUnit') {
+    updates.oversightMinutesPerMonth = undefined
+  } else if (basis === 'perMonth') {
+    updates.oversightMinutesPerUnit = undefined
+  } else if (basis === 'oneOff') {
+    updates.oversightMinutesPerUnit = undefined
+    updates.oversightMinutesPerMonth = undefined
+  }
+  
+  updateBenefit(index, updates)
 }
 
 // Metric defaults for direction and valueMeaning
@@ -301,6 +351,22 @@ function updateBenefit(index: number, updates: Partial<Benefit>) {
 function getNumericValue(value: BenefitValue): number {
   if (value.type === 'numeric') return value.value
   return 0
+}
+
+// Handle oversight value change
+function handleOversightChange(index: number, event: Event, type: 'perUnit' | 'perMonth') {
+  const input = event.target as HTMLInputElement
+  const value = input.value ? parseFloat(input.value) : undefined
+  
+  if (type === 'perUnit') {
+    updateBenefit(index, {
+      oversightMinutesPerUnit: value
+    })
+  } else {
+    updateBenefit(index, {
+      oversightMinutesPerMonth: value
+    })
+  }
 }
 
 function emitUpdate() {

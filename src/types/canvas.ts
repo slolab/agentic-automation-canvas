@@ -67,6 +67,9 @@ export interface Benefit {
   benefitUnit: string // e.g., "minutes", "%", "incidents/month"
   baseline: BenefitValue
   expected: BenefitValue
+  /** Human oversight (for time benefits only). Always in minutes. Subtracted from gross time savings. Mutually exclusive: use oversightMinutesPerUnit for perUnit aggregation, oversightMinutesPerMonth for perMonth aggregation. */
+  oversightMinutesPerUnit?: number // Only used when aggregationBasis is 'perUnit'
+  oversightMinutesPerMonth?: number // Only used when aggregationBasis is 'perMonth'
   confidenceUser?: 'low' | 'medium' | 'high'
   confidenceDev?: 'low' | 'medium' | 'high'
   assumptions?: string
@@ -113,9 +116,8 @@ export interface Requirement {
   unitOfWork?: string
   unitCategory?: 'item' | 'interaction' | 'computation' | 'other'
   volumePerMonth?: number
-  /** Time unit for this requirement's time benefits and oversight. Standardizes all time values. */
-  timeUnit?: 'minutes' | 'hours' | 'days'
-  humanOversightMinutesPerUnit?: number // Applies globally to time benefits (stored in minutes, converted for display)
+  /** Time unit for this requirement's time benefits. Standardizes all time values. */
+  timeUnit?: 'minutes' | 'hours'
   // Generalized benefits array - replaces legacy time/quality/risk fields
   benefits: Benefit[]
   /** IDs of requirements this task depends on (workflow order) */

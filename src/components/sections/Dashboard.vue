@@ -106,8 +106,8 @@
               <div v-if="getTimeSavedMinutes(req) > 0" class="text-lg font-semibold text-green-700">
                 {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
               </div>
-              <div v-if="req.humanOversightMinutesPerUnit !== undefined" class="text-sm text-gray-500">
-                Oversight: {{ formatMinutes(req.humanOversightMinutesPerUnit * (req.volumePerMonth || 0)) }}
+              <div v-if="getOversightMinutesForReq(req) > 0" class="text-sm text-gray-500">
+                Oversight: {{ formatMinutes(getOversightMinutesForReq(req)) }}
               </div>
             </div>
           </div>
@@ -122,7 +122,7 @@
               <span class="font-medium text-green-700">
                 {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
               </span>
-              <span v-if="req.humanOversightMinutesPerUnit !== undefined" class="ml-2">
+              <span v-if="getOversightMinutesForReq(req) > 0" class="ml-2">
                 (Net: {{ formatMinutes(getNetTimeSaved(req) * (req.volumePerMonth || 0)) }})
               </span>
             </div>
@@ -233,7 +233,7 @@ import { computed, ref, watch, onMounted } from 'vue'
 import mermaid from 'mermaid'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
-import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { generateDependencyMermaid, hasDependencies } from '@/utils/dependencyGraph'
@@ -310,16 +310,17 @@ const totalHoursSavedPerMonth = computed(() => {
   return Math.round((totalMinutesSavedPerMonth.value / 60) * 10) / 10
 })
 
-// Calculate net time saved (saved per unit − oversight) × volume
+// Calculate net time saved (saved per unit × volume − oversight)
 const netMinutesSavedPerMonth = computed(() => {
   return requirements.value.reduce((total, req) => {
     const timeBenefit = getTimeBenefit(req)
     if (!timeBenefit) return total
     const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
-    const oversight = req.humanOversightMinutesPerUnit || 0
     const volume = req.volumePerMonth || 0
-    const netSaved = Math.max(0, savedPerUnit - oversight)
-    return total + (netSaved * volume)
+    const grossTimeSaved = savedPerUnit * volume
+    const oversightTime = getOversightMinutes(timeBenefit, volume)
+    const netTimeSaved = Math.max(0, grossTimeSaved - oversightTime)
+    return total + netTimeSaved
   }, 0)
 })
 
@@ -396,9 +397,21 @@ function getTimeSavedMinutes(req: Requirement): number {
 }
 
 function getNetTimeSaved(req: Requirement): number {
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return getTimeSavedMinutes(req)
   const timeSaved = getTimeSavedMinutes(req)
-  const oversight = req.humanOversightMinutesPerUnit || 0
-  return Math.max(0, timeSaved - oversight)
+  const volume = req.volumePerMonth || 0
+  const grossTimeSaved = timeSaved * volume
+  const oversightTime = getOversightMinutes(timeBenefit, volume)
+  // Return per-unit net savings
+  if (volume === 0) return timeSaved
+  return Math.max(0, (grossTimeSaved - oversightTime) / volume)
+}
+
+function getOversightMinutesForReq(req: Requirement): number {
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
+  return getOversightMinutes(timeBenefit, req.volumePerMonth)
 }
 
 // Calculate maximum total time saved across all tasks for normalization
@@ -414,19 +427,23 @@ const maxTotalTimeSaved = computed(() => {
 // Get net savings percentage (green bar)
 function getNetSavingsPercentage(req: Requirement): number {
   if (maxTotalTimeSaved.value === 0) return 0
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
   const timeSaved = getTimeSavedMinutes(req)
-  const oversight = req.humanOversightMinutesPerUnit || 0
   const volume = req.volumePerMonth || 0
-  const netTimeSaved = Math.max(0, timeSaved - oversight) * volume
+  const grossTimeSaved = timeSaved * volume
+  const oversightTime = getOversightMinutes(timeBenefit, volume)
+  const netTimeSaved = Math.max(0, grossTimeSaved - oversightTime)
   return Math.round((netTimeSaved / maxTotalTimeSaved.value) * 100)
 }
 
 // Get oversight percentage (grey bar)
 function getOversightPercentage(req: Requirement): number {
   if (maxTotalTimeSaved.value === 0) return 0
-  const oversight = req.humanOversightMinutesPerUnit || 0
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
   const volume = req.volumePerMonth || 0
-  const oversightTime = oversight * volume
+  const oversightTime = getOversightMinutes(timeBenefit, volume)
   return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 

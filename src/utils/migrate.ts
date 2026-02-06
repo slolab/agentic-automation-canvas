@@ -84,9 +84,15 @@ export function normalizeCanvasData(data: CanvasData): NormalizeResult {
       value: r.value,
       unitOfWork: r.unitOfWork,
       volumePerMonth: r.volumePerMonth,
-      humanOversightMinutesPerUnit: r.humanOversightMinutesPerUnit,
       dependsOn: r.dependsOn,
       feasibility: r.feasibility,
+      // Migrate oversight from requirement to first time benefit
+      benefits: r.benefits?.map((b, idx) => {
+        if (b.benefitType === 'time' && idx === 0 && r.humanOversightMinutesPerUnit !== undefined) {
+          return { ...b, oversightMinutesPerUnit: r.humanOversightMinutesPerUnit }
+        }
+        return b
+      }) || r.benefits,
     } as Requirement
   })
 

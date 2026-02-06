@@ -138,7 +138,7 @@ import CostBenefitForm from './benefits/CostBenefitForm.vue'
 interface Props {
   isOpen: boolean
   benefits: Benefit[]
-  requirement?: { timeUnit?: 'minutes' | 'hours' | 'days' }
+  requirement?: { timeUnit?: 'minutes' | 'hours' }
 }
 
 const props = defineProps<Props>()
@@ -199,9 +199,8 @@ const tabs = [
 watch(() => props.isOpen, (isOpen) => {
   if (isOpen) {
     localBenefits.value = props.benefits.map(b => ({ ...b }))
-    // Set active tab to first type with benefits, or 'time' by default
-    const firstType = props.benefits[0]?.benefitType
-    activeTab.value = firstType || 'time'
+    // Always start with 'time' tab
+    activeTab.value = 'time'
     // Prevent background scrolling - save current scroll position and lock
     savedScrollPosition.value = window.scrollY
     document.body.style.position = 'fixed'

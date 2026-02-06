@@ -95,10 +95,9 @@
               "volumePerMonth": { "type": "number", "minimum": 1 },
               "timeUnit": {
                 "type": "string",
-                "enum": ["minutes", "hours", "days"],
+                "enum": ["minutes", "hours"],
                 "description": "Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency."
               },
-              "humanOversightMinutesPerUnit": { "type": "number", "minimum": 0 },
               "benefits": {
                 "type": "array",
                 "description": "Array of benefit metrics for this requirement",
@@ -430,6 +429,16 @@
         "expected": {
           "$ref": "#/$defs/BenefitValue",
           "description": "Expected value after automation"
+        },
+        "oversightMinutesPerUnit": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Human oversight per unit in minutes. Only used when aggregationBasis is 'perUnit'. Mutually exclusive with oversightMinutesPerMonth. Subtracted from gross time benefit."
+        },
+        "oversightMinutesPerMonth": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Human oversight per month in minutes. Only used when aggregationBasis is 'perMonth'. Mutually exclusive with oversightMinutesPerUnit. Subtracted from gross time benefit."
         },
         "confidenceUser": {
           "type": "string",

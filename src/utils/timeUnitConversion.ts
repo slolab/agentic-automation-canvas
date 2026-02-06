@@ -3,11 +3,9 @@
  * All calculations are done in minutes internally, but we convert for display.
  */
 
-export type TimeUnit = 'minutes' | 'hours' | 'days'
+export type TimeUnit = 'minutes' | 'hours'
 
 const MINUTES_PER_HOUR = 60
-const HOURS_PER_DAY = 24
-const MINUTES_PER_DAY = MINUTES_PER_HOUR * HOURS_PER_DAY
 
 /**
  * Convert a value from the given unit to minutes.
@@ -18,8 +16,6 @@ export function toMinutes(value: number, unit: TimeUnit): number {
       return value
     case 'hours':
       return value * MINUTES_PER_HOUR
-    case 'days':
-      return value * MINUTES_PER_DAY
     default:
       return value
   }
@@ -34,8 +30,6 @@ export function fromMinutes(value: number, unit: TimeUnit): number {
       return value
     case 'hours':
       return value / MINUTES_PER_HOUR
-    case 'days':
-      return value / MINUTES_PER_DAY
     default:
       return value
   }
@@ -58,11 +52,6 @@ export function parseTimeUnit(unitString: string): TimeUnit | null {
     return 'hours'
   }
   
-  // Check for days
-  if (normalized.includes('day') || normalized === 'd') {
-    return 'days'
-  }
-  
   return null
 }
 
@@ -75,7 +64,5 @@ export function getTimeUnitLabel(unit: TimeUnit): string {
       return 'minutes'
     case 'hours':
       return 'hours'
-    case 'days':
-      return 'days'
   }
 }

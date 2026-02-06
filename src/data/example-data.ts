@@ -60,7 +60,6 @@ export const exampleData: CanvasData = {
         unitOfWork: 'one document',
         unitCategory: 'item',
         volumePerMonth: 500,
-        humanOversightMinutesPerUnit: 1,
         stakeholders: ['person-0'],
         feasibility: {
           technicalRisk: 'high',
@@ -90,6 +89,7 @@ export const exampleData: CanvasData = {
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 8 },
             expected: { type: 'numeric', value: 2 },
+            oversightMinutesPerUnit: 1,
             confidenceUser: 'high',
             confidenceDev: 'medium',
             assumptions: 'Documents are mostly standardized formats. Complex documents may require more oversight.',
@@ -134,7 +134,6 @@ export const exampleData: CanvasData = {
         unitOfWork: 'one document',
         unitCategory: 'item',
         volumePerMonth: 500,
-        humanOversightMinutesPerUnit: 0.5,
         dependsOn: ['req-1'],
         stakeholders: ['person-1', 'person-2'],
         feasibility: {
@@ -159,6 +158,7 @@ export const exampleData: CanvasData = {
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 3 },
             expected: { type: 'numeric', value: 1 },
+            oversightMinutesPerUnit: 0,
             confidenceUser: 'medium',
             confidenceDev: 'medium',
             assumptions: 'Document types are well-defined and distinguishable',
@@ -202,7 +202,6 @@ export const exampleData: CanvasData = {
         unitOfWork: 'one routing decision',
         unitCategory: 'item',
         volumePerMonth: 500,
-        humanOversightMinutesPerUnit: 0.3,
         dependsOn: ['req-2'],
         stakeholders: ['person-0', 'person-1', 'person-2'],
         feasibility: {
@@ -232,6 +231,7 @@ export const exampleData: CanvasData = {
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 2 },
             expected: { type: 'numeric', value: 0.5 },
+            oversightMinutesPerUnit: 0.3,
             confidenceUser: 'high',
             confidenceDev: 'high',
             assumptions: 'Routing rules are clear and can be automated',

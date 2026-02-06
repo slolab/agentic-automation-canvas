@@ -226,28 +226,28 @@
           />
         </FormField>
 
-        <FormField
-          :id="`req-unit-category-${index}`"
-          label="Unit Category"
-          help-text="Standardized category of the work unit. Select the type that best matches your unit of work."
-          tooltip="Select the category that best matches your unit: <strong>Item</strong> - A processable unit (e.g. case, document, record); <strong>Interaction</strong> - User-facing interaction (e.g. message, meeting); <strong>Computation</strong> - Automated process (e.g. analysis run); <strong>Other</strong> - Something else."
-          required
-        >
-          <select
-            :id="`req-unit-category-${index}`"
-            :value="requirement.unitCategory || ''"
-            class="form-input"
-            @change="update({ ...requirement, unitCategory: ($event.target as HTMLSelectElement).value as any || undefined })"
-          >
-            <option value="">Select category</option>
-            <option value="item">Item</option>
-            <option value="interaction">Interaction</option>
-            <option value="computation">Computation</option>
-            <option value="other">Other</option>
-          </select>
-        </FormField>
-
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            :id="`req-unit-category-${index}`"
+            label="Unit Category"
+            help-text="Standardized category of the work unit. Select the type that best matches your unit of work."
+            tooltip="Select the category that best matches your unit: <strong>Item</strong> - A processable unit (e.g. case, document, record); <strong>Interaction</strong> - User-facing interaction (e.g. message, meeting); <strong>Computation</strong> - Automated process (e.g. analysis run); <strong>Other</strong> - Something else."
+            required
+          >
+            <select
+              :id="`req-unit-category-${index}`"
+              :value="requirement.unitCategory || ''"
+              class="form-input"
+              @change="update({ ...requirement, unitCategory: ($event.target as HTMLSelectElement).value as any || undefined })"
+            >
+              <option value="">Select category</option>
+              <option value="item">Item</option>
+              <option value="interaction">Interaction</option>
+              <option value="computation">Computation</option>
+              <option value="other">Other</option>
+            </select>
+          </FormField>
+
           <FormField
             :id="`req-volume-${index}`"
             label="Volume Per Month"
@@ -268,23 +268,6 @@
                 {{ volumeBandHelper }}
               </p>
             </div>
-          </FormField>
-
-          <FormField
-            :id="`req-oversight-${index}`"
-            :label="`Human Oversight After Automation (${requirement.timeUnit || 'minutes'}/unit)`"
-            help-text="Time required for human review per unit after the system is deployed. Subtracted from time savings. Unit matches your time benefit unit."
-            tooltip="Time required for human review or oversight per unit after the envisioned system is deployed. This represents ongoing oversight costs and is subtracted from time savings. The unit automatically matches your time benefit unit."
-          >
-            <input
-              :id="`req-oversight-${index}`"
-              :value="getOversightDisplayValue()"
-              type="number"
-              min="0"
-              step="0.1"
-              class="form-input"
-              @input="handleOversightChange($event)"
-            />
           </FormField>
         </div>
       </div>
@@ -457,8 +440,8 @@ import BenefitsModal from './BenefitsModal.vue'
 import type { Requirement, Benefit, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
-import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
-import { parseTimeUnit, fromMinutes, toMinutes, type TimeUnit } from '@/utils/timeUnitConversion'
+import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
+import { parseTimeUnit, type TimeUnit } from '@/utils/timeUnitConversion'
 
 interface Props {
   requirement: Requirement
@@ -566,52 +549,22 @@ function getNetSavingsPercentage(): number {
   if (!timeBenefit.value) return 0
   
   const savedPerUnit = getTimeSavedPerUnit(timeBenefit.value, props.requirement)
-  const oversight = props.requirement.humanOversightMinutesPerUnit || 0
   const volume = props.requirement.volumePerMonth || 0
-  const netTimeSaved = Math.max(0, savedPerUnit - oversight) * volume
+  const grossTimeSaved = savedPerUnit * volume
+  const oversightTime = getOversightMinutes(timeBenefit.value, volume)
+  const netTimeSaved = Math.max(0, grossTimeSaved - oversightTime)
   return Math.round((netTimeSaved / maxTotalTimeSaved.value) * 100)
 }
 
 // Get oversight percentage (grey bar)
 function getOversightPercentage(): number {
   if (maxTotalTimeSaved.value === 0) return 0
-  const oversight = props.requirement.humanOversightMinutesPerUnit || 0
+  if (!timeBenefit.value) return 0
   const volume = props.requirement.volumePerMonth || 0
-  const oversightTime = oversight * volume
+  const oversightTime = getOversightMinutes(timeBenefit.value, volume)
   return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 
-// Get oversight display value (convert from minutes to requirement's time unit)
-function getOversightDisplayValue(): number | string {
-  if (props.requirement.humanOversightMinutesPerUnit === undefined) {
-    return ''
-  }
-  
-  const timeUnit: TimeUnit = props.requirement.timeUnit || 'minutes'
-  if (timeUnit === 'minutes') {
-    return props.requirement.humanOversightMinutesPerUnit
-  }
-  
-  // Convert from minutes to the requirement's time unit
-  return fromMinutes(props.requirement.humanOversightMinutesPerUnit, timeUnit)
-}
-
-// Handle oversight change (convert from requirement's time unit to minutes for storage)
-function handleOversightChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  const value = input.value ? parseFloat(input.value) : undefined
-  
-  if (value === undefined) {
-    props.update({ ...props.requirement, humanOversightMinutesPerUnit: undefined })
-    return
-  }
-  
-  const timeUnit: TimeUnit = props.requirement.timeUnit || 'minutes'
-  // Convert from requirement's time unit to minutes for storage
-  const minutesValue = toMinutes(value, timeUnit)
-  
-  props.update({ ...props.requirement, humanOversightMinutesPerUnit: minutesValue })
-}
 
 // Format time saved text for collapsed view (baseline − expected) × volume
 const timeSavedText = computed(() => {
@@ -653,7 +606,7 @@ function openBenefitsModal() {
 function saveBenefits(newBenefits: Benefit[]) {
   // Determine time unit from time benefits
   const timeBenefits = newBenefits.filter(b => b.benefitType === 'time')
-  let timeUnit: 'minutes' | 'hours' | 'days' | undefined = props.requirement.timeUnit
+  let timeUnit: 'minutes' | 'hours' | undefined = props.requirement.timeUnit
   
   if (timeBenefits.length > 0) {
     // Parse unit from first time benefit

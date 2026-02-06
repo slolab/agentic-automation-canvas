@@ -5,7 +5,7 @@
 import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
-import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
 const BENEFIT_DISPLAY_STORAGE_KEY = 'agentic-automation-canvas-benefit-display'
@@ -464,20 +464,28 @@ export function useCanvasData() {
         errors.push({ field: `${prefix}.volumePerMonth`, message: 'Volume per month must be at least 1', severity: 'error' })
       }
 
-      if (req.humanOversightMinutesPerUnit !== undefined && req.humanOversightMinutesPerUnit < 0) {
-        errors.push({ field: `${prefix}.humanOversightMinutesPerUnit`, message: 'Human oversight minutes must be ≥ 0', severity: 'error' })
-      }
-
       // Validate benefits array
       if (!req.benefits || req.benefits.length === 0) {
         errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
       } else {
         // Check for time benefit and validate net savings (baseline − expected − oversight)
         const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
-        if (timeBenefit && req.humanOversightMinutesPerUnit !== undefined) {
+        if (timeBenefit) {
+          // Validate oversight values
+          if (timeBenefit.oversightMinutesPerUnit !== undefined && timeBenefit.oversightMinutesPerUnit < 0) {
+            errors.push({ field: `${prefix}.benefits[].oversightMinutesPerUnit`, message: 'Human oversight minutes per unit must be ≥ 0', severity: 'error' })
+          }
+          if (timeBenefit.oversightMinutesPerMonth !== undefined && timeBenefit.oversightMinutesPerMonth < 0) {
+            errors.push({ field: `${prefix}.benefits[].oversightMinutesPerMonth`, message: 'Human oversight minutes per month must be ≥ 0', severity: 'error' })
+          }
+          
+          // Validate net savings
           const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
-          const netTimeSaved = savedPerUnit - req.humanOversightMinutesPerUnit
-          if (netTimeSaved <= 0) {
+          const volume = req.volumePerMonth || 0
+          const grossTimeSaved = savedPerUnit * volume
+          const oversightTime = getOversightMinutes(timeBenefit, volume)
+          const netTimeSaved = grossTimeSaved - oversightTime
+          if (netTimeSaved <= 0 && (timeBenefit.oversightMinutesPerUnit !== undefined || timeBenefit.oversightMinutesPerMonth !== undefined)) {
             errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
           }
         }
@@ -672,10 +680,7 @@ export function useCanvasData() {
           total++
           if (req.status) completed++
         }
-        if (req.humanOversightMinutesPerUnit !== undefined) {
-          total++
-          if (req.humanOversightMinutesPerUnit !== undefined) completed++
-        }
+        // Oversight is now part of benefits, counted with benefits below
         // Count benefits as completed fields
         if (req.benefits && req.benefits.length > 0) {
           total += req.benefits.length

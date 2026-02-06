@@ -39,22 +39,41 @@ export function getTimeSavedPerUnit(benefit: Benefit, requirement?: Requirement)
 }
 
 /**
- * Get human oversight per unit in minutes.
- * Converts from the requirement's time unit to minutes for consistent calculations.
+ * Get human oversight for a time benefit in minutes.
+ * Returns oversight per unit or per month.
+ * Oversight is always stored and measured in minutes.
+ * 
+ * Logic:
+ * - If oversightMinutesPerMonth is set, use it (independent of aggregation basis)
+ * - Otherwise, if oversightMinutesPerUnit is set, multiply by volume for perUnit aggregation
+ * - For perMonth aggregation, use oversightMinutesPerMonth if set
+ * - For oneOff, no oversight
+ */
+export function getOversightMinutes(benefit: Benefit, volumePerMonth?: number): number {
+  // Oversight follows the aggregation basis of the benefit
+  if (benefit.aggregationBasis === 'perUnit') {
+    // For perUnit aggregation, oversight is per unit - multiply by volume
+    if (benefit.oversightMinutesPerUnit !== undefined && benefit.oversightMinutesPerUnit !== null && !isNaN(benefit.oversightMinutesPerUnit)) {
+      return volumePerMonth ? benefit.oversightMinutesPerUnit * volumePerMonth : benefit.oversightMinutesPerUnit
+    }
+  } else if (benefit.aggregationBasis === 'perMonth') {
+    // For perMonth aggregation, oversight is already per month - return directly
+    if (benefit.oversightMinutesPerMonth !== undefined && benefit.oversightMinutesPerMonth !== null && !isNaN(benefit.oversightMinutesPerMonth)) {
+      return benefit.oversightMinutesPerMonth
+    }
+  }
+  
+  // For oneOff or no oversight set, return 0
+  return 0
+}
+
+/**
+ * Get human oversight per unit in minutes (for perUnit aggregation only).
+ * @deprecated Use getOversightMinutes instead
  */
 export function getOversightMinutesPerUnit(requirement: Requirement): number {
   if (requirement.humanOversightMinutesPerUnit === undefined) {
     return 0
   }
-  
-  // If requirement has a timeUnit, the oversight is stored in minutes but represents that unit
-  // So we need to convert it. Actually wait - the field is called MinutesPerUnit, so it's always in minutes.
-  // But if the requirement has a timeUnit, we should convert the stored minutes to match the unit for display,
-  // but keep calculations in minutes.
-  
-  // Actually, I think the oversight should be stored in the requirement's time unit, not always minutes.
-  // But for backward compatibility, let's assume it's stored in minutes for now.
-  // We'll need to migrate this properly.
-  
   return requirement.humanOversightMinutesPerUnit
 }

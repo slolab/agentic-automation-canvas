@@ -529,8 +529,10 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.volumePerMonth !== undefined) {
         stepEntity['aac:volumePerMonth'] = req.volumePerMonth
       }
-      if (req.humanOversightMinutesPerUnit !== undefined) {
-        stepEntity['aac:humanOversightMinutesPerUnit'] = req.humanOversightMinutesPerUnit
+      // Export oversight from first time benefit (for backward compatibility)
+      const timeBenefit = req.benefits?.find(b => b.benefitType === 'time')
+      if (timeBenefit?.oversightMinutesPerUnit !== undefined) {
+        stepEntity['aac:humanOversightMinutesPerUnit'] = timeBenefit.oversightMinutesPerUnit
       }
       // Benefits array - generalized benefit tracking
       if (req.benefits && req.benefits.length > 0) {
