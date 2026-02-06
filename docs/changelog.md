@@ -104,8 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standards compliance (RO-Crate 1.1, Schema.org, DCAT, PROV-O, P-Plan, FRAPO)
 
 ### Schema Structure
-- Main properties: `version`, `versionDate`, `isImported`, `persons`, `project`, `userExpectations`, `developerFeasibility`, `governance`, `dataAccess`, `outcomes`
-- Schema definitions: `BenefitValue`, `Benefit`, `AggregateBenefit`
+- Main properties: `version`, `versionDate`, `persons`, `project`, `userExpectations`, `developerFeasibility`, `governance`, `dataAccess`, `outcomes`
+- Schema definitions: `BenefitValue`, `Benefit`
 
 ### Standards Integration
 - RO-Crate 1.1 packaging

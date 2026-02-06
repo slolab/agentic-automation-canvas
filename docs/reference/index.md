@@ -186,7 +186,7 @@ Technology Readiness Level - project-level maturity assessment
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `requirements` | array of object | No |  |  | P-Plan |
-| `stakeholders` | array of object | No | DEPRECATED in 0.11.0: Stakeholders are now managed per-task (`requirement.stakeholders`). Will be removed in 0.12.0. Maintained for backward compatibility only. |  | — |
+| `stakeholders` | array of object | No |  |  | — |
 
 ## UserExpectations Requirement
 

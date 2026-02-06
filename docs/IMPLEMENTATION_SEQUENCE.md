@@ -37,9 +37,9 @@ This document records the implementation sequence for the Agentic Automation Can
     - (Optional) Benefit–Effort scatter chart in Dashboard – not implemented.
 
 11. **Task-Specific Feasibility**:
-    - Optional `feasibility` on requirements (technologies, effortEstimate, technicalRisk, feasibilityNotes, llmApproach).
+    - Optional `feasibility` on requirements (technologies, effortEstimate, technicalRisk, feasibilityNotes, modelSelection, modelName, technologyApproach).
     - Collapsible "Technical Feasibility" section in RequirementItem.
-    - Optional `appliesToRequirements` on global DeveloperFeasibility.
+    - Project-level `developerFeasibility` provides defaults that apply to all tasks unless overridden.
     - Per-task feasibility indicators in Dashboard (risk badge, effort).
     - RO-Crate export/import updated for feasibility.
 

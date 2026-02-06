@@ -22,10 +22,9 @@ The canvas data model is the source of truth. RO-Crate export is a deterministic
 | `project.keywords` | `keywords` | Schema.org property |
 | `project.projectId` | `identifier` | URI/DOI |
 | `project.headlineValue` | `aac:headlineValue` | Free text |
-| `project.aggregateBenefitValue` | `aac:aggregateBenefitValue` | Number |
-| `project.aggregateBenefitUnit` | `aac:aggregateBenefitUnit` | String |
-| `project.primaryValueDriver` | `aac:primaryValueDriver` | Enum: time, quality, risk, enablement |
-| `project.aggregateBenefits` | `aac:aggregateBenefits` | Array of AggregateBenefit objects |
+| `project.roughEstimateValue` | `aac:roughEstimateValue` | Number (optional project-level estimate) |
+| `project.roughEstimateUnit` | `aac:roughEstimateUnit` | String (unit for rough estimate) |
+| `project.primaryValueDriver` | `aac:primaryValueDriver` | Enum: time, quality, risk, enablement, cost |
 | `project.version` | `aac:version` | Semantic version |
 | `project.versionDate` | `aac:versionDate` | ISO date |
 
@@ -98,8 +97,8 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 | `benefitUnit` | `benefitUnit` | Required |
 | `baseline` | `baseline` | BenefitValue object |
 | `expected` | `expected` | BenefitValue object |
-| `oversightMinutesPerUnit` | `aac:humanOversightMinutesPerUnit` | Optional: For time benefits with perUnit aggregation (RO-Crate uses legacy field name) |
-| `oversightMinutesPerMonth` | `aac:humanOversightMinutesPerMonth` | Optional: For time benefits with perMonth aggregation (RO-Crate uses legacy field name) |
+| `oversightMinutesPerUnit` | `aac:humanOversightMinutesPerUnit` | Optional: For time benefits with perUnit aggregation. RO-Crate exports this from first time benefit for backward compatibility (legacy field name). |
+| `oversightMinutesPerMonth` | (not exported) | Optional: For time benefits with perMonth aggregation. Stored in canvas but not exported to RO-Crate (perMonth oversight is task-specific). |
 | `confidenceUser` | `confidenceUser` | Optional: low, medium, high |
 | `confidenceDev` | `confidenceDev` | Optional: low, medium, high |
 | `assumptions` | `assumptions` | Optional |

@@ -461,11 +461,8 @@ function getStageColor(index: number): string {
 // Per-task feasibility: use req.feasibility, or global DeveloperFeasibility when applicable
 function getTaskFeasibility(req: Requirement) {
   if (req.feasibility) return req.feasibility
-  const df = canvasData.value.developerFeasibility
-  if (!df) return null
-  const appliesTo = df.appliesToRequirements
-  if (appliesTo && appliesTo.length > 0 && !appliesTo.includes(req.id)) return null
-  return df
+  // If no task-specific feasibility, use project-level defaults
+  return canvasData.value.developerFeasibility || null
 }
 
 function getTaskFeasibilityRisk(req: Requirement): string | null {
