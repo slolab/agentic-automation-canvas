@@ -103,8 +103,13 @@ const handleFileSelect = async (event: Event) => {
 
   try {
     const result = await importROCrateFromZip(file)
-    importFromROCrate(result.canvasData, result.benefitDisplay, result.crateSchemaVersion, true)
-    alert('RO-Crate imported successfully!')
+    importFromROCrate(result.canvasData, result.benefitDisplay, result.crateSchemaVersion, true, result.migrationWarnings)
+    // Don't switch tabs - stay on current tab
+    if (result.migrationWarnings && result.migrationWarnings.length > 0) {
+      alert(`RO-Crate imported successfully.\n\nMigrations applied:\n${result.migrationWarnings.join('\n')}`)
+    } else {
+      alert('RO-Crate imported successfully!')
+    }
   } catch (error) {
     alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
     console.error('Import error:', error)

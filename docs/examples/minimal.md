@@ -16,7 +16,6 @@ The minimal example shows:
 {
   "version": "0.1.0",
   "versionDate": "2025-01-30",
-  "isImported": false,
   "project": {
     "title": "Example Agentic Automation Project",
     "description": "A minimal example project",

@@ -123,6 +123,7 @@ export interface ValueModel {
   'aac:unitOfWork'?: string
   'aac:unitCategory'?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
   'aac:volumePerMonth'?: number
+  /** RO-Crate field name (legacy compatibility) - maps to benefit.oversightMinutesPerUnit in internal schema */
   'aac:humanOversightMinutesPerUnit'?: number
   'aac:benefits'?: Array<{
     benefitType: 'time' | 'quality' | 'risk' | 'enablement'

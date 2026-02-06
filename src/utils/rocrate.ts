@@ -506,10 +506,12 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       const stepEntity: ROCrateEntity = {
         '@id': stepId,
         '@type': 'p-plan:Step',
-        description: req.description,
+        name: req.title,
+        description: req.description ?? '',
       }
+      stepEntity['aac:title'] = req.title
       if (req.userStory) {
-        stepEntity.name = req.userStory
+        stepEntity['aac:userStory'] = req.userStory
       }
       if (req.priority) {
         stepEntity.priority = req.priority
@@ -527,12 +529,21 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.volumePerMonth !== undefined) {
         stepEntity['aac:volumePerMonth'] = req.volumePerMonth
       }
-      if (req.humanOversightMinutesPerUnit !== undefined) {
-        stepEntity['aac:humanOversightMinutesPerUnit'] = req.humanOversightMinutesPerUnit
+      // Export oversight from first time benefit (for backward compatibility)
+      // RO-Crate uses 'humanOversightMinutesPerUnit' for backward compatibility with older crates
+      const timeBenefit = req.benefits?.find(b => b.benefitType === 'time')
+      if (timeBenefit?.oversightMinutesPerUnit !== undefined) {
+        stepEntity['aac:humanOversightMinutesPerUnit'] = timeBenefit.oversightMinutesPerUnit
       }
       // Benefits array - generalized benefit tracking
       if (req.benefits && req.benefits.length > 0) {
         stepEntity['aac:benefits'] = req.benefits
+      }
+      if (req.dependsOn && req.dependsOn.length > 0) {
+        stepEntity['aac:dependsOn'] = req.dependsOn
+      }
+      if (req.feasibility && Object.keys(req.feasibility).length > 0) {
+        stepEntity['aac:feasibility'] = req.feasibility
       }
       graph.push(stepEntity)
     })
@@ -549,21 +560,39 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     projectEntity.hasPlan = { '@id': planId }
   }
 
-  // 4b. Stakeholders - use Person registry for deduplication
-  if (data.userExpectations?.stakeholders && data.userExpectations.stakeholders.length > 0) {
-    const stakeholderRefs: Array<{ '@id': string }> = []
+  // 4b. Stakeholders - collect from tasks (per-task stakeholders)
+  // Collect all unique person IDs from task stakeholders
+  const taskStakeholderIds = new Set<string>()
+  if (data.userExpectations?.requirements) {
+    data.userExpectations.requirements.forEach((req) => {
+      if (req.stakeholders) {
+        req.stakeholders.forEach((personId) => taskStakeholderIds.add(personId))
+      }
+    })
+  }
+  
+  // Also support legacy format (stakeholders at userExpectations level) for backward compatibility
+  // DEPRECATED: Will be removed in 0.12.0. Stakeholders are now managed per-task (requirement.stakeholders).
+  if (data.userExpectations?.stakeholders) {
     data.userExpectations.stakeholders.forEach((stakeholder) => {
+      taskStakeholderIds.add(stakeholder.personId)
+    })
+  }
+  
+  if (taskStakeholderIds.size > 0) {
+    const stakeholderRefs: Array<{ '@id': string }> = []
+    taskStakeholderIds.forEach((personId) => {
       // Find person by personId
-      const person = data.persons?.find(p => p.id === stakeholder.personId)
+      const person = data.persons?.find(p => p.id === personId)
       if (!person) {
-        console.warn(`Stakeholder references unknown person: ${stakeholder.personId}`)
+        console.warn(`Stakeholder references unknown person: ${personId}`)
         return
       }
       
       // Get RO-Crate Person ID from map
-      const rocratePersonId = personIdMap.get(stakeholder.personId)
+      const rocratePersonId = personIdMap.get(personId)
       if (!rocratePersonId) {
-        console.warn(`No RO-Crate ID mapped for person: ${stakeholder.personId}`)
+        console.warn(`No RO-Crate ID mapped for person: ${personId}`)
         return
       }
       
@@ -577,10 +606,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         }
       )
       
-      // Add role assignment separately (will create schema:Role node)
-      if (stakeholder.role) {
-        personRegistry.addRoleAssignment(rocratePersonId, stakeholder.role, 'stakeholder')
-      }
+      // Note: Per-task stakeholders don't have roles, but we can still create a generic stakeholder role
+      // for backward compatibility with RO-Crate format
+      personRegistry.addRoleAssignment(rocratePersonId, 'Stakeholder', 'stakeholder')
       
       stakeholderRefs.push({ '@id': rocratePersonId })
     })

@@ -95,17 +95,22 @@ The schema follows semantic versioning. Changes to the schema structure will be 
 - Grouping benefits for display (e.g. by metric) is application state only, stored in `benefit-display.json` in the crate when present
 - Display groups are not part of the canvas schema; they allow the UI to show combined values (e.g. time saved per month) in the collapsed view and dashboard
 
-### Savings Model Validation
+### Benefits and Oversight Model
 
-**Per-Step Validation Rules:**
-- `volumePerMonth >= 1` (required)
-- `baselineMinutesPerUnit >= 0` (required)
-- If all three time saved estimates are present: `best >= likely >= worst`
-- Warning (non-blocking) if `netTimeSaved <= 0`
+**Time Benefits:**
+- Time benefits include baseline and expected values (in requirement's `timeUnit`: minutes or hours)
+- Human oversight is stored at benefit level:
+  - `oversightMinutesPerUnit`: For benefits with `aggregationBasis: "perUnit"` (oversight per unit, always in minutes)
+  - `oversightMinutesPerMonth`: For benefits with `aggregationBasis: "perMonth"` (oversight per month, always in minutes)
+- Net time savings = (baseline - expected) - oversight (calculated, not stored)
+- Oversight is always measured in minutes regardless of the benefit's time unit
 
-**Field Naming:**
-- `humanOversightMinutesPerUnit`: Time required for human review/oversight per unit
-- `netTimeSavedMinutesPerUnit`: Computed as `likely - oversight` (auto-calculated, not stored)
+**Benefit Types:**
+- `time`: Time savings (with optional oversight)
+- `quality`: Quality improvements
+- `risk`: Risk reductions
+- `enablement`: New capabilities enabled
+- `cost`: Cost savings
 
 ### Governance Stage Gating
 
@@ -129,10 +134,11 @@ The schema follows semantic versioning. Changes to the schema structure will be 
 - `title` and `description` required
 
 **Requirement:**
-- `volumePerMonth >= 1`
-- `baselineMinutesPerUnit >= 0`
-- `best >= likely >= worst` (if all present)
-- Warning if `netTimeSaved <= 0`
+- `title` required (min length: 1)
+- `benefits` required (array, at least one benefit)
+- `volumePerMonth >= 1` (if applicable)
+- `timeUnit` optional (enum: "minutes" | "hours") - standardizes all time values for the requirement
+- `stakeholders` optional (array of Person IDs, per-task)
 
 **References:**
 - All Person `@id` references must exist in Persons registry

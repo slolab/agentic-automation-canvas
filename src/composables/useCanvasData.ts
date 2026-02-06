@@ -5,7 +5,7 @@
 import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
-import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
+import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
 const BENEFIT_DISPLAY_STORAGE_KEY = 'agentic-automation-canvas-benefit-display'
@@ -33,8 +33,20 @@ const lastImportedCrateSchemaVersion = ref<string | null>(null)
 // App-only: true when last import was from a crate with no aac:schemaVersion (treat as prior/legacy)
 const importedCrateHadNoSchemaVersion = ref(false)
 
+// App-only: migration warnings from last import (normalization applied)
+const lastImportMigrationWarnings = ref<string[]>([])
+
 // App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
 const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
+
+// App-only: when set, CanvasForm switches to this section (e.g. after Load Example)
+const requestedSection = ref<string | null>(null)
+const requestSection = (section: string) => {
+  requestedSection.value = section
+}
+
+// Incremented on import so UserExpectations can remount and pick up fresh data
+const dataVersion = ref(0)
 
 // Load from localStorage on init
 const loadFromStorage = () => {
@@ -311,7 +323,8 @@ export function useCanvasData() {
     data: CanvasData,
     importedBenefitDisplay?: BenefitDisplayState,
     crateSchemaVersion?: string,
-    fromCrateFile = false
+    fromCrateFile = false,
+    migrationWarnings?: string[]
   ) => {
     // Deep copy the data to ensure reactivity works properly
     const newData = JSON.parse(JSON.stringify(data))
@@ -334,6 +347,7 @@ export function useCanvasData() {
     newData.versionDate = today
     newData.project.versionDate = today
     canvasData.value = newData
+    dataVersion.value++
     lastImportedVersion.value = newData.project?.version ?? newData.version ?? null
     if (fromCrateFile) {
       lastImportedCrateSchemaVersion.value = crateSchemaVersion ?? null
@@ -348,6 +362,11 @@ export function useCanvasData() {
     } else {
       benefitDisplay.value = { displayGroups: [] }
     }
+    lastImportMigrationWarnings.value = migrationWarnings ?? []
+  }
+
+  const clearMigrationWarnings = () => {
+    lastImportMigrationWarnings.value = []
   }
 
   // Validation functions
@@ -429,6 +448,10 @@ export function useCanvasData() {
     requirements.forEach((req, index) => {
       const prefix = `requirements[${index}]`
 
+      if (!req.title || !req.title.trim()) {
+        errors.push({ field: `${prefix}.title`, message: 'Task title is required', severity: 'error' })
+      }
+
       if (!req.unitOfWork || !req.unitOfWork.trim()) {
         errors.push({ field: `${prefix}.unitOfWork`, message: 'Unit of work is required', severity: 'error' })
       }
@@ -441,20 +464,28 @@ export function useCanvasData() {
         errors.push({ field: `${prefix}.volumePerMonth`, message: 'Volume per month must be at least 1', severity: 'error' })
       }
 
-      if (req.humanOversightMinutesPerUnit !== undefined && req.humanOversightMinutesPerUnit < 0) {
-        errors.push({ field: `${prefix}.humanOversightMinutesPerUnit`, message: 'Human oversight minutes must be ≥ 0', severity: 'error' })
-      }
-
       // Validate benefits array
       if (!req.benefits || req.benefits.length === 0) {
         errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
       } else {
         // Check for time benefit and validate net savings (baseline − expected − oversight)
         const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
-        if (timeBenefit && req.humanOversightMinutesPerUnit !== undefined) {
-          const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
-          const netTimeSaved = savedPerUnit - req.humanOversightMinutesPerUnit
-          if (netTimeSaved <= 0) {
+        if (timeBenefit) {
+          // Validate oversight values
+          if (timeBenefit.oversightMinutesPerUnit !== undefined && timeBenefit.oversightMinutesPerUnit < 0) {
+            errors.push({ field: `${prefix}.benefits[].oversightMinutesPerUnit`, message: 'Human oversight minutes per unit must be ≥ 0', severity: 'error' })
+          }
+          if (timeBenefit.oversightMinutesPerMonth !== undefined && timeBenefit.oversightMinutesPerMonth < 0) {
+            errors.push({ field: `${prefix}.benefits[].oversightMinutesPerMonth`, message: 'Human oversight minutes per month must be ≥ 0', severity: 'error' })
+          }
+          
+          // Validate net savings
+          const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
+          const volume = req.volumePerMonth || 0
+          const grossTimeSaved = savedPerUnit * volume
+          const oversightTime = getOversightMinutes(timeBenefit, volume)
+          const netTimeSaved = grossTimeSaved - oversightTime
+          if (netTimeSaved <= 0 && (timeBenefit.oversightMinutesPerUnit !== undefined || timeBenefit.oversightMinutesPerMonth !== undefined)) {
             errors.push({ field: `${prefix}.netTimeSaved`, message: 'Net time saved is ≤ 0 (oversight exceeds time saved)', severity: 'warning' })
           }
         }
@@ -622,7 +653,7 @@ export function useCanvasData() {
       data.userExpectations.requirements.forEach(req => {
         // Mandatory fields per requirement
         total++
-        if (req.description?.trim()) completed++
+        if (req.title?.trim()) completed++
         
         total++
         if (req.unitOfWork?.trim()) completed++
@@ -649,10 +680,7 @@ export function useCanvasData() {
           total++
           if (req.status) completed++
         }
-        if (req.humanOversightMinutesPerUnit !== undefined) {
-          total++
-          if (req.humanOversightMinutesPerUnit !== undefined) completed++
-        }
+        // Oversight is now part of benefits, counted with benefits below
         // Count benefits as completed fields
         if (req.benefits && req.benefits.length > 0) {
           total += req.benefits.length
@@ -695,14 +723,6 @@ export function useCanvasData() {
       if (data.developerFeasibility.technicalRisk !== undefined) {
         total++
         if (data.developerFeasibility.technicalRisk) completed++
-      }
-      if (data.developerFeasibility.algorithms !== undefined && data.developerFeasibility.algorithms.length > 0) {
-        total += data.developerFeasibility.algorithms.length
-        completed += data.developerFeasibility.algorithms.filter(a => a?.trim()).length
-      }
-      if (data.developerFeasibility.tools !== undefined && data.developerFeasibility.tools.length > 0) {
-        total += data.developerFeasibility.tools.length
-        completed += data.developerFeasibility.tools.filter(t => t?.trim()).length
       }
       if (data.developerFeasibility.effortEstimate !== undefined) {
         total++
@@ -867,6 +887,8 @@ export function useCanvasData() {
   return {
     canvasData,
     lastImportedVersion,
+    lastImportMigrationWarnings,
+    clearMigrationWarnings,
     benefitDisplay,
     markChangedSinceImport,
     updateProject,
@@ -886,5 +908,8 @@ export function useCanvasData() {
     validateRequirements,
     validateDatasets,
     validateOutcomes,
+    requestedSection,
+    requestSection,
+    dataVersion,
   }
 }

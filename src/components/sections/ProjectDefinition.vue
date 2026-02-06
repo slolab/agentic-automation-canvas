@@ -55,14 +55,16 @@
                   <span v-if="localData.headlineValue" class="font-medium text-gray-800">
                     {{ localData.headlineValue }}
                   </span>
-                  <span
-                    v-for="tag in benefitCountTags"
-                    :key="tag.type"
-                    :class="benefitTypeBadgeClass(tag.type)"
-                    class="rounded px-2 py-0.5 text-xs font-medium capitalize"
-                  >
-                    {{ tag.type }} {{ tag.count }}
-                  </span>
+                  <div class="flex flex-wrap items-center gap-2">
+                    <span
+                      v-for="tag in benefitCountTags"
+                      :key="tag.type"
+                      :class="benefitTypeBadgeClass(tag.type)"
+                      class="rounded px-2 py-0.5 text-xs font-medium capitalize"
+                    >
+                      {{ tag.type }} {{ tag.count }}
+                    </span>
+                  </div>
                   <!-- Display groups: one line each — tag then metric + value -->
                   <template v-for="line in displayGroupLinesForCollapsed" :key="'dg-' + line.id">
                     <div class="flex items-center gap-2 w-full text-xs mt-1.5 first:mt-2">
@@ -120,7 +122,7 @@
                   >
                     <div class="flex items-center gap-2 mb-1.5">
                       <span class="font-medium text-gray-900 truncate flex-1 text-sm">
-                        {{ task.description || `Task ${taskIndex + 1}` }}
+                        {{ task.title || task.description || `Task ${taskIndex + 1}` }}
                       </span>
                       <span
                         v-if="task.priority"
@@ -442,6 +444,7 @@
                 <option value="quality">Quality</option>
                 <option value="risk">Risk</option>
                 <option value="enablement">Enablement</option>
+                <option value="cost">Cost</option>
               </select>
             </FormField>
           </div>
@@ -576,6 +579,20 @@
             </div>
           </div>
         </div>
+
+        <!-- Done Button -->
+        <div class="pt-4 border-t border-gray-200 mt-4">
+          <button
+            type="button"
+            @click="isExpanded = false"
+            class="btn-secondary w-full flex items-center justify-center gap-2"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+            Done (collapse)
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -669,7 +686,7 @@ function getTaskDescription(requirementId: string): string {
   const req = (canvasData.value.userExpectations?.requirements || []).find(
     (r, i) => (r.id || `req-${i}`) === requirementId
   )
-  return req?.description || requirementId
+  return req?.title || req?.description || requirementId
 }
 
 function getMetricLabelForBenefit(benefit: Benefit): string {
@@ -682,6 +699,7 @@ function benefitTypeBadgeClass(type: string): string {
     quality: 'bg-blue-100 text-blue-700',
     risk: 'bg-orange-100 text-orange-700',
     enablement: 'bg-purple-100 text-purple-700',
+    cost: 'bg-amber-100 text-amber-700',
   }
   return classes[type] || 'bg-gray-100 text-gray-700'
 }
@@ -813,7 +831,7 @@ function getTaskTimeSaved(task: Requirement): string | null {
   const timeBenefit = (task.benefits || []).find(b => b.benefitType === 'time')
   if (!timeBenefit) return null
   
-  const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit, task)
   const volume = task.volumePerMonth
   
   if (savedPerUnit > 0 && volume) {
@@ -843,7 +861,7 @@ const computedBenefitFromTasks = computed<{ value: number; unit: string; source:
   for (const req of reqs) {
     const timeBenefit = (req.benefits || []).find(b => b.benefitType === 'time')
     if (!timeBenefit) continue
-    const savedPerUnit = getTimeSavedPerUnit(timeBenefit)
+    const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
     const volume = req.volumePerMonth || 0
     totalMinutes += savedPerUnit * volume
   }
@@ -866,6 +884,8 @@ const benefitValueHelpText = computed(() => {
       return 'Numeric value for risk reduction (e.g., 10)'
     case 'enablement':
       return 'Numeric value for enablement (e.g., 5)'
+    case 'cost':
+      return 'Numeric value for cost savings (e.g., 5000)'
     default:
       return 'Enter the numeric value for the benefit metric'
   }
@@ -881,6 +901,8 @@ const benefitValuePlaceholder = computed(() => {
       return 'e.g., 10'
     case 'enablement':
       return 'e.g., 5'
+    case 'cost':
+      return 'e.g., 5000'
     default:
       return 'Enter value'
   }
@@ -896,6 +918,8 @@ const benefitUnitHelpText = computed(() => {
       return 'Unit or description for risk reduction (e.g., incidents prevented/month, % compliance improvement)'
     case 'enablement':
       return 'Unit or description for enablement (e.g., new capabilities enabled, users empowered)'
+    case 'cost':
+      return 'Unit or description for cost (e.g., EUR/month, USD saved)'
     default:
       return 'Enter the unit or description for the benefit metric'
   }
@@ -911,6 +935,8 @@ const benefitUnitPlaceholder = computed(() => {
       return 'e.g., incidents prevented/month'
     case 'enablement':
       return 'e.g., new capabilities enabled'
+    case 'cost':
+      return 'e.g., EUR/month'
     default:
       return 'Enter unit'
   }
@@ -926,6 +952,8 @@ const benefitValueTooltip = computed(() => {
       return 'Enter the numeric value for risk reduction. This could be incidents prevented, compliance improvements, or other risk metrics. Example: If you prevent 10 incidents per month, enter 10.'
     case 'enablement':
       return 'Enter the numeric value for enablement. This represents new capabilities or users empowered. Example: If you enable 5 new workflow types, enter 5.'
+    case 'cost':
+      return 'Enter the numeric value for cost savings. Example: If you save 5000 EUR per month, enter 5000.'
     default:
       return 'Enter the numeric value for the benefit metric. The meaning depends on your selected Primary Value Driver.'
   }
@@ -941,6 +969,8 @@ const benefitUnitTooltip = computed(() => {
       return 'Specify the unit for risk reduction. Examples: incidents prevented/month, % compliance improvement, security vulnerabilities eliminated. This explains how risk reduction is quantified.'
     case 'enablement':
       return 'Specify the unit for enablement. Examples: new capabilities enabled, users empowered, workflows automated. This describes what new possibilities the project creates.'
+    case 'cost':
+      return 'Specify the unit for cost. Examples: EUR/month, USD saved, % cost reduction.'
     default:
       return 'Enter the unit or description for the benefit metric. This helps others understand how the benefit value should be interpreted.'
   }
@@ -955,13 +985,13 @@ const hasTaskBenefits = computed(() => {
 // Benefit count by type for compact tags (category + number)
 const benefitCountTags = computed(() => {
   const reqs = canvasData.value.userExpectations?.requirements || []
-  const counts: Record<string, number> = { time: 0, quality: 0, risk: 0, enablement: 0 }
+  const counts: Record<string, number> = { time: 0, quality: 0, risk: 0, enablement: 0, cost: 0 }
   reqs.forEach((r) => {
     (r.benefits || []).forEach((b) => {
       if (counts[b.benefitType] !== undefined) counts[b.benefitType]++
     })
   })
-  return (['time', 'quality', 'risk', 'enablement'] as const)
+  return (['time', 'quality', 'risk', 'enablement', 'cost'] as const)
     .filter((type) => counts[type] > 0)
     .map((type) => ({ type, count: counts[type] }))
 })
@@ -970,7 +1000,15 @@ const benefitCountTags = computed(() => {
 const displayGroupLinesForCollapsed = computed(() => {
   const reqs = canvasData.value.userExpectations?.requirements || []
   return benefitDisplay.value.displayGroups
-    .filter((g) => g.benefitRefs.length > 0)
+    .filter((g) => {
+      // Filter out groups with no benefit references
+      if (g.benefitRefs.length === 0) return false
+      // Filter out groups where all references point to non-existent tasks
+      return g.benefitRefs.some((ref) => {
+        const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
+        return req && req.benefits && req.benefits[ref.benefitIndex]
+      })
+    })
     .map((g) => {
       const metricLabel = g.metricId
         ? (getMetricDisplayLabel(g.benefitType, g.metricId) || g.metricId)
@@ -978,6 +1016,7 @@ const displayGroupLinesForCollapsed = computed(() => {
       const valueDisplay = formatDisplayGroupValue(g, reqs)
       return { id: g.id, benefitType: g.benefitType, metricLabel, valueDisplay }
     })
+    .filter((line) => line.valueDisplay !== '—') // Filter out lines that would show only dashes
 })
 
 // Display benefit metric in collapsed view (rough estimate only, when no task benefits)
@@ -1018,6 +1057,8 @@ const valueDriverIconPath = computed(() => {
       return 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z' // Shield icon
     case 'enablement':
       return 'M13 10V3L4 14h7v7l9-11h-7z' // Lightning bolt
+    case 'cost':
+      return 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z' // Currency
     default:
       return 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z' // Default checkmark circle
   }

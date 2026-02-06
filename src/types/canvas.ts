@@ -30,7 +30,7 @@ export interface ProjectDefinition {
   projectId?: string
   // Project-level value summary
   headlineValue?: string
-  primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
+  primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
   roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
   // Version management (stored at project level for ROcrate compatibility)
@@ -57,7 +57,7 @@ export type ValueMeaning = 'absolute' | 'delta'
 
 // Generalized benefit structure for all benefit types
 export interface Benefit {
-  benefitType: 'time' | 'quality' | 'risk' | 'enablement'
+  benefitType: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   metricId: string // Controlled vocabulary + "custom"
   metricLabel: string // Human-readable label
   direction: BenefitDirection // Whether higher/lower/target/bool is better
@@ -67,14 +67,46 @@ export interface Benefit {
   benefitUnit: string // e.g., "minutes", "%", "incidents/month"
   baseline: BenefitValue
   expected: BenefitValue
+  /** Human oversight (for time benefits only). Always in minutes. Subtracted from gross time savings. Mutually exclusive: use oversightMinutesPerUnit for perUnit aggregation, oversightMinutesPerMonth for perMonth aggregation. */
+  oversightMinutesPerUnit?: number // Only used when aggregationBasis is 'perUnit'
+  oversightMinutesPerMonth?: number // Only used when aggregationBasis is 'perMonth'
   confidenceUser?: 'low' | 'medium' | 'high'
   confidenceDev?: 'low' | 'medium' | 'high'
   assumptions?: string
 }
 
+/** Per-task feasibility (optional overrides for project-level feasibility) */
+export interface RequirementFeasibility {
+  technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
+  effortEstimate?: string
+  feasibilityNotes?: string
+  algorithms?: string[]
+  tools?: string[]
+  /** Model selection for this task (if different from project-level) */
+  modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other' | 'none'
+  /** Specific model name/version for this task */
+  modelName?: string
+  /** Technology approach for this task. Set to 'none' if task is deterministic and doesn't require LLMs */
+  technologyApproach?: {
+    architecture?: 'none' | 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
+    ragDetails?: { retrievalMethod?: string; embeddingModel?: string; chunkingStrategy?: string }
+    fineTuningDetails?: {
+      baseModel?: string // Base model that was fine-tuned
+      tuningApproach?: string // e.g., LoRA, QLoRA, full fine-tuning
+      dataset?: string // Dataset used for fine-tuning
+    }
+    agenticDetails?: { 
+      framework?: string[] // e.g., ReAct, MCP, Plan-and-Execute (single-item array, new entry replaces existing)
+      tools?: string[] // e.g., file_search, browser, custom tools
+      orchestration?: string[] // e.g., LangGraph (single-item array, new entry replaces existing)
+    }
+  }
+}
+
 export interface Requirement {
   id: string
-  description: string
+  title: string
+  description?: string
   userStory?: string
   priority?: 'low' | 'medium' | 'high' | 'critical'
   status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
@@ -82,11 +114,18 @@ export interface Requirement {
   value?: string
   // Value model fields
   unitOfWork?: string
-  unitCategory?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
+  unitCategory?: 'item' | 'interaction' | 'computation' | 'other'
   volumePerMonth?: number
-  humanOversightMinutesPerUnit?: number // Applies globally to time benefits
+  /** Time unit for this requirement's time benefits. Standardizes all time values. */
+  timeUnit?: 'minutes' | 'hours'
   // Generalized benefits array - replaces legacy time/quality/risk fields
   benefits: Benefit[]
+  /** IDs of requirements this task depends on (workflow order) */
+  dependsOn?: string[]
+  /** Person IDs of stakeholders for this task */
+  stakeholders?: string[]
+  /** Optional per-task feasibility (overrides or complements global DeveloperFeasibility) */
+  feasibility?: RequirementFeasibility
 }
 
 export interface Person {
@@ -94,6 +133,7 @@ export interface Person {
   name: string
   affiliation?: string // Optional disambiguation
   orcid?: string // Optional stable identifier (e.g., ORCID)
+  functionRoles?: string[] // Functional roles from controlled vocabulary
 }
 
 export interface Stakeholder {
@@ -103,37 +143,19 @@ export interface Stakeholder {
   roleContext?: string // Optional role context for this stakeholder role
 }
 
+/** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */
 export interface DeveloperFeasibility {
+  /** Technology Readiness Level - project-level maturity assessment */
   trlLevel?: {
     current?: number
     target?: number
   }
+  /** Overall technical risk for the project */
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
-  algorithms?: string[]
-  tools?: string[]
+  /** Overall effort estimate for the project */
   effortEstimate?: string
+  /** Project-level feasibility notes */
   feasibilityNotes?: string
-  modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other'
-  modelName?: string
-  baselineCapability?: {
-    taskPerformance?: 'excellent' | 'good' | 'moderate' | 'poor' | 'fails'
-    successRate?: number
-    limitations?: string
-    requiresCustomInstructions?: boolean
-    customInstructionsComplexity?: 'low' | 'medium' | 'high'
-  }
-  expectedGains?: {
-    performanceImprovement?: 'minimal' | 'moderate' | 'significant' | 'transformative'
-    headroom?: 'low' | 'medium' | 'high'
-    justification?: string
-  }
-  implementationDifficulty?: {
-    skillAdditionDifficulty?: 'very-easy' | 'easy' | 'moderate' | 'difficult' | 'very-difficult'
-    baselineComparisonRequired?: boolean
-    validationMonitoringRequired?: boolean
-    securityLevel?: 'low' | 'medium' | 'high' | 'critical'
-  }
-  agenticExplanation?: string
 }
 
 export interface GovernanceStaging {

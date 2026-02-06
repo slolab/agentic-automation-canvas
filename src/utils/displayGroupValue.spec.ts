@@ -4,7 +4,7 @@ import type { Requirement } from '@/types/canvas'
 import type { BenefitDisplayGroup } from '@/types/benefitDisplay'
 
 function req(id: string, volumePerMonth: number, benefits: Requirement['benefits']): Requirement {
-  return { id, description: '', benefits, volumePerMonth }
+  return { id, title: '', benefits, volumePerMonth }
 }
 
 function timeBenefit(baselineMin: number, expectedMin: number) {
@@ -140,7 +140,7 @@ describe('formatDisplayGroupValue', () => {
   })
 
   it('resolves requirement by id or fallback req-{i}', () => {
-    const reqNoId: Requirement = { id: 'req-0', description: '', benefits: [timeBenefit(10, 3)], volumePerMonth: 10 }
+    const reqNoId: Requirement = { id: 'req-0', title: '', benefits: [timeBenefit(10, 3)], volumePerMonth: 10 }
     const reqs: Requirement[] = [{ ...reqNoId }]
     const group: BenefitDisplayGroup = {
       id: 0,

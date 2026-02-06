@@ -80,7 +80,7 @@ watch(
       })
     }
   },
-  { deep: true, immediate: false }
+  { deep: true, immediate: true }
 )
 
 // Watch for local changes and update canvasData immediately

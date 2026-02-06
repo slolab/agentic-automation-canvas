@@ -217,6 +217,7 @@ const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'â
 const loadExample = () => {
   if (confirm('This will replace your current data with an example dataset. Continue?')) {
     importFromROCrate(exampleData, exampleBenefitDisplay)
+    // Don't switch tabs - stay on current tab
   }
 }
 

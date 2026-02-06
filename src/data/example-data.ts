@@ -13,12 +13,20 @@ export const exampleData: CanvasData = {
       id: 'person-0',
       name: 'Sarah Johnson',
       affiliation: 'Operations Department',
+      functionRoles: ['end-user', 'project-manager'],
     },
     {
       id: 'person-1',
       name: 'Michael Chen',
       orcid: 'https://orcid.org/0000-0000-0000-0001',
       affiliation: 'IT Department',
+      functionRoles: ['technical-lead', 'developer'],
+    },
+    {
+      id: 'person-2',
+      name: 'Emma Rodriguez',
+      affiliation: 'Compliance Department',
+      functionRoles: ['compliance-officer', 'data-manager'],
     },
   ],
   project: {
@@ -44,14 +52,46 @@ export const exampleData: CanvasData = {
     requirements: [
       {
         id: 'req-1',
-        description: 'Automatically extract key information from incoming documents',
+        title: 'Extract key information from documents',
+        description: `Automatically extract structured information (names, dates, amounts, categories) from diverse incoming documents (invoices, forms, reports) using agentic AI systems. This task demonstrates a complex, high-value automation opportunity where LLMs excel at handling format variability.
+
+**Rationale**: Document extraction is a prime candidate for agentic automation because it requires:
+- Handling diverse document formats and layouts
+- Understanding context to extract relevant fields
+- Validating extracted data against schemas
+- Adapting to edge cases through reasoning
+
+**Best Practices Demonstrated**:
+- Using per-unit aggregation for time benefits (8 min → 2 min per document)
+- Tracking multiple benefit types: time savings, quality improvements (error rate reduction), and risk mitigation (compliance incidents)
+- Setting realistic oversight expectations (1 min/unit for human review of extracted data)
+- High user confidence but medium developer confidence reflects uncertainty in production performance
+
+**References**: For agentic document processing approaches, see frameworks like ReAct (Yao et al., 2022) and MCP (Model Context Protocol) for tool-augmented extraction.`,
         userStory: 'As a data entry clerk, I want documents to be automatically processed so that I can focus on exception handling instead of routine data entry',
         priority: 'high',
         status: 'in-progress',
         unitOfWork: 'one document',
-        unitCategory: 'document',
+        unitCategory: 'item',
         volumePerMonth: 500,
-        humanOversightMinutesPerUnit: 1,
+        stakeholders: ['person-0'],
+        feasibility: {
+          technicalRisk: 'high',
+          effortEstimate: '8-10 weeks',
+          feasibilityNotes: 'Extraction requires extensive agentic capabilities to handle diverse document formats and extract structured information. Needs robust error handling and validation.',
+          modelSelection: 'frontier-model',
+          modelName: 'gpt-4o',
+          technologyApproach: {
+            architecture: 'agents',
+            agenticDetails: {
+              framework: ['ReAct', 'MCP'],
+              tools: ['document_parser', 'schema_validator', 'external_api', 'database_query'],
+              orchestration: ['LangGraph'],
+            },
+          },
+          algorithms: ['OCR (Optical Character Recognition)', 'Natural Language Processing', 'Named Entity Recognition'],
+          tools: ['Python', 'LangChain', 'OpenAI API', 'Document Processing API'],
+        },
         benefits: [
           {
             benefitType: 'time',
@@ -63,9 +103,10 @@ export const exampleData: CanvasData = {
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 8 },
             expected: { type: 'numeric', value: 2 },
+            oversightMinutesPerUnit: 1,
             confidenceUser: 'high',
             confidenceDev: 'medium',
-            assumptions: 'Documents are mostly standardized formats. Complex documents may require more oversight.',
+            assumptions: 'Documents are mostly standardized formats (80% invoices, 15% forms, 5% custom). Complex documents may require more oversight. Extraction accuracy validated through spot-checking 10% of documents. Human oversight focuses on verifying extracted amounts and dates for financial accuracy.',
           },
           {
             benefitType: 'quality',
@@ -79,7 +120,7 @@ export const exampleData: CanvasData = {
             expected: { type: 'numeric', value: 1 },
             confidenceUser: 'high',
             confidenceDev: 'medium',
-            assumptions: 'Assumes validation pipeline catches 95% of errors',
+            assumptions: 'Assumes validation pipeline catches 95% of errors through schema validation and range checks. Remaining 5% errors are primarily edge cases (handwritten text, unusual formats) that require human review.',
           },
           {
             benefitType: 'risk',
@@ -93,20 +134,48 @@ export const exampleData: CanvasData = {
             expected: { type: 'numeric', value: 0.5 },
             confidenceUser: 'medium',
             confidenceDev: 'medium',
-            assumptions: 'Automated processing ensures consistent handling per policy, reducing human error in compliance-sensitive documents',
+            assumptions: 'Automated processing ensures consistent handling per policy, reducing human error in compliance-sensitive documents. Baseline of 3 incidents/month reflects occasional policy misinterpretation by staff. Expected 0.5 incidents/month accounts for system errors requiring escalation.',
           },
         ],
       },
       {
         id: 'req-2',
-        description: 'Automatically categorize documents by type',
+        title: 'Categorize documents by type',
+        description: `Automatically categorize documents into predefined types (invoice, contract, report, etc.) based on structured data extracted in the previous step. This task demonstrates a deterministic automation that doesn't require LLMs.
+
+**Rationale**: This is a deterministic task because:
+- Input is structured (from req-1 extraction output)
+- Categories are well-defined and finite
+- Classification rules can be expressed as logical conditions
+- No ambiguity or reasoning required
+
+**Best Practices Demonstrated**:
+- Showing that not all automation requires LLMs (modelSelection: 'none')
+- Demonstrating task dependencies (dependsOn: ['req-1'])
+- Using deterministic approaches when possible reduces cost and complexity
+- Zero oversight needed for deterministic tasks (oversightMinutesPerUnit: 0)
+- Including cost benefits from eliminating external contractor
+
+**Design Pattern**: This follows the "extract-then-classify" pattern where an upstream agentic task (extraction) produces structured output that enables downstream deterministic processing.`,
         userStory: 'As a team lead, I want documents automatically categorized so that routing decisions are consistent and faster',
         priority: 'high',
         status: 'planned',
         unitOfWork: 'one document',
-        unitCategory: 'document',
+        unitCategory: 'item',
         volumePerMonth: 500,
-        humanOversightMinutesPerUnit: 0.5,
+        dependsOn: ['req-1'],
+        stakeholders: ['person-1', 'person-2'],
+        feasibility: {
+          technicalRisk: 'low',
+          effortEstimate: '2-3 weeks',
+          feasibilityNotes: 'Deterministic task based on structured schema output from extraction. Uses rule-based classification matching extracted fields to predefined document type patterns. No LLM required.',
+          modelSelection: 'none',
+          technologyApproach: {
+            architecture: 'none',
+          },
+          algorithms: ['Rule-based classification', 'Pattern matching'],
+          tools: ['Python', 'JSON Schema validator'],
+        },
         benefits: [
           {
             benefitType: 'time',
@@ -118,9 +187,10 @@ export const exampleData: CanvasData = {
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 3 },
             expected: { type: 'numeric', value: 1 },
+            oversightMinutesPerUnit: 0,
             confidenceUser: 'medium',
             confidenceDev: 'medium',
-            assumptions: 'Document types are well-defined and distinguishable',
+            assumptions: 'Document types are well-defined (invoice, contract, report, form, other) and distinguishable via extracted fields (document_type, amount, parties, date_range). Classification rules: invoices have amount > 0 and vendor field; contracts have parties array with length >= 2; reports have report_date and no amount.',
           },
           {
             benefitType: 'quality',
@@ -135,18 +205,64 @@ export const exampleData: CanvasData = {
             confidenceUser: 'medium',
             confidenceDev: 'medium',
           },
+          {
+            benefitType: 'cost',
+            metricId: 'operationalCost',
+            metricLabel: 'Operational cost',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'USD',
+            baseline: { type: 'numeric', value: 2500 },
+            expected: { type: 'numeric', value: 0 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Previously done by external contractor at a flat monthly fee of $2,500. With automation, no external contractor needed. This represents a direct cost savings that is independent of volume, hence perMonth aggregation.',
+          },
         ],
       },
       {
         id: 'req-3',
-        description: 'Route documents to appropriate team members',
+        title: 'Route documents to team members',
+        description: `Automatically route categorized documents to the appropriate team member based on document type, content, and team member expertise/workload. This task demonstrates lightweight agentic automation that leverages existing infrastructure.
+
+**Rationale**: While this could be deterministic, using an agentic approach provides:
+- Flexibility to handle routing exceptions
+- Ability to consider team member workload and availability
+- Natural language reasoning for edge cases
+- Integration with team directory and scheduling systems
+
+**Best Practices Demonstrated**:
+- Reusing existing model infrastructure (gpt-4o already in pipeline) even when not strictly necessary
+- Minimal oversight (0.3 min/unit) for periodic quality checks rather than per-document review
+- Enablement benefit showing new capability (automated routing) vs. just time savings
+- Lower technical risk due to simpler decision-making compared to extraction
+
+**Architecture Note**: Uses MCP (Model Context Protocol) to access routing rules and team directory, enabling the agent to make informed routing decisions without extensive prompt engineering.`,
         userStory: 'As a manager, I want documents automatically routed to the right person so that processing time is minimized',
         priority: 'medium',
         status: 'planned',
         unitOfWork: 'one routing decision',
-        unitCategory: 'case',
+        unitCategory: 'item',
         volumePerMonth: 500,
-        humanOversightMinutesPerUnit: 0.3,
+        dependsOn: ['req-2'],
+        stakeholders: ['person-0', 'person-1', 'person-2'],
+        feasibility: {
+          technicalRisk: 'low',
+          effortEstimate: '3-4 weeks',
+          feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. GPT-4o would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
+          modelSelection: 'frontier-model',
+          modelName: 'gpt-4o',
+          technologyApproach: {
+            architecture: 'agents',
+            agenticDetails: {
+              framework: ['MCP'],
+              tools: ['routing_rules', 'team_directory'],
+            },
+          },
+          algorithms: ['Decision tree', 'Rule-based routing'],
+          tools: ['Python', 'MCP framework', 'OpenAI API'],
+        },
         benefits: [
           {
             benefitType: 'time',
@@ -158,9 +274,10 @@ export const exampleData: CanvasData = {
             benefitUnit: 'minutes',
             baseline: { type: 'numeric', value: 2 },
             expected: { type: 'numeric', value: 0.5 },
+            oversightMinutesPerUnit: 0.3,
             confidenceUser: 'high',
             confidenceDev: 'high',
-            assumptions: 'Routing rules are clear and can be automated',
+            assumptions: 'Routing rules are clear and can be automated: invoices → accounting team, contracts → legal team, reports → analytics team. Edge cases (ambiguous documents) default to team lead for manual assignment. Oversight of 0.3 min/unit represents monthly review of routing accuracy (500 docs × 0.3 min = 150 min/month = 2.5 hours/month for quality assurance).',
           },
           {
             benefitType: 'enablement',
@@ -179,18 +296,6 @@ export const exampleData: CanvasData = {
         ],
       },
     ],
-    stakeholders: [
-      {
-        personId: 'person-0', // References Sarah Johnson from persons array
-        role: 'Data Entry Manager',
-        values: ['time savings', 'accuracy'],
-      },
-      {
-        personId: 'person-1', // References Michael Chen from persons array
-        role: 'IT Lead',
-        values: ['system reliability', 'maintainability'],
-      },
-    ],
   },
   developerFeasibility: {
     trlLevel: {
@@ -198,31 +303,8 @@ export const exampleData: CanvasData = {
       target: 7,
     },
     technicalRisk: 'medium',
-    algorithms: ['OCR (Optical Character Recognition)', 'Natural Language Processing', 'Document Classification'],
-    tools: ['Python', 'TensorFlow', 'Document Processing API'],
     effortEstimate: '4-6 months',
-    feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats.',
-    modelSelection: 'frontier-model',
-    modelName: 'GPT-4',
-    baselineCapability: {
-      taskPerformance: 'moderate',
-      successRate: 65,
-      limitations: 'Naive GPT-4 can extract text and basic information but struggles with: (1) Custom domain terminology specific to our business, (2) Complex multi-step workflows requiring context across multiple documents, (3) Edge cases with unusual document formats, (4) Maintaining consistency across related documents',
-      requiresCustomInstructions: true,
-      customInstructionsComplexity: 'high',
-    },
-    expectedGains: {
-      performanceImprovement: 'significant',
-      headroom: 'high',
-      justification: 'By adding agentic capabilities (tool use for document APIs, structured workflows, domain-specific instructions, and autonomy to handle multi-step processes), we expect to improve success rate from 65% to 90%+. The system will be able to handle complex workflows that require context awareness and decision-making that naive models cannot perform.',
-    },
-    implementationDifficulty: {
-      skillAdditionDifficulty: 'moderate',
-      baselineComparisonRequired: true,
-      validationMonitoringRequired: true,
-      securityLevel: 'medium',
-    },
-    agenticExplanation: 'Agentic capabilities are added through: (1) Tool use - giving the model access to document processing APIs, database queries, and external validation services, (2) Autonomy - allowing the model to make routing decisions and handle exceptions autonomously, (3) Structured workflows - defining multi-step document processing pipelines with checkpoints, (4) Domain knowledge - providing custom instructions with business-specific terminology and rules. The base GPT-4 provides reasoning and language understanding, but the agentic behavior emerges from the system architecture that enables autonomous decision-making and tool interaction.',
+    feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats. Different tasks require different approaches - extraction needs extensive agentic capabilities, while categorization can be deterministic.',
   },
   governance: {
     stages: [
@@ -243,6 +325,12 @@ export const exampleData: CanvasData = {
             role: 'Business Analyst',
             type: 'person',
             roleContext: 'Design phase requirements gathering',
+          },
+          {
+            personId: 'person-2', // References Emma Rodriguez from persons array
+            role: 'Compliance Officer',
+            type: 'person',
+            roleContext: 'Design phase compliance review',
           },
         ],
         milestones: [
@@ -298,6 +386,12 @@ export const exampleData: CanvasData = {
             role: 'Quality Assurance',
             type: 'person',
             roleContext: 'Validation phase quality control',
+          },
+          {
+            personId: 'person-2', // References Emma Rodriguez from persons array
+            role: 'Compliance Officer',
+            type: 'person',
+            roleContext: 'Validation phase compliance verification',
           },
         ],
         milestones: [
@@ -395,8 +489,9 @@ export const exampleData: CanvasData = {
   },
 }
 
-/** Default display groups for the example: time, quality, quality, risk, enablement (1–5). */
+/** Default display groups for the example: time, quality, quality, risk, enablement, cost (1–6). */
 export const exampleBenefitDisplay: BenefitDisplayState = {
+  displayGroupCount: 6,
   displayGroups: [
     {
       id: 1,
@@ -431,6 +526,12 @@ export const exampleBenefitDisplay: BenefitDisplayState = {
       benefitType: 'enablement',
       metricId: 'newCapability',
       benefitRefs: [{ requirementId: 'req-3', benefitIndex: 1 }],
+    },
+    {
+      id: 6,
+      benefitType: 'cost',
+      metricId: 'operationalCost',
+      benefitRefs: [{ requirementId: 'req-2', benefitIndex: 2 }],
     },
   ],
 }

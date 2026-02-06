@@ -23,7 +23,7 @@ YAML representation of the schema:
 
 ## Schema Version
 
-Current schema version: **0.10.2** (Beta)
+Current schema version: **0.11.3** (Beta)
 
 !!! warning "Beta Status"
     This schema is currently in **beta testing**. The structure and fields may change before the 1.0.0 release. 
@@ -87,7 +87,7 @@ The AAC schema builds on established standards rather than reinventing common co
 - **FRAPO (Funding, Research Administration & Projects Ontology)**: Research project extensions like `fundingGrant` (frapo:fundingGrant), `leadOrganization` (frapo:leadOrganization), `projectStage` (frapo:hasStatus), `deliverables` (frapo:deliverable)
 - **DUO (Data Use Ontology)**: Data use restrictions via `duoTerms` (dct:conformsTo)
 
-The [schema reference](../reference/index.md) includes an "Ontology" column indicating which standard each generic field maps to. Custom AAC-specific fields (like `projectStage`, `aggregateBenefitValue`, etc.) are clearly marked as such.
+The [schema reference](../reference/index.md) includes an "Ontology" column indicating which standard each generic field maps to. Custom AAC-specific fields (like `projectStage`, `roughEstimateValue`, etc.) are clearly marked as such.
 
 For detailed mapping documentation, see:
 

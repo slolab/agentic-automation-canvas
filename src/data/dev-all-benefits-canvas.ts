@@ -31,11 +31,11 @@ export const devAllBenefitsCanvas: CanvasData = {
     requirements: [
       {
         id: 'req-time',
+        title: 'Time benefits (task 1)',
         description: 'Time benefits (task 1): processing time = duration before → after; cycle time',
         unitOfWork: 'one unit',
         unitCategory: 'other',
         volumePerMonth: 100,
-        humanOversightMinutesPerUnit: 0,
         benefits: [
           {
             benefitType: 'time',
@@ -55,7 +55,7 @@ export const devAllBenefitsCanvas: CanvasData = {
             direction: 'decreaseIsBetter',
             valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
-            benefitUnit: 'days',
+            benefitUnit: 'hours',
             baseline: { type: 'numeric', value: 7 },
             expected: { type: 'numeric', value: 2 },
           },
@@ -63,11 +63,11 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-time-2',
+        title: 'Time benefits (task 2)',
         description: 'Time benefits again (task 2): processing time — tests aggregation',
         unitOfWork: 'one unit',
         unitCategory: 'other',
         volumePerMonth: 80,
-        humanOversightMinutesPerUnit: 0,
         benefits: [
           {
             benefitType: 'time',
@@ -84,9 +84,10 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-quality',
+        title: 'Quality benefits (task 1)',
         description: 'Quality benefits: errorRate, reworkRate, precision, recall, satisfaction, accuracy (task 1)',
         unitOfWork: 'one unit',
-        unitCategory: 'document',
+        unitCategory: 'item',
         volumePerMonth: 200,
         benefits: [
           {
@@ -159,9 +160,10 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-quality-2',
+        title: 'Quality benefits (task 2)',
         description: 'Quality again (task 2): errorRate, reworkRate — tests aggregation across tasks',
         unitOfWork: 'one unit',
-        unitCategory: 'document',
+        unitCategory: 'item',
         volumePerMonth: 150,
         benefits: [
           {
@@ -190,9 +192,10 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-risk',
+        title: 'Risk benefits (task 1)',
         description: 'Risk benefits: complianceIncidents, dataExposureRisk, auditFindings, probabilityOfHarm, securityVulnerabilities (task 1)',
         unitOfWork: 'one process',
-        unitCategory: 'case',
+        unitCategory: 'item',
         volumePerMonth: 50,
         benefits: [
           {
@@ -254,9 +257,10 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-risk-2',
+        title: 'Risk benefits (task 2)',
         description: 'Risk again (task 2): complianceIncidents, probabilityOfHarm — tests aggregation across tasks',
         unitOfWork: 'one process',
-        unitCategory: 'case',
+        unitCategory: 'item',
         volumePerMonth: 40,
         benefits: [
           {
@@ -285,9 +289,10 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-enablement',
+        title: 'Enablement benefits (task 1)',
         description: 'Enablement benefits: newCapability, coverage, latencyToAnswer, throughput, availability (task 1)',
         unitOfWork: 'one request',
-        unitCategory: 'message',
+        unitCategory: 'interaction',
         volumePerMonth: 1000,
         benefits: [
           {
@@ -349,9 +354,10 @@ export const devAllBenefitsCanvas: CanvasData = {
       },
       {
         id: 'req-enablement-2',
+        title: 'Enablement benefits (task 2)',
         description: 'Enablement again (task 2): newCapability, coverage — tests aggregation across tasks',
         unitOfWork: 'one request',
-        unitCategory: 'message',
+        unitCategory: 'interaction',
         volumePerMonth: 500,
         benefits: [
           {

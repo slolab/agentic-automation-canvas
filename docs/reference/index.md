@@ -10,7 +10,7 @@ This section provides detailed reference documentation for all types and propert
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `dataAccess` | object | No |  |  | — |
-| `developerFeasibility` | object | No |  |  | — |
+| `developerFeasibility` | object | No | Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) |  | — |
 | `governance` | object | No |  |  | — |
 | `outcomes` | object | No |  |  | — |
 | `persons` | array of object | No | Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents. |  | — |
@@ -28,7 +28,7 @@ A benefit metric for a requirement
 | `aggregationBasis` | string | No | How the benefit value is aggregated | Enum: `perUnit`, `perMonth`, `oneOff`<br>Default: `perUnit` | AAC |
 | `assumptions` | string | No | Key assumptions underlying the benefit estimate |  | AAC |
 | `baseline` | BenefitValue | Yes | Baseline value before automation |  | AAC |
-| `benefitType` | string | Yes | Type of benefit | Enum: `time`, `quality`, `risk`, `enablement` | AAC |
+| `benefitType` | string | Yes | Type of benefit | Enum: `time`, `quality`, `risk`, `enablement`, `cost` | AAC |
 | `benefitUnit` | string | Yes | Unit for the benefit value (e.g., 'minutes', '%', 'incidents/month') |  | AAC |
 | `confidenceDev` | string | No | Developer's confidence in the benefit estimate | Enum: `low`, `medium`, `high` | AAC |
 | `confidenceUser` | string | No | User's confidence in the benefit estimate | Enum: `low`, `medium`, `high` | AAC |
@@ -36,6 +36,8 @@ A benefit metric for a requirement
 | `expected` | BenefitValue | Yes | Expected value after automation |  | AAC |
 | `metricId` | string | Yes | Identifier for the metric (controlled vocabulary or 'custom') |  | AAC |
 | `metricLabel` | string | Yes | Human-readable label for the metric |  | AAC |
+| `oversightMinutesPerMonth` | number | No | Human oversight per month in minutes. Only used when aggregationBasis is 'perMonth'. Mutually exclusive with oversightMinutesPerUnit. Subtracted from gross time benefit. | Minimum: 0 | AAC |
+| `oversightMinutesPerUnit` | number | No | Human oversight per unit in minutes. Only used when aggregationBasis is 'perUnit'. Mutually exclusive with oversightMinutesPerMonth. Subtracted from gross time benefit. | Minimum: 0 | AAC |
 | `target` | number | No | Target value when direction is 'targetIsBetter' |  | AAC |
 | `valueMeaning` | string | Yes | Whether baseline/expected are absolute measured values or improvement deltas | Enum: `absolute`, `delta` | AAC |
 
@@ -63,49 +65,18 @@ A benefit metric for a requirement
 
 ## DeveloperFeasibility
 
-| Property | Type | Required | Description | Constraints | Ontology |
-|----------|------|----------|-------------|-------------|----------|
-| `agenticExplanation` | string | No | Explanation of how agentic capabilities are added (autonomy, tool use, etc.) - clarifying that LLMs are not inherently agentic |  | AAC |
-| `algorithms` | array of string | No |  |  | AAC |
-| `baselineCapability` | object | No |  |  | — |
-| `effortEstimate` | string | No |  |  | AAC |
-| `expectedGains` | object | No |  |  | — |
-| `feasibilityNotes` | string | No |  |  | AAC |
-| `implementationDifficulty` | object | No |  |  | — |
-| `modelName` | string | No | Specific model name or identifier (e.g., 'GPT-4', 'Llama 3.1', 'Claude Sonnet') |  | AAC |
-| `modelSelection` | string | No | Type of base model to be used | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other` | AAC |
-| `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
-| `tools` | array of string | No |  |  | AAC |
-| `trlLevel` | object | No |  |  | — |
-
-## DeveloperFeasibility BaselineCapability
+Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden)
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `customInstructionsComplexity` | string | No | Complexity of custom instructions needed | Enum: `low`, `medium`, `high` | AAC |
-| `limitations` | string | No | Key limitations of naive model performance |  | AAC |
-| `requiresCustomInstructions` | boolean | No | Whether the task requires extensive custom instructions/prompts |  | AAC |
-| `successRate` | number | No | Estimated success rate of naive model (0-100%) | Minimum: 0<br>Maximum: 100 | AAC |
-| `taskPerformance` | string | No | How well the naive model performs the task without custom system | Enum: `excellent`, `good`, `moderate`, `poor`, `fails` | AAC |
-
-## DeveloperFeasibility ExpectedGains
-
-| Property | Type | Required | Description | Constraints | Ontology |
-|----------|------|----------|-------------|-------------|----------|
-| `headroom` | string | No | Headroom for improvement - gap between baseline and potential | Enum: `low`, `medium`, `high` | AAC |
-| `justification` | string | No | Explanation of why gains are expected and what enables them |  | AAC |
-| `performanceImprovement` | string | No | Expected improvement in performance from agentic system | Enum: `minimal`, `moderate`, `significant`, `transformative` | AAC |
-
-## DeveloperFeasibility ImplementationDifficulty
-
-| Property | Type | Required | Description | Constraints | Ontology |
-|----------|------|----------|-------------|-------------|----------|
-| `baselineComparisonRequired` | boolean | No | Whether baseline comparison is necessary for validation |  | AAC |
-| `securityLevel` | string | No | Security level of the task, affecting validation requirements | Enum: `low`, `medium`, `high`, `critical` | AAC |
-| `skillAdditionDifficulty` | string | No | Difficulty of adding the necessary skills (e.g., via AGENTS.md, tools, etc.) | Enum: `very-easy`, `easy`, `moderate`, `difficult`, `very-difficult` | AAC |
-| `validationMonitoringRequired` | boolean | No | Whether validation and monitoring are required (depends on security level) |  | AAC |
+| `effortEstimate` | string | No | Overall effort estimate for the project |  | AAC |
+| `feasibilityNotes` | string | No | Project-level feasibility notes |  | AAC |
+| `technicalRisk` | string | No | Overall technical risk for the project | Enum: `low`, `medium`, `high`, `critical` | AAC |
+| `trlLevel` | object | No | Technology Readiness Level - project-level maturity assessment |  | — |
 
 ## DeveloperFeasibility TrlLevel
+
+Technology Readiness Level - project-level maturity assessment
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
@@ -200,7 +171,7 @@ A benefit metric for a requirement
 | `keywords` | array of string | No |  |  | Schema.org |
 | `leadOrganization` | string | No |  |  | FRAPO |
 | `objective` | string | No |  |  | Schema.org |
-| `primaryValueDriver` | string | No |  | Enum: `time`, `quality`, `risk`, `enablement` | AAC |
+| `primaryValueDriver` | string | No |  | Enum: `time`, `quality`, `risk`, `enablement`, `cost` | AAC |
 | `projectId` | string | No |  | Format: `uri` | Schema.org |
 | `projectStage` | string | Yes |  |  | FRAPO |
 | `roughEstimateUnit` | string | No | Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month') |  | AAC |
@@ -222,17 +193,71 @@ A benefit metric for a requirement
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `benefits` | array of [Benefit](#benefit) | Yes | Array of benefit metrics for this requirement |  | AAC |
-| `description` | string | Yes |  |  | Schema.org |
-| `humanOversightMinutesPerUnit` | number | No |  | Minimum: 0 | AAC |
+| `dependsOn` | array of string | No | IDs of requirements this task depends on |  | AAC |
+| `description` | string | No |  |  | Schema.org |
+| `feasibility` | object | No | Optional per-task feasibility (overrides project-level defaults) |  | — |
 | `id` | string | Yes |  |  | AAC |
 | `priority` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
-| `stakeholder` | string | No |  |  | AAC |
+| `stakeholder` | string | No | DEPRECATED in 0.11.0: Use requirement.stakeholders array instead. Will be removed in 0.12.0. Maintained for backward compatibility only. |  | AAC |
+| `stakeholders` | array of string | No | Person IDs of stakeholders for this task |  | AAC |
 | `status` | string | No |  | Enum: `planned`, `in-progress`, `completed`, `cancelled` | AAC |
-| `unitCategory` | string | No |  | Enum: `case`, `document`, `record`, `message`, `analysisRun`, `meeting`, `other` | AAC |
+| `timeUnit` | string | No | Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency. | Enum: `minutes`, `hours` | AAC |
+| `title` | string | Yes |  | Min length: 1 | Schema.org |
+| `unitCategory` | string | No |  | Enum: `item`, `interaction`, `computation`, `other` | AAC |
 | `unitOfWork` | string | No |  | Min length: 1 | AAC |
 | `userStory` | string | No |  |  | P-Plan |
 | `value` | string | No |  |  | AAC |
 | `volumePerMonth` | number | No |  | Minimum: 1 | AAC |
+
+## UserExpectations Requirement Feasibility
+
+Optional per-task feasibility (overrides project-level defaults)
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `algorithms` | array of string | No |  |  | AAC |
+| `effortEstimate` | string | No |  |  | AAC |
+| `feasibilityNotes` | string | No |  |  | AAC |
+| `modelName` | string | No | Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct') |  | AAC |
+| `modelSelection` | string | No | Type of model to be used (if applicable). Set to 'none' if task is deterministic. | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other`, `none` | AAC |
+| `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
+| `technologyApproach` | object | No | Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs. |  | — |
+| `tools` | array of string | No |  |  | AAC |
+
+## UserExpectations Requirement Feasibility TechnologyApproach
+
+Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs.
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `agenticDetails` | object | No |  |  | — |
+| `architecture` | string | No | Primary technology architecture. 'none' indicates deterministic task without LLM requirement. | Enum: `none`, `simple-prompting`, `rag`, `fine-tuning`, `agents`, `other` | AAC |
+| `fineTuningDetails` | object | No |  |  | — |
+| `ragDetails` | object | No |  |  | — |
+
+## UserExpectations Requirement Feasibility TechnologyApproach AgenticDetails
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `framework` | array of string | No | e.g. ReAct, MCP, Plan-and-Execute |  | AAC |
+| `orchestration` | array of string | No | e.g. LangGraph |  | AAC |
+| `tools` | array of string | No | MCP tools, custom tools |  | AAC |
+
+## UserExpectations Requirement Feasibility TechnologyApproach FineTuningDetails
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `baseModel` | string | No | Base model that was fine-tuned |  | AAC |
+| `dataset` | string | No | Dataset used for fine-tuning |  | AAC |
+| `tuningApproach` | string | No | Method used for fine-tuning (e.g., LoRA, QLoRA, full fine-tuning) |  | AAC |
+
+## UserExpectations Requirement Feasibility TechnologyApproach RagDetails
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `chunkingStrategy` | string | No |  |  | AAC |
+| `embeddingModel` | string | No |  |  | AAC |
+| `retrievalMethod` | string | No |  |  | AAC |
 
 ## UserExpectations Stakeholder
 

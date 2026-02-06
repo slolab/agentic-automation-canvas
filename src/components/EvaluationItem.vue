@@ -4,7 +4,7 @@
     <button
       v-if="!isExpanded"
       @click="isExpanded = true"
-      class="w-full text-left p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
+      class="w-full text-left p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset min-h-[60px]"
     >
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1 min-w-0">
@@ -86,6 +86,20 @@
           @input="update({ ...evaluation, results: ($event.target as HTMLTextAreaElement).value })"
         />
       </FormField>
+
+      <!-- Done Button -->
+      <div class="pt-4 border-t border-gray-200 mt-4">
+        <button
+          type="button"
+          @click="isExpanded = false"
+          class="btn-secondary w-full flex items-center justify-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+          </svg>
+          Done (collapse)
+        </button>
+      </div>
     </div>
   </div>
 </template>

@@ -4,7 +4,7 @@
     <button
       v-if="!isExpanded"
       @click="isExpanded = true"
-      class="w-full text-left p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
+      class="w-full text-left p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset min-h-[60px]"
     >
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1 min-w-0">
@@ -112,27 +112,44 @@
         :error="functionRolesError"
         required
       >
-        <div class="border border-gray-300 rounded-md bg-white max-h-64 overflow-y-auto p-3 space-y-2">
-          <label
-            v-for="role in functionRolesList"
-            :key="role.id"
-            class="flex items-start gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded -m-2"
+        <div class="space-y-2">
+          <!-- Selected roles as chips -->
+          <div v-if="selectedRoles.length > 0" class="flex flex-wrap gap-2">
+            <span
+              v-for="roleId in selectedRoles"
+              :key="roleId"
+              class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 text-blue-800 text-sm"
+            >
+              {{ getRoleLabel(roleId) }}
+              <button
+                type="button"
+                @click="removeFunctionRole(roleId)"
+                class="text-blue-600 hover:text-red-600"
+                aria-label="Remove role"
+              >
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </span>
+          </div>
+          <!-- Dropdown for selecting new roles -->
+          <select
+            :id="`person-function-roles-select-${index}`"
+            v-model="selectedRoleId"
+            class="form-input"
+            @change="handleRoleSelect"
           >
-            <input
-              type="checkbox"
-              :checked="(person.functionRoles || []).includes(role.id)"
-              class="mt-0.5 form-checkbox-small"
-              @change="handleFunctionRoleToggle(role.id, $event)"
-            />
-            <div class="flex-1 min-w-0">
-              <span class="text-sm font-medium text-gray-900">{{ role.label }}</span>
-              <p v-if="role.description" class="text-xs text-gray-500 mt-0.5">{{ role.description }}</p>
-            </div>
-          </label>
+            <option value="">Select a functional role...</option>
+            <option
+              v-for="role in availableRoles"
+              :key="role.id"
+              :value="role.id"
+            >
+              {{ role.label }}
+            </option>
+          </select>
         </div>
-        <p class="text-xs text-gray-500 mt-1">
-          Selected: {{ (person.functionRoles || []).length }} of {{ functionRolesList.length }} roles
-        </p>
       </FormField>
 
       <FormField
@@ -159,6 +176,20 @@
       <!-- Validation: Check for function roles -->
       <div v-if="functionRolesError" class="p-2 bg-red-50 border border-red-200 rounded text-xs text-red-800">
         <strong>Error:</strong> {{ functionRolesError }}
+      </div>
+
+      <!-- Done Button -->
+      <div class="pt-4 border-t border-gray-200 mt-4">
+        <button
+          type="button"
+          @click="isExpanded = false"
+          class="btn-secondary w-full flex items-center justify-center gap-2"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+          </svg>
+          Done (collapse)
+        </button>
       </div>
     </div>
   </div>
@@ -187,6 +218,23 @@ const functionRolesList = computed(() => {
   return (functionRolesData as any).roles || []
 })
 
+// Selected roles
+const selectedRoles = computed(() => props.person.functionRoles || [])
+
+// Available roles (not yet selected)
+const availableRoles = computed(() => {
+  return functionRolesList.value.filter(role => !selectedRoles.value.includes(role.id))
+})
+
+// Dropdown selection state
+const selectedRoleId = ref('')
+
+// Get role label by ID
+function getRoleLabel(roleId: string): string {
+  const role = functionRolesList.value.find(r => r.id === roleId)
+  return role?.label || roleId
+}
+
 // Check for duplicate IDs
 const hasDuplicateId = computed(() => {
   return props.allPersons.filter(p => p.id === props.person.id).length > 1
@@ -201,19 +249,23 @@ const functionRolesError = computed(() => {
   return null
 })
 
-// Handle function role toggle (checkbox)
-function handleFunctionRoleToggle(roleId: string, event: Event) {
-  const checked = (event.target as HTMLInputElement).checked
+// Handle role selection from dropdown
+function handleRoleSelect() {
+  if (!selectedRoleId.value) return
   const currentRoles = props.person.functionRoles || []
-  let newRoles: string[]
-  
-  if (checked) {
-    newRoles = [...currentRoles, roleId]
-  } else {
-    newRoles = currentRoles.filter(r => r !== roleId)
+  if (!currentRoles.includes(selectedRoleId.value)) {
+    const newRoles = [...currentRoles, selectedRoleId.value]
+    props.update({ ...props.person, functionRoles: newRoles })
   }
-  
-  props.update({ ...props.person, functionRoles: newRoles })
+  // Reset dropdown
+  selectedRoleId.value = ''
+}
+
+// Remove a function role
+function removeFunctionRole(roleId: string) {
+  const currentRoles = props.person.functionRoles || []
+  const newRoles = currentRoles.filter(r => r !== roleId)
+  props.update({ ...props.person, functionRoles: newRoles.length > 0 ? newRoles : undefined })
 }
 
 // Handle local titles change

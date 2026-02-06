@@ -81,6 +81,7 @@ const tooltipStyle = ref<{ left?: string; top?: string; minWidth: string; maxWid
 })
 const arrowStyle = ref<{ left?: string; top?: string; right?: string; bottom?: string }>({})
 const isMobile = ref(false)
+let hideTimeout: ReturnType<typeof setTimeout> | null = null
 
 // Check if mobile device
 const checkMobile = () => {
@@ -94,6 +95,11 @@ onMounted(() => {
 
 onUnmounted(() => {
   window.removeEventListener('resize', checkMobile)
+  // Clear any pending timeout
+  if (hideTimeout) {
+    clearTimeout(hideTimeout)
+    hideTimeout = null
+  }
   // Ensure body scroll is restored when component is unmounted
   document.body.style.position = ''
   document.body.style.top = ''
@@ -261,6 +267,11 @@ watch(isVisible, (newVal) => {
 
 const showTooltip = () => {
   if (!isMobile.value) {
+    // Clear any pending hide timeout
+    if (hideTimeout) {
+      clearTimeout(hideTimeout)
+      hideTimeout = null
+    }
     // Reset to preferred position first
     actualPosition.value = props.position
     isVisible.value = true
@@ -269,7 +280,11 @@ const showTooltip = () => {
 
 const hideTooltip = () => {
   if (!isMobile.value) {
-    isVisible.value = false
+    // Add a small delay before hiding to allow mouse movement to tooltip
+    hideTimeout = setTimeout(() => {
+      isVisible.value = false
+      hideTimeout = null
+    }, 100) // 100ms delay to allow mouse to move to tooltip
   }
 }
 

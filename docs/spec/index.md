@@ -39,14 +39,10 @@ The specification is organized into several sections:
 
 ## Schema Version
 
-The current schema version is **0.10.2 (Beta)**. The schema follows semantic versioning:
-
-- **Major versions** (1.0, 2.0): Breaking changes, incompatible with previous versions
-- **Minor versions** (0.10, 0.11): Pre-release versions, may include breaking changes
-- **Patch versions** (0.10.1, 0.10.2): Bug fixes, documentation updates
+The current schema version is **0.11.3 (Beta)**. The schema follows semantic versioning.
 
 !!! warning "Beta Testing Phase"
-    Version 0.10.2 is a **beta release** for testing and feedback. The schema structure and fields 
+    Version 0.11.3 is a **beta release** for testing and feedback. The schema structure and fields 
     may change before the stable 1.0.0 release. We welcome feedback and contributions during this phase.
 
 See the [Conformance](conformance.md) section for details on versioning and compatibility.

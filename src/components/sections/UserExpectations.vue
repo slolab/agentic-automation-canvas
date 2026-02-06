@@ -4,7 +4,7 @@
       <h2 class="section-header flex items-center gap-2">
         <span>Tasks & Expectations</span>
         <InfoTooltip
-          content="<strong>What goes here:</strong> The automation tasks you need to accomplish and stakeholders with interests in the project.<br/><br/><strong>Benefits:</strong> Each task can have multiple benefits across four types: Time (savings), Quality (improvements), Risk (reduction), and Enablement (new capabilities). Use the Edit Benefits button to define detailed benefit metrics.<br/><br/><strong>Workflow tip:</strong> Start with task descriptions, then define value model fields and benefits. Add stakeholders after creating persons. Tasks are represented as P-Plan Steps and link to governance stages."
+          content="<strong>What goes here:</strong> The automation tasks you need to accomplish.<br/><br/><strong>Benefits:</strong> Each task can have multiple benefits across five types: Time (savings), Quality (improvements), Risk (reduction), Enablement (new capabilities), and Cost (savings). Use the Edit Benefits button to define detailed benefit metrics.<br/><br/><strong>Stakeholders:</strong> Add stakeholders directly to each task from the persons list. This makes it clear which stakeholders are interested in each specific task.<br/><br/><strong>Workflow tip:</strong> Start with task descriptions, then define value model fields and benefits. Add stakeholders per-task after creating persons. Tasks are represented as P-Plan Steps and link to governance stages."
           position="top"
         />
       </h2>
@@ -14,14 +14,18 @@
     </div>
 
     <div>
-      <h3 class="subsection-header">Tasks</h3>
-      <p class="text-sm text-gray-600 mb-4">
-        Tasks are elements of the project process. Each task represents a specific automation task that contributes to the overall project goals. Define what needs to be automated, estimate the value it will deliver, and track its progress.
+      <p class="text-sm text-gray-600 mb-2">
+        Tasks are elements of the project process. Each element represents a specific automation task that contributes to the overall project goals.
       </p>
+      <ul class="text-sm text-gray-600 mb-4 list-disc ml-6 space-y-1">
+        <li><strong>Capture benefits</strong> to communicate value to stakeholders—baseline vs expected values show improvement at a glance</li>
+        <li>The <strong>visual progress bars</strong> in collapsed task view (green = net savings) provide immediate impact visualization</li>
+        <li>Define <strong>volume per month</strong> to calculate total monthly impact from per-unit benefits</li>
+      </ul>
       <MultiValueInput
         v-model="localRequirements"
         label="task"
-        :create-default="() => ({ id: `req-${Date.now()}`, description: '', benefits: [] })"
+        :create-default="() => ({ id: `req-${Date.now()}`, title: '', benefits: [] })"
       >
         <template #input="{ item, index, update }">
           <RequirementItem
@@ -33,22 +37,7 @@
       </MultiValueInput>
     </div>
 
-    <div>
-      <h3 class="subsection-header">Stakeholders</h3>
-      <MultiValueInput
-        v-model="localStakeholders"
-        label="stakeholder"
-        :create-default="() => ({ personId: '' })"
-      >
-        <template #input="{ item, index, update }">
-          <StakeholderItem
-            :stakeholder="item"
-            :index="index"
-            :update="update"
-          />
-        </template>
-      </MultiValueInput>
-    </div>
+    <!-- Stakeholders section removed - stakeholders are now managed per-task -->
   </div>
 </template>
 
@@ -56,9 +45,8 @@
 import { ref, watch, nextTick } from 'vue'
 import MultiValueInput from '../MultiValueInput.vue'
 import RequirementItem from '../RequirementItem.vue'
-import StakeholderItem from '../StakeholderItem.vue'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { Requirement, Stakeholder } from '@/types/canvas'
+import type { Requirement } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 const { canvasData, updateUserExpectations } = useCanvasData()
@@ -71,13 +59,11 @@ const initLocalData = () => {
       ...item, 
       benefits: item.benefits || [] 
     })),
-    stakeholders: (expectations?.stakeholders || []).map((item) => ({ ...item })),
   }
 }
 
 const initialData = initLocalData()
 const localRequirements = ref<Requirement[]>(initialData.requirements)
-const localStakeholders = ref<Stakeholder[]>(initialData.stakeholders)
 
 let isLocalUpdate = false
 let isSyncingFromCanvas = false
@@ -94,11 +80,9 @@ watch(
           ...item, 
           benefits: item.benefits || [] 
         }))
-        localStakeholders.value = (newExpectations.stakeholders || []).map((item) => ({ ...item }))
       } else {
         // Reset when cleared
         localRequirements.value = []
-        localStakeholders.value = []
       }
       // Reset flag after syncing
       nextTick(() => {
@@ -117,20 +101,6 @@ watch(localRequirements, async (newReqs) => {
   isLocalUpdate = true
   updateUserExpectations({
     requirements: [...newReqs],
-    stakeholders: [...localStakeholders.value],
-  })
-  await nextTick()
-  isLocalUpdate = false
-}, { deep: true, immediate: false })
-
-watch(localStakeholders, async (newStakeholders) => {
-  // Skip if we're currently syncing from canvasData to avoid circular updates
-  if (isSyncingFromCanvas) return
-  
-  isLocalUpdate = true
-  updateUserExpectations({
-    requirements: [...localRequirements.value],
-    stakeholders: [...newStakeholders],
   })
   await nextTick()
   isLocalUpdate = false
