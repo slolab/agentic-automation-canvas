@@ -4,7 +4,7 @@
     <button
       v-if="!isExpanded"
       @click="isExpanded = true"
-      class="w-full text-left p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
+      class="w-full text-left p-3 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset min-h-[60px]"
     >
       <div class="flex items-start justify-between gap-4">
         <div class="flex-1 min-w-0">

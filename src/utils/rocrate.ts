@@ -506,10 +506,12 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       const stepEntity: ROCrateEntity = {
         '@id': stepId,
         '@type': 'p-plan:Step',
-        description: req.description,
+        name: req.title,
+        description: req.description ?? '',
       }
+      stepEntity['aac:title'] = req.title
       if (req.userStory) {
-        stepEntity.name = req.userStory
+        stepEntity['aac:userStory'] = req.userStory
       }
       if (req.priority) {
         stepEntity.priority = req.priority
@@ -533,6 +535,12 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       // Benefits array - generalized benefit tracking
       if (req.benefits && req.benefits.length > 0) {
         stepEntity['aac:benefits'] = req.benefits
+      }
+      if (req.dependsOn && req.dependsOn.length > 0) {
+        stepEntity['aac:dependsOn'] = req.dependsOn
+      }
+      if (req.feasibility && Object.keys(req.feasibility).length > 0) {
+        stepEntity['aac:feasibility'] = req.feasibility
       }
       graph.push(stepEntity)
     })

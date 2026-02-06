@@ -147,6 +147,50 @@
             @blur="update"
           />
         </FormField>
+
+        <FormField
+          id="applies-to-requirements"
+          label="Applies to Tasks"
+          help-text="If set, this feasibility assessment applies only to the selected tasks. Leave empty to apply to all tasks."
+          tooltip="Scope this global feasibility to specific tasks. When empty, it applies to all tasks. Use per-task Technical Feasibility in task details to override for individual tasks."
+        >
+          <div class="space-y-2">
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="reqId in (localData.appliesToRequirements || [])"
+                :key="reqId"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 text-gray-800 text-sm"
+              >
+                {{ getRequirementTitle(reqId) || reqId }}
+                <button
+                  type="button"
+                  @click="removeAppliesToRequirement(reqId)"
+                  class="text-gray-500 hover:text-red-600"
+                  aria-label="Remove"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <select
+              id="applies-to-requirements"
+              :value="''"
+              class="form-input w-auto"
+              @change="addAppliesToRequirement(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Add task...</option>
+              <option
+                v-for="req in requirementsNotInAppliesTo"
+                :key="req.id"
+                :value="req.id"
+              >
+                {{ req.title || req.id }}
+              </option>
+            </select>
+          </div>
+        </FormField>
       </div>
     </div>
 
@@ -273,6 +317,101 @@
             label="Tools / Frameworks"
             placeholder="e.g., Python"
           />
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2b: LLM Technology Approach -->
+    <div class="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200">
+      <!-- Collapsed View -->
+      <button
+        v-if="!cardExpanded.llmApproach"
+        @click="cardExpanded.llmApproach = true"
+        class="w-full text-left p-5 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1 min-w-0 space-y-3">
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-semibold text-gray-900">LLM Technology Approach</h3>
+            </div>
+            <div class="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+              <span v-if="llmArchitectureLabel" class="flex items-center gap-1">
+                {{ llmArchitectureLabel }}
+              </span>
+              <div v-if="!llmArchitectureLabel" class="text-xs text-gray-400 italic">
+                No LLM approach specified yet
+              </div>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+
+      <!-- Expanded View -->
+      <div v-else class="p-4 space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold text-gray-900">LLM Technology Approach</h3>
+          <button
+            @click="cardExpanded.llmApproach = false"
+            class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded p-1"
+            aria-label="Collapse LLM Technology Approach"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+        </div>
+        <p class="text-sm text-gray-600 mb-4">
+          Specify the LLM architecture and technology (RAG, MCP, ReAct, etc.) used for this project.
+        </p>
+
+        <FormField
+          id="llm-architecture"
+          label="Architecture"
+          help-text="Primary LLM architecture approach"
+          tooltip="<strong>Simple prompting</strong> - Direct prompts, no retrieval; <strong>RAG</strong> - Retrieval-augmented generation; <strong>Fine-tuning</strong> - Custom model; <strong>Agents</strong> - Agentic (ReAct, MCP, tools); <strong>Other</strong> - Different approach"
+        >
+          <select
+            id="llm-architecture"
+            v-model="localData.llmApproach.architecture"
+            class="form-input"
+            @change="update"
+          >
+            <option :value="undefined">Select architecture</option>
+            <option value="simple-prompting">Simple prompting</option>
+            <option value="rag">RAG (Retrieval-augmented generation)</option>
+            <option value="fine-tuning">Fine-tuning</option>
+            <option value="agents">Agents (ReAct, MCP, tools)</option>
+            <option value="other">Other</option>
+          </select>
+        </FormField>
+
+        <div v-if="localData.llmApproach?.architecture === 'rag'" class="space-y-4 pl-4 border-l-2 border-gray-200">
+          <h4 class="text-sm font-medium text-gray-900">RAG Details</h4>
+          <FormField id="rag-retrieval" label="Retrieval method" help-text="e.g. vector search, hybrid search">
+            <input id="rag-retrieval" v-model="localData.llmApproach.ragDetails.retrievalMethod" type="text" class="form-input" placeholder="e.g., vector search" @blur="update" />
+          </FormField>
+          <FormField id="rag-embedding" label="Embedding model">
+            <input id="rag-embedding" v-model="localData.llmApproach.ragDetails.embeddingModel" type="text" class="form-input" placeholder="e.g., text-embedding-3-small" @blur="update" />
+          </FormField>
+          <FormField id="rag-chunking" label="Chunking strategy">
+            <input id="rag-chunking" v-model="localData.llmApproach.ragDetails.chunkingStrategy" type="text" class="form-input" placeholder="e.g., semantic, fixed-size" @blur="update" />
+          </FormField>
+        </div>
+
+        <div v-if="localData.llmApproach?.architecture === 'agents'" class="space-y-4 pl-4 border-l-2 border-gray-200">
+          <h4 class="text-sm font-medium text-gray-900">Agentic Details</h4>
+          <FormField id="agent-framework" label="Framework" help-text="e.g. ReAct, Plan-and-Execute">
+            <input id="agent-framework" v-model="localData.llmApproach.agenticDetails.framework" type="text" class="form-input" placeholder="e.g., ReAct, MCP" @blur="update" />
+          </FormField>
+          <FormField id="agent-tools" label="Tools" help-text="MCP tools, custom tools (one per line)">
+            <textarea id="agent-tools" v-model="agentToolsText" rows="2" class="form-input" placeholder="e.g., file_search, browser" @blur="updateAgentTools" />
+          </FormField>
+          <FormField id="agent-orchestration" label="Orchestration">
+            <input id="agent-orchestration" v-model="localData.llmApproach.agenticDetails.orchestration" type="text" class="form-input" placeholder="e.g., LangGraph" @blur="update" />
+          </FormField>
         </div>
       </div>
     </div>
@@ -808,16 +947,20 @@ const { canvasData, updateDeveloperFeasibility } = useCanvasData()
 const cardExpanded = ref({
   technicalReadiness: false,
   technologyStack: false,
+  llmApproach: false,
   baselineCapability: false,
   expectedGains: false,
   implementationRequirements: false,
   agenticArchitecture: false,
 })
 
+const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
+
 // Initialize localData with proper array references
 const initLocalData = (): DeveloperFeasibility => {
   const feasibility = canvasData.value.developerFeasibility
   return {
+    appliesToRequirements: feasibility?.appliesToRequirements,
     trlLevel: feasibility?.trlLevel || {},
     technicalRisk: feasibility?.technicalRisk,
     effortEstimate: feasibility?.effortEstimate,
@@ -828,6 +971,7 @@ const initLocalData = (): DeveloperFeasibility => {
     expectedGains: feasibility?.expectedGains || {},
     implementationDifficulty: feasibility?.implementationDifficulty || {},
     agenticExplanation: feasibility?.agenticExplanation,
+    llmApproach: feasibility?.llmApproach || {},
   }
 }
 
@@ -842,6 +986,39 @@ if (!localData.value.expectedGains) {
 }
 if (!localData.value.implementationDifficulty) {
   localData.value.implementationDifficulty = {}
+}
+if (!localData.value.llmApproach) {
+  localData.value.llmApproach = {}
+}
+if (!localData.value.llmApproach.ragDetails) {
+  localData.value.llmApproach.ragDetails = {}
+}
+if (!localData.value.llmApproach.agenticDetails) {
+  localData.value.llmApproach.agenticDetails = {}
+}
+
+const requirementsNotInAppliesTo = computed(() => {
+  const applies = localData.value.appliesToRequirements || []
+  return requirements.value.filter((r) => !applies.includes(r.id))
+})
+
+function getRequirementTitle(id: string): string {
+  const req = requirements.value.find((r) => r.id === id)
+  return req?.title || req?.description || id
+}
+
+function addAppliesToRequirement(id: string) {
+  if (!id) return
+  const applies = [...(localData.value.appliesToRequirements || [])]
+  if (applies.includes(id)) return
+  localData.value.appliesToRequirements = [...applies, id]
+  update()
+}
+
+function removeAppliesToRequirement(id: string) {
+  const applies = (localData.value.appliesToRequirements || []).filter((r) => r !== id)
+  localData.value.appliesToRequirements = applies.length > 0 ? applies : undefined
+  update()
 }
 
 // Convert algorithms/tools arrays to objects for MultiValueInput
@@ -923,6 +1100,38 @@ const modelSummary = computed(() => {
   }
   return null
 })
+
+// LLM Architecture Label
+const llmArchitectureLabel = computed(() => {
+  const arch = localData.value.llmApproach?.architecture
+  if (!arch) return null
+  const labels: Record<string, string> = {
+    'simple-prompting': 'Simple prompting',
+    rag: 'RAG',
+    'fine-tuning': 'Fine-tuning',
+    agents: 'Agents (ReAct, MCP)',
+    other: 'Other',
+  }
+  return labels[arch] || arch
+})
+
+// Agent tools as newline-separated text (for textarea) - ref synced from localData
+const agentToolsText = ref('')
+function syncAgentToolsFromData() {
+  agentToolsText.value = (localData.value.llmApproach?.agenticDetails?.tools ?? []).join('\n')
+}
+function updateAgentTools() {
+  if (!localData.value.llmApproach) localData.value.llmApproach = {}
+  if (!localData.value.llmApproach.agenticDetails) localData.value.llmApproach.agenticDetails = {}
+  localData.value.llmApproach.agenticDetails.tools = agentToolsText.value
+    .split('\n')
+    .map((s) => s.trim())
+    .filter(Boolean)
+  update()
+}
+
+// Sync agentToolsText when localData.llmApproach changes (init + watch from canvas)
+watch(() => localData.value.llmApproach?.agenticDetails?.tools, () => syncAgentToolsFromData(), { immediate: true })
 
 // Baseline Performance Label
 const baselinePerformanceLabel = computed(() => {
@@ -1039,6 +1248,7 @@ watch(
       if (newFeasibility && Object.keys(newFeasibility).length > 0) {
         // Create new object with proper array references
         localData.value = {
+          appliesToRequirements: newFeasibility.appliesToRequirements,
           trlLevel: newFeasibility.trlLevel || {},
           technicalRisk: newFeasibility.technicalRisk,
           effortEstimate: newFeasibility.effortEstimate,
@@ -1049,6 +1259,7 @@ watch(
           expectedGains: newFeasibility.expectedGains || {},
           implementationDifficulty: newFeasibility.implementationDifficulty || {},
           agenticExplanation: newFeasibility.agenticExplanation,
+          llmApproach: newFeasibility.llmApproach || {},
         }
         // Ensure nested objects always exist
         if (!localData.value.baselineCapability) {
@@ -1060,6 +1271,16 @@ watch(
         if (!localData.value.implementationDifficulty) {
           localData.value.implementationDifficulty = {}
         }
+        if (!localData.value.llmApproach) {
+          localData.value.llmApproach = {}
+        }
+        if (!localData.value.llmApproach.ragDetails) {
+          localData.value.llmApproach.ragDetails = {}
+        }
+        if (!localData.value.llmApproach.agenticDetails) {
+          localData.value.llmApproach.agenticDetails = {}
+        }
+        syncAgentToolsFromData()
         // Sync algorithms and tools arrays
         localAlgorithms.value = (newFeasibility.algorithms || []).map((a: string) => ({ value: a }))
         localTools.value = (newFeasibility.tools || []).map((t: string) => ({ value: t }))
@@ -1070,6 +1291,7 @@ watch(
           baselineCapability: {},
           expectedGains: {},
           implementationDifficulty: {},
+          llmApproach: {},
         }
         localAlgorithms.value = []
         localTools.value = []

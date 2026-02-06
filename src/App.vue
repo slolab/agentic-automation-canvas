@@ -203,7 +203,7 @@ import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
 import InfoOverlay from './components/InfoOverlay.vue'
 
-const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
+const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll, requestSection } = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 const headerActionsRef = ref<HTMLElement | null>(null)
 const headerActionsMode = useHeaderActionsMode(headerActionsRef)
@@ -217,6 +217,7 @@ const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : 'â
 const loadExample = () => {
   if (confirm('This will replace your current data with an example dataset. Continue?')) {
     importFromROCrate(exampleData, exampleBenefitDisplay)
+    // Don't switch tabs - stay on current tab
   }
 }
 

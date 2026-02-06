@@ -33,8 +33,20 @@ const lastImportedCrateSchemaVersion = ref<string | null>(null)
 // App-only: true when last import was from a crate with no aac:schemaVersion (treat as prior/legacy)
 const importedCrateHadNoSchemaVersion = ref(false)
 
+// App-only: migration warnings from last import (normalization applied)
+const lastImportMigrationWarnings = ref<string[]>([])
+
 // App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
 const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
+
+// App-only: when set, CanvasForm switches to this section (e.g. after Load Example)
+const requestedSection = ref<string | null>(null)
+const requestSection = (section: string) => {
+  requestedSection.value = section
+}
+
+// Incremented on import so UserExpectations can remount and pick up fresh data
+const dataVersion = ref(0)
 
 // Load from localStorage on init
 const loadFromStorage = () => {
@@ -311,7 +323,8 @@ export function useCanvasData() {
     data: CanvasData,
     importedBenefitDisplay?: BenefitDisplayState,
     crateSchemaVersion?: string,
-    fromCrateFile = false
+    fromCrateFile = false,
+    migrationWarnings?: string[]
   ) => {
     // Deep copy the data to ensure reactivity works properly
     const newData = JSON.parse(JSON.stringify(data))
@@ -334,6 +347,7 @@ export function useCanvasData() {
     newData.versionDate = today
     newData.project.versionDate = today
     canvasData.value = newData
+    dataVersion.value++
     lastImportedVersion.value = newData.project?.version ?? newData.version ?? null
     if (fromCrateFile) {
       lastImportedCrateSchemaVersion.value = crateSchemaVersion ?? null
@@ -348,6 +362,11 @@ export function useCanvasData() {
     } else {
       benefitDisplay.value = { displayGroups: [] }
     }
+    lastImportMigrationWarnings.value = migrationWarnings ?? []
+  }
+
+  const clearMigrationWarnings = () => {
+    lastImportMigrationWarnings.value = []
   }
 
   // Validation functions
@@ -428,6 +447,10 @@ export function useCanvasData() {
 
     requirements.forEach((req, index) => {
       const prefix = `requirements[${index}]`
+
+      if (!req.title || !req.title.trim()) {
+        errors.push({ field: `${prefix}.title`, message: 'Task title is required', severity: 'error' })
+      }
 
       if (!req.unitOfWork || !req.unitOfWork.trim()) {
         errors.push({ field: `${prefix}.unitOfWork`, message: 'Unit of work is required', severity: 'error' })
@@ -622,7 +645,7 @@ export function useCanvasData() {
       data.userExpectations.requirements.forEach(req => {
         // Mandatory fields per requirement
         total++
-        if (req.description?.trim()) completed++
+        if (req.title?.trim()) completed++
         
         total++
         if (req.unitOfWork?.trim()) completed++
@@ -867,6 +890,8 @@ export function useCanvasData() {
   return {
     canvasData,
     lastImportedVersion,
+    lastImportMigrationWarnings,
+    clearMigrationWarnings,
     benefitDisplay,
     markChangedSinceImport,
     updateProject,
@@ -886,5 +911,8 @@ export function useCanvasData() {
     validateRequirements,
     validateDatasets,
     validateOutcomes,
+    requestedSection,
+    requestSection,
+    dataVersion,
   }
 }

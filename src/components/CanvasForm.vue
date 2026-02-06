@@ -1,5 +1,27 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg">
+    <!-- Migration warnings banner (one-time after import) -->
+    <div
+      v-if="lastImportMigrationWarnings.length > 0"
+      class="border-b border-amber-200 bg-amber-50 px-6 py-3 flex items-start justify-between gap-4"
+    >
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium text-amber-800">Import migrations applied</p>
+        <ul class="mt-1 text-sm text-amber-700 list-disc list-inside">
+          <li v-for="(msg, i) in lastImportMigrationWarnings" :key="i">{{ msg }}</li>
+        </ul>
+      </div>
+      <button
+        type="button"
+        @click="clearMigrationWarnings"
+        class="text-amber-700 hover:text-amber-900 shrink-0"
+        aria-label="Dismiss"
+      >
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      </button>
+    </div>
     <!-- Progress indicator -->
     <div class="border-b border-gray-200 px-6 py-4">
       <div class="flex items-center justify-between mb-2">
@@ -24,6 +46,7 @@
         <button
           v-for="section in sections"
           :key="section.id"
+          type="button"
           @click="activeSection = section.id"
           :class="[
             'px-4 py-3 text-sm font-medium border-b-2 transition-colors',
@@ -49,7 +72,7 @@
       />
       <UserExpectations
         v-if="activeSection === 'user-expectations'"
-        :key="'user-expectations'"
+        :key="`user-expectations-${dataVersion}`"
       />
       <DeveloperFeasibility
         v-if="activeSection === 'developer-feasibility'"
@@ -96,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import ProjectDefinition from './sections/ProjectDefinition.vue'
 import Persons from './sections/Persons.vue'
 import UserExpectations from './sections/UserExpectations.vue'
@@ -107,9 +130,7 @@ import OutcomesEvaluation from './sections/OutcomesEvaluation.vue'
 import Dashboard from './sections/Dashboard.vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 
-const { completionPercentage, validateAll } = useCanvasData()
-
-const activeSection = ref('project')
+const { completionPercentage, validateAll, lastImportMigrationWarnings, clearMigrationWarnings, requestedSection, dataVersion } = useCanvasData()
 
 const sections = [
   { id: 'project', label: 'Project' },
@@ -121,6 +142,15 @@ const sections = [
   { id: 'outcomes', label: 'Outcomes' },
   { id: 'dashboard', label: 'Dashboard' },
 ]
+
+const activeSection = ref('project')
+
+watch(requestedSection, (section) => {
+  if (section && sections.some((s) => s.id === section)) {
+    activeSection.value = section
+    requestedSection.value = null
+  }
+})
 
 const validation = computed(() => validateAll())
 

@@ -64,6 +64,15 @@
       </div>
     </div>
 
+    <!-- Task Dependency Graph -->
+    <div v-if="requirements.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Task Dependency Graph</h3>
+      <p v-if="!hasDependencies(requirements)" class="text-sm text-gray-500 italic mb-4">
+        Add dependencies in task details to see workflow connections.
+      </p>
+      <div ref="mermaidContainerRef" class="mermaid-diagram overflow-x-auto min-h-[100px] flex items-center justify-center p-4 bg-gray-50 rounded-lg" />
+    </div>
+
     <!-- Time Savings per Task -->
     <div v-if="requirements.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Time Savings per Task</h3>
@@ -76,7 +85,19 @@
         >
           <div class="flex items-start justify-between mb-2">
             <div class="flex-1">
-              <h4 class="font-medium text-gray-900">{{ req.description || `Task ${index + 1}` }}</h4>
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-medium text-gray-900">{{ req.title || `Task ${index + 1}` }}</h4>
+                <span
+                  v-if="getTaskFeasibilityRisk(req)"
+                  :class="getFeasibilityRiskBadgeClass(getTaskFeasibilityRisk(req)!)"
+                  class="px-2 py-0.5 rounded text-xs font-medium capitalize"
+                >
+                  {{ getTaskFeasibilityRisk(req) }}
+                </span>
+                <span v-if="getTaskFeasibilityEffort(req)" class="text-xs text-gray-500">
+                  {{ getTaskFeasibilityEffort(req) }}
+                </span>
+              </div>
               <p v-if="req.unitOfWork" class="text-sm text-gray-600 mt-1">
                 {{ req.unitOfWork }} ({{ req.volumePerMonth || 0 }}/month)
               </p>
@@ -208,18 +229,38 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch, onMounted } from 'vue'
+import mermaid from 'mermaid'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
+import { generateDependencyMermaid, hasDependencies } from '@/utils/dependencyGraph'
 import type { Requirement, Benefit } from '@/types/canvas'
 
 const { canvasData, benefitDisplay } = useCanvasData()
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 const governanceStages = computed(() => canvasData.value.governance?.stages || [])
+
+const dependencyMermaid = computed(() => generateDependencyMermaid(requirements.value))
+const mermaidContainerRef = ref<HTMLElement | null>(null)
+
+async function renderMermaid() {
+  if (!mermaidContainerRef.value || !dependencyMermaid.value) return
+  try {
+    mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' })
+    const id = `mermaid-dep-${Date.now()}`
+    const { svg } = await mermaid.render(id, dependencyMermaid.value)
+    mermaidContainerRef.value.innerHTML = svg
+  } catch (err) {
+    mermaidContainerRef.value.innerHTML = `<p class="text-sm text-gray-500">Could not render diagram</p>`
+  }
+}
+
+onMounted(() => renderMermaid())
+watch([dependencyMermaid, requirements], () => renderMermaid(), { deep: true })
 
 const taskCount = computed(() => requirements.value.length)
 
@@ -239,7 +280,7 @@ const displayGroupsWithBenefits = computed(() => {
           const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
           const benefit = req?.benefits?.[ref.benefitIndex]
           if (!req || !benefit) return null
-          const taskDescription = req.description || ref.requirementId
+          const taskDescription = req.title || req.description || ref.requirementId
           const valueDisplay = formatBenefitValueDisplay(benefit)
           return { taskDescription, valueDisplay }
         })
@@ -400,6 +441,38 @@ function getStageColor(index: number): string {
   return colors[index % colors.length]
 }
 
+// Per-task feasibility: use req.feasibility, or global DeveloperFeasibility when applicable
+function getTaskFeasibility(req: Requirement) {
+  if (req.feasibility) return req.feasibility
+  const df = canvasData.value.developerFeasibility
+  if (!df) return null
+  const appliesTo = df.appliesToRequirements
+  if (appliesTo && appliesTo.length > 0 && !appliesTo.includes(req.id)) return null
+  return df
+}
+
+function getTaskFeasibilityRisk(req: Requirement): string | null {
+  const feas = getTaskFeasibility(req)
+  const risk = feas?.technicalRisk
+  return risk || null
+}
+
+function getTaskFeasibilityEffort(req: Requirement): string | null {
+  const feas = getTaskFeasibility(req)
+  const effort = feas?.effortEstimate
+  return effort?.trim() || null
+}
+
+function getFeasibilityRiskBadgeClass(risk: string): string {
+  const classes: Record<string, string> = {
+    low: 'bg-green-100 text-green-700',
+    medium: 'bg-yellow-100 text-yellow-700',
+    high: 'bg-orange-100 text-orange-700',
+    critical: 'bg-red-100 text-red-700',
+  }
+  return classes[risk.toLowerCase()] || 'bg-gray-100 text-gray-700'
+}
+
 function getTaskBorderColor(index: number): string {
   const colors = [
     'border-blue-500',
@@ -417,18 +490,16 @@ function getValueTypeColor(type: string): string {
     quality: 'bg-green-50 border border-green-200 text-green-900',
     risk: 'bg-red-50 border border-red-200 text-red-900',
     enablement: 'bg-purple-50 border border-purple-200 text-purple-900',
+    cost: 'bg-amber-50 border border-amber-200 text-amber-900',
   }
   return colors[type] || 'bg-gray-50 border border-gray-200 text-gray-900'
 }
 
 function getCategoryColor(category: string): string {
   const colors: Record<string, string> = {
-    case: 'bg-blue-500',
-    document: 'bg-green-500',
-    record: 'bg-yellow-500',
-    message: 'bg-purple-500',
-    analysisRun: 'bg-pink-500',
-    meeting: 'bg-indigo-500',
+    item: 'bg-blue-500',
+    interaction: 'bg-purple-500',
+    computation: 'bg-pink-500',
     other: 'bg-gray-500',
   }
   return colors[category] || 'bg-gray-500'

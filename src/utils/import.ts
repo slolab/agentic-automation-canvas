@@ -7,6 +7,7 @@ import JSZip from 'jszip'
 import type { ROCrateJSONLD, ROCrateEntity } from '@/types/rocrate'
 import type { CanvasData } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
+import { normalizeCanvasData } from '@/utils/migrate'
 
 /**
  * Find entity by ID in RO-Crate graph
@@ -103,10 +104,15 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       .map((stepRef) => findEntity(graph, stepRef['@id']))
       .filter((step) => step !== undefined)
       .map((step) => {
+        const stepDesc = (step!.description as string) || ''
+        const stepName = (step!.name as string) || ''
+        const aacTitle = step!['aac:title'] as string | undefined
+        const aacUserStory = step!['aac:userStory'] as string | undefined
         const req: any = {
           id: step!['@id'].replace('#', ''),
-          description: (step!.description as string) || '',
-          userStory: (step!.name as string) || undefined,
+          title: aacTitle || stepDesc || stepName || '',
+          description: stepDesc || undefined,
+          userStory: aacUserStory ?? (stepName && stepName !== (aacTitle || stepDesc) ? stepName : undefined),
           priority: (step!.priority as 'low' | 'medium' | 'high' | 'critical' | undefined) || undefined,
           status: (step!.status as 'planned' | 'in-progress' | 'completed' | 'cancelled' | undefined) || undefined,
           benefits: [], // Always initialize benefits array
@@ -122,11 +128,17 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           req.humanOversightMinutesPerUnit = step!['aac:humanOversightMinutesPerUnit'] as number
         }
         if (step!['aac:unitCategory']) {
-          req.unitCategory = step!['aac:unitCategory'] as 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
+          req.unitCategory = step!['aac:unitCategory'] as 'item' | 'interaction' | 'computation' | 'other'
         }
         // Parse benefits array
         if (step!['aac:benefits'] && Array.isArray(step!['aac:benefits'])) {
           req.benefits = step!['aac:benefits']
+        }
+        if (step!['aac:dependsOn'] && Array.isArray(step!['aac:dependsOn'])) {
+          req.dependsOn = step!['aac:dependsOn'] as string[]
+        }
+        if (step!['aac:feasibility'] && typeof step!['aac:feasibility'] === 'object') {
+          req.feasibility = step!['aac:feasibility'] as import('@/types/canvas').RequirementFeasibility
         }
         return req
       })
@@ -582,6 +594,8 @@ export interface ImportROCrateResult {
   benefitDisplay?: BenefitDisplayState
   /** Schema version of the crate (from aac:schemaVersion in root dataset) */
   crateSchemaVersion?: string
+  /** Warnings from migration/normalization (e.g. description→title, unitCategory mapping) */
+  migrationWarnings?: string[]
 }
 
 export async function importROCrateFromZip(file: File): Promise<ImportROCrateResult> {
@@ -599,7 +613,9 @@ export async function importROCrateFromZip(file: File): Promise<ImportROCrateRes
     const rootDataset = rocrate['@graph']?.find((e: ROCrateEntity) => e['@id'] === './')
     const crateSchemaVersion = rootDataset?.['aac:schemaVersion'] as string | undefined
 
-    const canvasData = await importROCrateFromJSON(rocrate)
+    let canvasData = await importROCrateFromJSON(rocrate)
+    const { data: normalizedData, warnings: migrationWarnings } = normalizeCanvasData(canvasData)
+    canvasData = normalizedData
 
     let benefitDisplay: BenefitDisplayState | undefined
     const benefitDisplayFile = zip.file('benefit-display.json')
@@ -618,7 +634,7 @@ export async function importROCrateFromZip(file: File): Promise<ImportROCrateRes
       }
     }
 
-    return { canvasData, benefitDisplay, crateSchemaVersion }
+    return { canvasData, benefitDisplay, crateSchemaVersion, migrationWarnings }
   } catch (error) {
     if (error instanceof Error) {
       throw new Error(`Failed to import RO-Crate: ${error.message}`)

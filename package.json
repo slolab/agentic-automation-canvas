@@ -20,7 +20,9 @@
   },
   "dependencies": {
     "jszip": "^3.10.1",
-    "vue": "^3.4.21"
+    "mermaid": "^10.9.5",
+    "vue": "^3.4.21",
+    "vue-draggable-next": "^2.3.0"
   },
   "devDependencies": {
     "@headlessui/vue": "^1.7.16",

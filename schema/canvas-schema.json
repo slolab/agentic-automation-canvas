@@ -52,7 +52,7 @@
         "leadOrganization": { "type": "string" },
         "projectId": { "type": "string", "format": "uri" },
         "headlineValue": { "type": "string" },
-        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement"] },
+        "primaryValueDriver": { "type": "string", "enum": ["time", "quality", "risk", "enablement", "cost"] },
         "roughEstimateValue": {
           "type": "number",
           "minimum": 0,
@@ -83,6 +83,7 @@
             "type": "object",
             "properties": {
               "id": { "type": "string" },
+              "title": { "type": "string", "minLength": 1 },
               "description": { "type": "string" },
               "userStory": { "type": "string" },
               "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
@@ -90,16 +91,54 @@
               "stakeholder": { "type": "string" },
               "value": { "type": "string" },
               "unitOfWork": { "type": "string", "minLength": 1 },
-              "unitCategory": { "type": "string", "enum": ["case", "document", "record", "message", "analysisRun", "meeting", "other"] },
+              "unitCategory": { "type": "string", "enum": ["item", "interaction", "computation", "other"] },
               "volumePerMonth": { "type": "number", "minimum": 1 },
               "humanOversightMinutesPerUnit": { "type": "number", "minimum": 0 },
               "benefits": {
                 "type": "array",
                 "description": "Array of benefit metrics for this requirement",
                 "items": { "$ref": "#/$defs/Benefit" }
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "IDs of requirements this task depends on"
+              },
+              "feasibility": {
+                "type": "object",
+                "description": "Optional per-task feasibility (overrides or complements global DeveloperFeasibility)",
+                "properties": {
+                  "technicalRisk": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
+                  "effortEstimate": { "type": "string" },
+                  "feasibilityNotes": { "type": "string" },
+                  "algorithms": { "type": "array", "items": { "type": "string" } },
+                  "tools": { "type": "array", "items": { "type": "string" } },
+                  "llmApproach": {
+                    "type": "object",
+                    "properties": {
+                      "architecture": { "type": "string", "enum": ["simple-prompting", "rag", "fine-tuning", "agents", "other"] },
+                      "ragDetails": {
+                        "type": "object",
+                        "properties": {
+                          "retrievalMethod": { "type": "string" },
+                          "embeddingModel": { "type": "string" },
+                          "chunkingStrategy": { "type": "string" }
+                        }
+                      },
+                      "agenticDetails": {
+                        "type": "object",
+                        "properties": {
+                          "framework": { "type": "string" },
+                          "tools": { "type": "array", "items": { "type": "string" } },
+                          "orchestration": { "type": "string" }
+                        }
+                      }
+                    }
+                  }
+                }
               }
             },
-            "required": ["id", "description", "benefits"]
+            "required": ["id", "title", "benefits"]
           }
         },
         "stakeholders": {
@@ -123,6 +162,11 @@
     "developerFeasibility": {
       "type": "object",
       "properties": {
+        "appliesToRequirements": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "If set, global feasibility applies only to these requirement IDs (otherwise to all)"
+        },
         "trlLevel": {
           "type": "object",
           "properties": {
@@ -227,6 +271,33 @@
         "agenticExplanation": {
           "type": "string",
           "description": "Explanation of how agentic capabilities are added (autonomy, tool use, etc.) - clarifying that LLMs are not inherently agentic"
+        },
+        "llmApproach": {
+          "type": "object",
+          "description": "LLM technology approach and architecture details",
+          "properties": {
+            "architecture": {
+              "type": "string",
+              "enum": ["simple-prompting", "rag", "fine-tuning", "agents", "other"],
+              "description": "Primary LLM architecture approach"
+            },
+            "ragDetails": {
+              "type": "object",
+              "properties": {
+                "retrievalMethod": { "type": "string" },
+                "embeddingModel": { "type": "string" },
+                "chunkingStrategy": { "type": "string" }
+              }
+            },
+            "agenticDetails": {
+              "type": "object",
+              "properties": {
+                "framework": { "type": "string", "description": "e.g. ReAct, Plan-and-Execute, AutoGPT" },
+                "tools": { "type": "array", "items": { "type": "string" }, "description": "MCP tools, custom tools" },
+                "orchestration": { "type": "string" }
+              }
+            }
+          }
         }
       }
     },
@@ -400,7 +471,7 @@
       "properties": {
         "benefitType": {
           "type": "string",
-          "enum": ["time", "quality", "risk", "enablement"],
+          "enum": ["time", "quality", "risk", "enablement", "cost"],
           "description": "Type of benefit"
         },
         "metricId": {

@@ -44,12 +44,13 @@ export const exampleData: CanvasData = {
     requirements: [
       {
         id: 'req-1',
+        title: 'Extract key information from documents',
         description: 'Automatically extract key information from incoming documents',
         userStory: 'As a data entry clerk, I want documents to be automatically processed so that I can focus on exception handling instead of routine data entry',
         priority: 'high',
         status: 'in-progress',
         unitOfWork: 'one document',
-        unitCategory: 'document',
+        unitCategory: 'item',
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 1,
         benefits: [
@@ -99,14 +100,16 @@ export const exampleData: CanvasData = {
       },
       {
         id: 'req-2',
+        title: 'Categorize documents by type',
         description: 'Automatically categorize documents by type',
         userStory: 'As a team lead, I want documents automatically categorized so that routing decisions are consistent and faster',
         priority: 'high',
         status: 'planned',
         unitOfWork: 'one document',
-        unitCategory: 'document',
+        unitCategory: 'item',
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 0.5,
+        dependsOn: ['req-1'],
         benefits: [
           {
             benefitType: 'time',
@@ -139,14 +142,16 @@ export const exampleData: CanvasData = {
       },
       {
         id: 'req-3',
+        title: 'Route documents to team members',
         description: 'Route documents to appropriate team members',
         userStory: 'As a manager, I want documents automatically routed to the right person so that processing time is minimized',
         priority: 'medium',
         status: 'planned',
         unitOfWork: 'one routing decision',
-        unitCategory: 'case',
+        unitCategory: 'item',
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 0.3,
+        dependsOn: ['req-2'],
         benefits: [
           {
             benefitType: 'time',

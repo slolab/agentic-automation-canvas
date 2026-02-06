@@ -30,7 +30,7 @@ export interface ProjectDefinition {
   projectId?: string
   // Project-level value summary
   headlineValue?: string
-  primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement'
+  primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
   roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
   // Version management (stored at project level for ROcrate compatibility)
@@ -57,7 +57,7 @@ export type ValueMeaning = 'absolute' | 'delta'
 
 // Generalized benefit structure for all benefit types
 export interface Benefit {
-  benefitType: 'time' | 'quality' | 'risk' | 'enablement'
+  benefitType: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   metricId: string // Controlled vocabulary + "custom"
   metricLabel: string // Human-readable label
   direction: BenefitDirection // Whether higher/lower/target/bool is better
@@ -72,9 +72,24 @@ export interface Benefit {
   assumptions?: string
 }
 
+/** Per-task feasibility (subset of DeveloperFeasibility) */
+export interface RequirementFeasibility {
+  technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
+  effortEstimate?: string
+  feasibilityNotes?: string
+  algorithms?: string[]
+  tools?: string[]
+  llmApproach?: {
+    architecture?: 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
+    ragDetails?: { retrievalMethod?: string; embeddingModel?: string; chunkingStrategy?: string }
+    agenticDetails?: { framework?: string; tools?: string[]; orchestration?: string }
+  }
+}
+
 export interface Requirement {
   id: string
-  description: string
+  title: string
+  description?: string
   userStory?: string
   priority?: 'low' | 'medium' | 'high' | 'critical'
   status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
@@ -82,11 +97,15 @@ export interface Requirement {
   value?: string
   // Value model fields
   unitOfWork?: string
-  unitCategory?: 'case' | 'document' | 'record' | 'message' | 'analysisRun' | 'meeting' | 'other'
+  unitCategory?: 'item' | 'interaction' | 'computation' | 'other'
   volumePerMonth?: number
   humanOversightMinutesPerUnit?: number // Applies globally to time benefits
   // Generalized benefits array - replaces legacy time/quality/risk fields
   benefits: Benefit[]
+  /** IDs of requirements this task depends on (workflow order) */
+  dependsOn?: string[]
+  /** Optional per-task feasibility (overrides or complements global DeveloperFeasibility) */
+  feasibility?: RequirementFeasibility
 }
 
 export interface Person {
@@ -104,6 +123,8 @@ export interface Stakeholder {
 }
 
 export interface DeveloperFeasibility {
+  /** If set, global feasibility applies only to these requirement IDs (otherwise to all) */
+  appliesToRequirements?: string[]
   trlLevel?: {
     current?: number
     target?: number
@@ -134,6 +155,19 @@ export interface DeveloperFeasibility {
     securityLevel?: 'low' | 'medium' | 'high' | 'critical'
   }
   agenticExplanation?: string
+  llmApproach?: {
+    architecture?: 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
+    ragDetails?: {
+      retrievalMethod?: string
+      embeddingModel?: string
+      chunkingStrategy?: string
+    }
+    agenticDetails?: {
+      framework?: string
+      tools?: string[]
+      orchestration?: string
+    }
+  }
 }
 
 export interface GovernanceStaging {
