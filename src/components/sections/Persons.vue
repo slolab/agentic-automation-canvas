@@ -167,9 +167,24 @@ function getRoleLabel(roleId: string): string {
 // Get project assignments for a person (stakeholder/agent assignments)
 function getPersonAssignments(personId: string): Array<{ type: 'stakeholder' | 'agent'; context?: string }> {
   const assignments: Array<{ type: 'stakeholder' | 'agent'; context?: string }> = []
+  const taskStakeholderPersonIds = new Set<string>()
   
-  // Check stakeholders
-  if (canvasData.value.userExpectations?.stakeholders) {
+  // Check stakeholders from tasks (per-task stakeholders) - preferred format
+  if (canvasData.value.userExpectations?.requirements) {
+    canvasData.value.userExpectations.requirements.forEach((req) => {
+      if (req.stakeholders && req.stakeholders.includes(personId)) {
+        taskStakeholderPersonIds.add(personId)
+        assignments.push({
+          type: 'stakeholder',
+          context: req.title || req.id,
+        })
+      }
+    })
+  }
+  
+  // Also check legacy stakeholders format for backward compatibility
+  // Only include if person is not already a stakeholder in any task (avoid duplicates)
+  if (!taskStakeholderPersonIds.has(personId) && canvasData.value.userExpectations?.stakeholders) {
     canvasData.value.userExpectations.stakeholders.forEach((stakeholder) => {
       if (stakeholder.personId === personId) {
         assignments.push({

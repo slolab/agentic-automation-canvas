@@ -104,6 +104,11 @@
                 "items": { "type": "string" },
                 "description": "IDs of requirements this task depends on"
               },
+              "stakeholders": {
+                "type": "array",
+                "items": { "type": "string" },
+                "description": "Person IDs of stakeholders for this task"
+              },
               "feasibility": {
                 "type": "object",
                 "description": "Optional per-task feasibility (overrides or complements global DeveloperFeasibility)",

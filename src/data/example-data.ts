@@ -53,6 +53,7 @@ export const exampleData: CanvasData = {
         unitCategory: 'item',
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 1,
+        stakeholders: ['person-0'],
         benefits: [
           {
             benefitType: 'time',
@@ -110,6 +111,7 @@ export const exampleData: CanvasData = {
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 0.5,
         dependsOn: ['req-1'],
+        stakeholders: ['person-1'],
         benefits: [
           {
             benefitType: 'time',
@@ -152,6 +154,7 @@ export const exampleData: CanvasData = {
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 0.3,
         dependsOn: ['req-2'],
+        stakeholders: ['person-0', 'person-1'],
         benefits: [
           {
             benefitType: 'time',
@@ -182,18 +185,6 @@ export const exampleData: CanvasData = {
             assumptions: 'Enables automated routing that was not possible before',
           },
         ],
-      },
-    ],
-    stakeholders: [
-      {
-        personId: 'person-0', // References Sarah Johnson from persons array
-        role: 'Data Entry Manager',
-        values: ['time savings', 'accuracy'],
-      },
-      {
-        personId: 'person-1', // References Michael Chen from persons array
-        role: 'IT Lead',
-        values: ['system reliability', 'maintainability'],
       },
     ],
   },

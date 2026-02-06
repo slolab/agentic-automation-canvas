@@ -104,6 +104,8 @@ export interface Requirement {
   benefits: Benefit[]
   /** IDs of requirements this task depends on (workflow order) */
   dependsOn?: string[]
+  /** Person IDs of stakeholders for this task */
+  stakeholders?: string[]
   /** Optional per-task feasibility (overrides or complements global DeveloperFeasibility) */
   feasibility?: RequirementFeasibility
 }

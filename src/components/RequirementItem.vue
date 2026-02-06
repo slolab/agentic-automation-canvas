@@ -56,6 +56,15 @@
             >
               Depends on {{ (requirement.dependsOn || []).length }}
             </span>
+            <span
+              v-if="(requirement.stakeholders || []).length > 0"
+              class="flex items-center gap-1 text-blue-600 text-xs"
+            >
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+              {{ (requirement.stakeholders || []).length }} stakeholder{{ (requirement.stakeholders || []).length !== 1 ? 's' : '' }}
+            </span>
             <!-- Benefit type badges -->
             <span v-if="benefitTypes.length > 0" class="flex items-center gap-1">
               <span
@@ -279,6 +288,56 @@
         </div>
       </div>
 
+      <!-- Stakeholders Section -->
+      <div class="mt-6 pt-6 border-t-2 border-gray-200">
+        <FormField
+          :id="`req-stakeholders-${index}`"
+          label="Stakeholders"
+          help-text="Persons with interest in this task"
+          tooltip="Select stakeholders from the persons list. Stakeholders represent people with an interest in this specific task's outcomes."
+        >
+          <div class="space-y-2">
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="personId in (requirement.stakeholders || [])"
+                :key="personId"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded bg-blue-100 text-blue-800 text-sm"
+              >
+                {{ getPersonName(personId) || personId }}
+                <button
+                  type="button"
+                  @click="removeStakeholder(personId)"
+                  class="text-blue-600 hover:text-red-600"
+                  aria-label="Remove stakeholder"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <select
+              :id="`req-stakeholders-${index}`"
+              :value="''"
+              class="form-input w-auto"
+              @change="addStakeholder(($event.target as HTMLSelectElement).value)"
+            >
+              <option value="">Add stakeholder...</option>
+              <option
+                v-for="person in availablePersons"
+                :key="person.id"
+                :value="person.id"
+              >
+                {{ person.name }}{{ person.affiliation ? ` (${person.affiliation})` : '' }}
+              </option>
+            </select>
+            <p v-if="availablePersons.length === 0" class="text-xs text-yellow-600 mt-1">
+              No persons available. Please add persons in the "Persons" section first.
+            </p>
+          </div>
+        </FormField>
+      </div>
+
       <!-- Dependencies Section -->
       <div class="mt-6 pt-6 border-t-2 border-gray-200">
         <FormField
@@ -491,7 +550,7 @@
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
 import BenefitsModal from './BenefitsModal.vue'
-import type { Requirement, Benefit, RequirementFeasibility } from '@/types/canvas'
+import type { Requirement, Benefit, RequirementFeasibility, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
@@ -544,6 +603,13 @@ const isBenefitsModalOpen = ref(false)
 // Get all requirements for normalization
 const { canvasData } = useCanvasData()
 const allRequirements = computed(() => canvasData.value.userExpectations?.requirements || [])
+const allPersons = computed(() => canvasData.value.persons || [])
+
+// Available persons (exclude already selected stakeholders)
+const availablePersons = computed(() => {
+  const selected = props.requirement.stakeholders || []
+  return allPersons.value.filter((p) => !selected.includes(p.id))
+})
 
 // Other tasks (exclude self and already selected) for dependency selector
 const otherTasks = computed(() => {
@@ -568,6 +634,23 @@ function addDependency(id: string) {
 function removeDependency(id: string) {
   const deps = (props.requirement.dependsOn || []).filter((d) => d !== id)
   props.update({ ...props.requirement, dependsOn: deps.length > 0 ? deps : undefined })
+}
+
+function getPersonName(personId: string): string {
+  const person = allPersons.value.find((p) => p.id === personId)
+  return person?.name || 'Unknown Person'
+}
+
+function addStakeholder(personId: string) {
+  if (!personId) return
+  const stakeholders = [...(props.requirement.stakeholders || [])]
+  if (stakeholders.includes(personId)) return
+  props.update({ ...props.requirement, stakeholders: [...stakeholders, personId] })
+}
+
+function removeStakeholder(personId: string) {
+  const stakeholders = (props.requirement.stakeholders || []).filter((s) => s !== personId)
+  props.update({ ...props.requirement, stakeholders: stakeholders.length > 0 ? stakeholders : undefined })
 }
 
 // Benefits array (ensure it's always an array)

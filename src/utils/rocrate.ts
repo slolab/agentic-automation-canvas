@@ -557,21 +557,38 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     projectEntity.hasPlan = { '@id': planId }
   }
 
-  // 4b. Stakeholders - use Person registry for deduplication
-  if (data.userExpectations?.stakeholders && data.userExpectations.stakeholders.length > 0) {
-    const stakeholderRefs: Array<{ '@id': string }> = []
+  // 4b. Stakeholders - collect from tasks (per-task stakeholders)
+  // Collect all unique person IDs from task stakeholders
+  const taskStakeholderIds = new Set<string>()
+  if (data.userExpectations?.requirements) {
+    data.userExpectations.requirements.forEach((req) => {
+      if (req.stakeholders) {
+        req.stakeholders.forEach((personId) => taskStakeholderIds.add(personId))
+      }
+    })
+  }
+  
+  // Also support legacy format (stakeholders at userExpectations level) for backward compatibility
+  if (data.userExpectations?.stakeholders) {
     data.userExpectations.stakeholders.forEach((stakeholder) => {
+      taskStakeholderIds.add(stakeholder.personId)
+    })
+  }
+  
+  if (taskStakeholderIds.size > 0) {
+    const stakeholderRefs: Array<{ '@id': string }> = []
+    taskStakeholderIds.forEach((personId) => {
       // Find person by personId
-      const person = data.persons?.find(p => p.id === stakeholder.personId)
+      const person = data.persons?.find(p => p.id === personId)
       if (!person) {
-        console.warn(`Stakeholder references unknown person: ${stakeholder.personId}`)
+        console.warn(`Stakeholder references unknown person: ${personId}`)
         return
       }
       
       // Get RO-Crate Person ID from map
-      const rocratePersonId = personIdMap.get(stakeholder.personId)
+      const rocratePersonId = personIdMap.get(personId)
       if (!rocratePersonId) {
-        console.warn(`No RO-Crate ID mapped for person: ${stakeholder.personId}`)
+        console.warn(`No RO-Crate ID mapped for person: ${personId}`)
         return
       }
       
@@ -585,10 +602,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         }
       )
       
-      // Add role assignment separately (will create schema:Role node)
-      if (stakeholder.role) {
-        personRegistry.addRoleAssignment(rocratePersonId, stakeholder.role, 'stakeholder')
-      }
+      // Note: Per-task stakeholders don't have roles, but we can still create a generic stakeholder role
+      // for backward compatibility with RO-Crate format
+      personRegistry.addRoleAssignment(rocratePersonId, 'Stakeholder', 'stakeholder')
       
       stakeholderRefs.push({ '@id': rocratePersonId })
     })
