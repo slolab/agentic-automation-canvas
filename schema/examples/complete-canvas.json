@@ -34,14 +34,15 @@
     "requirements": [
       {
         "id": "requirement-0",
+        "title": "Automated data processing",
         "description": "As a researcher, I want automated data processing so that I can focus on analysis",
         "userStory": "Automated data processing",
         "priority": "high",
         "status": "in-progress",
         "unitOfWork": "one data processing task",
-        "unitCategory": "analysisRun",
+        "unitCategory": "computation",
         "volumePerMonth": 120,
-        "humanOversightMinutesPerUnit": 2,
+        "timeUnit": "minutes",
         "benefits": [
           {
             "benefitType": "time",
@@ -53,6 +54,7 @@
             "benefitUnit": "minutes",
             "baseline": { "type": "numeric", "value": 10 },
             "expected": { "type": "numeric", "value": 5 },
+            "oversightMinutesPerUnit": 2,
             "confidenceUser": "high",
             "confidenceDev": "medium",
             "assumptions": "Assumes standard data formats and no major edge cases"
