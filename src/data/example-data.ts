@@ -77,7 +77,7 @@ export const exampleData: CanvasData = {
         stakeholders: ['person-0'],
         feasibility: {
           technicalRisk: 'high',
-          effortEstimate: '8-10 weeks',
+          effortEstimate: { value: 9, unit: 'weeks' },
           feasibilityNotes: 'Extraction requires extensive agentic capabilities to handle diverse document formats and extract structured information. Needs robust error handling and validation.',
           modelSelection: 'frontier-model',
           modelName: 'gpt-4o',
@@ -167,7 +167,7 @@ export const exampleData: CanvasData = {
         stakeholders: ['person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
-          effortEstimate: '2-3 weeks',
+          effortEstimate: { value: 80, unit: 'person-hours' },
           feasibilityNotes: 'Deterministic task based on structured schema output from extraction. Uses rule-based classification matching extracted fields to predefined document type patterns. No LLM required.',
           modelSelection: 'none',
           technologyApproach: {
@@ -249,7 +249,7 @@ export const exampleData: CanvasData = {
         stakeholders: ['person-0', 'person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
-          effortEstimate: '3-4 weeks',
+          effortEstimate: { value: 3.5, unit: 'weeks' },
           feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. GPT-4o would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
           modelSelection: 'frontier-model',
           modelName: 'gpt-4o',
@@ -303,7 +303,7 @@ export const exampleData: CanvasData = {
       target: 7,
     },
     technicalRisk: 'medium',
-    effortEstimate: '4-6 months',
+    effortEstimate: { value: 20, unit: 'weeks' },
     feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats. Different tasks require different approaches - extraction needs extensive agentic capabilities, while categorization can be deterministic.',
   },
   governance: {

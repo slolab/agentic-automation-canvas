@@ -122,7 +122,14 @@
                 "description": "Optional per-task feasibility (overrides project-level defaults)",
                 "properties": {
                   "technicalRisk": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
-                  "effortEstimate": { "type": "string" },
+                  "effortEstimate": {
+                    "type": "object",
+                    "properties": {
+                      "value": { "type": "number", "minimum": 0 },
+                      "unit": { "type": "string", "enum": ["weeks", "person-hours"] }
+                    },
+                    "required": ["value", "unit"]
+                  },
                   "feasibilityNotes": { "type": "string" },
                   "algorithms": { "type": "array", "items": { "type": "string" } },
                   "tools": { "type": "array", "items": { "type": "string" } },
@@ -212,8 +219,13 @@
           "description": "Overall technical risk for the project"
         },
         "effortEstimate": {
-          "type": "string",
-          "description": "Overall effort estimate for the project"
+          "type": "object",
+          "description": "Overall effort estimate for the project",
+          "properties": {
+            "value": { "type": "number", "minimum": 0 },
+            "unit": { "type": "string", "enum": ["weeks", "person-hours"] }
+          },
+          "required": ["value", "unit"]
         },
         "feasibilityNotes": {
           "type": "string",

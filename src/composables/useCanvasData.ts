@@ -726,7 +726,13 @@ export function useCanvasData() {
       }
       if (data.developerFeasibility.effortEstimate !== undefined) {
         total++
-        if (data.developerFeasibility.effortEstimate?.trim()) completed++
+        // Handle both old string format and new structured format
+        const effort = data.developerFeasibility.effortEstimate
+        if (typeof effort === 'string' && effort.trim()) {
+          completed++
+        } else if (typeof effort === 'object' && effort.value !== undefined && effort.value > 0) {
+          completed++
+        }
       }
       if (data.developerFeasibility.feasibilityNotes !== undefined) {
         total++

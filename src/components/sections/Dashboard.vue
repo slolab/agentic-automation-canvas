@@ -76,6 +76,38 @@
     <!-- Time Savings per Task -->
     <div v-if="requirements.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Time Savings per Task</h3>
+      
+      <!-- Effort Summary Cards (only show if there are tasks with effort estimates) -->
+      <div v-if="tasksWithEffort.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-gray-50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Total Effort</span>
+            <span class="text-lg font-semibold text-gray-900">{{ formatTotalEffort() }}</span>
+          </div>
+          <div class="text-xs text-gray-600 mt-1">
+            Sum of all task-level effort estimates
+          </div>
+        </div>
+        <div v-if="totalTimeSavedPersonHours > 0" class="bg-green-50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Time Benefits</span>
+            <span class="text-lg font-semibold text-green-700">{{ formatTimeSaved(totalTimeSavedPersonHours) }}/month</span>
+          </div>
+          <div class="text-xs text-gray-600 mt-1">
+            Net time saved per month (other benefit types not shown)
+          </div>
+        </div>
+        <div v-if="totalAmortizationMonths !== null" class="bg-blue-50 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-sm font-medium text-gray-700">Amortization Period</span>
+            <span class="text-lg font-semibold text-blue-700">{{ totalAmortizationMonths.toFixed(1) }} months</span>
+          </div>
+          <div class="text-xs text-gray-600 mt-1">
+            Months until effort amortizes
+          </div>
+        </div>
+      </div>
+      
       <div class="space-y-4">
         <div
           v-for="(req, index) in requirements"
@@ -97,20 +129,30 @@
                 <span v-if="getTaskFeasibilityEffort(req)" class="text-xs text-gray-500">
                   {{ getTaskFeasibilityEffort(req) }}
                 </span>
+                <!-- Benefit type badges -->
+                <span
+                  v-for="type in getBenefitTypes(req)"
+                  :key="type"
+                  :class="benefitTypeBadgeClass(type)"
+                  class="px-2 py-0 rounded text-xs font-medium"
+                >
+                  {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+                </span>
               </div>
               <p v-if="req.unitOfWork" class="text-sm text-gray-600 mt-1">
                 {{ req.unitOfWork }} ({{ req.volumePerMonth || 0 }}/month)
               </p>
             </div>
             <div class="text-right ml-4">
-              <div v-if="getTimeSavedMinutes(req) > 0" class="text-lg font-semibold text-green-700">
-                {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
+              <div v-if="getNetTimeSaved(req) > 0 || getTimeSavedMinutes(req) > 0" class="text-lg font-semibold text-green-700">
+                {{ formatMinutes(getNetTimeSaved(req) * (req.volumePerMonth || 0)) }}
               </div>
-              <div v-if="getOversightMinutesForReq(req) > 0" class="text-sm text-gray-500">
+              <div class="text-sm text-gray-500">
                 Oversight: {{ formatMinutes(getOversightMinutesForReq(req)) }}
               </div>
             </div>
           </div>
+          
           <div class="mt-2">
             <div class="flex items-center gap-2 text-xs text-gray-600">
               <span>Baseline:</span>
@@ -118,13 +160,23 @@
                 {{ formatMinutes(getBaselineMinutes(req) * (req.volumePerMonth || 0)) }}
               </span>
               <span class="mx-2">→</span>
-              <span>Saved:</span>
-              <span class="font-medium text-green-700">
-                {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
-              </span>
-              <span v-if="getOversightMinutesForReq(req) > 0" class="ml-2">
-                (Net: {{ formatMinutes(getNetTimeSaved(req) * (req.volumePerMonth || 0)) }})
-              </span>
+              <template v-if="getOversightMinutesForReq(req) > 0">
+                <span>Gross Saved:</span>
+                <span class="font-medium">
+                  {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
+                </span>
+                <span class="ml-2">→</span>
+                <span>Net Saved:</span>
+                <span class="font-medium text-green-700">
+                  {{ formatMinutes(getNetTimeSaved(req) * (req.volumePerMonth || 0)) }}
+                </span>
+              </template>
+              <template v-else>
+                <span>Saved:</span>
+                <span class="font-medium text-green-700">
+                  {{ formatMinutes(getTimeSavedMinutes(req) * (req.volumePerMonth || 0)) }}
+                </span>
+              </template>
             </div>
             <!-- Progress bar: total bar = total savings, green = net savings, grey = oversight -->
             <div class="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden relative">
@@ -143,6 +195,26 @@
                   left: `${getNetSavingsPercentage(req)}%`
                 }"
               />
+            </div>
+            
+            <!-- Effort bar (only show if task has effort estimate) -->
+            <div v-if="req.feasibility?.effortEstimate?.value !== undefined && req.feasibility.effortEstimate.value > 0" class="mt-3">
+              <div class="flex items-center gap-2 text-xs text-gray-600 mb-1">
+                <span>Development Effort:</span>
+                <span class="font-medium text-purple-700">
+                  {{ formatEffort(req.feasibility.effortEstimate) }}
+                </span>
+                <span v-if="getTimeSavedPersonHours(req) > 0 && getAmortizationMonths(req) !== null" class="ml-2 text-blue-600">
+                  ({{ getAmortizationMonths(req)!.toFixed(1) }}mo until amortization)
+                </span>
+              </div>
+              <!-- Effort bar: normalized to max effort across all tasks -->
+              <div class="h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                <div
+                  class="h-full bg-purple-500 transition-all absolute left-0 top-0"
+                  :style="{ width: `${getEffortPercentage(req)}%` }"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -474,7 +546,9 @@ function getTaskFeasibilityRisk(req: Requirement): string | null {
 function getTaskFeasibilityEffort(req: Requirement): string | null {
   const feas = getTaskFeasibility(req)
   const effort = feas?.effortEstimate
-  return effort?.trim() || null
+  if (!effort || effort.value === undefined) return null
+  const unitLabel = effort.unit === 'person-hours' ? 'person-hours' : 'weeks'
+  return `${effort.value} ${unitLabel}`
 }
 
 function getFeasibilityRiskBadgeClass(risk: string): string {
@@ -517,5 +591,148 @@ function getCategoryColor(category: string): string {
     other: 'bg-gray-500',
   }
   return colors[category] || 'bg-gray-500'
+}
+
+// Effort summary functions (similar to DeveloperFeasibility)
+const tasksWithEffort = computed(() => {
+  return requirements.value.filter((r) => r.feasibility?.effortEstimate?.value !== undefined && r.feasibility.effortEstimate.value > 0)
+})
+
+// Calculate total effort (normalize to person-hours for aggregation)
+const totalEffortPersonHours = computed(() => {
+  return tasksWithEffort.value.reduce((total, req) => {
+    const effort = req.feasibility?.effortEstimate
+    if (!effort || effort.value === undefined) return total
+    // Normalize to person-hours (assume 40 person-hours per week)
+    if (effort.unit === 'weeks') {
+      return total + (effort.value * 40)
+    }
+    return total + effort.value
+  }, 0)
+})
+
+// Get maximum effort for percentage calculation
+const maxEffortPersonHours = computed(() => {
+  if (tasksWithEffort.value.length === 0) return 0
+  const efforts = tasksWithEffort.value.map(req => {
+    const effort = req.feasibility?.effortEstimate
+    if (!effort || effort.value === undefined) return 0
+    if (effort.unit === 'weeks') {
+      return effort.value * 40
+    }
+    return effort.value
+  })
+  return Math.max(...efforts, 0)
+})
+
+// Calculate time saved per month for a requirement (in person-hours)
+function getTimeSavedPersonHours(req: Requirement): number {
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
+  
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
+  const volume = req.volumePerMonth || 0
+  const grossTimeSaved = savedPerUnit * volume
+  const oversightTime = getOversightMinutes(timeBenefit, volume)
+  const netTimeSaved = Math.max(0, grossTimeSaved - oversightTime)
+  
+  // Convert minutes to person-hours
+  return netTimeSaved / 60
+}
+
+// Calculate total time saved across all tasks with effort estimates
+const totalTimeSavedPersonHours = computed(() => {
+  return tasksWithEffort.value.reduce((total, req) => {
+    return total + getTimeSavedPersonHours(req)
+  }, 0)
+})
+
+// Get maximum time saved for normalization
+const maxTimeSavedPersonHours = computed(() => {
+  if (tasksWithEffort.value.length === 0) return 0
+  const saved = tasksWithEffort.value.map(req => getTimeSavedPersonHours(req))
+  return Math.max(...saved, 0)
+})
+
+function getEffortPercentage(req: Requirement): number {
+  if (maxEffortPersonHours.value === 0) return 0
+  const effort = req.feasibility?.effortEstimate
+  if (!effort || effort.value === undefined) return 0
+  const effortHours = effort.unit === 'weeks' ? effort.value * 40 : effort.value
+  return Math.round((effortHours / maxEffortPersonHours.value) * 100)
+}
+
+function getTimeSavedPercentage(req: Requirement): number {
+  if (maxTimeSavedPersonHours.value === 0) return 0
+  const saved = getTimeSavedPersonHours(req)
+  return Math.round((saved / maxTimeSavedPersonHours.value) * 100)
+}
+
+function formatTotalEffort(): string {
+  const totalHours = totalEffortPersonHours.value
+  if (totalHours === 0) return '0 person-hours'
+  
+  // Show in weeks if >= 40 hours, otherwise person-hours
+  if (totalHours >= 40) {
+    const weeks = Math.round((totalHours / 40) * 10) / 10
+    return `${weeks} weeks (${totalHours} person-hours)`
+  }
+  return `${totalHours} person-hours`
+}
+
+function formatEffort(effort?: { value: number; unit: 'weeks' | 'person-hours' }): string {
+  if (!effort || effort.value === undefined) return ''
+  const unitLabel = effort.unit === 'person-hours' ? 'person-hours' : 'weeks'
+  return `${effort.value} ${unitLabel}`
+}
+
+function formatTimeSaved(hours: number): string {
+  if (hours === 0) return '0h'
+  if (hours < 1) {
+    const minutes = Math.round(hours * 60)
+    return `${minutes}m`
+  }
+  if (hours < 10) {
+    return `${Math.round(hours * 10) / 10}h`
+  }
+  return `${Math.round(hours)}h`
+}
+
+// Calculate amortization period (months until effort amortizes) for a task
+function getAmortizationMonths(req: Requirement): number | null {
+  const effort = req.feasibility?.effortEstimate
+  if (!effort || effort.value === undefined || effort.value === 0) return null
+  
+  const effortHours = effort.unit === 'weeks' ? effort.value * 40 : effort.value
+  const monthlyBenefitHours = getTimeSavedPersonHours(req)
+  
+  if (monthlyBenefitHours === 0) return null
+  return effortHours / monthlyBenefitHours
+}
+
+// Calculate total amortization period
+const totalAmortizationMonths = computed(() => {
+  const totalEffort = totalEffortPersonHours.value
+  const totalBenefit = totalTimeSavedPersonHours.value
+  if (totalEffort === 0 || totalBenefit === 0) return null
+  return totalEffort / totalBenefit
+})
+
+// Get unique benefit types for a requirement
+function getBenefitTypes(req: Requirement): string[] {
+  const types = new Set((req.benefits || []).map(b => b.benefitType))
+  return Array.from(types)
+}
+
+// Badge class for benefit types
+function benefitTypeBadgeClass(type: string): string {
+  const classes: Record<string, string> = {
+    'time': 'bg-green-100 text-green-700',
+    'quality': 'bg-blue-100 text-blue-700',
+    'risk': 'bg-orange-100 text-orange-700',
+    'enablement': 'bg-purple-100 text-purple-700',
+    'cost': 'bg-amber-100 text-amber-700'
+  }
+  return classes[type] || 'bg-gray-100 text-gray-700'
 }
 </script>
