@@ -19,12 +19,14 @@ The canvas serves as both a human-readable planning document and a machine-reada
 
 A **task** represents a specific unit of work that the agentic system will perform. Tasks are captured as **requirements** in the user expectations section. Each requirement includes:
 
-- Description and user story
+- Title and description
+- User story
 - Priority and status
 - Volume (units per month)
+- Time unit standardization (minutes or hours)
 - Baseline performance metrics
-- Expected benefits (time, quality, risk, enablement)
-- Associated stakeholders
+- Expected benefits (time, quality, risk, enablement, cost)
+- Associated stakeholders (per-task, referenced by Person ID)
 
 Tasks are the fundamental building blocks for understanding what the agentic system will do and measuring its impact.
 
@@ -32,16 +34,19 @@ Tasks are the fundamental building blocks for understanding what the agentic sys
 
 The **contract** between users and developers is captured through:
 
-- **User Expectations**: What users need and expect from the system (requirements, benefits, stakeholders)
-- **Developer Feasibility**: Technical assessment of feasibility, risks, and implementation considerations
+- **User Expectations**: What users need and expect from the system (requirements, benefits, per-task stakeholders)
+- **Developer Feasibility**: Technical assessment at project and task levels
+  - **Project-level**: Simple, generic defaults (TRL, overall risk, effort estimate) that apply to all tasks
+  - **Task-level**: Optional detailed feasibility assessments for individual tasks that override project defaults
 
 This contract ensures alignment between what users want and what developers can deliver, including:
 
-- Benefit metrics and expected improvements
-- Technical risk levels
+- Benefit metrics and expected improvements (time, quality, risk, enablement, cost)
+- Human oversight requirements (for time benefits)
+- Technical risk levels (project-level and per-task)
 - Technology Readiness Levels (TRL)
-- Model selection and baseline capabilities
-- Implementation difficulty assessments
+- Model selection and baseline capabilities (per-task)
+- Implementation difficulty assessments (per-task)
 
 ## Evaluation
 
@@ -78,14 +83,15 @@ Persons are referenced by ID throughout the canvas (as stakeholders, agents, cre
 
 ## Benefit Metrics
 
-**Benefit metrics** quantify the expected improvements from the agentic automation system. Benefits are categorized into four types:
+**Benefit metrics** quantify the expected improvements from the agentic automation system. Benefits are categorized into five types:
 
 - **Time**: Reduction in time spent on tasks
 - **Quality**: Improvement in output quality or error rates
 - **Risk**: Reduction in risks or incidents
 - **Enablement**: New capabilities or functionalities enabled
+- **Cost**: Reduction in operational, development, or infrastructure costs
 
-Each benefit includes baseline and expected values, confidence levels, and assumptions. Benefits can be aggregated at the project level to provide overall impact metrics.
+Each benefit includes baseline and expected values, confidence levels, and assumptions. Time benefits may include human oversight values (per unit or per month) which are subtracted from gross time savings. Benefits can be aggregated at the project level to provide overall impact metrics.
 
 ## Governance Stages
 

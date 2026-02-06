@@ -57,11 +57,14 @@ Roles are exported as separate `schema:Role` nodes that reference Person entitie
 
 ### Stakeholder Mappings
 
+Stakeholders are now managed per-task (in `requirement.stakeholders` array). Legacy project-level stakeholders (`userExpectations.stakeholders`) are deprecated and will be removed in 0.12.0.
+
 | Canvas Field | RO-Crate Representation | Notes |
 |-------------|-------------------------|-------|
-| `stakeholders[].personId` | Person entity reference | Links to `#person-N` |
-| `stakeholders[].role` | `schema:Role` node | Separate entity |
-| Stakeholder list | `contributor` on Project | Array of Person references |
+| `requirements[].stakeholders` | Person entity references | Array of Person IDs (per-task) |
+| Legacy: `userExpectations.stakeholders[].personId` | Person entity reference | DEPRECATED: Links to `#person-N` |
+| Legacy: `userExpectations.stakeholders[].role` | `schema:Role` node | DEPRECATED: Separate entity |
+| All stakeholders (from all tasks) | `contributor` on Project | Aggregated array of Person references |
 
 ### Requirement/Task Entities
 
@@ -75,7 +78,8 @@ Roles are exported as separate `schema:Role` nodes that reference Person entitie
 | `requirements[].unitOfWork` | `aac:unitOfWork` | String |
 | `requirements[].unitCategory` | `aac:unitCategory` | Enum |
 | `requirements[].volumePerMonth` | `aac:volumePerMonth` | Number |
-| `requirements[].humanOversightMinutesPerUnit` | `aac:humanOversightMinutesPerUnit` | Number |
+| `requirements[].timeUnit` | `aac:timeUnit` | Enum: minutes, hours |
+| `requirements[].stakeholders` | Person entity references | Array of Person IDs (per-task stakeholders) |
 | `requirements[].benefits` | `aac:benefits` | Array of Benefit objects |
 
 ### Benefit Objects
@@ -84,7 +88,7 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `benefitType` | `benefitType` | Required: time, quality, risk, enablement |
+| `benefitType` | `benefitType` | Required: time, quality, risk, enablement, cost |
 | `metricId` | `metricId` | Required |
 | `metricLabel` | `metricLabel` | Required |
 | `direction` | `direction` | Required: increaseIsBetter, decreaseIsBetter, targetIsBetter, boolIsBetter |
@@ -94,6 +98,8 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 | `benefitUnit` | `benefitUnit` | Required |
 | `baseline` | `baseline` | BenefitValue object |
 | `expected` | `expected` | BenefitValue object |
+| `oversightMinutesPerUnit` | `aac:humanOversightMinutesPerUnit` | Optional: For time benefits with perUnit aggregation (RO-Crate uses legacy field name) |
+| `oversightMinutesPerMonth` | `aac:humanOversightMinutesPerMonth` | Optional: For time benefits with perMonth aggregation (RO-Crate uses legacy field name) |
 | `confidenceUser` | `confidenceUser` | Optional: low, medium, high |
 | `confidenceDev` | `confidenceDev` | Optional: low, medium, high |
 | `assumptions` | `assumptions` | Optional |

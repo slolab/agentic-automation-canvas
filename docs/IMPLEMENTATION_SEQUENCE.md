@@ -13,7 +13,7 @@ This document records the implementation sequence for the Agentic Automation Can
 
 ## Phase 1 – Quick Wins
 
-1. **Human Oversight**: Label changed to "Human Oversight After Automation (min/unit)" in RequirementItem.
+1. **Human Oversight**: Moved from requirement level to benefit level (in benefits modal). Oversight follows aggregation basis: perUnit benefits use `oversightMinutesPerUnit`, perMonth benefits use `oversightMinutesPerMonth`. Always measured in minutes.
 2. **Multiline User Stories**: User Story field changed from `<input>` to `<textarea rows="3">`.
 3. **Unit Categories**: Schema, types, and UI updated to `item`, `interaction`, `computation`, `other` (migrated from case/document/record/message/meeting/analysisRun).
 
