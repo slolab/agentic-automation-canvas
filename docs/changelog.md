@@ -5,6 +5,31 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.0] - 2026-02-06
+
+### Added
+- Developer Feasibility refactor: separate project-level defaults and task-level overrides
+- Human oversight moved to benefits modal, follows aggregation basis (perUnit/perMonth)
+- Time unit standardization: requirement-level timeUnit field, synchronized across all time benefits
+- Cost benefit type with CostBenefitForm component
+- Markdown rendering for task descriptions in feasibility section
+- Functional roles dropdown with chips interface
+- "Done (collapse)" buttons for all collapsible items and expandable sections
+
+### Changed
+- Stakeholders moved from separate section to per-task association
+- Oversight calculations now use benefit-level oversight instead of requirement-level
+- Benefits modal opens on "time" tab by default
+- Enhanced example task descriptions with rationale and best practices
+- Improved UI guidance: integrated bullet points replacing highlighted boxes
+
+### Fixed
+- Benefit tags wrap as a group instead of individually
+- Removed tasks' benefits no longer appear in project summary
+- Time unit dropdown reactivity in benefits modal
+- DeliverableItem "Done" button width issue
+- Tooltip hover behavior (stay visible when moving mouse)
+
 ## [0.10.2] - 2025-02-04
 
 ### Added
