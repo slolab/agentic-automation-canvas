@@ -72,7 +72,7 @@ A benefit metric for a requirement
 | `expectedGains` | object | No |  |  | — |
 | `feasibilityNotes` | string | No |  |  | AAC |
 | `implementationDifficulty` | object | No |  |  | — |
-| `modelName` | string | No | Specific model name or identifier (e.g., 'GPT-4', 'Llama 3.1', 'Claude Sonnet') |  | AAC |
+| `modelName` | string | No | Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct') |  | AAC |
 | `modelSelection` | string | No | Type of base model to be used | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other` | AAC |
 | `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `tools` | array of string | No |  |  | AAC |

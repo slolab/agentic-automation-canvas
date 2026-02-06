@@ -111,17 +111,31 @@
               },
               "feasibility": {
                 "type": "object",
-                "description": "Optional per-task feasibility (overrides or complements global DeveloperFeasibility)",
+                "description": "Optional per-task feasibility (overrides project-level defaults)",
                 "properties": {
                   "technicalRisk": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
                   "effortEstimate": { "type": "string" },
                   "feasibilityNotes": { "type": "string" },
                   "algorithms": { "type": "array", "items": { "type": "string" } },
                   "tools": { "type": "array", "items": { "type": "string" } },
-                  "llmApproach": {
+                  "modelSelection": {
+                    "type": "string",
+                    "enum": ["open-source", "frontier-model", "fine-tuned", "custom", "other", "none"],
+                    "description": "Type of model to be used (if applicable). Set to 'none' if task is deterministic."
+                  },
+                  "modelName": {
+                    "type": "string",
+                    "description": "Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct')"
+                  },
+                  "technologyApproach": {
                     "type": "object",
+                    "description": "Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs.",
                     "properties": {
-                      "architecture": { "type": "string", "enum": ["simple-prompting", "rag", "fine-tuning", "agents", "other"] },
+                      "architecture": {
+                        "type": "string",
+                        "enum": ["none", "simple-prompting", "rag", "fine-tuning", "agents", "other"],
+                        "description": "Primary technology architecture. 'none' indicates deterministic task without LLM requirement."
+                      },
                       "ragDetails": {
                         "type": "object",
                         "properties": {
@@ -130,12 +144,20 @@
                           "chunkingStrategy": { "type": "string" }
                         }
                       },
+                      "fineTuningDetails": {
+                        "type": "object",
+                        "properties": {
+                          "baseModel": { "type": "string", "description": "Base model that was fine-tuned" },
+                          "tuningApproach": { "type": "string", "description": "Method used for fine-tuning (e.g., LoRA, QLoRA, full fine-tuning)" },
+                          "dataset": { "type": "string", "description": "Dataset used for fine-tuning" }
+                        }
+                      },
                       "agenticDetails": {
                         "type": "object",
                         "properties": {
-                          "framework": { "type": "string" },
-                          "tools": { "type": "array", "items": { "type": "string" } },
-                          "orchestration": { "type": "string" }
+                          "framework": { "type": "array", "items": { "type": "string" }, "description": "e.g. ReAct, MCP, Plan-and-Execute" },
+                          "tools": { "type": "array", "items": { "type": "string" }, "description": "MCP tools, custom tools" },
+                          "orchestration": { "type": "array", "items": { "type": "string" }, "description": "e.g. LangGraph" }
                         }
                       }
                     }
@@ -166,14 +188,11 @@
     },
     "developerFeasibility": {
       "type": "object",
+      "description": "Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden)",
       "properties": {
-        "appliesToRequirements": {
-          "type": "array",
-          "items": { "type": "string" },
-          "description": "If set, global feasibility applies only to these requirement IDs (otherwise to all)"
-        },
         "trlLevel": {
           "type": "object",
+          "description": "Technology Readiness Level - project-level maturity assessment",
           "properties": {
             "current": { "type": "integer", "minimum": 1, "maximum": 9 },
             "target": { "type": "integer", "minimum": 1, "maximum": 9 }
@@ -181,128 +200,16 @@
         },
         "technicalRisk": {
           "type": "string",
-          "enum": ["low", "medium", "high", "critical"]
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Overall technical risk for the project"
         },
-        "algorithms": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "tools": {
-          "type": "array",
-          "items": { "type": "string" }
-        },
-        "effortEstimate": { "type": "string" },
-        "feasibilityNotes": { "type": "string" },
-        "modelSelection": {
+        "effortEstimate": {
           "type": "string",
-          "enum": ["open-source", "frontier-model", "fine-tuned", "custom", "other"],
-          "description": "Type of base model to be used"
+          "description": "Overall effort estimate for the project"
         },
-        "modelName": {
+        "feasibilityNotes": {
           "type": "string",
-          "description": "Specific model name or identifier (e.g., 'GPT-4', 'Llama 3.1', 'Claude Sonnet')"
-        },
-        "baselineCapability": {
-          "type": "object",
-          "properties": {
-            "taskPerformance": {
-              "type": "string",
-              "enum": ["excellent", "good", "moderate", "poor", "fails"],
-              "description": "How well the naive model performs the task without custom system"
-            },
-            "successRate": {
-              "type": "number",
-              "minimum": 0,
-              "maximum": 100,
-              "description": "Estimated success rate of naive model (0-100%)"
-            },
-            "limitations": {
-              "type": "string",
-              "description": "Key limitations of naive model performance"
-            },
-            "requiresCustomInstructions": {
-              "type": "boolean",
-              "description": "Whether the task requires extensive custom instructions/prompts"
-            },
-            "customInstructionsComplexity": {
-              "type": "string",
-              "enum": ["low", "medium", "high"],
-              "description": "Complexity of custom instructions needed"
-            }
-          }
-        },
-        "expectedGains": {
-          "type": "object",
-          "properties": {
-            "performanceImprovement": {
-              "type": "string",
-              "enum": ["minimal", "moderate", "significant", "transformative"],
-              "description": "Expected improvement in performance from agentic system"
-            },
-            "headroom": {
-              "type": "string",
-              "enum": ["low", "medium", "high"],
-              "description": "Headroom for improvement - gap between baseline and potential"
-            },
-            "justification": {
-              "type": "string",
-              "description": "Explanation of why gains are expected and what enables them"
-            }
-          }
-        },
-        "implementationDifficulty": {
-          "type": "object",
-          "properties": {
-            "skillAdditionDifficulty": {
-              "type": "string",
-              "enum": ["very-easy", "easy", "moderate", "difficult", "very-difficult"],
-              "description": "Difficulty of adding the necessary skills (e.g., via AGENTS.md, tools, etc.)"
-            },
-            "baselineComparisonRequired": {
-              "type": "boolean",
-              "description": "Whether baseline comparison is necessary for validation"
-            },
-            "validationMonitoringRequired": {
-              "type": "boolean",
-              "description": "Whether validation and monitoring are required (depends on security level)"
-            },
-            "securityLevel": {
-              "type": "string",
-              "enum": ["low", "medium", "high", "critical"],
-              "description": "Security level of the task, affecting validation requirements"
-            }
-          }
-        },
-        "agenticExplanation": {
-          "type": "string",
-          "description": "Explanation of how agentic capabilities are added (autonomy, tool use, etc.) - clarifying that LLMs are not inherently agentic"
-        },
-        "llmApproach": {
-          "type": "object",
-          "description": "LLM technology approach and architecture details",
-          "properties": {
-            "architecture": {
-              "type": "string",
-              "enum": ["simple-prompting", "rag", "fine-tuning", "agents", "other"],
-              "description": "Primary LLM architecture approach"
-            },
-            "ragDetails": {
-              "type": "object",
-              "properties": {
-                "retrievalMethod": { "type": "string" },
-                "embeddingModel": { "type": "string" },
-                "chunkingStrategy": { "type": "string" }
-              }
-            },
-            "agenticDetails": {
-              "type": "object",
-              "properties": {
-                "framework": { "type": "string", "description": "e.g. ReAct, Plan-and-Execute, AutoGPT" },
-                "tools": { "type": "array", "items": { "type": "string" }, "description": "MCP tools, custom tools" },
-                "orchestration": { "type": "string" }
-              }
-            }
-          }
+          "description": "Project-level feasibility notes"
         }
       }
     },

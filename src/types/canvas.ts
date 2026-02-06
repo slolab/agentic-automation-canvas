@@ -72,17 +72,31 @@ export interface Benefit {
   assumptions?: string
 }
 
-/** Per-task feasibility (subset of DeveloperFeasibility) */
+/** Per-task feasibility (optional overrides for project-level feasibility) */
 export interface RequirementFeasibility {
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
   effortEstimate?: string
   feasibilityNotes?: string
   algorithms?: string[]
   tools?: string[]
-  llmApproach?: {
-    architecture?: 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
+  /** Model selection for this task (if different from project-level) */
+  modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other' | 'none'
+  /** Specific model name/version for this task */
+  modelName?: string
+  /** Technology approach for this task. Set to 'none' if task is deterministic and doesn't require LLMs */
+  technologyApproach?: {
+    architecture?: 'none' | 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
     ragDetails?: { retrievalMethod?: string; embeddingModel?: string; chunkingStrategy?: string }
-    agenticDetails?: { framework?: string; tools?: string[]; orchestration?: string }
+    fineTuningDetails?: {
+      baseModel?: string // Base model that was fine-tuned
+      tuningApproach?: string // e.g., LoRA, QLoRA, full fine-tuning
+      dataset?: string // Dataset used for fine-tuning
+    }
+    agenticDetails?: { 
+      framework?: string[] // e.g., ReAct, MCP, Plan-and-Execute (single-item array, new entry replaces existing)
+      tools?: string[] // e.g., file_search, browser, custom tools
+      orchestration?: string[] // e.g., LangGraph (single-item array, new entry replaces existing)
+    }
   }
 }
 
@@ -124,52 +138,19 @@ export interface Stakeholder {
   roleContext?: string // Optional role context for this stakeholder role
 }
 
+/** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */
 export interface DeveloperFeasibility {
-  /** If set, global feasibility applies only to these requirement IDs (otherwise to all) */
-  appliesToRequirements?: string[]
+  /** Technology Readiness Level - project-level maturity assessment */
   trlLevel?: {
     current?: number
     target?: number
   }
+  /** Overall technical risk for the project */
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
-  algorithms?: string[]
-  tools?: string[]
+  /** Overall effort estimate for the project */
   effortEstimate?: string
+  /** Project-level feasibility notes */
   feasibilityNotes?: string
-  modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other'
-  modelName?: string
-  baselineCapability?: {
-    taskPerformance?: 'excellent' | 'good' | 'moderate' | 'poor' | 'fails'
-    successRate?: number
-    limitations?: string
-    requiresCustomInstructions?: boolean
-    customInstructionsComplexity?: 'low' | 'medium' | 'high'
-  }
-  expectedGains?: {
-    performanceImprovement?: 'minimal' | 'moderate' | 'significant' | 'transformative'
-    headroom?: 'low' | 'medium' | 'high'
-    justification?: string
-  }
-  implementationDifficulty?: {
-    skillAdditionDifficulty?: 'very-easy' | 'easy' | 'moderate' | 'difficult' | 'very-difficult'
-    baselineComparisonRequired?: boolean
-    validationMonitoringRequired?: boolean
-    securityLevel?: 'low' | 'medium' | 'high' | 'critical'
-  }
-  agenticExplanation?: string
-  llmApproach?: {
-    architecture?: 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
-    ragDetails?: {
-      retrievalMethod?: string
-      embeddingModel?: string
-      chunkingStrategy?: string
-    }
-    agenticDetails?: {
-      framework?: string
-      tools?: string[]
-      orchestration?: string
-    }
-  }
 }
 
 export interface GovernanceStaging {

@@ -385,118 +385,6 @@
         </FormField>
       </div>
 
-      <!-- Technical Feasibility Section (optional per-task) -->
-      <div class="mt-6 pt-6 border-t-2 border-gray-200">
-        <button
-          type="button"
-          @click="feasibilityExpanded = !feasibilityExpanded"
-          class="flex items-center justify-between w-full text-left mb-2 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded"
-        >
-          <h4 class="subsubsection-header mb-0">Technical Feasibility</h4>
-          <svg class="w-5 h-5 text-gray-400" :class="{ 'rotate-180': feasibilityExpanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-          </svg>
-        </button>
-        <p class="text-sm text-gray-600 mb-3">Optional per-task feasibility. Use to override or complement the global Developer Feasibility section.</p>
-        <div v-if="feasibilityExpanded" class="space-y-4">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              :id="`req-feas-risk-${index}`"
-              label="Technical Risk"
-              help-text="Risk level for this task"
-            >
-              <select
-                :id="`req-feas-risk-${index}`"
-                :value="requirement.feasibility?.technicalRisk || ''"
-                class="form-input"
-                @change="updateFeasibility({ technicalRisk: ($event.target as HTMLSelectElement).value || undefined })"
-              >
-                <option value="">Select risk level</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-                <option value="critical">Critical</option>
-              </select>
-            </FormField>
-            <FormField
-              :id="`req-feas-effort-${index}`"
-              label="Effort Estimate"
-              help-text="Estimated effort for this task"
-            >
-              <input
-                :id="`req-feas-effort-${index}`"
-                :value="requirement.feasibility?.effortEstimate || ''"
-                type="text"
-                class="form-input"
-                placeholder="e.g., 2 weeks, 40h"
-                @input="updateFeasibility({ effortEstimate: ($event.target as HTMLInputElement).value || undefined })"
-              />
-            </FormField>
-          </div>
-          <FormField
-            :id="`req-feas-notes-${index}`"
-            label="Feasibility Notes"
-            help-text="Notes on technical feasibility for this task"
-          >
-            <textarea
-              :id="`req-feas-notes-${index}`"
-              :value="requirement.feasibility?.feasibilityNotes || ''"
-              rows="2"
-              class="form-input"
-              placeholder="e.g., Requires external API integration"
-              @input="updateFeasibility({ feasibilityNotes: ($event.target as HTMLTextAreaElement).value || undefined })"
-            />
-          </FormField>
-          <FormField
-            :id="`req-feas-algorithms-${index}`"
-            label="Algorithms"
-            help-text="Comma-separated list of algorithms for this task"
-          >
-            <input
-              :id="`req-feas-algorithms-${index}`"
-              :value="(requirement.feasibility?.algorithms || []).join(', ')"
-              type="text"
-              class="form-input"
-              placeholder="e.g., BERT, rule-based"
-              @input="updateFeasibility({ algorithms: parseCommaList(($event.target as HTMLInputElement).value) })"
-            />
-          </FormField>
-          <FormField
-            :id="`req-feas-tools-${index}`"
-            label="Tools"
-            help-text="Comma-separated list of tools for this task"
-          >
-            <input
-              :id="`req-feas-tools-${index}`"
-              :value="(requirement.feasibility?.tools || []).join(', ')"
-              type="text"
-              class="form-input"
-              placeholder="e.g., LangChain, OpenAI API"
-              @input="updateFeasibility({ tools: parseCommaList(($event.target as HTMLInputElement).value) })"
-            />
-          </FormField>
-          <FormField
-            :id="`req-feas-llm-arch-${index}`"
-            label="LLM Approach"
-            help-text="Architecture for this task"
-          >
-            <select
-              :id="`req-feas-llm-arch-${index}`"
-              :value="requirement.feasibility?.llmApproach?.architecture || ''"
-              class="form-input"
-              @change="updateFeasibilityLlmArch(($event.target as HTMLSelectElement).value)"
-            >
-              <option value="">Select approach</option>
-              <option value="simple-prompting">Simple prompting</option>
-              <option value="rag">RAG</option>
-              <option value="fine-tuning">Fine-tuning</option>
-              <option value="agents">Agents</option>
-              <option value="other">Other</option>
-            </select>
-          </FormField>
-        </div>
-      </div>
-
       <!-- Benefits Section -->
       <div class="mt-6 pt-6 border-t-2 border-gray-200">
         <div class="flex items-center justify-between mb-4">
@@ -550,7 +438,7 @@
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
 import BenefitsModal from './BenefitsModal.vue'
-import type { Requirement, Benefit, RequirementFeasibility, Person } from '@/types/canvas'
+import type { Requirement, Benefit, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
@@ -562,39 +450,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-// Technical feasibility section expanded when feasibility data exists
-const feasibilityExpanded = ref(!!props.requirement.feasibility && Object.keys(props.requirement.feasibility).length > 0)
-
-function parseCommaList(s: string): string[] {
-  return s.split(',').map((x) => x.trim()).filter(Boolean)
-}
-
-function updateFeasibility(partial: Partial<RequirementFeasibility>) {
-  const next: Record<string, unknown> = { ...props.requirement.feasibility, ...partial }
-  const cleaned = Object.fromEntries(
-    Object.entries(next).filter(([, v]) => {
-      if (v === undefined || v === null) return false
-      if (typeof v === 'string' && v.trim() === '') return false
-      if (Array.isArray(v) && v.length === 0) return false
-      if (typeof v === 'object' && v !== null && !Array.isArray(v)) {
-        return Object.keys(v as object).length > 0
-      }
-      return true
-    })
-  ) as RequirementFeasibility
-  props.update({
-    ...props.requirement,
-    feasibility: Object.keys(cleaned).length > 0 ? cleaned : undefined,
-  })
-}
-
-function updateFeasibilityLlmArch(architecture: string) {
-  const valid = ['simple-prompting', 'rag', 'fine-tuning', 'agents', 'other'] as const
-  const arch = (architecture && valid.includes(architecture as typeof valid[number]) ? architecture : undefined) as 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other' | undefined
-  const llm = arch ? { ...props.requirement.feasibility?.llmApproach, architecture: arch } : undefined
-  updateFeasibility({ llmApproach: llm })
-}
 
 // New requirements (without title) start expanded
 const isExpanded = ref(!props.requirement.title || props.requirement.title.trim() === '')

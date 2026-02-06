@@ -54,6 +54,23 @@ export const exampleData: CanvasData = {
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 1,
         stakeholders: ['person-0'],
+        feasibility: {
+          technicalRisk: 'high',
+          effortEstimate: '8-10 weeks',
+          feasibilityNotes: 'Extraction requires extensive agentic capabilities to handle diverse document formats and extract structured information. Needs robust error handling and validation.',
+          modelSelection: 'frontier-model',
+          modelName: 'claude-opus-4-5',
+          technologyApproach: {
+            architecture: 'agents',
+            agenticDetails: {
+              framework: ['ReAct', 'MCP'],
+              tools: ['document_parser', 'schema_validator', 'external_api', 'database_query'],
+              orchestration: ['LangGraph'],
+            },
+          },
+          algorithms: ['OCR (Optical Character Recognition)', 'Natural Language Processing', 'Named Entity Recognition'],
+          tools: ['Python', 'LangChain', 'OpenAI API', 'Document Processing API'],
+        },
         benefits: [
           {
             benefitType: 'time',
@@ -112,6 +129,17 @@ export const exampleData: CanvasData = {
         humanOversightMinutesPerUnit: 0.5,
         dependsOn: ['req-1'],
         stakeholders: ['person-1'],
+        feasibility: {
+          technicalRisk: 'low',
+          effortEstimate: '2-3 weeks',
+          feasibilityNotes: 'Deterministic task based on structured schema output from extraction. Uses rule-based classification matching extracted fields to predefined document type patterns. No LLM required.',
+          modelSelection: 'none',
+          technologyApproach: {
+            architecture: 'none',
+          },
+          algorithms: ['Rule-based classification', 'Pattern matching'],
+          tools: ['Python', 'JSON Schema validator'],
+        },
         benefits: [
           {
             benefitType: 'time',
@@ -155,6 +183,22 @@ export const exampleData: CanvasData = {
         humanOversightMinutesPerUnit: 0.3,
         dependsOn: ['req-2'],
         stakeholders: ['person-0', 'person-1'],
+        feasibility: {
+          technicalRisk: 'low',
+          effortEstimate: '3-4 weeks',
+          feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. Claude would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
+          modelSelection: 'frontier-model',
+          modelName: 'claude-opus-4-5',
+          technologyApproach: {
+            architecture: 'agents',
+            agenticDetails: {
+              framework: ['MCP'],
+              tools: ['routing_rules', 'team_directory'],
+            },
+          },
+          algorithms: ['Decision tree', 'Rule-based routing'],
+          tools: ['Python', 'MCP framework', 'OpenAI API'],
+        },
         benefits: [
           {
             benefitType: 'time',
@@ -194,31 +238,8 @@ export const exampleData: CanvasData = {
       target: 7,
     },
     technicalRisk: 'medium',
-    algorithms: ['OCR (Optical Character Recognition)', 'Natural Language Processing', 'Document Classification'],
-    tools: ['Python', 'TensorFlow', 'Document Processing API'],
     effortEstimate: '4-6 months',
-    feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats.',
-    modelSelection: 'frontier-model',
-    modelName: 'GPT-4',
-    baselineCapability: {
-      taskPerformance: 'moderate',
-      successRate: 65,
-      limitations: 'Naive GPT-4 can extract text and basic information but struggles with: (1) Custom domain terminology specific to our business, (2) Complex multi-step workflows requiring context across multiple documents, (3) Edge cases with unusual document formats, (4) Maintaining consistency across related documents',
-      requiresCustomInstructions: true,
-      customInstructionsComplexity: 'high',
-    },
-    expectedGains: {
-      performanceImprovement: 'significant',
-      headroom: 'high',
-      justification: 'By adding agentic capabilities (tool use for document APIs, structured workflows, domain-specific instructions, and autonomy to handle multi-step processes), we expect to improve success rate from 65% to 90%+. The system will be able to handle complex workflows that require context awareness and decision-making that naive models cannot perform.',
-    },
-    implementationDifficulty: {
-      skillAdditionDifficulty: 'moderate',
-      baselineComparisonRequired: true,
-      validationMonitoringRequired: true,
-      securityLevel: 'medium',
-    },
-    agenticExplanation: 'Agentic capabilities are added through: (1) Tool use - giving the model access to document processing APIs, database queries, and external validation services, (2) Autonomy - allowing the model to make routing decisions and handle exceptions autonomously, (3) Structured workflows - defining multi-step document processing pipelines with checkpoints, (4) Domain knowledge - providing custom instructions with business-specific terminology and rules. The base GPT-4 provides reasoning and language understanding, but the agentic behavior emerges from the system architecture that enables autonomous decision-making and tool interaction.',
+    feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats. Different tasks require different approaches - extraction needs extensive agentic capabilities, while categorization can be deterministic.',
   },
   governance: {
     stages: [

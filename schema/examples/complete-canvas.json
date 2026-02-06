@@ -103,7 +103,7 @@
     "effortEstimate": "6-8 months",
     "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling.",
     "modelSelection": "frontier-model",
-    "modelName": "GPT-4",
+    "modelName": "claude-opus-4-5",
     "baselineCapability": {
       "taskPerformance": "moderate",
       "successRate": 65,
