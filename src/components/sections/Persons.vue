@@ -16,7 +16,7 @@
     <MultiValueInput
       v-model="localPersons"
       label="person"
-      :create-default="() => ({ id: `person-${Date.now()}`, name: '', functionRoles: [] })"
+      :create-default="createDefaultPerson"
     >
       <template #input="{ item, index, update }">
         <PersonItem
@@ -157,6 +157,37 @@ watch(localPersons, async (newPersons) => {
   await nextTick()
   isLocalUpdate = false
 }, { deep: true, immediate: false })
+
+// Generate next sequential person ID (e.g., person-0, person-1, person-2)
+function getNextPersonId(): string {
+  const existingIds = localPersons.value.map(p => p.id)
+  const personIdPattern = /^person-(\d+)$/
+  
+  // Extract all numbers from existing person-<number> IDs
+  const usedNumbers = existingIds
+    .map(id => {
+      const match = id.match(personIdPattern)
+      return match ? parseInt(match[1], 10) : -1
+    })
+    .filter(num => num >= 0)
+  
+  // Find the next available number
+  if (usedNumbers.length === 0) {
+    return 'person-0'
+  }
+  
+  const maxNumber = Math.max(...usedNumbers)
+  return `person-${maxNumber + 1}`
+}
+
+// Create default person with sequential ID
+function createDefaultPerson(): Person {
+  return {
+    id: getNextPersonId(),
+    name: '',
+    functionRoles: []
+  }
+}
 
 // Get role label from ID
 function getRoleLabel(roleId: string): string {
