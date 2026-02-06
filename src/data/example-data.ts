@@ -13,12 +13,20 @@ export const exampleData: CanvasData = {
       id: 'person-0',
       name: 'Sarah Johnson',
       affiliation: 'Operations Department',
+      functionRoles: ['end-user', 'project-manager'],
     },
     {
       id: 'person-1',
       name: 'Michael Chen',
       orcid: 'https://orcid.org/0000-0000-0000-0001',
       affiliation: 'IT Department',
+      functionRoles: ['technical-lead', 'developer'],
+    },
+    {
+      id: 'person-2',
+      name: 'Emma Rodriguez',
+      affiliation: 'Compliance Department',
+      functionRoles: ['compliance-officer', 'data-manager'],
     },
   ],
   project: {
@@ -128,7 +136,7 @@ export const exampleData: CanvasData = {
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 0.5,
         dependsOn: ['req-1'],
-        stakeholders: ['person-1'],
+        stakeholders: ['person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
           effortEstimate: '2-3 weeks',
@@ -196,7 +204,7 @@ export const exampleData: CanvasData = {
         volumePerMonth: 500,
         humanOversightMinutesPerUnit: 0.3,
         dependsOn: ['req-2'],
-        stakeholders: ['person-0', 'person-1'],
+        stakeholders: ['person-0', 'person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
           effortEstimate: '3-4 weeks',
@@ -275,6 +283,12 @@ export const exampleData: CanvasData = {
             type: 'person',
             roleContext: 'Design phase requirements gathering',
           },
+          {
+            personId: 'person-2', // References Emma Rodriguez from persons array
+            role: 'Compliance Officer',
+            type: 'person',
+            roleContext: 'Design phase compliance review',
+          },
         ],
         milestones: [
           {
@@ -329,6 +343,12 @@ export const exampleData: CanvasData = {
             role: 'Quality Assurance',
             type: 'person',
             roleContext: 'Validation phase quality control',
+          },
+          {
+            personId: 'person-2', // References Emma Rodriguez from persons array
+            role: 'Compliance Officer',
+            type: 'person',
+            roleContext: 'Validation phase compliance verification',
           },
         ],
         milestones: [
