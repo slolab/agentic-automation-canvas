@@ -59,7 +59,7 @@ export const exampleData: CanvasData = {
           effortEstimate: '8-10 weeks',
           feasibilityNotes: 'Extraction requires extensive agentic capabilities to handle diverse document formats and extract structured information. Needs robust error handling and validation.',
           modelSelection: 'frontier-model',
-          modelName: 'claude-opus-4-5',
+          modelName: 'gpt-4o',
           technologyApproach: {
             architecture: 'agents',
             agenticDetails: {
@@ -186,9 +186,9 @@ export const exampleData: CanvasData = {
         feasibility: {
           technicalRisk: 'low',
           effortEstimate: '3-4 weeks',
-          feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. Claude would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
+          feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. GPT-4o would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
           modelSelection: 'frontier-model',
-          modelName: 'claude-opus-4-5',
+          modelName: 'gpt-4o',
           technologyApproach: {
             architecture: 'agents',
             agenticDetails: {
