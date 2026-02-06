@@ -1,6 +1,12 @@
 /**
  * Normalize canvas data from older schema to current schema.
- * No legacy compatibility: map what we can, drop the rest, collect warnings.
+ * Handles straightforward 1:1 mappings:
+ * - Title: description → title (if title missing)
+ * - Unit category: old enum values → new enum values
+ * - Oversight: requirement.humanOversightMinutesPerUnit → benefit.oversightMinutesPerUnit
+ * 
+ * Deprecated fields (stakeholder, humanOversightMinutesPerUnit) will be removed in 0.12.0.
+ * This migration will be simplified/removed in future versions.
  */
 
 import type { CanvasData, Requirement, Benefit } from '@/types/canvas'
@@ -68,7 +74,13 @@ export function normalizeCanvasData(data: CanvasData): NormalizeResult {
       }
     }
 
-    const benefits: Benefit[] = (r.benefits ?? []).map((b) => ({ ...b }))
+    // Migrate oversight from requirement to first time benefit (1:1 mapping - same data, different location)
+    const benefits: Benefit[] = (r.benefits ?? []).map((b, idx) => {
+      if (b.benefitType === 'time' && idx === 0 && (r as any).humanOversightMinutesPerUnit !== undefined) {
+        return { ...b, oversightMinutesPerUnit: (r as any).humanOversightMinutesPerUnit }
+      }
+      return { ...b }
+    })
 
     return {
       ...r,
@@ -86,13 +98,6 @@ export function normalizeCanvasData(data: CanvasData): NormalizeResult {
       volumePerMonth: r.volumePerMonth,
       dependsOn: r.dependsOn,
       feasibility: r.feasibility,
-      // Migrate oversight from requirement to first time benefit
-      benefits: r.benefits?.map((b, idx) => {
-        if (b.benefitType === 'time' && idx === 0 && r.humanOversightMinutesPerUnit !== undefined) {
-          return { ...b, oversightMinutesPerUnit: r.humanOversightMinutesPerUnit }
-        }
-        return b
-      }) || r.benefits,
     } as Requirement
   })
 

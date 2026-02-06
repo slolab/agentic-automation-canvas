@@ -530,6 +530,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         stepEntity['aac:volumePerMonth'] = req.volumePerMonth
       }
       // Export oversight from first time benefit (for backward compatibility)
+      // RO-Crate uses 'humanOversightMinutesPerUnit' for backward compatibility with older crates
       const timeBenefit = req.benefits?.find(b => b.benefitType === 'time')
       if (timeBenefit?.oversightMinutesPerUnit !== undefined) {
         stepEntity['aac:humanOversightMinutesPerUnit'] = timeBenefit.oversightMinutesPerUnit
@@ -571,6 +572,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   }
   
   // Also support legacy format (stakeholders at userExpectations level) for backward compatibility
+  // DEPRECATED: Will be removed in 0.12.0. Stakeholders are now managed per-task (requirement.stakeholders).
   if (data.userExpectations?.stakeholders) {
     data.userExpectations.stakeholders.forEach((stakeholder) => {
       taskStakeholderIds.add(stakeholder.personId)

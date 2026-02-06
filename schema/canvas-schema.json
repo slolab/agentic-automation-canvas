@@ -88,7 +88,11 @@
               "userStory": { "type": "string" },
               "priority": { "type": "string", "enum": ["low", "medium", "high", "critical"] },
               "status": { "type": "string", "enum": ["planned", "in-progress", "completed", "cancelled"] },
-              "stakeholder": { "type": "string" },
+              "stakeholder": { 
+                "type": "string",
+                "description": "DEPRECATED in 0.11.0: Use requirement.stakeholders array instead. Will be removed in 0.12.0. Maintained for backward compatibility only.",
+                "deprecated": true
+              },
               "value": { "type": "string" },
               "unitOfWork": { "type": "string", "minLength": 1 },
               "unitCategory": { "type": "string", "enum": ["item", "interaction", "computation", "other"] },

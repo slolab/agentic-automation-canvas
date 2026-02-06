@@ -125,6 +125,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           req.volumePerMonth = step!['aac:volumePerMonth'] as number
         }
         // Migrate old requirement-level oversight to first time benefit
+        // Map RO-Crate field name (aac:humanOversightMinutesPerUnit) to internal schema field name (oversightMinutesPerUnit)
         if (step!['aac:humanOversightMinutesPerUnit'] !== undefined) {
           const oversightValue = step!['aac:humanOversightMinutesPerUnit'] as number
           // Find first time benefit and add oversight

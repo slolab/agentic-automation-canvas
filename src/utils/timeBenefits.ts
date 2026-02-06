@@ -66,14 +66,3 @@ export function getOversightMinutes(benefit: Benefit, volumePerMonth?: number): 
   // For oneOff or no oversight set, return 0
   return 0
 }
-
-/**
- * Get human oversight per unit in minutes (for perUnit aggregation only).
- * @deprecated Use getOversightMinutes instead
- */
-export function getOversightMinutesPerUnit(requirement: Requirement): number {
-  if (requirement.humanOversightMinutesPerUnit === undefined) {
-    return 0
-  }
-  return requirement.humanOversightMinutesPerUnit
-}
