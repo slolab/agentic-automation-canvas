@@ -102,7 +102,10 @@
     "technicalRisk": "medium",
     "algorithms": ["Machine Learning", "Natural Language Processing"],
     "tools": ["Python", "TensorFlow", "Biomedical Data APIs"],
-    "effortEstimate": "6-8 months",
+    "effortEstimate": {
+      "value": 28,
+      "unit": "weeks"
+    },
     "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling.",
     "modelSelection": "frontier-model",
     "modelName": "gpt-4o",
