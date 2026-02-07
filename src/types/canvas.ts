@@ -78,7 +78,10 @@ export interface Benefit {
 /** Per-task feasibility (optional overrides for project-level feasibility) */
 export interface RequirementFeasibility {
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
-  effortEstimate?: string
+  effortEstimate?: {
+    value: number
+    unit: 'weeks' | 'person-hours'
+  }
   feasibilityNotes?: string
   algorithms?: string[]
   tools?: string[]
@@ -153,7 +156,10 @@ export interface DeveloperFeasibility {
   /** Overall technical risk for the project */
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
   /** Overall effort estimate for the project */
-  effortEstimate?: string
+  effortEstimate?: {
+    value: number
+    unit: 'weeks' | 'person-hours'
+  }
   /** Project-level feasibility notes */
   feasibilityNotes?: string
 }

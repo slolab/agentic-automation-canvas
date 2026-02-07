@@ -1,7 +1,7 @@
 # Agentic Automation Canvas (AAC)
 
 !!! warning "Beta Release"
-    **Version 0.11.3 (Beta)**: This specification is currently in beta testing. The schema and documentation 
+    **Version 0.11.4 (Beta)**: This specification is currently in beta testing. The schema and documentation 
     may change before the stable 1.0.0 release. Feedback and contributions are welcome!
 
 The **Agentic Automation Canvas (AAC)** is a framework for designing and documenting agentic automation solutions driven by generative AI. Agentic systems are designed to replace human judgment in a reliable way, requiring a control inversion where the system takes command of tasks while humans step back accordingly. The AAC provides a structured approach to capture project metadata, user expectations, feasibility considerations, governance requirements, and outcomes—all while generating machine-readable outputs that integrate with FAIR Digital Object ecosystems.

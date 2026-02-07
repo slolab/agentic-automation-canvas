@@ -100,6 +100,7 @@
           type="url"
           class="form-input"
           placeholder="https://orcid.org/0000-0000-0000-0001"
+          autocomplete="off"
           @input="update({ ...person, orcid: ($event.target as HTMLInputElement).value || undefined })"
         />
       </FormField>

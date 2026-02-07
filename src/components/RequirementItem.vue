@@ -76,6 +76,13 @@
                 {{ type.charAt(0).toUpperCase() + type.slice(1) }}
               </span>
             </span>
+            <!-- Effort estimate -->
+            <span v-if="effortText" class="flex items-center gap-1 text-purple-700 font-medium">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ effortText }}
+            </span>
           </div>
           <!-- Time savings bar -->
           <div v-if="maxTotalTimeSaved > 0" class="mt-2">
@@ -94,6 +101,15 @@
                   width: `${getOversightPercentage()}%`,
                   left: `${getNetSavingsPercentage()}%`
                 }"
+              />
+            </div>
+          </div>
+          <!-- Effort bar -->
+          <div v-if="effortValue > 0 && maxEffort > 0" class="mt-2">
+            <div class="h-1.5 bg-gray-200 rounded-full overflow-hidden relative">
+              <div
+                class="h-full bg-purple-500 transition-all absolute left-0 top-0"
+                :style="{ width: `${(effortValue / maxEffort) * 100}%` }"
               />
             </div>
           </div>
@@ -583,6 +599,43 @@ const timeSavedText = computed(() => {
     return `${Math.round(totalMinutes)}m/month`
   }
   return null
+})
+
+// Effort estimate helpers
+const effortEstimate = computed(() => {
+  return props.requirement.feasibility?.effortEstimate
+})
+
+const effortText = computed(() => {
+  const effort = effortEstimate.value
+  if (!effort || effort.value === undefined || effort.value === 0) return null
+  const unitLabel = effort.unit === 'person-hours' ? 'person-hours' : 'weeks'
+  return `${effort.value} ${unitLabel}`
+})
+
+const effortValue = computed(() => {
+  const effort = effortEstimate.value
+  if (!effort || effort.value === undefined) return 0
+  // Normalize to person-hours for comparison (assume 40 person-hours per week)
+  if (effort.unit === 'weeks') {
+    return effort.value * 40
+  }
+  return effort.value
+})
+
+// Calculate maximum effort across all tasks for normalization
+const maxEffort = computed(() => {
+  if (allRequirements.value.length === 0) return 0
+  const efforts = allRequirements.value.map(req => {
+    const effort = req.feasibility?.effortEstimate
+    if (!effort || effort.value === undefined) return 0
+    // Normalize to person-hours for comparison
+    if (effort.unit === 'weeks') {
+      return effort.value * 40
+    }
+    return effort.value
+  })
+  return Math.max(...efforts, 0)
 })
 
 // Badge class for benefit types

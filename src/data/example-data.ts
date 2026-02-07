@@ -77,7 +77,7 @@ export const exampleData: CanvasData = {
         stakeholders: ['person-0'],
         feasibility: {
           technicalRisk: 'high',
-          effortEstimate: '8-10 weeks',
+          effortEstimate: { value: 9, unit: 'weeks' },
           feasibilityNotes: 'Extraction requires extensive agentic capabilities to handle diverse document formats and extract structured information. Needs robust error handling and validation.',
           modelSelection: 'frontier-model',
           modelName: 'gpt-4o',
@@ -167,7 +167,7 @@ export const exampleData: CanvasData = {
         stakeholders: ['person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
-          effortEstimate: '2-3 weeks',
+          effortEstimate: { value: 80, unit: 'person-hours' },
           feasibilityNotes: 'Deterministic task based on structured schema output from extraction. Uses rule-based classification matching extracted fields to predefined document type patterns. No LLM required.',
           modelSelection: 'none',
           technologyApproach: {
@@ -249,7 +249,7 @@ export const exampleData: CanvasData = {
         stakeholders: ['person-0', 'person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
-          effortEstimate: '3-4 weeks',
+          effortEstimate: { value: 3.5, unit: 'weeks' },
           feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. GPT-4o would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
           modelSelection: 'frontier-model',
           modelName: 'gpt-4o',
@@ -295,6 +295,88 @@ export const exampleData: CanvasData = {
           },
         ],
       },
+      {
+        id: 'req-4',
+        title: 'Automated security and compliance validation',
+        description: `Automatically validate documents for security risks and compliance violations before processing. This safety feature scans documents for sensitive data exposure, policy violations, and potential security threats.
+
+**Rationale**: This is a critical safety feature that:
+- Prevents processing of documents containing sensitive information that shouldn't be handled
+- Detects potential security threats (malicious content, data exfiltration attempts)
+- Ensures compliance with data protection regulations before processing
+- Reduces organizational risk even if it doesn't save time
+
+**Best Practices Demonstrated**:
+- Risk reduction as primary value driver (no time savings)
+- Safety features may add processing time but reduce organizational risk
+- Quality benefits from catching issues early
+- Essential for production deployment of document processing systems
+
+**Design Pattern**: This follows the "safety-first" pattern where validation gates are placed before processing to prevent downstream issues.`,
+        userStory: 'As a compliance officer, I want documents automatically validated for security and compliance risks so that we prevent processing of problematic documents',
+        priority: 'high',
+        status: 'planned',
+        unitOfWork: 'one document validation',
+        unitCategory: 'item',
+        volumePerMonth: 500,
+        dependsOn: ['req-1'],
+        stakeholders: ['person-2'],
+        feasibility: {
+          technicalRisk: 'low',
+          effortEstimate: { value: 4, unit: 'weeks' },
+          feasibilityNotes: 'Rule-based validation combined with pattern matching for known security and compliance issues. Can leverage existing compliance rule sets. May add slight processing overhead but critical for production safety.',
+          modelSelection: 'none',
+          technologyApproach: {
+            architecture: 'none',
+          },
+          algorithms: ['Pattern matching', 'Rule-based validation', 'Keyword detection'],
+          tools: ['Python', 'Regular expressions', 'Compliance rule engine'],
+        },
+        benefits: [
+          {
+            benefitType: 'risk',
+            metricId: 'securityIncidents',
+            metricLabel: 'Security Incidents',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'incidents/month',
+            baseline: { type: 'numeric', value: 2 },
+            expected: { type: 'numeric', value: 0.2 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Automated validation catches documents with exposed credentials, PII in wrong contexts, or suspicious patterns before they enter the processing pipeline. Baseline of 2 incidents/month reflects occasional manual oversight failures. Expected 0.2 incidents/month accounts for novel attack patterns that bypass initial validation.',
+          },
+          {
+            benefitType: 'risk',
+            metricId: 'complianceViolations',
+            metricLabel: 'Compliance Violations',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'violations/month',
+            baseline: { type: 'numeric', value: 1.5 },
+            expected: { type: 'numeric', value: 0.1 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Automated checks ensure documents meet GDPR, data retention, and access control requirements before processing. Baseline reflects occasional manual errors in compliance checks. Expected reduction to 0.1 violations/month through automated policy enforcement.',
+          },
+          {
+            benefitType: 'quality',
+            metricId: 'earlyDetectionRate',
+            metricLabel: 'Early Issue Detection',
+            direction: 'increaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perUnit',
+            benefitUnit: '%',
+            baseline: { type: 'numeric', value: 60 },
+            expected: { type: 'numeric', value: 95 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Automated validation catches issues before they propagate through the system. Baseline of 60% reflects manual review catching most issues but missing some. Expected 95% detection rate through comprehensive automated checks.',
+          },
+        ],
+      },
     ],
   },
   developerFeasibility: {
@@ -303,7 +385,7 @@ export const exampleData: CanvasData = {
       target: 7,
     },
     technicalRisk: 'medium',
-    effortEstimate: '4-6 months',
+    effortEstimate: { value: 20, unit: 'weeks' },
     feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats. Different tasks require different approaches - extraction needs extensive agentic capabilities, while categorization can be deterministic.',
   },
   governance: {

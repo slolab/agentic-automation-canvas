@@ -726,7 +726,11 @@ export function useCanvasData() {
       }
       if (data.developerFeasibility.effortEstimate !== undefined) {
         total++
-        if (data.developerFeasibility.effortEstimate?.trim()) completed++
+        // Check if effort estimate has a valid value
+        const effort = data.developerFeasibility.effortEstimate
+        if (effort.value !== undefined && effort.value > 0) {
+          completed++
+        }
       }
       if (data.developerFeasibility.feasibilityNotes !== undefined) {
         total++

@@ -48,14 +48,14 @@
                   {{ riskLabel }}
                 </span>
               </span>
-              <span v-if="localData.effortEstimate" class="flex items-center gap-1">
+              <span v-if="localData.effortEstimate?.value" class="flex items-center gap-1">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
-                {{ localData.effortEstimate }}
+                {{ formatEffort(localData.effortEstimate) }}
               </span>
             </div>
-            <div v-if="!trlSummary && !localData.technicalRisk && !localData.effortEstimate" class="text-xs text-gray-400 italic">
+            <div v-if="!trlSummary && !localData.technicalRisk && !localData.effortEstimate?.value" class="text-xs text-gray-400 italic">
               No project-level feasibility information added yet
             </div>
           </div>
@@ -143,21 +143,41 @@
           </select>
         </FormField>
 
-        <FormField
-          id="effort-estimate"
-          label="Overall Effort Estimate"
-          help-text="Estimated effort or duration for the project"
-          tooltip="Estimate the effort required for implementation. Can be in time (e.g., '6 months') or person-hours (e.g., '500 person-hours'). Be realistic - consider development, testing, and deployment. Example: '3 months development + 1 month testing' or '400 person-hours'."
-        >
-          <input
-            id="effort-estimate"
-            v-model="localData.effortEstimate"
-            type="text"
-            class="form-input"
-            placeholder="e.g., 6 months, 500 person-hours"
-            @blur="update"
-          />
-        </FormField>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            id="effort-estimate-value"
+            label="Overall Effort Estimate"
+            help-text="Estimated effort value for the project"
+            tooltip="Estimate the effort required for implementation. Enter a numeric value and select the unit (weeks or person-hours). Be realistic - consider development, testing, and deployment."
+          >
+            <input
+              id="effort-estimate-value"
+              :value="localData.effortEstimate?.value ?? ''"
+              type="number"
+              min="0"
+              step="0.1"
+              class="form-input"
+              placeholder="e.g., 12"
+              @input="updateEffortValue(($event.target as HTMLInputElement).value)"
+            />
+          </FormField>
+          <FormField
+            id="effort-estimate-unit"
+            label="Effort Unit"
+            help-text="Unit for effort estimate"
+            tooltip="Select whether effort is measured in weeks (calendar time) or person-hours (total work time)."
+          >
+            <select
+              id="effort-estimate-unit"
+              :value="localData.effortEstimate?.unit || 'weeks'"
+              class="form-input"
+              @change="updateEffortUnit(($event.target as HTMLSelectElement).value as 'weeks' | 'person-hours')"
+            >
+              <option value="weeks">Weeks</option>
+              <option value="person-hours">Person-hours</option>
+            </select>
+          </FormField>
+        </div>
 
         <FormField
           id="feasibility-notes"
@@ -291,20 +311,39 @@
                   </select>
                 </FormField>
 
-                <FormField
-                  :id="`task-${requirement.id}-effort`"
-                  label="Effort Estimate"
-                  help-text="Estimated effort for this task (overrides project-level)"
-                >
-                  <input
-                    :id="`task-${requirement.id}-effort`"
-                    :value="requirement.feasibility?.effortEstimate || ''"
-                    type="text"
-                    class="form-input"
-                    placeholder="e.g., 2 weeks, 40h"
-                    @blur="updateTaskFeasibility(requirement.id, { effortEstimate: ($event.target as HTMLInputElement).value || undefined })"
-                  />
-                </FormField>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <FormField
+                    :id="`task-${requirement.id}-effort-value`"
+                    label="Effort Estimate"
+                    help-text="Estimated effort value for this task (overrides project-level)"
+                  >
+                    <input
+                      :id="`task-${requirement.id}-effort-value`"
+                      :value="requirement.feasibility?.effortEstimate?.value ?? ''"
+                      type="number"
+                      min="0"
+                      step="0.1"
+                      class="form-input"
+                      placeholder="e.g., 2"
+                      @input="updateTaskEffortValue(requirement.id, ($event.target as HTMLInputElement).value)"
+                    />
+                  </FormField>
+                  <FormField
+                    :id="`task-${requirement.id}-effort-unit`"
+                    label="Effort Unit"
+                    help-text="Unit for effort estimate"
+                  >
+                    <select
+                      :id="`task-${requirement.id}-effort-unit`"
+                      :value="requirement.feasibility?.effortEstimate?.unit || 'weeks'"
+                      class="form-input"
+                      @change="updateTaskEffortUnit(requirement.id, ($event.target as HTMLSelectElement).value as 'weeks' | 'person-hours')"
+                    >
+                      <option value="weeks">Weeks</option>
+                      <option value="person-hours">Person-hours</option>
+                    </select>
+                  </FormField>
+                </div>
               </div>
 
               <FormField
@@ -660,6 +699,221 @@
         </div>
       </div>
     </div>
+
+    <!-- Effort Summary -->
+    <div v-if="tasksWithEffort.length > 0" class="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200">
+      <!-- Collapsed View -->
+      <button
+        v-if="!cardExpanded.effortSummary"
+        @click="cardExpanded.effortSummary = true"
+        class="w-full text-left p-5 hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-inset"
+      >
+        <div class="flex items-start justify-between gap-4">
+          <div class="flex-1 min-w-0 space-y-3">
+            <div class="flex items-center gap-2">
+              <h3 class="text-lg font-semibold text-gray-900">Development Effort Summary</h3>
+            </div>
+            <div class="text-sm text-gray-600">
+              <div class="flex items-center gap-4 mb-2 flex-wrap">
+                <span class="font-medium">Total: {{ formatTotalEffort() }}</span>
+                <span v-if="totalTimeSavedPersonHours > 0" class="font-medium text-green-700">
+                  Time Benefits: {{ formatTimeSaved(totalTimeSavedPersonHours) }}/month
+                </span>
+                <span v-if="totalAmortizationMonths !== null" class="font-medium text-blue-700">
+                  Until Amortization: {{ totalAmortizationMonths.toFixed(1) }} months
+                </span>
+                <span>{{ tasksWithEffort.length }} {{ tasksWithEffort.length === 1 ? 'task' : 'tasks' }} with effort estimates</span>
+              </div>
+              <!-- Effort and benefit bars for each task -->
+              <div class="space-y-3 mt-3">
+                <div
+                  v-for="req in tasksWithEffort"
+                  :key="req.id"
+                  class="space-y-2"
+                >
+                  <!-- Title row with badges on the right -->
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs text-gray-600 font-medium">{{ req.title || req.id }}</span>
+                    <!-- Benefit type badges -->
+                    <div v-if="getBenefitTypes(req).length > 0" class="flex flex-wrap gap-1">
+                      <span
+                        v-for="type in getBenefitTypes(req)"
+                        :key="type"
+                        :class="benefitTypeBadgeClass(type)"
+                        class="px-2 py-0 rounded text-[10px] font-medium"
+                      >
+                        {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <!-- Effort bar -->
+                  <div class="flex items-center gap-3">
+                    <span class="text-xs text-gray-400 w-24 truncate">Effort</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                      <div
+                        class="h-full bg-purple-500 transition-all absolute left-0 top-0"
+                        :style="{ width: `${getEffortPercentage(req)}%` }"
+                      />
+                    </div>
+                    <span class="text-xs text-gray-700 font-medium text-right whitespace-nowrap min-w-[100px]">{{ formatEffort(req.feasibility?.effortEstimate) }}</span>
+                  </div>
+                  
+                  <!-- Time benefit bar -->
+                  <div v-if="getTimeSavedPersonHours(req) > 0" class="flex items-center gap-3">
+                    <span class="text-xs text-gray-400 w-24 truncate">Time Benefits</span>
+                    <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                      <div
+                        class="h-full bg-green-500 transition-all absolute left-0 top-0"
+                        :style="{ width: `${getTimeSavedPercentage(req)}%` }"
+                      />
+                    </div>
+                    <div class="flex items-center gap-2 min-w-[100px] justify-end">
+                      <span class="text-xs text-green-700 font-medium text-right whitespace-nowrap">{{ formatTimeSaved(getTimeSavedPersonHours(req)) }}/mo</span>
+                      <span v-if="getAmortizationMonths(req) !== null" class="text-xs text-blue-600 font-medium text-right whitespace-nowrap">
+                        {{ getAmortizationMonths(req)!.toFixed(1) }}mo until amort
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <svg class="w-5 h-5 text-gray-400 flex-shrink-0 mt-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </div>
+      </button>
+
+      <!-- Expanded View -->
+      <div v-else class="p-4 space-y-4">
+        <div class="flex items-center justify-between mb-2">
+          <h3 class="text-sm font-semibold text-gray-900">Development Effort Summary</h3>
+          <button
+            @click="cardExpanded.effortSummary = false"
+            class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded p-1"
+            aria-label="Collapse Effort Summary"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+            </svg>
+          </button>
+        </div>
+
+        <div class="space-y-4">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="bg-gray-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Total Effort</span>
+                <span class="text-lg font-semibold text-gray-900">{{ formatTotalEffort() }}</span>
+              </div>
+              <div class="text-xs text-gray-600 mt-1">
+                Sum of all task-level effort estimates
+              </div>
+            </div>
+            <div v-if="totalTimeSavedPersonHours > 0" class="bg-green-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Time Benefits</span>
+                <span class="text-lg font-semibold text-green-700">{{ formatTimeSaved(totalTimeSavedPersonHours) }}/month</span>
+              </div>
+              <div class="text-xs text-gray-600 mt-1">
+                Net time saved per month (other benefit types not shown)
+              </div>
+            </div>
+            <div v-if="totalAmortizationMonths !== null" class="bg-blue-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Amortization Period</span>
+                <span class="text-lg font-semibold text-blue-700">{{ totalAmortizationMonths.toFixed(1) }} months</span>
+              </div>
+              <div class="text-xs text-gray-600 mt-1">
+                Months until effort amortizes
+              </div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <h4 class="text-sm font-medium text-gray-900">Effort vs Time Benefits by Task</h4>
+            <p class="text-xs text-gray-500 mb-3">
+              Note: Only time benefits are shown here. Tasks may also have quality, risk, enablement, or cost benefits (see badges).
+            </p>
+            <div class="space-y-4">
+              <div
+                v-for="req in tasksWithEffort"
+                :key="req.id"
+                class="border border-gray-200 rounded-lg p-4"
+              >
+                <div class="flex items-center justify-between mb-3">
+                  <div class="flex-1">
+                    <span class="text-sm font-medium text-gray-900">{{ req.title || req.id }}</span>
+                    <!-- Benefit type badges -->
+                    <div v-if="getBenefitTypes(req).length > 0" class="flex flex-wrap gap-1.5 mt-2">
+                      <span
+                        v-for="type in getBenefitTypes(req)"
+                        :key="type"
+                        :class="benefitTypeBadgeClass(type)"
+                        class="px-2 py-0 rounded text-xs font-medium"
+                      >
+                        {{ type.charAt(0).toUpperCase() + type.slice(1) }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Effort -->
+                <div class="mb-3">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs text-gray-600">Effort</span>
+                    <span class="text-xs font-medium text-purple-700">{{ formatEffort(req.feasibility?.effortEstimate) }}</span>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                    <div
+                      class="h-full bg-purple-500 transition-all absolute left-0 top-0"
+                      :style="{ width: `${getEffortPercentage(req)}%` }"
+                    />
+                  </div>
+                </div>
+                
+                <!-- Time Benefits -->
+                <div v-if="getTimeSavedPersonHours(req) > 0">
+                  <div class="flex items-center justify-between mb-1">
+                    <span class="text-xs text-gray-600">Time Benefits (saved/month)</span>
+                    <div class="flex items-center gap-2">
+                      <span class="text-xs font-medium text-green-700">{{ formatTimeSaved(getTimeSavedPersonHours(req)) }}</span>
+                      <span v-if="getAmortizationMonths(req) !== null" class="text-xs font-medium text-blue-600">
+                        ({{ getAmortizationMonths(req)!.toFixed(1) }}mo until amortization)
+                      </span>
+                    </div>
+                  </div>
+                  <div class="h-2 bg-gray-200 rounded-full overflow-hidden relative">
+                    <div
+                      class="h-full bg-green-500 transition-all absolute left-0 top-0"
+                      :style="{ width: `${getTimeSavedPercentage(req)}%` }"
+                    />
+                  </div>
+                </div>
+                <div v-else class="text-xs text-gray-400 italic">
+                  No time benefits defined for this task
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Done Button -->
+          <div class="pt-4 border-t border-gray-200 mt-4">
+            <button
+              type="button"
+              @click="cardExpanded.effortSummary = false"
+              class="btn-secondary w-full flex items-center justify-center gap-2"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+              </svg>
+              Done (collapse)
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -667,10 +921,11 @@
 import { ref, watch, computed } from 'vue'
 import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { DeveloperFeasibility, RequirementFeasibility } from '@/types/canvas'
+import type { DeveloperFeasibility, RequirementFeasibility, Benefit } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import type { Requirement } from '@/types/canvas'
 import { markdownToHtml } from '@/utils/markdown'
+import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 
 const { canvasData, updateDeveloperFeasibility, updateUserExpectations } = useCanvasData()
 
@@ -688,6 +943,7 @@ function updateRequirement(taskId: string, updatedRequirement: Requirement) {
 const cardExpanded = ref({
   projectLevel: false,
   taskLevel: false,
+  effortSummary: false,
 })
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
@@ -696,6 +952,149 @@ const tasksWithFeasibility = computed(() => {
   return requirements.value.filter((r) => r.feasibility && Object.keys(r.feasibility).length > 0)
 })
 
+const tasksWithEffort = computed(() => {
+  return requirements.value.filter((r) => r.feasibility?.effortEstimate?.value !== undefined && r.feasibility.effortEstimate.value > 0)
+})
+
+// Calculate total effort (normalize to person-hours for aggregation)
+const totalEffortPersonHours = computed(() => {
+  return tasksWithEffort.value.reduce((total, req) => {
+    const effort = req.feasibility?.effortEstimate
+    if (!effort || effort.value === undefined) return total
+    // Normalize to person-hours (assume 40 person-hours per week)
+    if (effort.unit === 'weeks') {
+      return total + (effort.value * 40)
+    }
+    return total + effort.value
+  }, 0)
+})
+
+// Get maximum effort for percentage calculation
+const maxEffortPersonHours = computed(() => {
+  if (tasksWithEffort.value.length === 0) return 0
+  const efforts = tasksWithEffort.value.map(req => {
+    const effort = req.feasibility?.effortEstimate
+    if (!effort || effort.value === undefined) return 0
+    if (effort.unit === 'weeks') {
+      return effort.value * 40
+    }
+    return effort.value
+  })
+  return Math.max(...efforts, 0)
+})
+
+function getEffortPercentage(req: Requirement): number {
+  if (maxEffortPersonHours.value === 0) return 0
+  const effort = req.feasibility?.effortEstimate
+  if (!effort || effort.value === undefined) return 0
+  const effortHours = effort.unit === 'weeks' ? effort.value * 40 : effort.value
+  return Math.round((effortHours / maxEffortPersonHours.value) * 100)
+}
+
+function formatTotalEffort(): string {
+  const totalHours = totalEffortPersonHours.value
+  if (totalHours === 0) return '0 person-hours'
+  
+  // Show in weeks if >= 40 hours, otherwise person-hours
+  if (totalHours >= 40) {
+    const weeks = Math.round((totalHours / 40) * 10) / 10
+    return `${weeks} weeks (${totalHours} person-hours)`
+  }
+  return `${totalHours} person-hours`
+}
+
+// Get time benefit from a requirement
+function getTimeBenefit(req: Requirement): Benefit | undefined {
+  return (req.benefits || []).find(b => b.benefitType === 'time')
+}
+
+// Calculate time saved per month for a requirement (in person-hours)
+function getTimeSavedPersonHours(req: Requirement): number {
+  const timeBenefit = getTimeBenefit(req)
+  if (!timeBenefit) return 0
+  
+  const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
+  const volume = req.volumePerMonth || 0
+  const grossTimeSaved = savedPerUnit * volume
+  const oversightTime = getOversightMinutes(timeBenefit, volume)
+  const netTimeSaved = Math.max(0, grossTimeSaved - oversightTime)
+  
+  // Convert minutes to person-hours
+  return netTimeSaved / 60
+}
+
+// Calculate total time saved across all tasks with effort estimates
+const totalTimeSavedPersonHours = computed(() => {
+  return tasksWithEffort.value.reduce((total, req) => {
+    return total + getTimeSavedPersonHours(req)
+  }, 0)
+})
+
+// Get maximum time saved for normalization
+const maxTimeSavedPersonHours = computed(() => {
+  if (tasksWithEffort.value.length === 0) return 0
+  const saved = tasksWithEffort.value.map(req => getTimeSavedPersonHours(req))
+  return Math.max(...saved, 0)
+})
+
+// Format time saved for display
+function formatTimeSaved(hours: number): string {
+  if (hours === 0) return '0h'
+  if (hours < 1) {
+    const minutes = Math.round(hours * 60)
+    return `${minutes}m`
+  }
+  if (hours < 10) {
+    return `${Math.round(hours * 10) / 10}h`
+  }
+  return `${Math.round(hours)}h`
+}
+
+// Get time saved percentage for bar display
+function getTimeSavedPercentage(req: Requirement): number {
+  if (maxTimeSavedPersonHours.value === 0) return 0
+  const saved = getTimeSavedPersonHours(req)
+  return Math.round((saved / maxTimeSavedPersonHours.value) * 100)
+}
+
+// Calculate amortization period (months until effort amortizes) for a task
+function getAmortizationMonths(req: Requirement): number | null {
+  const effort = req.feasibility?.effortEstimate
+  if (!effort || effort.value === undefined || effort.value === 0) return null
+  
+  const effortHours = effort.unit === 'weeks' ? effort.value * 40 : effort.value
+  const monthlyBenefitHours = getTimeSavedPersonHours(req)
+  
+  if (monthlyBenefitHours === 0) return null
+  return effortHours / monthlyBenefitHours
+}
+
+// Calculate total amortization period
+const totalAmortizationMonths = computed(() => {
+  const totalEffort = totalEffortPersonHours.value
+  const totalBenefit = totalTimeSavedPersonHours.value
+  if (totalEffort === 0 || totalBenefit === 0) return null
+  return totalEffort / totalBenefit
+})
+
+// Get unique benefit types for a requirement
+function getBenefitTypes(req: Requirement): string[] {
+  const types = new Set((req.benefits || []).map(b => b.benefitType))
+  return Array.from(types)
+}
+
+// Badge class for benefit types
+function benefitTypeBadgeClass(type: string): string {
+  const classes: Record<string, string> = {
+    'time': 'bg-green-100 text-green-700',
+    'quality': 'bg-blue-100 text-blue-700',
+    'risk': 'bg-orange-100 text-orange-700',
+    'enablement': 'bg-purple-100 text-purple-700',
+    'cost': 'bg-amber-100 text-amber-700'
+  }
+  return classes[type] || 'bg-gray-100 text-gray-700'
+}
+
 // Input refs for chip-based fields
 const agenticFrameworkInputs = ref<Record<string, string>>({})
 const agenticToolsInputs = ref<Record<string, string>>({})
@@ -703,13 +1102,69 @@ const agenticOrchestrationInputs = ref<Record<string, string>>({})
 const algorithmsInputs = ref<Record<string, string>>({})
 const toolsInputs = ref<Record<string, string>>({})
 
+// Migrate old string effortEstimate to structured format
+function migrateEffortEstimate(effort: any): { value: number; unit: 'weeks' | 'person-hours' } | undefined {
+  if (!effort) return undefined
+  
+  // Already in new format
+  if (typeof effort === 'object' && effort.value !== undefined && effort.unit) {
+    return effort
+  }
+  
+  // Old string format - try to parse
+  if (typeof effort === 'string') {
+    const str = effort.trim().toLowerCase()
+    
+    // Handle ranges like "8-10 weeks" or "4-6 months" - take midpoint
+    const rangeWeekMatch = str.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*(?:week|wk)/i)
+    if (rangeWeekMatch) {
+      const min = parseFloat(rangeWeekMatch[1])
+      const max = parseFloat(rangeWeekMatch[2])
+      return { value: (min + max) / 2, unit: 'weeks' }
+    }
+    
+    const rangeMonthMatch = str.match(/(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)\s*(?:month|mo)/i)
+    if (rangeMonthMatch) {
+      const min = parseFloat(rangeMonthMatch[1])
+      const max = parseFloat(rangeMonthMatch[2])
+      // Convert months to weeks (assume 4 weeks per month)
+      return { value: ((min + max) / 2) * 4, unit: 'weeks' }
+    }
+    
+    // Handle single values with months - convert to weeks
+    const monthMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:month|mo)/i)
+    if (monthMatch) {
+      return { value: parseFloat(monthMatch[1]) * 4, unit: 'weeks' }
+    }
+    
+    // Try to extract number and unit
+    const weekMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:week|wk)/i)
+    if (weekMatch) {
+      return { value: parseFloat(weekMatch[1]), unit: 'weeks' }
+    }
+    const hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:person-?hour|person-?hr|ph|hour|hr)/i)
+    if (hourMatch) {
+      return { value: parseFloat(hourMatch[1]), unit: 'person-hours' }
+    }
+    // Default: try to parse as number, assume weeks
+    const numMatch = str.match(/(\d+(?:\.\d+)?)/)
+    if (numMatch) {
+      return { value: parseFloat(numMatch[1]), unit: 'weeks' }
+    }
+  }
+  
+  return undefined
+}
+
 // Initialize localData for project-level feasibility
 const initLocalData = (): DeveloperFeasibility => {
   const feasibility = canvasData.value.developerFeasibility
+  const effortEstimate = migrateEffortEstimate(feasibility?.effortEstimate)
+  
   return {
     trlLevel: feasibility?.trlLevel || {},
     technicalRisk: feasibility?.technicalRisk,
-    effortEstimate: feasibility?.effortEstimate,
+    effortEstimate,
     feasibilityNotes: feasibility?.feasibilityNotes,
   }
 }
@@ -770,24 +1225,68 @@ const riskBadgeClass = computed(() => {
 })
 
 let isLocalUpdate = false
+let isMigratingRequirements = false
 
 watch(
   () => canvasData.value.developerFeasibility,
   (newFeasibility) => {
     if (!isLocalUpdate) {
       if (newFeasibility && Object.keys(newFeasibility).length > 0) {
+        const migratedEffort = migrateEffortEstimate(newFeasibility.effortEstimate)
         localData.value = {
           trlLevel: newFeasibility.trlLevel || {},
           technicalRisk: newFeasibility.technicalRisk,
-          effortEstimate: newFeasibility.effortEstimate,
+          effortEstimate: migratedEffort,
           feasibilityNotes: newFeasibility.feasibilityNotes,
         }
         if (!localData.value.trlLevel) {
           localData.value.trlLevel = {}
         }
+        // If migration happened, update the canvas data
+        if (migratedEffort !== newFeasibility.effortEstimate) {
+          isLocalUpdate = true
+          updateDeveloperFeasibility(localData.value)
+          setTimeout(() => {
+            isLocalUpdate = false
+          }, 0)
+        }
       } else {
         localData.value = { trlLevel: {} }
       }
+    }
+  },
+  { deep: true, immediate: true }
+)
+
+// Watch requirements and migrate task-level effort estimates
+watch(
+  () => requirements.value,
+  (newRequirements) => {
+    // Prevent infinite loop
+    if (isMigratingRequirements) return
+    
+    let needsMigration = false
+    const migratedRequirements = newRequirements.map(req => {
+      if (req.feasibility?.effortEstimate && typeof req.feasibility.effortEstimate === 'string') {
+        needsMigration = true
+        const migrated = migrateEffortEstimate(req.feasibility.effortEstimate)
+        return {
+          ...req,
+          feasibility: {
+            ...req.feasibility,
+            effortEstimate: migrated
+          }
+        }
+      }
+      return req
+    })
+    
+    if (needsMigration && migratedRequirements.length > 0) {
+      isMigratingRequirements = true
+      updateUserExpectations({ requirements: migratedRequirements })
+      setTimeout(() => {
+        isMigratingRequirements = false
+      }, 0)
     }
   },
   { deep: true, immediate: true }
@@ -799,6 +1298,75 @@ const update = () => {
   setTimeout(() => {
     isLocalUpdate = false
   }, 0)
+}
+
+// Effort estimate helpers
+function updateEffortValue(valueStr: string) {
+  const value = valueStr === '' ? undefined : parseFloat(valueStr)
+  if (value === undefined || isNaN(value)) {
+    if (localData.value.effortEstimate) {
+      localData.value.effortEstimate = {
+        ...localData.value.effortEstimate,
+        value: undefined as any
+      }
+      if (!localData.value.effortEstimate.value) {
+        localData.value.effortEstimate = undefined
+      }
+    }
+  } else {
+    if (!localData.value.effortEstimate) {
+      localData.value.effortEstimate = { value, unit: 'weeks' }
+    } else {
+      localData.value.effortEstimate.value = value
+    }
+  }
+  update()
+}
+
+function updateEffortUnit(unit: 'weeks' | 'person-hours') {
+  if (!localData.value.effortEstimate) {
+    localData.value.effortEstimate = { value: 0, unit }
+  } else {
+    localData.value.effortEstimate.unit = unit
+  }
+  update()
+}
+
+function updateTaskEffortValue(taskId: string, valueStr: string) {
+  const value = valueStr === '' ? undefined : parseFloat(valueStr)
+  const requirement = requirements.value.find((r) => r.id === taskId)
+  if (!requirement) return
+  
+  let effortEstimate: { value: number; unit: 'weeks' | 'person-hours' } | undefined
+  if (value === undefined || isNaN(value)) {
+    effortEstimate = undefined
+  } else {
+    const currentUnit = requirement.feasibility?.effortEstimate?.unit || 'weeks'
+    effortEstimate = { value, unit: currentUnit }
+  }
+  
+  updateTaskFeasibility(taskId, { effortEstimate })
+}
+
+function updateTaskEffortUnit(taskId: string, unit: 'weeks' | 'person-hours') {
+  const requirement = requirements.value.find((r) => r.id === taskId)
+  if (!requirement) return
+  
+  const currentValue = requirement.feasibility?.effortEstimate?.value
+  if (currentValue === undefined) {
+    // If no value, create with 0 value
+    updateTaskFeasibility(taskId, { effortEstimate: { value: 0, unit } })
+  } else {
+    updateTaskFeasibility(taskId, { 
+      effortEstimate: { value: currentValue, unit } 
+    })
+  }
+}
+
+function formatEffort(effort?: { value: number; unit: 'weeks' | 'person-hours' }): string {
+  if (!effort || effort.value === undefined) return ''
+  const unitLabel = effort.unit === 'person-hours' ? 'person-hours' : 'weeks'
+  return `${effort.value} ${unitLabel}`
 }
 
 // Format description with markdown

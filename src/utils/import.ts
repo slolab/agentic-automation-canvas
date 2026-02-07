@@ -83,7 +83,32 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       canvasData.project.versionDate = rootDataset['aac:versionDate'] as string
     }
     if (rootDataset['aac:developerFeasibility']) {
-      canvasData.developerFeasibility = rootDataset['aac:developerFeasibility'] as CanvasData['developerFeasibility']
+      const feasibility = rootDataset['aac:developerFeasibility'] as any
+      // Migrate old string effortEstimate to structured format
+      if (feasibility.effortEstimate && typeof feasibility.effortEstimate === 'string') {
+        const str = feasibility.effortEstimate.trim().toLowerCase()
+        let migrated: { value: number; unit: 'weeks' | 'person-hours' } | undefined
+        const weekMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:week|wk)/i)
+        if (weekMatch) {
+          migrated = { value: parseFloat(weekMatch[1]), unit: 'weeks' }
+        } else {
+          const hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:person-?hour|person-?hr|ph|hour|hr)/i)
+          if (hourMatch) {
+            migrated = { value: parseFloat(hourMatch[1]), unit: 'person-hours' }
+          } else {
+            const numMatch = str.match(/(\d+(?:\.\d+)?)/)
+            if (numMatch) {
+              migrated = { value: parseFloat(numMatch[1]), unit: 'weeks' }
+            }
+          }
+        }
+        if (migrated) {
+          feasibility.effortEstimate = migrated
+        } else {
+          delete feasibility.effortEstimate
+        }
+      }
+      canvasData.developerFeasibility = feasibility as CanvasData['developerFeasibility']
     }
   }
 
@@ -150,7 +175,32 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           req.dependsOn = step!['aac:dependsOn'] as string[]
         }
         if (step!['aac:feasibility'] && typeof step!['aac:feasibility'] === 'object') {
-          req.feasibility = step!['aac:feasibility'] as import('@/types/canvas').RequirementFeasibility
+          const feasibility = step!['aac:feasibility'] as any
+          // Migrate old string effortEstimate to structured format
+          if (feasibility.effortEstimate && typeof feasibility.effortEstimate === 'string') {
+            const str = feasibility.effortEstimate.trim().toLowerCase()
+            let migrated: { value: number; unit: 'weeks' | 'person-hours' } | undefined
+            const weekMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:week|wk)/i)
+            if (weekMatch) {
+              migrated = { value: parseFloat(weekMatch[1]), unit: 'weeks' }
+            } else {
+              const hourMatch = str.match(/(\d+(?:\.\d+)?)\s*(?:person-?hour|person-?hr|ph|hour|hr)/i)
+              if (hourMatch) {
+                migrated = { value: parseFloat(hourMatch[1]), unit: 'person-hours' }
+              } else {
+                const numMatch = str.match(/(\d+(?:\.\d+)?)/)
+                if (numMatch) {
+                  migrated = { value: parseFloat(numMatch[1]), unit: 'weeks' }
+                }
+              }
+            }
+            if (migrated) {
+              feasibility.effortEstimate = migrated
+            } else {
+              delete feasibility.effortEstimate
+            }
+          }
+          req.feasibility = feasibility as import('@/types/canvas').RequirementFeasibility
         }
         return req
       })
