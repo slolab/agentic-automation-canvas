@@ -69,10 +69,19 @@ Project-level feasibility (simple, generic defaults that apply to all tasks unle
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `effortEstimate` | string | No | Overall effort estimate for the project |  | AAC |
+| `effortEstimate` | object | No | Overall effort estimate for the project |  | — |
 | `feasibilityNotes` | string | No | Project-level feasibility notes |  | AAC |
 | `technicalRisk` | string | No | Overall technical risk for the project | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `trlLevel` | object | No | Technology Readiness Level - project-level maturity assessment |  | — |
+
+## DeveloperFeasibility EffortEstimate
+
+Overall effort estimate for the project
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `unit` | string | Yes |  | Enum: `weeks`, `person-hours` | AAC |
+| `value` | number | Yes |  | Minimum: 0 | AAC |
 
 ## DeveloperFeasibility TrlLevel
 
@@ -216,13 +225,20 @@ Optional per-task feasibility (overrides project-level defaults)
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `algorithms` | array of string | No |  |  | AAC |
-| `effortEstimate` | string | No |  |  | AAC |
+| `effortEstimate` | object | No |  |  | — |
 | `feasibilityNotes` | string | No |  |  | AAC |
 | `modelName` | string | No | Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct') |  | AAC |
 | `modelSelection` | string | No | Type of model to be used (if applicable). Set to 'none' if task is deterministic. | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other`, `none` | AAC |
 | `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `technologyApproach` | object | No | Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs. |  | — |
 | `tools` | array of string | No |  |  | AAC |
+
+## UserExpectations Requirement Feasibility EffortEstimate
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `unit` | string | Yes |  | Enum: `weeks`, `person-hours` | AAC |
+| `value` | number | Yes |  | Minimum: 0 | AAC |
 
 ## UserExpectations Requirement Feasibility TechnologyApproach
 

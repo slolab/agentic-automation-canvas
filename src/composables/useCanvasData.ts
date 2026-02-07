@@ -726,11 +726,9 @@ export function useCanvasData() {
       }
       if (data.developerFeasibility.effortEstimate !== undefined) {
         total++
-        // Handle both old string format and new structured format
+        // Check if effort estimate has a valid value
         const effort = data.developerFeasibility.effortEstimate
-        if (typeof effort === 'string' && effort.trim()) {
-          completed++
-        } else if (typeof effort === 'object' && effort.value !== undefined && effort.value > 0) {
+        if (effort.value !== undefined && effort.value > 0) {
           completed++
         }
       }
