@@ -212,11 +212,11 @@
     <!-- Value Type Breakdown -->
     <div v-if="valueTypeBreakdown.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Value Type Distribution</h3>
-      <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="grid grid-cols-2 md:grid-cols-5 gap-3">
         <div
           v-for="item in valueTypeBreakdown"
           :key="item.type"
-          class="text-center p-4 rounded-lg"
+          class="text-center p-3 rounded-lg"
           :class="getValueTypeColor(item.type)"
         >
           <div class="text-2xl font-bold mb-1">{{ item.count }}</div>
