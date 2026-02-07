@@ -295,6 +295,88 @@ export const exampleData: CanvasData = {
           },
         ],
       },
+      {
+        id: 'req-4',
+        title: 'Automated security and compliance validation',
+        description: `Automatically validate documents for security risks and compliance violations before processing. This safety feature scans documents for sensitive data exposure, policy violations, and potential security threats.
+
+**Rationale**: This is a critical safety feature that:
+- Prevents processing of documents containing sensitive information that shouldn't be handled
+- Detects potential security threats (malicious content, data exfiltration attempts)
+- Ensures compliance with data protection regulations before processing
+- Reduces organizational risk even if it doesn't save time
+
+**Best Practices Demonstrated**:
+- Risk reduction as primary value driver (no time savings)
+- Safety features may add processing time but reduce organizational risk
+- Quality benefits from catching issues early
+- Essential for production deployment of document processing systems
+
+**Design Pattern**: This follows the "safety-first" pattern where validation gates are placed before processing to prevent downstream issues.`,
+        userStory: 'As a compliance officer, I want documents automatically validated for security and compliance risks so that we prevent processing of problematic documents',
+        priority: 'high',
+        status: 'planned',
+        unitOfWork: 'one document validation',
+        unitCategory: 'item',
+        volumePerMonth: 500,
+        dependsOn: ['req-1'],
+        stakeholders: ['person-2'],
+        feasibility: {
+          technicalRisk: 'low',
+          effortEstimate: { value: 4, unit: 'weeks' },
+          feasibilityNotes: 'Rule-based validation combined with pattern matching for known security and compliance issues. Can leverage existing compliance rule sets. May add slight processing overhead but critical for production safety.',
+          modelSelection: 'none',
+          technologyApproach: {
+            architecture: 'none',
+          },
+          algorithms: ['Pattern matching', 'Rule-based validation', 'Keyword detection'],
+          tools: ['Python', 'Regular expressions', 'Compliance rule engine'],
+        },
+        benefits: [
+          {
+            benefitType: 'risk',
+            metricId: 'securityIncidents',
+            metricLabel: 'Security Incidents',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'incidents/month',
+            baseline: { type: 'numeric', value: 2 },
+            expected: { type: 'numeric', value: 0.2 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Automated validation catches documents with exposed credentials, PII in wrong contexts, or suspicious patterns before they enter the processing pipeline. Baseline of 2 incidents/month reflects occasional manual oversight failures. Expected 0.2 incidents/month accounts for novel attack patterns that bypass initial validation.',
+          },
+          {
+            benefitType: 'risk',
+            metricId: 'complianceViolations',
+            metricLabel: 'Compliance Violations',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'violations/month',
+            baseline: { type: 'numeric', value: 1.5 },
+            expected: { type: 'numeric', value: 0.1 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Automated checks ensure documents meet GDPR, data retention, and access control requirements before processing. Baseline reflects occasional manual errors in compliance checks. Expected reduction to 0.1 violations/month through automated policy enforcement.',
+          },
+          {
+            benefitType: 'quality',
+            metricId: 'earlyDetectionRate',
+            metricLabel: 'Early Issue Detection',
+            direction: 'increaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perUnit',
+            benefitUnit: '%',
+            baseline: { type: 'numeric', value: 60 },
+            expected: { type: 'numeric', value: 95 },
+            confidenceUser: 'high',
+            confidenceDev: 'high',
+            assumptions: 'Automated validation catches issues before they propagate through the system. Baseline of 60% reflects manual review catching most issues but missing some. Expected 95% detection rate through comprehensive automated checks.',
+          },
+        ],
+      },
     ],
   },
   developerFeasibility: {

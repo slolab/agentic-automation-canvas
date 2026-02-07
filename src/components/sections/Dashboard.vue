@@ -79,32 +79,20 @@
       
       <!-- Effort Summary Cards (only show if there are tasks with effort estimates) -->
       <div v-if="tasksWithEffort.length > 0" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-        <div class="bg-gray-50 rounded-lg p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700">Total Effort</span>
-            <span class="text-lg font-semibold text-gray-900">{{ formatTotalEffort() }}</span>
-          </div>
-          <div class="text-xs text-gray-600 mt-1">
-            Sum of all task-level effort estimates
-          </div>
+        <div v-if="tasksWithEffort.length > 0" class="bg-gray-50 border border-gray-200 rounded-lg p-4">
+          <h3 class="text-sm font-medium text-gray-900 mb-1">Total Effort</h3>
+          <p class="text-2xl font-bold text-gray-700">{{ formatTotalEffort() }}</p>
+          <p class="text-xs text-gray-600 mt-1">Sum of all task-level effort estimates</p>
         </div>
-        <div v-if="totalTimeSavedPersonHours > 0" class="bg-green-50 rounded-lg p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700">Time Benefits</span>
-            <span class="text-lg font-semibold text-green-700">{{ formatTimeSaved(totalTimeSavedPersonHours) }}/month</span>
-          </div>
-          <div class="text-xs text-gray-600 mt-1">
-            Net time saved per month (other benefit types not shown)
-          </div>
+        <div v-if="tasksWithEffort.length > 0 && totalTimeSavedPersonHours > 0" class="bg-green-50 border border-green-200 rounded-lg p-4">
+          <h3 class="text-sm font-medium text-green-900 mb-1">Time Benefits</h3>
+          <p class="text-2xl font-bold text-green-700">{{ formatTimeSaved(totalTimeSavedPersonHours) }}/month</p>
+          <p class="text-xs text-green-600 mt-1">Net time saved per month (other benefit types not shown)</p>
         </div>
-        <div v-if="totalAmortizationMonths !== null" class="bg-blue-50 rounded-lg p-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-sm font-medium text-gray-700">Amortization Period</span>
-            <span class="text-lg font-semibold text-blue-700">{{ totalAmortizationMonths.toFixed(1) }} months</span>
-          </div>
-          <div class="text-xs text-gray-600 mt-1">
-            Months until effort amortizes
-          </div>
+        <div v-if="tasksWithEffort.length > 0 && totalAmortizationMonths !== null" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <h3 class="text-sm font-medium text-blue-900 mb-1">Amortization Period</h3>
+          <p class="text-2xl font-bold text-blue-700">{{ totalAmortizationMonths.toFixed(1) }} months</p>
+          <p class="text-xs text-blue-600 mt-1">Months until effort amortizes</p>
         </div>
       </div>
       
@@ -234,33 +222,6 @@
           <div class="text-2xl font-bold mb-1">{{ item.count }}</div>
           <div class="text-sm font-medium capitalize">{{ item.type }}</div>
           <div class="text-xs text-gray-600 mt-1">{{ item.percentage }}%</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Unit Category Breakdown -->
-    <div v-if="unitCategoryBreakdown.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Unit Category Distribution</h3>
-      <div class="space-y-3">
-        <div
-          v-for="item in unitCategoryBreakdown"
-          :key="item.category"
-          class="flex items-center justify-between"
-        >
-          <div class="flex items-center gap-3">
-            <div class="w-3 h-3 rounded-full" :class="getCategoryColor(item.category)"></div>
-            <span class="text-sm font-medium capitalize">{{ item.category }}</span>
-          </div>
-          <div class="flex items-center gap-4">
-            <div class="w-32 h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                class="h-full transition-all"
-                :class="getCategoryColor(item.category)"
-                :style="{ width: `${(item.count / requirements.length) * 100}%` }"
-              />
-            </div>
-            <span class="text-sm text-gray-600 w-12 text-right">{{ item.count }}</span>
-          </div>
         </div>
       </div>
     </div>
@@ -421,20 +382,6 @@ const valueTypeBreakdown = computed(() => {
   }))
 })
 
-// Unit category breakdown
-const unitCategoryBreakdown = computed(() => {
-  const counts: Record<string, number> = {}
-  requirements.value.forEach(req => {
-    const category = req.unitCategory || 'other'
-    counts[category] = (counts[category] || 0) + 1
-  })
-  
-  return Object.entries(counts).map(([category, count]) => ({
-    category,
-    count
-  })).sort((a, b) => b.count - a.count)
-})
-
 // Helper functions
 function formatMinutes(minutes: number): string {
   if (minutes >= 60) {
@@ -583,16 +530,6 @@ function getValueTypeColor(type: string): string {
   return colors[type] || 'bg-gray-50 border border-gray-200 text-gray-900'
 }
 
-function getCategoryColor(category: string): string {
-  const colors: Record<string, string> = {
-    item: 'bg-blue-500',
-    interaction: 'bg-purple-500',
-    computation: 'bg-pink-500',
-    other: 'bg-gray-500',
-  }
-  return colors[category] || 'bg-gray-500'
-}
-
 // Effort summary functions (similar to DeveloperFeasibility)
 const tasksWithEffort = computed(() => {
   return requirements.value.filter((r) => r.feasibility?.effortEstimate?.value !== undefined && r.feasibility.effortEstimate.value > 0)
@@ -736,3 +673,12 @@ function benefitTypeBadgeClass(type: string): string {
   return classes[type] || 'bg-gray-100 text-gray-700'
 }
 </script>
+
+<style scoped>
+.mermaid-diagram :deep(svg) {
+  max-width: 100%;
+  height: auto;
+  transform: scale(0.75);
+  transform-origin: top center;
+}
+</style>
