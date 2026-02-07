@@ -5,6 +5,25 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.4] - 2026-02-06
+
+### Added
+- Risk-only task example (req-4) demonstrating tasks without time benefits, focused on security and compliance validation
+
+### Changed
+- Time savings display: net savings shown prominently in green (matching bar color), gross savings shown as secondary info
+- Amortization terminology updated: "payback" → "until amortization" for more formal language
+- Effort summary cards standardized: consistent formatting with borders and typography matching top summary cards
+- Mermaid dependency graph scaled to 75% for better fit in dashboard
+
+### Fixed
+- Person ID generation: sequential IDs (person-0, person-1) instead of timestamp-based hashes
+- Safari autofill: ORCID field no longer incorrectly detected as credit card field
+- Oversight display: always shown (displays 0 when none) for consistency
+
+### Removed
+- Unit Category Distribution panel from Dashboard
+
 ## [0.11.0] - 2026-02-06
 
 ### Added
