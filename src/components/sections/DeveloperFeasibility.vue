@@ -1037,26 +1037,6 @@ const maxTimeSavedPersonHours = computed(() => {
   return Math.max(...saved, 0)
 })
 
-// Calculate benefit/effort ratio for a task
-function getBenefitEffortRatio(req: Requirement): number | null {
-  const effort = req.feasibility?.effortEstimate
-  if (!effort || effort.value === undefined || effort.value === 0) return null
-  
-  const effortHours = effort.unit === 'weeks' ? effort.value * 40 : effort.value
-  const benefitHours = getTimeSavedPersonHours(req)
-  
-  if (effortHours === 0) return null
-  return benefitHours / effortHours
-}
-
-// Calculate total benefit/effort ratio
-const totalBenefitEffortRatio = computed(() => {
-  const totalEffort = totalEffortPersonHours.value
-  const totalBenefit = totalTimeSavedPersonHours.value
-  if (totalEffort === 0) return null
-  return totalBenefit / totalEffort
-})
-
 // Format time saved for display
 function formatTimeSaved(hours: number): string {
   if (hours === 0) return '0h'

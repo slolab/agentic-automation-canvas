@@ -584,25 +584,12 @@ const totalTimeSavedPersonHours = computed(() => {
   }, 0)
 })
 
-// Get maximum time saved for normalization
-const maxTimeSavedPersonHours = computed(() => {
-  if (tasksWithEffort.value.length === 0) return 0
-  const saved = tasksWithEffort.value.map(req => getTimeSavedPersonHours(req))
-  return Math.max(...saved, 0)
-})
-
 function getEffortPercentage(req: Requirement): number {
   if (maxEffortPersonHours.value === 0) return 0
   const effort = req.feasibility?.effortEstimate
   if (!effort || effort.value === undefined) return 0
   const effortHours = effort.unit === 'weeks' ? effort.value * 40 : effort.value
   return Math.round((effortHours / maxEffortPersonHours.value) * 100)
-}
-
-function getTimeSavedPercentage(req: Requirement): number {
-  if (maxTimeSavedPersonHours.value === 0) return 0
-  const saved = getTimeSavedPersonHours(req)
-  return Math.round((saved / maxTimeSavedPersonHours.value) * 100)
 }
 
 function formatTotalEffort(): string {
