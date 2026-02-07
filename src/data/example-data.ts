@@ -573,7 +573,7 @@ export const exampleData: CanvasData = {
 
 /** Default display groups for the example: time, quality, quality, risk, enablement, cost (1–6). */
 export const exampleBenefitDisplay: BenefitDisplayState = {
-  displayGroupCount: 6,
+  displayGroupCount: 5,
   displayGroups: [
     {
       id: 1,
@@ -593,24 +593,18 @@ export const exampleBenefitDisplay: BenefitDisplayState = {
     },
     {
       id: 3,
-      benefitType: 'quality',
-      metricId: 'reworkRate',
-      benefitRefs: [{ requirementId: 'req-2', benefitIndex: 1 }],
+      benefitType: 'risk',
+      metricId: 'securityIncidents',
+      benefitRefs: [{ requirementId: 'req-4', benefitIndex: 0 }],
     },
     {
       id: 4,
-      benefitType: 'risk',
-      metricId: 'complianceIncidents',
-      benefitRefs: [{ requirementId: 'req-1', benefitIndex: 2 }],
-    },
-    {
-      id: 5,
       benefitType: 'enablement',
       metricId: 'newCapability',
       benefitRefs: [{ requirementId: 'req-3', benefitIndex: 1 }],
     },
     {
-      id: 6,
+      id: 5,
       benefitType: 'cost',
       metricId: 'operationalCost',
       benefitRefs: [{ requirementId: 'req-2', benefitIndex: 2 }],
