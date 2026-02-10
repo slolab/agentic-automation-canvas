@@ -73,9 +73,16 @@
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <p><strong>{{ summary.userExpectations.taskCount }}</strong> tasks</p>
-              <ul v-if="summary.userExpectations.taskTitles.length" class="list-disc list-inside text-xs space-y-0.5">
-                <li v-for="(t, i) in summary.userExpectations.taskTitles" :key="i">{{ t }}</li>
-              </ul>
+              <div v-if="summary.userExpectations.tasks.length" class="space-y-2">
+                <div
+                  v-for="(t, i) in summary.userExpectations.tasks"
+                  :key="i"
+                  class="border-l-2 border-gray-300 pl-2 py-0.5"
+                >
+                  <p class="font-medium text-gray-900">{{ t.title }}</p>
+                  <p v-if="t.userStory" class="text-xs text-gray-600 italic mt-0.5">{{ t.userStory }}</p>
+                </div>
+              </div>
               <template v-if="summary.userExpectations.totalTimeSavedHoursPerMonth > 0 || Object.keys(summary.userExpectations.benefitTypeCounts).length">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Benefits</p>
                 <p v-if="summary.userExpectations.totalTimeSavedHoursPerMonth > 0" class="font-medium">
@@ -132,8 +139,22 @@
               </div>
               <p v-if="summary.developerFeasibility.technicalRisk">Risk: <span class="capitalize">{{ summary.developerFeasibility.technicalRisk }}</span></p>
               <p v-if="summary.developerFeasibility.effortEstimate">Effort: {{ summary.developerFeasibility.effortEstimate }}</p>
+              <p v-if="summary.developerFeasibility.amortizationMonths !== null" class="text-xs">
+                ~{{ summary.developerFeasibility.amortizationMonths!.toFixed(1) }} mo until amortization
+              </p>
               <p v-if="summary.developerFeasibility.feasibilityNotes" class="text-xs">{{ summary.developerFeasibility.feasibilityNotes }}</p>
-              <p v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility)" class="italic text-gray-400">Not specified</p>
+              <div v-if="summary.userExpectations.taskCount > 0" class="mt-2">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
+                  Task-level feasibility: {{ summary.developerFeasibility.tasksWithDedicatedFeasibility.length }} of {{ summary.userExpectations.taskCount }} tasks
+                </p>
+                <div class="canvas-feasibility-bar h-2.5 bg-gray-300 border border-gray-500 rounded-sm overflow-hidden">
+                  <div
+                    class="canvas-feasibility-fill h-full transition-all"
+                    :style="{ width: `${feasibilityProgress}%` }"
+                  />
+                </div>
+              </div>
+              <p v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility) && summary.userExpectations.taskCount === 0" class="italic text-gray-400">Not specified</p>
             </div>
           </div>
           <div class="canvas-bmc-block flex-1 p-4">
@@ -141,15 +162,53 @@
               <CanvasBlockIcon name="outcomes" />
               Outcomes
             </h4>
-            <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
+            <div class="canvas-bmc-content text-sm text-gray-800 space-y-2">
               <template v-if="!isEmptyOutcomes(summary.outcomes)">
-                <p>{{ summary.outcomes.deliverableCount }} deliverables, {{ summary.outcomes.publicationCount }} publications, {{ summary.outcomes.evaluationCount }} evaluations</p>
-                <ul v-if="summary.outcomes.deliverableTitles.length" class="list-disc list-inside text-xs space-y-0.5">
-                  <li v-for="(t, i) in summary.outcomes.deliverableTitles" :key="i">{{ t }}</li>
-                </ul>
-                <ul v-if="summary.outcomes.keyResults.length" class="list-disc list-inside text-xs space-y-0.5">
-                  <li v-for="(r, i) in summary.outcomes.keyResults" :key="'r-' + i">{{ r }}</li>
-                </ul>
+                <template v-if="summary.outcomes.deliverables.length">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ summary.outcomes.deliverableCount }} {{ summary.outcomes.deliverableCount === 1 ? 'deliverable' : 'deliverables' }}
+                  </p>
+                  <ul class="list-none space-y-0.5 text-xs">
+                    <li v-for="(d, i) in summary.outcomes.deliverables" :key="'d-' + i">
+                      <a
+                        v-if="isLink(d.pid)"
+                        :href="d.pid!"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-gray-700 hover:underline"
+                      >{{ d.title }}</a>
+                      <span v-else>{{ d.title }}</span>
+                    </li>
+                  </ul>
+                </template>
+                <template v-if="summary.outcomes.publications.length">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ summary.outcomes.publicationCount }} {{ summary.outcomes.publicationCount === 1 ? 'publication' : 'publications' }}
+                  </p>
+                  <ul class="list-none space-y-0.5 text-xs">
+                    <li v-for="(p, i) in summary.outcomes.publications" :key="'p-' + i">
+                      <a
+                        v-if="isLink(p.doi)"
+                        :href="p.doi!"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="text-gray-700 hover:underline"
+                      >{{ p.title }}</a>
+                      <span v-else>{{ p.title }}</span>
+                    </li>
+                  </ul>
+                </template>
+                <template v-if="summary.outcomes.evaluations.length">
+                  <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
+                    {{ summary.outcomes.evaluationCount }} {{ summary.outcomes.evaluationCount === 1 ? 'evaluation' : 'evaluations' }}
+                  </p>
+                  <ul class="list-none space-y-0.5 text-xs">
+                    <li v-for="(e, i) in summary.outcomes.evaluations" :key="'e-' + i">
+                      <span class="font-medium">{{ e.type }}</span>
+                      <span v-if="e.results" class="text-gray-600"> — {{ e.results }}</span>
+                    </li>
+                  </ul>
+                </template>
               </template>
               <p v-else class="italic text-gray-400">Not specified</p>
             </div>
@@ -178,13 +237,20 @@ const summary = computed<CanvasSummaryData>(() => computeCanvasSummary(canvasDat
 const today = new Date().toISOString().split('T')[0]
 const version = computed(() => canvasData.value.project?.version || canvasData.value.version || '0.1.0')
 
+const feasibilityProgress = computed(() => {
+  const n = summary.value.developerFeasibility.tasksWithDedicatedFeasibility.length
+  const total = summary.value.userExpectations.taskCount
+  if (total === 0) return 0
+  return Math.round((n / total) * 100)
+})
+
 function isEmptyProject(p: CanvasSummaryData['project']): boolean {
   const noTitle = !p.title || p.title === 'Untitled Project'
   return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver && p.domain.length === 0
 }
 
 function isEmptyUserExpectations(u: CanvasSummaryData['userExpectations']): boolean {
-  return u.taskCount === 0 && Object.keys(u.benefitTypeCounts).length === 0
+  return u.taskCount === 0 && Object.keys(u.benefitTypeCounts).length === 0 && u.tasks.length === 0
 }
 
 function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility']): boolean {
@@ -193,8 +259,17 @@ function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility'
     d.trlTarget === null &&
     !d.technicalRisk &&
     !d.effortEstimate &&
-    !d.feasibilityNotes.trim()
+    d.amortizationMonths === null &&
+    !d.feasibilityNotes.trim() &&
+    d.tasksWithDedicatedFeasibility.length === 0
   )
+}
+
+/** True if value looks like a link (starts with http:// or https://) */
+function isLink(url: string | undefined): boolean {
+  if (!url || !url.trim()) return false
+  const s = url.trim().toLowerCase()
+  return s.startsWith('http://') || s.startsWith('https://')
 }
 
 function isEmptyDataAccess(d: CanvasSummaryData['dataAccess']): boolean {
@@ -206,8 +281,9 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
     o.deliverableCount === 0 &&
     o.publicationCount === 0 &&
     o.evaluationCount === 0 &&
-    o.deliverableTitles.length === 0 &&
-    o.keyResults.length === 0
+    o.deliverables.length === 0 &&
+    o.publications.length === 0 &&
+    o.evaluations.length === 0
   )
 }
 
@@ -251,6 +327,15 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
   min-height: 4rem;
 }
 
+
+.canvas-feasibility-bar {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+.canvas-feasibility-fill {
+  background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
 
 @media print {
   .canvas-bmc-wrapper {

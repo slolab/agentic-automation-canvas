@@ -25,9 +25,14 @@ export interface ProjectBlock {
   domain: string[]
 }
 
+export interface TaskSummary {
+  title: string
+  userStory?: string
+}
+
 export interface UserExpectationsBlock {
   taskCount: number
-  taskTitles: string[]
+  tasks: TaskSummary[]
   totalTimeSavedHoursPerMonth: number
   benefitTypeCounts: Record<string, number>
 }
@@ -37,7 +42,34 @@ export interface DeveloperFeasibilityBlock {
   trlTarget: number | null
   technicalRisk: string | null
   effortEstimate: string | null
+  amortizationMonths: number | null
   feasibilityNotes: string
+  /** Task titles that have task-level feasibility overrides */
+  tasksWithDedicatedFeasibility: string[]
+}
+
+export interface DeliverableSummary {
+  title: string
+  pid?: string
+}
+
+export interface PublicationSummary {
+  title: string
+  doi?: string
+}
+
+export interface EvaluationSummary {
+  type: string
+  results?: string
+}
+
+export interface OutcomesBlock {
+  deliverableCount: number
+  publicationCount: number
+  evaluationCount: number
+  deliverables: DeliverableSummary[]
+  publications: PublicationSummary[]
+  evaluations: EvaluationSummary[]
 }
 
 export interface GovernanceBlock {
@@ -56,14 +88,6 @@ export interface DataAccessBlock {
   sensitivitySummary: string[]
 }
 
-export interface OutcomesBlock {
-  deliverableCount: number
-  publicationCount: number
-  evaluationCount: number
-  deliverableTitles: string[]
-  keyResults: string[]
-}
-
 export interface CanvasSummaryData {
   project: ProjectBlock
   userExpectations: UserExpectationsBlock
@@ -75,6 +99,19 @@ export interface CanvasSummaryData {
 
 function getTimeBenefit(req: Requirement) {
   return (req.benefits || []).find((b) => b.benefitType === 'time')
+}
+
+function hasDedicatedFeasibility(req: Requirement): boolean {
+  const f = req.feasibility
+  if (!f) return false
+  if (f.technicalRisk) return true
+  if (f.effortEstimate?.value != null && f.effortEstimate.value > 0) return true
+  if (f.feasibilityNotes?.trim()) return true
+  if (f.modelSelection && f.modelSelection !== 'none') return true
+  if (f.modelName?.trim()) return true
+  const arch = f.technologyApproach?.architecture
+  if (arch && arch !== 'none') return true
+  return false
 }
 
 export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
@@ -115,9 +152,13 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
       benefitTypeCounts[b.benefitType] = (benefitTypeCounts[b.benefitType] || 0) + 1
     })
   })
+  const tasks: TaskSummary[] = requirements.slice(0, MAX_TASK_TITLES).map((r) => ({
+    title: r.title || 'Untitled task',
+    userStory: r.userStory?.trim() || undefined,
+  }))
   const userExpectationsBlock: UserExpectationsBlock = {
     taskCount: requirements.length,
-    taskTitles: requirements.slice(0, MAX_TASK_TITLES).map((r) => r.title || 'Untitled task'),
+    tasks,
     totalTimeSavedHoursPerMonth: Math.round((totalMinutesSavedPerMonth / 60) * 10) / 10,
     benefitTypeCounts,
   }
@@ -132,12 +173,45 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     const u = feas.effortEstimate.unit === 'weeks' ? 'weeks' : 'person-hours'
     effortEstimate = `${feas.effortEstimate.value} ${u}`
   }
+
+  // Amortization: total effort / total time saved per month (from tasks with effort)
+  let amortizationMonths: number | null = null
+  const tasksWithEffort = requirements.filter(
+    (r) => r.feasibility?.effortEstimate?.value !== undefined && r.feasibility.effortEstimate.value > 0
+  )
+  if (tasksWithEffort.length > 0) {
+    const totalEffortHours = tasksWithEffort.reduce((sum, req) => {
+      const e = req.feasibility?.effortEstimate
+      if (!e?.value) return sum
+      return sum + (e.unit === 'weeks' ? e.value * 40 : e.value)
+    }, 0)
+    const totalBenefitHoursPerMonth = tasksWithEffort.reduce((sum, req) => {
+      const timeBenefit = getTimeBenefit(req)
+      if (!timeBenefit) return sum
+      const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
+      const volume = req.volumePerMonth ?? 0
+      const gross = savedPerUnit * volume
+      const oversight = getOversightMinutes(timeBenefit, volume)
+      const net = Math.max(0, gross - oversight)
+      return sum + net / 60
+    }, 0)
+    if (totalBenefitHoursPerMonth > 0) {
+      amortizationMonths = totalEffortHours / totalBenefitHoursPerMonth
+    }
+  }
+
+  const tasksWithDedicatedFeasibility = requirements
+    .filter((r) => hasDedicatedFeasibility(r))
+    .map((r) => r.title || 'Untitled task')
+
   const developerFeasibilityBlock: DeveloperFeasibilityBlock = {
     trlCurrent,
     trlTarget,
     technicalRisk,
     effortEstimate,
+    amortizationMonths,
     feasibilityNotes: truncate(feas?.feasibilityNotes, MAX_DESC_LEN),
+    tasksWithDedicatedFeasibility,
   }
 
   // Governance block
@@ -168,14 +242,22 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
   }
 
   // Outcomes block
-  const deliverableTitles = deliverables.slice(0, 3).map((d) => d.title || 'Untitled')
-  const keyResults = evaluations.slice(0, 2).map((e) => e.results || e.type).filter(Boolean)
   const outcomesBlock: OutcomesBlock = {
     deliverableCount: deliverables.length,
     publicationCount: publications.length,
     evaluationCount: evaluations.length,
-    deliverableTitles,
-    keyResults,
+    deliverables: deliverables.slice(0, 5).map((d) => ({
+      title: d.title || 'Untitled',
+      pid: d.pid?.trim() || undefined,
+    })),
+    publications: publications.slice(0, 5).map((p) => ({
+      title: p.title || 'Untitled',
+      doi: p.doi?.trim() || undefined,
+    })),
+    evaluations: evaluations.slice(0, 5).map((e) => ({
+      type: e.type || 'Evaluation',
+      results: e.results?.trim() || undefined,
+    })),
   }
 
   return {
