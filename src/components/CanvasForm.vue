@@ -62,6 +62,10 @@
 
     <!-- Form sections -->
     <div class="p-6">
+      <CanvasSummary
+        v-if="activeSection === 'canvas-summary'"
+        :key="'canvas-summary'"
+      />
       <ProjectDefinition
         v-if="activeSection === 'project'"
         :key="'project'"
@@ -120,6 +124,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import CanvasSummary from './sections/CanvasSummary.vue'
 import ProjectDefinition from './sections/ProjectDefinition.vue'
 import Persons from './sections/Persons.vue'
 import UserExpectations from './sections/UserExpectations.vue'
@@ -133,6 +138,7 @@ import { useCanvasData } from '@/composables/useCanvasData'
 const { completionPercentage, validateAll, lastImportMigrationWarnings, clearMigrationWarnings, requestedSection, dataVersion } = useCanvasData()
 
 const sections = [
+  { id: 'canvas-summary', label: 'Canvas Summary' },
   { id: 'project', label: 'Project' },
   { id: 'persons', label: 'Persons' },
   { id: 'user-expectations', label: 'Tasks & Expectations' },
@@ -143,7 +149,7 @@ const sections = [
   { id: 'dashboard', label: 'Dashboard' },
 ]
 
-const activeSection = ref('project')
+const activeSection = ref('canvas-summary')
 
 watch(requestedSection, (section) => {
   if (section && sections.some((s) => s.id === section)) {

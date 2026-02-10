@@ -13,7 +13,7 @@ uv run python tools/generate-reference.py
 
 # Build MkDocs (for local development, use default site_url)
 echo "📖 Building MkDocs documentation..."
-uv run mkdocs build --quiet
+uv run python -m mkdocs build --quiet
 
 # Prepare schema artifacts
 echo "📄 Preparing schema artifacts..."
@@ -62,7 +62,7 @@ echo "📁 Documentation: dist/agentic-automation-canvas/docs/"
 echo ""
 echo "To preview locally:"
 echo "  npm run preview    # Preview Vue app at http://localhost:4173"
-echo "  uv run mkdocs serve  # Preview docs at http://localhost:8000"
+echo "  uv run python -m mkdocs serve  # Preview docs at http://localhost:8000"
 echo ""
 echo "Or serve the combined build:"
 echo "  npm run preview:all"
