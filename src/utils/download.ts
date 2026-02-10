@@ -1,12 +1,14 @@
 /**
  * RO-Crate download functionality
- * Generates ZIP file with ro-crate-metadata.json and README
+ * Generates ZIP file with ro-crate-metadata.json, preview.html, and README
  */
 
 import JSZip from 'jszip'
 import type { ROCrateJSONLD } from '@/types/rocrate'
 import type { CanvasData } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
+import { computeCanvasSummary } from './canvasSummary'
+import { generateCanvasPreviewHtml } from './generateCanvasPreviewHtml'
 
 /**
  * Generate README content for RO-Crate
@@ -30,6 +32,7 @@ This RO-Crate package contains metadata describing an Agentic Automation Canvas 
 ### Contents
 
 - \`ro-crate-metadata.json\`: RO-Crate metadata file (includes project, requirements, developer feasibility, etc.)
+- \`preview.html\`: One-page canvas summary (open in browser)
 - \`benefit-display.json\`: Benefit display groups for dashboard (if available)
 - This README: Project overview
 
@@ -60,6 +63,18 @@ function getProjectVersion(canvasData?: CanvasData): string {
   return canvasData?.project?.version || canvasData?.version || '0.1.0'
 }
 
+function addPreviewToRocrate(rocrate: ROCrateJSONLD): void {
+  rocrate['@graph'].push({
+    '@id': 'preview.html',
+    '@type': 'schema:CreativeWork',
+    'schema:name': 'Canvas Summary Preview',
+  })
+  const root = rocrate['@graph'].find((e) => e['@id'] === './') as { hasPart?: Array<{ '@id': string }> }
+  if (root) {
+    root.hasPart = [...(root.hasPart || []), { '@id': 'preview.html' }]
+  }
+}
+
 /**
  * Download RO-Crate as ZIP file
  */
@@ -70,6 +85,14 @@ export async function downloadROCrateZip(
   benefitDisplay?: BenefitDisplayState
 ): Promise<void> {
   const zip = new JSZip()
+
+  if (canvasData) {
+    const summary = computeCanvasSummary(canvasData)
+    const version = getProjectVersion(canvasData)
+    const html = generateCanvasPreviewHtml(canvasData, summary, version)
+    zip.file('preview.html', html)
+    addPreviewToRocrate(rocrate)
+  }
 
   // Add ro-crate-metadata.json
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
@@ -107,10 +130,19 @@ export async function downloadROCrateZip(
 export async function buildROCrateZipBuffer(
   rocrate: ROCrateJSONLD,
   projectName: string,
-  _canvasData?: CanvasData,
+  canvasData?: CanvasData,
   benefitDisplay?: BenefitDisplayState
 ): Promise<ArrayBuffer> {
   const zip = new JSZip()
+
+  if (canvasData) {
+    const summary = computeCanvasSummary(canvasData)
+    const version = getProjectVersion(canvasData)
+    const html = generateCanvasPreviewHtml(canvasData, summary, version)
+    zip.file('preview.html', html)
+    addPreviewToRocrate(rocrate)
+  }
+
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
   const hasBenefitDisplay =
     (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||

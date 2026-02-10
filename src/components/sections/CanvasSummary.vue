@@ -240,7 +240,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
-import { computeCanvasSummary, type CanvasSummaryData } from '@/utils/canvasSummary'
+import { computeCanvasSummary, type CanvasSummaryData, isLink, parseUserStory } from '@/utils/canvasSummary'
 import InfoTooltip from '../InfoTooltip.vue'
 import CanvasBlockIcon from './CanvasBlockIcon.vue'
 
@@ -276,42 +276,6 @@ function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility'
     !d.feasibilityNotes.trim() &&
     d.tasksWithDedicatedFeasibility.length === 0
   )
-}
-
-/** True if value looks like a link (starts with http:// or https://) */
-function isLink(url: string | undefined): boolean {
-  if (!url || !url.trim()) return false
-  const s = url.trim().toLowerCase()
-  return s.startsWith('http://') || s.startsWith('https://')
-}
-
-/** Parse "As a X, I want Y, so that Z" structure. Returns segments or null if pattern not found. Case insensitive; commas before "I want" and "so that" optional. */
-function parseUserStory(text: string | undefined): Array<{ text: string; formulaic: boolean }> | null {
-  if (!text || !text.trim()) return null
-  const t = text.trim()
-  // Full pattern: As a/an ROLE [,] I want GOAL [,] so that BENEFIT
-  const full = t.match(/^\s*(as\s+an?\s+)([\s\S]+?)(,?\s*i\s+want\s+)([\s\S]+?)(,?\s*so\s+that\s+)([\s\S]*)\s*$/i)
-  if (full) {
-    return [
-      { text: full[1], formulaic: true },
-      { text: full[2].trim(), formulaic: false },
-      { text: full[3], formulaic: true },
-      { text: full[4].trim(), formulaic: false },
-      { text: full[5], formulaic: true },
-      { text: full[6].trim(), formulaic: false },
-    ]
-  }
-  // Partial: As a/an ROLE [,] I want GOAL (no "so that")
-  const partial = t.match(/^\s*(as\s+an?\s+)([\s\S]+?)(,?\s*i\s+want\s+)([\s\S]*)\s*$/i)
-  if (partial) {
-    return [
-      { text: partial[1], formulaic: true },
-      { text: partial[2].trim(), formulaic: false },
-      { text: partial[3], formulaic: true },
-      { text: partial[4].trim(), formulaic: false },
-    ]
-  }
-  return null
 }
 
 function isEmptyDataAccess(d: CanvasSummaryData['dataAccess']): boolean {

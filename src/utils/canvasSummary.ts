@@ -6,8 +6,8 @@
 import type { CanvasData, Requirement } from '@/types/canvas'
 import { getTimeSavedPerUnit, getOversightMinutes } from './timeBenefits'
 
-const MAX_DESC_LEN = 180
-const MAX_FEASIBILITY_NOTES_LEN = 240
+const MAX_DESC_LEN = 300
+const MAX_FEASIBILITY_NOTES_LEN = 300
 const MAX_TASK_TITLES = 5
 
 function truncate(text: string | undefined, maxLen: number): string {
@@ -98,6 +98,40 @@ export interface CanvasSummaryData {
   outcomes: OutcomesBlock
 }
 
+/** True if value looks like a link (starts with http:// or https://) */
+export function isLink(url: string | undefined): boolean {
+  if (!url || !url.trim()) return false
+  const s = url.trim().toLowerCase()
+  return s.startsWith('http://') || s.startsWith('https://')
+}
+
+/** Parse "As a X, I want Y, so that Z" structure. Returns segments or null if pattern not found. */
+export function parseUserStory(text: string | undefined): Array<{ text: string; formulaic: boolean }> | null {
+  if (!text || !text.trim()) return null
+  const t = text.trim()
+  const full = t.match(/^\s*(as\s+an?\s+)([\s\S]+?)(,?\s*i\s+want\s+)([\s\S]+?)(,?\s*so\s+that\s+)([\s\S]*)\s*$/i)
+  if (full) {
+    return [
+      { text: full[1], formulaic: true },
+      { text: full[2].trim(), formulaic: false },
+      { text: full[3], formulaic: true },
+      { text: full[4].trim(), formulaic: false },
+      { text: full[5], formulaic: true },
+      { text: full[6].trim(), formulaic: false },
+    ]
+  }
+  const partial = t.match(/^\s*(as\s+an?\s+)([\s\S]+?)(,?\s*i\s+want\s+)([\s\S]*)\s*$/i)
+  if (partial) {
+    return [
+      { text: partial[1], formulaic: true },
+      { text: partial[2].trim(), formulaic: false },
+      { text: partial[3], formulaic: true },
+      { text: partial[4].trim(), formulaic: false },
+    ]
+  }
+  return null
+}
+
 function getTimeBenefit(req: Requirement) {
   return (req.benefits || []).find((b) => b.benefitType === 'time')
 }
@@ -149,7 +183,7 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
   }, 0)
   const benefitTypeCounts: Record<string, number> = {}
   requirements.forEach((req) => {
-    ;(req.benefits || []).forEach((b) => {
+    (req.benefits || []).forEach((b) => {
       benefitTypeCounts[b.benefitType] = (benefitTypeCounts[b.benefitType] || 0) + 1
     })
   })

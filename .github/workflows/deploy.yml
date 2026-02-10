@@ -93,7 +93,7 @@ jobs:
           # Update site_url for custom domain deployment
           # Use sed to update site_url without parsing custom YAML tags
           sed 's|site_url: https://w3id.org/aac/|site_url: https://aac.slolab.ai/docs/|' mkdocs.yml > mkdocs.yml.tmp
-          uv run mkdocs build --quiet --config-file mkdocs.yml.tmp
+          uv run python -m mkdocs build --quiet --config-file mkdocs.yml.tmp
           rm -f mkdocs.yml.tmp
 
       - name: Prepare schema artifacts
