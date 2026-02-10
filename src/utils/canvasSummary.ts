@@ -6,7 +6,8 @@
 import type { CanvasData, Requirement } from '@/types/canvas'
 import { getTimeSavedPerUnit, getOversightMinutes } from './timeBenefits'
 
-const MAX_DESC_LEN = 120
+const MAX_DESC_LEN = 180
+const MAX_FEASIBILITY_NOTES_LEN = 240
 const MAX_TASK_TITLES = 5
 
 function truncate(text: string | undefined, maxLen: number): string {
@@ -210,7 +211,7 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     technicalRisk,
     effortEstimate,
     amortizationMonths,
-    feasibilityNotes: truncate(feas?.feasibilityNotes, MAX_DESC_LEN),
+    feasibilityNotes: truncate(feas?.feasibilityNotes, MAX_FEASIBILITY_NOTES_LEN),
     tasksWithDedicatedFeasibility,
   }
 
