@@ -14,7 +14,7 @@
     </div>
 
     <div>
-      <h3 class="subsection-header">Deliverables</h3>
+      <h3 class="subsection-header text-gray-500">Deliverables</h3>
       <MultiValueInput
         v-model="localDeliverables"
         label="deliverable"
@@ -31,7 +31,7 @@
     </div>
 
     <div>
-      <h3 class="subsection-header">Publications</h3>
+      <h3 class="subsection-header text-gray-500">Publications</h3>
       <MultiValueInput
         v-model="localPublications"
         label="publication"
@@ -48,7 +48,7 @@
     </div>
 
     <div>
-      <h3 class="subsection-header">Evaluations</h3>
+      <h3 class="subsection-header text-gray-500">Evaluations</h3>
       <MultiValueInput
         v-model="localEvaluations"
         label="evaluation"
