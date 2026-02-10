@@ -30,8 +30,8 @@
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
           <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              <CanvasBlockIcon name="project" />
               Project Definition
+              <CanvasBlockIcon name="project" class="ml-auto" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <p class="font-semibold">{{ summary.project.title }}</p>
@@ -47,8 +47,8 @@
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              <CanvasBlockIcon name="governance" />
               Governance
+              <CanvasBlockIcon name="governance" class="ml-auto" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <template v-if="summary.governance.stages.length">
@@ -67,8 +67,8 @@
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
           <div class="canvas-bmc-block flex-[2] border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              <CanvasBlockIcon name="expectations" />
               User Expectations
+              <CanvasBlockIcon name="expectations" class="ml-auto" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <p><strong>{{ summary.userExpectations.taskCount }}</strong> tasks</p>
@@ -111,8 +111,8 @@
           </div>
           <div class="canvas-bmc-block flex-[1] px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              <CanvasBlockIcon name="data" />
               Data Access
+              <CanvasBlockIcon name="data" class="ml-auto" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <template v-if="!isEmptyDataAccess(summary.dataAccess)">
@@ -133,8 +133,8 @@
         <div class="canvas-bmc-col flex flex-col">
           <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              <CanvasBlockIcon name="feasibility" />
               Developer Feasibility
+              <CanvasBlockIcon name="feasibility" class="ml-auto" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <div v-if="summary.developerFeasibility.trlCurrent !== null || summary.developerFeasibility.trlTarget !== null">
@@ -167,8 +167,8 @@
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              <CanvasBlockIcon name="outcomes" />
               Outcomes
+              <CanvasBlockIcon name="outcomes" class="ml-auto" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-2">
               <template v-if="!isEmptyOutcomes(summary.outcomes)">
