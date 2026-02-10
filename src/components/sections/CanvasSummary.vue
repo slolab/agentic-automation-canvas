@@ -29,7 +29,7 @@
       <div class="canvas-bmc-grid">
         <!-- Left column: 1/2 + 1/2 -->
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
-          <div class="canvas-bmc-block flex-1 border-b-2 border-black p-4">
+          <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <CanvasBlockIcon name="project" />
               Project Definition
@@ -46,7 +46,7 @@
               <p v-if="isEmptyProject(summary.project)" class="italic text-gray-400">Not specified</p>
             </div>
           </div>
-          <div class="canvas-bmc-block flex-1 p-4">
+          <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <CanvasBlockIcon name="governance" />
               Governance
@@ -66,7 +66,7 @@
 
         <!-- Middle column: 2/3 + 1/3 -->
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
-          <div class="canvas-bmc-block flex-[2] border-b-2 border-black p-4">
+          <div class="canvas-bmc-block flex-[2] border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <CanvasBlockIcon name="expectations" />
               User Expectations
@@ -110,7 +110,7 @@
               <p v-if="isEmptyUserExpectations(summary.userExpectations)" class="italic text-gray-400">Not specified</p>
             </div>
           </div>
-          <div class="canvas-bmc-block flex-[1] p-4">
+          <div class="canvas-bmc-block flex-[1] px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <CanvasBlockIcon name="data" />
               Data Access
@@ -132,7 +132,7 @@
 
         <!-- Right column: 1/2 + 1/2 -->
         <div class="canvas-bmc-col flex flex-col">
-          <div class="canvas-bmc-block flex-1 border-b-2 border-black p-4">
+          <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <CanvasBlockIcon name="feasibility" />
               Developer Feasibility
@@ -166,7 +166,7 @@
               <p v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility) && summary.userExpectations.taskCount === 0" class="italic text-gray-400">Not specified</p>
             </div>
           </div>
-          <div class="canvas-bmc-block flex-1 p-4">
+          <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <CanvasBlockIcon name="outcomes" />
               Outcomes
@@ -352,12 +352,13 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
 }
 
 .canvas-bmc-block-title {
-  font-size: 0.7rem;
+  font-size: 0.8rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   margin-bottom: 0.75rem;
-  padding-bottom: 0.25rem;
+  padding-top: 0.125rem;
+  padding-bottom: 0.35rem;
   border-bottom: 1px solid rgb(209 213 219);
 }
 
