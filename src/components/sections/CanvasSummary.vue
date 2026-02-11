@@ -334,6 +334,22 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
   min-height: 4rem;
 }
 
+/* Subtly grey out other panels when hovering one (overlay avoids icon wiggle from opacity transitions) */
+.canvas-bmc-block {
+  position: relative;
+}
+.canvas-bmc-block::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+.canvas-bmc-wrapper:has(.canvas-bmc-block:hover) .canvas-bmc-block:not(:hover)::after {
+  opacity: 1;
+}
 
 .canvas-feasibility-bar {
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.15);
