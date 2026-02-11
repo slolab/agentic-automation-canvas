@@ -38,7 +38,10 @@
             <button
               type="button"
               @click="loadExample"
-              class="flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              :class="[
+                'flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors',
+                showLoadExampleHint && 'load-example-hint-pulse',
+              ]"
               title="Load example dataset"
             >
               <svg
@@ -192,7 +195,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCanvasData } from './composables/useCanvasData'
 import { useHeaderActionsMode } from './composables/useHeaderActionsMode'
 import { exampleData, exampleBenefitDisplay } from './data/example-data'
@@ -214,7 +217,16 @@ const baseUrl = import.meta.env.BASE_URL || '/'
 // Injected at build time from package.json (vite.config.ts define)
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
 
+const LOAD_EXAMPLE_HINT_KEY = 'aac-load-example-hint-seen'
+const showLoadExampleHint = ref(false)
+
+onMounted(() => {
+  showLoadExampleHint.value = !localStorage.getItem(LOAD_EXAMPLE_HINT_KEY)
+})
+
 const loadExample = () => {
+  localStorage.setItem(LOAD_EXAMPLE_HINT_KEY, '1')
+  showLoadExampleHint.value = false
   if (confirm('This will replace your current data with an example dataset. Continue?')) {
     importFromROCrate(exampleData, exampleBenefitDisplay)
     // Don't switch tabs - stay on current tab
@@ -370,3 +382,17 @@ const downloadROCrate = async () => {
   }
 }
 </script>
+
+<style scoped>
+.load-example-hint-pulse {
+  animation: load-example-pulse 1.5s ease-in-out infinite;
+}
+@keyframes load-example-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(14, 165, 233, 0);
+  }
+}
+</style>
