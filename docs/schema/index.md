@@ -23,7 +23,7 @@ YAML representation of the schema:
 
 ## Schema Version
 
-Current schema version: **0.11.4** (Beta)
+Current schema version: **0.11.5** (Beta)
 
 !!! warning "Beta Status"
     This schema is currently in **beta testing**. The structure and fields may change before the 1.0.0 release. 
