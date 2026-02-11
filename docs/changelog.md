@@ -5,6 +5,17 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.11.6] - 2026-02-10
+
+### Added
+- Load Example: subtle pulse animation for first-time visitors (cleared on click)
+- Canvas Summary: panel headers link to respective tabs (Project, Governance, User Expectations, etc.)
+- Canvas Summary: benefit tags link to Project tab
+
+### Changed
+- Canvas Summary: non-hovered panels subtly dimmed on hover (overlay avoids icon wiggle)
+- Canvas Summary: stronger dim effect (70% overlay opacity)
+
 ## [0.11.5] - 2026-02-10
 
 ### Added
