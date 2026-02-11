@@ -30,8 +30,10 @@
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
           <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              Project Definition
-              <CanvasBlockIcon name="project" class="ml-auto" />
+              <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('project')">
+                Project Definition
+                <CanvasBlockIcon name="project" class="ml-auto" />
+              </button>
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <p class="font-semibold">{{ summary.project.title }}</p>
@@ -47,8 +49,10 @@
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              Governance
-              <CanvasBlockIcon name="governance" class="ml-auto" />
+              <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('governance')">
+                Governance
+                <CanvasBlockIcon name="governance" class="ml-auto" />
+              </button>
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <template v-if="summary.governance.stages.length">
@@ -67,8 +71,10 @@
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
           <div class="canvas-bmc-block flex-[2] border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              User Expectations
-              <CanvasBlockIcon name="expectations" class="ml-auto" />
+              <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('user-expectations')">
+                User Expectations
+                <CanvasBlockIcon name="expectations" class="ml-auto" />
+              </button>
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <p><strong>{{ summary.userExpectations.taskCount }}</strong> tasks</p>
@@ -97,13 +103,15 @@
                   ~{{ summary.userExpectations.totalTimeSavedHoursPerMonth }} hrs/month saved
                 </p>
                 <div v-if="Object.keys(summary.userExpectations.benefitTypeCounts).length" class="flex flex-wrap gap-1 text-xs">
-                  <span
+                  <button
                     v-for="(count, type) in summary.userExpectations.benefitTypeCounts"
                     :key="type"
-                    class="px-1.5 py-0.5 border border-black text-gray-700 capitalize"
+                    type="button"
+                    class="canvas-benefit-tag"
+                    @click="requestSection('project')"
                   >
                     {{ type }} {{ count }}
-                  </span>
+                  </button>
                 </div>
               </template>
               <p v-if="isEmptyUserExpectations(summary.userExpectations)" class="italic text-gray-400">Not specified</p>
@@ -111,8 +119,10 @@
           </div>
           <div class="canvas-bmc-block flex-[1] px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              Data Access
-              <CanvasBlockIcon name="data" class="ml-auto" />
+              <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('data-access')">
+                Data Access
+                <CanvasBlockIcon name="data" class="ml-auto" />
+              </button>
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <template v-if="!isEmptyDataAccess(summary.dataAccess)">
@@ -133,8 +143,10 @@
         <div class="canvas-bmc-col flex flex-col">
           <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              Developer Feasibility
-              <CanvasBlockIcon name="feasibility" class="ml-auto" />
+              <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('developer-feasibility')">
+                Developer Feasibility
+                <CanvasBlockIcon name="feasibility" class="ml-auto" />
+              </button>
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <div v-if="summary.developerFeasibility.trlCurrent !== null || summary.developerFeasibility.trlTarget !== null">
@@ -167,8 +179,10 @@
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
-              Outcomes
-              <CanvasBlockIcon name="outcomes" class="ml-auto" />
+              <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('outcomes')">
+                Outcomes
+                <CanvasBlockIcon name="outcomes" class="ml-auto" />
+              </button>
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-2">
               <template v-if="!isEmptyOutcomes(summary.outcomes)">
@@ -244,7 +258,7 @@ import { computeCanvasSummary, type CanvasSummaryData, isLink, parseUserStory } 
 import InfoTooltip from '../InfoTooltip.vue'
 import CanvasBlockIcon from './CanvasBlockIcon.vue'
 
-const { canvasData } = useCanvasData()
+const { canvasData, requestSection } = useCanvasData()
 
 const summary = computed<CanvasSummaryData>(() => computeCanvasSummary(canvasData.value))
 const today = new Date().toISOString().split('T')[0]
@@ -328,6 +342,39 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
   padding-top: 0.125rem;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid rgb(209 213 219);
+}
+
+.canvas-bmc-block-title-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.canvas-bmc-block-title-link:hover {
+  text-decoration: underline;
+}
+
+.canvas-benefit-tag {
+  padding: 0.125rem 0.375rem;
+  border: 1px solid black;
+  font-size: 0.75rem;
+  color: rgb(55 65 81);
+  text-transform: capitalize;
+  background: none;
+  cursor: pointer;
+}
+.canvas-benefit-tag:hover {
+  background: rgb(243 244 246);
 }
 
 .canvas-bmc-content {
