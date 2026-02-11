@@ -1,6 +1,6 @@
 {
   "@context": [
-    "https://w3id.org/ro/crate/1.1/context",
+    "https://w3id.org/ro/crate/1.2/context",
     {
       "schema": "https://schema.org/",
       "prov": "http://www.w3.org/ns/prov#",
@@ -15,7 +15,7 @@
       "@id": "ro-crate-metadata.json",
       "@type": "schema:CreativeWork",
       "conformsTo": {
-        "@id": "https://w3id.org/ro/crate/1.1"
+        "@id": "https://w3id.org/ro/crate/1.2"
       },
       "about": {
         "@id": "./"
@@ -26,6 +26,8 @@
       "@type": ["schema:Dataset", "dcat:Dataset"],
       "name": "Complete Agentic Automation Canvas Example",
       "description": "A complete example RO-Crate with all sections populated",
+      "datePublished": "2025-01-30",
+      "license": { "@id": "https://creativecommons.org/licenses/by/4.0/" },
       "about": {
         "@id": "#project"
       },
@@ -200,6 +202,12 @@
       "name": "Developer Feasibility Assessment",
       "description": "Technical feasibility assessment including Technology Readiness Level (TRL), risk assessment, and technology choices",
       "schema:encodingFormat": "application/json"
+    },
+    {
+      "@id": "https://creativecommons.org/licenses/by/4.0/",
+      "@type": "schema:CreativeWork",
+      "name": "Creative Commons Attribution 4.0 International",
+      "identifier": "https://creativecommons.org/licenses/by/4.0/"
     }
   ]
 }

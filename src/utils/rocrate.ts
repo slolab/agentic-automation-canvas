@@ -389,7 +389,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     '@id': 'ro-crate-metadata.json',
     '@type': 'schema:CreativeWork',
     conformsTo: {
-      '@id': 'https://w3id.org/ro/crate/1.1',
+      '@id': 'https://w3id.org/ro/crate/1.2',
     },
     about: {
       '@id': './',
@@ -402,6 +402,17 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     '@type': ['schema:Dataset', 'dcat:Dataset'],
     name: data.project.title || 'Agentic Automation Project',
     description: data.project.description,
+    datePublished: new Date().toISOString().split('T')[0],
+  }
+
+  // Optional license on root dataset (RO-Crate 1.2 SHOULD)
+  if (data.project.license) {
+    rootDataset.license = { '@id': data.project.license }
+    graph.push({
+      '@id': data.project.license,
+      '@type': 'schema:CreativeWork',
+      identifier: data.project.license,
+    })
   }
 
   const projectId = generateId('project')
@@ -936,7 +947,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
 
   // Extended @context with all required prefixes
   const context: (string | Record<string, string>)[] = [
-    'https://w3id.org/ro/crate/1.1/context',
+    'https://w3id.org/ro/crate/1.2/context',
     {
       schema: 'https://schema.org/',
       prov: 'http://www.w3.org/ns/prov#',

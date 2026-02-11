@@ -33,6 +33,8 @@ export interface ProjectDefinition {
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
   roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
+  // License for RO-Crate export (e.g. "https://creativecommons.org/licenses/by/4.0/")
+  license?: string
   // Version management (stored at project level for ROcrate compatibility)
   version?: string // Semantic version (e.g., "0.1.0")
   versionDate?: string // ISO date string when version was downloaded/created

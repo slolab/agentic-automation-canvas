@@ -34,4 +34,47 @@ describe('generateROCrate', () => {
     const root = out['@graph'].find((e: { '@id': string }) => e['@id'] === './') as Record<string, unknown>
     expect(root['aac:schemaVersion']).toBe('0.10.0')
   })
+
+  it('metadata descriptor conformsTo references RO-Crate 1.2', () => {
+    const out = generateROCrate(minimalCanvasData)
+    const descriptor = out['@graph'].find(
+      (e: { '@id': string }) => e['@id'] === 'ro-crate-metadata.json',
+    ) as Record<string, unknown>
+    expect(descriptor).toBeDefined()
+    expect((descriptor.conformsTo as { '@id': string })['@id']).toBe(
+      'https://w3id.org/ro/crate/1.2',
+    )
+  })
+
+  it('root has datePublished in ISO date format', () => {
+    const out = generateROCrate(minimalCanvasData)
+    const root = out['@graph'].find((e: { '@id': string }) => e['@id'] === './') as Record<string, unknown>
+    expect(root.datePublished).toBeDefined()
+    expect(root.datePublished).toMatch(/^\d{4}-\d{2}-\d{2}$/)
+  })
+
+  it('includes license contextual entity when project has license', () => {
+    const dataWithLicense: CanvasData = {
+      project: {
+        title: 'Licensed Project',
+        description: '',
+        license: 'https://creativecommons.org/licenses/by/4.0/',
+      },
+    }
+    const out = generateROCrate(dataWithLicense)
+    const root = out['@graph'].find((e: { '@id': string }) => e['@id'] === './') as Record<string, unknown>
+    expect((root.license as { '@id': string })['@id']).toBe(
+      'https://creativecommons.org/licenses/by/4.0/',
+    )
+    const licenseEntity = out['@graph'].find(
+      (e: { '@id': string }) => e['@id'] === 'https://creativecommons.org/licenses/by/4.0/',
+    )
+    expect(licenseEntity).toBeDefined()
+  })
+
+  it('does not include license when project has no license', () => {
+    const out = generateROCrate(minimalCanvasData)
+    const root = out['@graph'].find((e: { '@id': string }) => e['@id'] === './') as Record<string, unknown>
+    expect(root.license).toBeUndefined()
+  })
 })
