@@ -32,11 +32,13 @@ If schema changed:
 - Re-validate
 
 ### PR Message
-Format in code block:
+Do NOT attempt to create PRs programmatically (e.g., via `gh pr create`) — it will fail in this environment. Instead, provide the PR title and body as a fenced markdown code block so the user can copy it and create the PR manually on GitHub.
+
+Format:
 - Title
-- Key Changes (bullets)
-- Technical Details (files)
-- Breaking Changes (if any)
+- `## Summary` with bullet points
+- `## Test plan` with a checklist
+- Breaking changes (if any)
 
 ### Version
 User handles `bump2version` if needed. Note in PR if version changed.

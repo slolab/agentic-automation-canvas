@@ -13,11 +13,6 @@ import type {
   Benefit,
   BenefitValue,
   Person,
-  Dataset,
-  GovernanceStage,
-  Agent,
-  Deliverable,
-  Evaluation,
 } from '@/types/canvas'
 
 // ---------------------------------------------------------------------------
@@ -127,14 +122,14 @@ function renderRequirements(data: CanvasData): string | undefined {
       parts.push(bullet('Unit of work', `${req.unitOfWork}${vol}`)!)
     }
     if (req.dependsOn?.length) {
-      const depTitles = req.dependsOn.map((id) => {
+      const depTitles = req.dependsOn.map((id: string) => {
         const dep = reqs.find((r) => r.id === id)
         return dep ? dep.title : id
       })
       parts.push(bullet('Depends on', depTitles.join(', '))!)
     }
     if (req.stakeholders?.length) {
-      parts.push(bullet('Stakeholders', req.stakeholders.map((id) => personName(id, persons)).join(', '))!)
+      parts.push(bullet('Stakeholders', req.stakeholders.map((id: string) => personName(id, persons)).join(', '))!)
     }
 
     // Benefits as acceptance criteria
