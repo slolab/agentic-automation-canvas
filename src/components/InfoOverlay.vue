@@ -41,30 +41,37 @@
             <div class="space-y-4 text-sm text-gray-700">
               <div>
                 <h3 class="font-semibold text-gray-900 mb-2">What is this?</h3>
+                <p class="mb-2">
+                  The Agentic Automation Canvas helps you design, govern, and document agentic automation solutions that use AI to replace or augment human judgment. It formalises a <strong>bidirectional contract between users and developers</strong>: users capture their expectations with quantified benefit metrics, while developers assess the technical feasibility of delivering those benefits.
+                </p>
                 <p>
-                  The Agentic Automation Canvas helps you design and document agentic automation solutions that use AI to replace or augment human judgment in routine tasks. It guides you through planning, development, and deployment while capturing all essential aspects of your automation project.
+                  The canvas is primarily a <strong>communication tool</strong>. We recommend that users and developers fill it out together — the structured conversation surfaces misalignments early, before significant resources are committed. It is not a contract to be enforced, but a <strong>living document</strong> that evolves alongside your project.
                 </p>
               </div>
 
               <div>
                 <h3 class="font-semibold text-gray-900 mb-2">Why use it?</h3>
                 <ul class="list-disc list-inside space-y-1 ml-2">
-                  <li><strong>Framework for implementation:</strong> Structured approach to designing your automation solution</li>
-                  <li><strong>Comprehensive checklist:</strong> Ensures you consider all relevant aspects (user expectations, feasibility, governance, data access)</li>
-                  <li><strong>Machine-readable output:</strong> Generates standards-compliant packages that work with other tools and systems</li>
-                  <li><strong>Track progress:</strong> Compare actual gains vs. initial expectations over time</li>
-                  <li><strong>Governance support:</strong> Facilitate use & access decisions and data protection strategies</li>
+                  <li><strong>Prospective design:</strong> Unlike retrospective documentation (model cards, datasheets), the AAC guides design decisions <em>before and during</em> development, when they can still influence outcomes</li>
+                  <li><strong>Quantified benefits:</strong> Capture measurable expectations across five dimensions (time, quality, risk, enablement, cost) with human oversight costs factored in, enabling realistic go/no-go decisions</li>
+                  <li><strong>Comprehensive checklist:</strong> Ensures you consider all relevant aspects — user expectations, feasibility, governance, data access, and outcomes</li>
+                  <li><strong>Machine-readable output:</strong> Generates FAIR-compliant RO-Crate packages that integrate with research infrastructure and other tools</li>
+                  <li><strong>AI-ready:</strong> Every export includes an <code>AGENTS.md</code> file that translates the canvas specification into structured instructions for AI coding agents (GitHub Copilot, Cursor, etc.), bridging design and implementation</li>
+                  <li><strong>Track progress:</strong> Compare actual gains vs. initial expectations over time by versioning the canvas alongside your implementation</li>
+                  <li><strong>Governance support:</strong> Define decision authority at each development phase, establish milestones, and create an auditable governance trail</li>
+                  <li><strong>Private by design:</strong> The application runs entirely in the browser — no server-side processing, and canvas data never leaves your machine</li>
                 </ul>
               </div>
 
               <div>
                 <h3 class="font-semibold text-gray-900 mb-2">How does it work?</h3>
                 <ol class="list-decimal list-inside space-y-1 ml-2">
-                  <li>Fill out the form sections to capture your project details, requirements, and expectations</li>
-                  <li>The canvas validates your input and provides real-time feedback</li>
-                  <li>View the dashboard to see workflow visualizations and time savings metrics</li>
-                  <li>Download your completed canvas as a package (ZIP file)</li>
-                  <li>Use the package for project documentation, comparison, and integration with other tools</li>
+                  <li>Sit down with your users <em>and</em> developers to fill out the canvas together — start with scope, then expectations and feasibility</li>
+                  <li>The canvas validates your input in real time and guides you through six structured dimensions</li>
+                  <li>View the dashboard to see workflow visualizations and benefit metrics</li>
+                  <li>Download your completed canvas as an RO-Crate package (ZIP file with metadata, preview, and agent instructions)</li>
+                  <li>Place the <code>AGENTS.md</code> file in your project repository for your AI coding assistant to use as a project specification</li>
+                  <li>Re-upload the RO-Crate when the project evolves — keep the canvas version synchronised with your implementation milestones</li>
                 </ol>
               </div>
 
@@ -119,9 +126,7 @@
                     target="_blank"
                     rel="noopener noreferrer"
                     class="text-primary-600 hover:text-primary-800 underline"
-                  >
-                    Agentic Automation Canvas documentation
-                  </a>.
+                  >Agentic Automation Canvas documentation</a>.
                 </p>
               </div>
             </div>

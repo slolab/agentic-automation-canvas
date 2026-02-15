@@ -910,6 +910,17 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     graph.push(benefitDisplayFileEntity)
   }
 
+  // Add AGENTS.md as first-class file entity (AI coding agent instructions)
+  const agentInstructionsFileId = 'AGENTS.md'
+  hasPart.push({ '@id': agentInstructionsFileId })
+  graph.push({
+    '@id': agentInstructionsFileId,
+    '@type': 'schema:File',
+    name: 'Agent instructions',
+    description: 'AI coding agent instructions derived from the AAC canvas specification',
+    'schema:encodingFormat': 'text/markdown',
+  } as ROCrateEntity)
+
   // Update root dataset hasPart
   if (hasPart.length > 0) {
     rootDataset.hasPart = hasPart

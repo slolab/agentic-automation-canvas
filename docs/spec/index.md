@@ -18,6 +18,8 @@ The AAC specification serves multiple purposes:
 
 5. **Tooling**: Enables development of CLI tools, API integrations, and other interfaces that work with AAC data.
 
+6. **AI-Ready Handoff**: Every RO-Crate export includes an `AGENTS.md` file that translates the structured canvas specification into instructions consumable by AI coding agents (e.g., GitHub Copilot, Cursor), bridging the gap between project design and implementation.
+
 ## Scope
 
 The specification covers:
