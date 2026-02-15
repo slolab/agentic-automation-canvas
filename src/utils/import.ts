@@ -174,6 +174,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         if (step!['aac:dependsOn'] && Array.isArray(step!['aac:dependsOn'])) {
           req.dependsOn = step!['aac:dependsOn'] as string[]
         }
+        if (step!['aac:stakeholders'] && Array.isArray(step!['aac:stakeholders'])) {
+          req.stakeholders = step!['aac:stakeholders'] as string[]
+        }
         if (step!['aac:feasibility'] && typeof step!['aac:feasibility'] === 'object') {
           const feasibility = step!['aac:feasibility'] as any
           // Migrate old string effortEstimate to structured format

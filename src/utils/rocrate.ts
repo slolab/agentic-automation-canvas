@@ -556,6 +556,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.feasibility && Object.keys(req.feasibility).length > 0) {
         stepEntity['aac:feasibility'] = req.feasibility
       }
+      if (req.stakeholders && req.stakeholders.length > 0) {
+        stepEntity['aac:stakeholders'] = req.stakeholders
+      }
       graph.push(stepEntity)
     })
 
