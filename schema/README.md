@@ -46,7 +46,7 @@ The schema ensures that all generated RO-Crates follow consistent, standards-com
 
 This schema profile aligns with:
 
-- RO-Crate 1.1 specification
+- RO-Crate specification
 - FAIR Digital Object principles
 - EOSC metadata profiles
 - W3C standards (DCAT, PROV-O)
@@ -56,7 +56,7 @@ This schema profile aligns with:
 
 The schema follows semantic versioning. Changes to the schema structure will be versioned independently of the web application.
 
-## Schema Version 1.1
+## Schema Version 0.12.0
 
 ### Person Identity and Role Model
 
@@ -143,9 +143,3 @@ The schema follows semantic versioning. Changes to the schema structure will be 
 **References:**
 - All Person `@id` references must exist in Persons registry
 - No duplicate Person nodes for same identity
-
-### Schema Version Flag
-
-RO-Crates generated with schema version 1.1 include:
-- `aac:schemaVersion: "1.1"` in the root dataset
-- This enables version-aware processing and migration tools

@@ -39,7 +39,7 @@ This RO-Crate package contains metadata describing an Agentic Automation Canvas 
 ### Standards Compliance
 
 This RO-Crate follows:
-- RO-Crate 1.2 specification
+- RO-Crate specification
 - Schema.org vocabularies (Project, ResearchProject, CreativeWork)
 - W3C DCAT (Data Catalog Vocabulary)
 - W3C PROV-O (Provenance Ontology)

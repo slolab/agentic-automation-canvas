@@ -104,35 +104,16 @@ Build a dev aid zip with every benefit metric represented once: `npm run build:d
 
 ## Standards Compliance
 
-The Agentic Automation Canvas follows established standards:
-
-- **RO-Crate 1.1**: Research Object Crate specification
-- **Schema.org**: Project, ResearchProject, CreativeWork types
-- **W3C DCAT**: Data Catalog Vocabulary for datasets
-- **W3C PROV-O**: Provenance Ontology for activities
-- **P-Plan**: Plan Ontology for user expectations
-- **FRAPO**: Funding, Research Administration & Projects Ontology
-- **DUO**: Data Use Ontology for data restrictions
-
-See [IMPLEMENTATION_PLAN.md](IMPLEMENTATION_PLAN.md) for detailed standards mapping.
+The AAC generates RO-Crate packages using Schema.org, W3C DCAT, PROV-O, and other established vocabularies. See the [specification](docs/spec/index.md) for details.
 
 ## Schema Profile
 
-The `schema/` directory contains standalone schema definitions that can be used independently:
-
-- **JSON Schema**: `schema/canvas-schema.json` for validating canvas data
-- **RO-Crate Profile**: `schema/rocrate-profile.json` for validating RO-Crates
-- **Mappings**: Documentation of ontology mappings
-- **Vocabularies**: Controlled vocabularies (Technology Readiness Level (TRL), DUO terms, etc.)
-- **Examples**: Example RO-Crate files
-
-See [schema/README.md](schema/README.md) for schema documentation.
+The `schema/` directory contains standalone schema definitions (JSON Schema, RO-Crate profile, mappings, vocabularies, examples) that can be used independently. See [schema/README.md](schema/README.md).
 
 ## Documentation
 
 - [Contributing Guide](docs/CONTRIBUTING.md) - Development guidelines
 - [Deployment Guide](docs/DEPLOYMENT.md) - GitHub Pages deployment
-- [Architecture Documentation](docs/ARCHITECTURE.md) - Technical architecture
 
 ## License
 

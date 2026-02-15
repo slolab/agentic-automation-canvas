@@ -1,6 +1,6 @@
 /**
  * TypeScript interfaces for RO-Crate JSON-LD structure
- * Following RO-Crate 1.1 specification
+ * Following RO-Crate 1.2 specification
  */
 
 export interface ROCrateJSONLD {

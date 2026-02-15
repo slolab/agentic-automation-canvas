@@ -689,27 +689,6 @@ export function useCanvasData() {
       })
     }
 
-    // Stakeholders (optional - only count if exists)
-    if (data.userExpectations?.stakeholders && data.userExpectations.stakeholders.length > 0) {
-      data.userExpectations.stakeholders.forEach(stakeholder => {
-        total++
-        // Check if stakeholder has a valid personId
-        if (stakeholder.personId?.trim()) {
-          // Check if person exists and has a name
-          const person = data.persons?.find(p => p.id === stakeholder.personId)
-          if (person?.name?.trim()) completed++
-        }
-        if (stakeholder.role !== undefined) {
-          total++
-          if (stakeholder.role?.trim()) completed++
-        }
-        if (stakeholder.values !== undefined && stakeholder.values.length > 0) {
-          total += stakeholder.values.length
-          completed += stakeholder.values.filter(v => v?.trim()).length
-        }
-      })
-    }
-
     // Developer Feasibility (optional section)
     if (data.developerFeasibility) {
       if (data.developerFeasibility.trlLevel !== undefined) {

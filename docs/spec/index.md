@@ -12,7 +12,7 @@ The AAC specification serves multiple purposes:
 
 2. **Validation**: Enables programmatic validation of canvas data to ensure completeness and correctness before export.
 
-3. **Interoperability**: Ensures generated RO-Crates follow established standards (RO-Crate 1.1, Schema.org, DCAT, PROV-O) for integration with research infrastructure.
+3. **Interoperability**: Ensures generated RO-Crates follow established standards (RO-Crate 1.2, Schema.org, DCAT, PROV-O) for integration with research infrastructure.
 
 4. **Documentation**: Serves as a reference for understanding the data model, field semantics, and relationships between entities.
 
@@ -63,7 +63,7 @@ Validation can be performed:
 
 The AAC specification builds on and integrates with:
 
-- **RO-Crate 1.1**: Research Object Crate specification for packaging research outputs
+- **RO-Crate 1.2**: Research Object Crate specification for packaging research outputs
 - **Schema.org**: Vocabulary for structured data on the web
 - **W3C DCAT**: Data Catalog Vocabulary for describing datasets
 - **W3C PROV-O**: Provenance Ontology for describing activities and agents

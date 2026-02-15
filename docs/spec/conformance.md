@@ -169,7 +169,7 @@ Controlled vocabularies (e.g., benefit types, TRL levels) **MAY** be extended in
 
 AAC canvases exported as RO-Crates **MUST** conform to:
 
-- RO-Crate 1.1 specification
+- RO-Crate specification
 - Schema.org vocabulary usage as specified in mappings
 - W3C DCAT, PROV-O, and other referenced standards
 

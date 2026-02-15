@@ -32,7 +32,7 @@ All schema artifacts, examples, and documentation are served from this stable na
 
 **Stability Promises:**
 
-- **Beta Phase (0.9.x)**: During beta testing, the schema structure may change. Breaking changes will be documented in the changelog.
+- **Beta Phase (0.x.x)**: During beta testing, the schema structure may change. Breaking changes will be documented in the changelog.
 - **Stable (1.0+)**: After 1.0.0, schema `$id` URIs, property names, required fields, and core structure will remain stable within major versions.
 - **Versioned Changes**: Breaking changes will only occur in major version increments (e.g., 1.0 → 2.0), with deprecation notices in advance.
 - **Additive Evolution**: Minor versions may add optional fields, new controlled vocabularies, or extended examples without breaking existing implementations.
@@ -85,7 +85,7 @@ All schema artifacts, examples, and documentation are served from this stable na
 
 The Agentic Automation Canvas follows established standards:
 
-- **RO-Crate 1.1**: Research Object Crate specification
+- **RO-Crate**: Research Object Crate specification
 - **Schema.org**: Project, ResearchProject, CreativeWork types
 - **W3C DCAT**: Data Catalog Vocabulary for datasets
 - **W3C PROV-O**: Provenance Ontology for activities

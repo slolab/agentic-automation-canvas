@@ -5,7 +5,6 @@
  * - Unit category: old enum values → new enum values
  * - Oversight: requirement.humanOversightMinutesPerUnit → benefit.oversightMinutesPerUnit
  * 
- * Deprecated fields (stakeholder, humanOversightMinutesPerUnit) will be removed in 0.12.0.
  * This migration will be simplified/removed in future versions.
  */
 
@@ -92,7 +91,6 @@ export function normalizeCanvasData(data: CanvasData): NormalizeResult {
       userStory: r.userStory,
       priority: r.priority,
       status: r.status,
-      stakeholder: r.stakeholder,
       value: r.value,
       unitOfWork: r.unitOfWork,
       volumePerMonth: r.volumePerMonth,

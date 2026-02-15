@@ -283,14 +283,6 @@ const downloadROCrate = async () => {
     })
   }
   
-  // Check stakeholder references
-  if (canvasData.value.userExpectations?.stakeholders) {
-    canvasData.value.userExpectations.stakeholders.forEach((stakeholder, idx) => {
-      if (stakeholder.personId && !personIds.has(stakeholder.personId)) {
-        additionalWarnings.push(`Stakeholder[${idx}] references unknown person: ${stakeholder.personId}`)
-      }
-    })
-  }
   
   // Check agent references
   if (canvasData.value.governance?.stages) {

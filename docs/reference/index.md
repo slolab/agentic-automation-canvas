@@ -195,7 +195,6 @@ Technology Readiness Level - project-level maturity assessment
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `requirements` | array of object | No |  |  | P-Plan |
-| `stakeholders` | array of object | No |  |  | — |
 
 ## UserExpectations Requirement
 
@@ -207,7 +206,6 @@ Technology Readiness Level - project-level maturity assessment
 | `feasibility` | object | No | Optional per-task feasibility (overrides project-level defaults) |  | — |
 | `id` | string | Yes |  |  | AAC |
 | `priority` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
-| `stakeholder` | string | No | DEPRECATED in 0.11.0: Use requirement.stakeholders array instead. Will be removed in 0.12.0. Maintained for backward compatibility only. |  | AAC |
 | `stakeholders` | array of string | No | Person IDs of stakeholders for this task |  | AAC |
 | `status` | string | No |  | Enum: `planned`, `in-progress`, `completed`, `cancelled` | AAC |
 | `timeUnit` | string | No | Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency. | Enum: `minutes`, `hours` | AAC |
@@ -274,12 +272,3 @@ Technology architecture approach for this task. Set architecture to 'none' if ta
 | `chunkingStrategy` | string | No |  |  | AAC |
 | `embeddingModel` | string | No |  |  | AAC |
 | `retrievalMethod` | string | No |  |  | AAC |
-
-## UserExpectations Stakeholder
-
-| Property | Type | Required | Description | Constraints | Ontology |
-|----------|------|----------|-------------|-------------|----------|
-| `personId` | string | Yes | Reference to Person entity ID (required) |  | AAC |
-| `role` | string | No |  |  | AAC |
-| `roleContext` | string | No | Optional role context |  | AAC |
-| `values` | array of string | No |  |  | AAC |

@@ -1,6 +1,6 @@
 /**
  * RO-Crate JSON-LD generator
- * Following RO-Crate 1.1 specification with Schema.org, DCAT, PROV-O, FRAPO mappings
+ * Following RO-Crate 1.2 specification with Schema.org, DCAT, PROV-O, FRAPO mappings
  */
 
 import type { CanvasData, Benefit } from '@/types/canvas'
@@ -579,14 +579,6 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.stakeholders) {
         req.stakeholders.forEach((personId) => taskStakeholderIds.add(personId))
       }
-    })
-  }
-  
-  // Also support legacy format (stakeholders at userExpectations level) for backward compatibility
-  // DEPRECATED: Will be removed in 0.12.0. Stakeholders are now managed per-task (requirement.stakeholders).
-  if (data.userExpectations?.stakeholders) {
-    data.userExpectations.stakeholders.forEach((stakeholder) => {
-      taskStakeholderIds.add(stakeholder.personId)
     })
   }
   

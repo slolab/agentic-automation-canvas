@@ -4,7 +4,7 @@ requires-python = ">=3.10"
 
 [[package]]
 name = "agentic-automation-canvas"
-version = "0.11.6"
+version = "0.12.0"
 source = { virtual = "." }
 dependencies = [
     { name = "jsonschema" },

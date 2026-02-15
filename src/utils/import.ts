@@ -304,54 +304,6 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     }
   }
 
-  // Find stakeholders (contributors to project)
-  if (projectEntity && projectEntity.contributor) {
-    const contributorRefs = Array.isArray(projectEntity.contributor) 
-      ? projectEntity.contributor 
-      : [projectEntity.contributor]
-    
-    const stakeholders = contributorRefs
-      .map((ref: any) => {
-        const entity = findEntity(graph, ref['@id'])
-        if (!entity) return null
-        
-        const entityType = Array.isArray(entity['@type'])
-          ? entity['@type'][0]
-          : entity['@type']
-        // Handle both prefixed and non-prefixed Person type
-        const normalizedType = entityType?.replace('schema:', '') || entityType
-        if (normalizedType !== 'Person') return null
-
-        const personData = extractPersonData(entity)
-        // Extract Person ID (remove # prefix if present)
-        const personId = entity['@id'].replace('#', '')
-        
-        // Get role from schema:Role nodes (prefer stakeholder context) or legacy embedded roles
-        const stakeholderRolesFromNodes = personData.rolesFromNodes
-          .filter(r => r.roleContext === 'stakeholder')
-          .map(r => r.role)
-        
-        // Use role from Role nodes first, then legacy embedded roles
-        const roles = stakeholderRolesFromNodes.length > 0 
-          ? stakeholderRolesFromNodes 
-          : personData.roles.filter(r => r !== 'stakeholder')
-        const primaryRole = roles.length > 0 ? roles[0] : undefined
-        
-        return {
-          personId: personId,
-          role: primaryRole,
-        }
-      })
-      .filter((stakeholder): stakeholder is NonNullable<typeof stakeholder> => stakeholder !== null)
-
-    if (stakeholders.length > 0) {
-      if (!canvasData.userExpectations) {
-        canvasData.userExpectations = {}
-      }
-      canvasData.userExpectations.stakeholders = stakeholders
-    }
-  }
-
   // Find governance stages (PROV-O Activities) - handle both prefixed and non-prefixed types
   const activityEntities = findEntitiesByType(graph, ['Activity', 'prov:Activity'])
   

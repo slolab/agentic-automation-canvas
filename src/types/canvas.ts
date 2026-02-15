@@ -42,7 +42,6 @@ export interface ProjectDefinition {
 
 export interface UserExpectations {
   requirements?: Requirement[]
-  stakeholders?: Stakeholder[]
 }
 
 // Benefit value types - numeric, categorical, or binary
@@ -115,7 +114,6 @@ export interface Requirement {
   userStory?: string
   priority?: 'low' | 'medium' | 'high' | 'critical'
   status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
-  stakeholder?: string
   value?: string
   // Value model fields
   unitOfWork?: string
@@ -139,13 +137,6 @@ export interface Person {
   affiliation?: string // Optional disambiguation
   orcid?: string // Optional stable identifier (e.g., ORCID)
   functionRoles?: string[] // Functional roles from controlled vocabulary
-}
-
-export interface Stakeholder {
-  personId: string // Reference to Person entity ID
-  role?: string
-  values?: string[]
-  roleContext?: string // Optional role context for this stakeholder role
 }
 
 /** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */
