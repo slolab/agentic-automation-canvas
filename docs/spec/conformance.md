@@ -44,7 +44,7 @@ The AAC specification follows [Semantic Versioning](https://semver.org/) (SemVer
 - **PATCH** version (0.0.X): Bug fixes and documentation updates
 
 !!! warning "Beta Versions (0.x.x)"
-    Versions starting with `0.` (e.g., 0.12.1) are considered **beta releases**. During the beta phase:
+    Versions starting with `0.` (e.g., 0.12.2) are considered **beta releases**. During the beta phase:
 
     - Breaking changes may occur between minor versions (0.10 → 0.11)
     - Feedback and testing are encouraged
