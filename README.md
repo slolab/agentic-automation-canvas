@@ -30,7 +30,7 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 
 ## Quick Start
 
-Visit the [live application](https://slolab.github.io/agentic-automation-canvas/) to start filling out your canvas.
+Visit the [live application](https://aac.slolab.ai) to start filling out your canvas.
 
 ## Development
 
