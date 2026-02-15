@@ -485,34 +485,40 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
     }
   }
 
-  // Find outcomes (CreativeWork, ScholarlyArticle) - handle both prefixed and non-prefixed types
-  // Exclude metadata file descriptor, milestones, evaluations, and other non-outcome CreativeWorks
-  const creativeWorkEntities = findEntitiesByType(graph, [
-    'CreativeWork',
-    'ScholarlyArticle',
-    'Report',
-    'schema:CreativeWork',
-    'schema:ScholarlyArticle',
-    'schema:Report',
-  ]).filter((entity) => {
+  // Find outcomes: entities marked with aac:outcomeType OR legacy CreativeWork/ScholarlyArticle/Report types
+  // Exclude metadata file descriptor, milestones, evaluations, and other non-outcome entities
+  const outcomeEntities = graph.filter((entity) => {
     // Exclude metadata file descriptor
-    if (entity['@id'] === 'ro-crate-metadata.json') {
-      return false
-    }
-    // Exclude file entities (they're referenced but not outcomes)
-    if (entity['@id'] === 'benefit-display.json') {
-      return false
-    }
-    // Exclude milestones (they're linked via hasMilestone or have aac:milestoneType)
-    if (milestoneIds.has(entity['@id']) || entity['aac:milestoneType'] === 'milestone') {
-      return false
-    }
-    // Exclude evaluations (they have aac:evaluationType)
-    if (entity['aac:evaluationType']) {
-      return false
-    }
-    // Only include entities that have a name (title) - real outcomes should have names
-    return !!(entity.name as string)?.trim()
+    if (entity['@id'] === 'ro-crate-metadata.json') return false
+    // Exclude file entities
+    if (entity['@id'] === 'benefit-display.json') return false
+    // Exclude milestones
+    if (milestoneIds.has(entity['@id']) || entity['aac:milestoneType'] === 'milestone') return false
+    // Exclude evaluations
+    if (entity['aac:evaluationType']) return false
+    // Only include entities with a name
+    if (!(entity.name as string)?.trim()) return false
+
+    // Match entities with aac:outcomeType marker (new format)
+    if (entity['aac:outcomeType'] === 'deliverable') return true
+
+    // Legacy fallback: match known CreativeWork subtypes
+    const entityTypes = Array.isArray(entity['@type']) ? entity['@type'] : [entity['@type']]
+    const legacyTypes = ['CreativeWork', 'ScholarlyArticle', 'Report', 'schema:CreativeWork', 'schema:ScholarlyArticle', 'schema:Report']
+    return legacyTypes.some((t) => entityTypes.includes(t))
+  })
+  // Also find ScholarlyArticle publications (which don't have aac:outcomeType)
+  const publicationEntities = findEntitiesByType(graph, ['ScholarlyArticle', 'schema:ScholarlyArticle']).filter((entity) => {
+    if (entity['@id'] === 'ro-crate-metadata.json') return false
+    if (!(entity.name as string)?.trim()) return false
+    return true
+  })
+  // Merge, deduplicating by @id
+  const seenIds = new Set<string>()
+  const creativeWorkEntities = [...outcomeEntities, ...publicationEntities].filter((entity) => {
+    if (seenIds.has(entity['@id'])) return false
+    seenIds.add(entity['@id'])
+    return true
   })
 
   if (creativeWorkEntities.length > 0) {

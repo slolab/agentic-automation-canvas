@@ -819,6 +819,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         const outcomeEntity: ROCrateEntity = {
           '@id': outcomeId,
           '@type': deliverable.type ? `schema:${deliverable.type}` : 'schema:CreativeWork',
+          'aac:outcomeType': 'deliverable',
           name: deliverable.title,
           description: deliverable.description,
         }
