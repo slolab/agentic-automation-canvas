@@ -14,7 +14,7 @@ The canvas serves simultaneously as a framework for implementation, a checklist 
 
 2. **Validate**: The web form validates your data automatically as you fill it out. If you're working with canvas JSON files directly (outside the web form), use the [validator](validator.md) to ensure compliance with the AAC specification.
 
-3. **Download**: Download your completed canvas as an RO-Crate package (ZIP file). The web form exports your data as a standards-compliant RO-Crate that can be shared, archived, and integrated with research infrastructure following FAIR principles.
+3. **Download**: Download your completed canvas as an RO-Crate package (ZIP file). The web form exports your data as a standards-compliant RO-Crate that can be shared, archived, and integrated with research infrastructure following FAIR principles. Each export includes an **AI-ready `AGENTS.md`** file that translates your canvas specification into structured instructions for AI coding agents, so you can use the canvas directly as a project brief for tools like GitHub Copilot or Cursor.
 
 ## Canonical Identifiers
 

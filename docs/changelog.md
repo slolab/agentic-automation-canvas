@@ -5,6 +5,11 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.2] - 2026-02-15
+
+### Added
+- AI-ready `AGENTS.md` included in every RO-Crate export: translates the canvas specification (requirements, technical approach, data constraints, governance checkpoints) into structured instructions for AI coding agents
+
 ## [0.12.0] - 2026-02-11
 
 ### Changed

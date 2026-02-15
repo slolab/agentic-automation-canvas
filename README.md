@@ -27,6 +27,7 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 - **Interactive Form**: Modern, accessible Vue.js interface for capturing project metadata
 - **Standards-Compliant**: Generates RO-Crate packages following W3C and Schema.org standards
 - **Comprehensive Coverage**: Captures project definition, user expectations, feasibility, governance, data access, and outcomes
+- **AI-Ready Export**: Every RO-Crate includes an `AGENTS.md` file that translates the canvas specification into structured instructions for AI coding agents (GitHub Copilot, Cursor, and other LLM-based assistants), bridging the gap between project design and implementation
 - **Bot Assistant**: Contextual help for filling out the canvas (MVP with placeholder)
 - **Schema Profile**: Standalone schema definitions for validation and tooling
 

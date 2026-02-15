@@ -9,6 +9,7 @@ import type { CanvasData } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { computeCanvasSummary } from './canvasSummary'
 import { generateCanvasPreviewHtml } from './generateCanvasPreviewHtml'
+import { generateAgentInstructions } from './agent-instructions'
 
 /**
  * Generate README content for RO-Crate
@@ -33,6 +34,7 @@ This RO-Crate package contains metadata describing an Agentic Automation Canvas 
 
 - \`ro-crate-metadata.json\`: RO-Crate metadata file (includes project, requirements, developer feasibility, etc.)
 - \`ro-crate-preview.html\`: One-page canvas summary (open in browser)
+- \`AGENTS.md\`: AI coding agent instructions derived from the canvas specification
 - \`benefit-display.json\`: Benefit display groups for dashboard (if available)
 - This README: Project overview
 
@@ -101,6 +103,11 @@ export async function downloadROCrateZip(
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
 
+  // Add AGENTS.md (AI coding agent instructions)
+  if (canvasData) {
+    zip.file('AGENTS.md', generateAgentInstructions(canvasData))
+  }
+
   // Add README
   const readme = generateReadme(rocrate, projectName)
   zip.file('README.md', readme)
@@ -146,6 +153,9 @@ export async function buildROCrateZipBuffer(
     (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
   if (hasBenefitDisplay) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
+  }
+  if (canvasData) {
+    zip.file('AGENTS.md', generateAgentInstructions(canvasData))
   }
   const readme = generateReadme(rocrate, projectName)
   zip.file('README.md', readme)
