@@ -147,14 +147,14 @@
             </button>
           </div>
           <!-- Display functional roles for person-type agents -->
-          <div v-if="agent.type === 'person' && agent.personId && getPersonInfo(agent.personId)?.functionRoles && getPersonInfo(agent.personId)!.functionRoles.length > 0" class="text-xs mb-1">
+          <div v-if="agent.type === 'person' && agent.personId && getPersonInfo(agent.personId)?.functionRoles?.length" class="text-xs mb-1">
             <span class="font-medium text-gray-700">Functional Roles: </span>
             <span
-              v-for="(roleId, idx) in getPersonInfo(agent.personId)!.functionRoles"
+              v-for="(roleId, idx) in getPersonInfo(agent.personId)?.functionRoles"
               :key="roleId"
               class="px-1.5 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-700"
             >
-              {{ roleId }}{{ idx < getPersonInfo(agent.personId)!.functionRoles.length - 1 ? ',' : '' }}
+              {{ roleId }}{{ idx < (getPersonInfo(agent.personId)?.functionRoles?.length ?? 0) - 1 ? ',' : '' }}
             </span>
           </div>
           <div v-if="agent.type === 'person' && agent.personId" class="text-xs text-gray-500 space-y-0.5">

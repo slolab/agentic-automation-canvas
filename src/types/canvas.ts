@@ -33,6 +33,9 @@ export interface ProjectDefinition {
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
   roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
+  creator?: string[] // Person IDs of project creators
+  // License for RO-Crate export (e.g. "https://creativecommons.org/licenses/by/4.0/")
+  license?: string
   // Version management (stored at project level for ROcrate compatibility)
   version?: string // Semantic version (e.g., "0.1.0")
   versionDate?: string // ISO date string when version was downloaded/created
@@ -40,7 +43,6 @@ export interface ProjectDefinition {
 
 export interface UserExpectations {
   requirements?: Requirement[]
-  stakeholders?: Stakeholder[]
 }
 
 // Benefit value types - numeric, categorical, or binary
@@ -113,7 +115,6 @@ export interface Requirement {
   userStory?: string
   priority?: 'low' | 'medium' | 'high' | 'critical'
   status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
-  stakeholder?: string
   value?: string
   // Value model fields
   unitOfWork?: string
@@ -137,13 +138,7 @@ export interface Person {
   affiliation?: string // Optional disambiguation
   orcid?: string // Optional stable identifier (e.g., ORCID)
   functionRoles?: string[] // Functional roles from controlled vocabulary
-}
-
-export interface Stakeholder {
-  personId: string // Reference to Person entity ID
-  role?: string
-  values?: string[]
-  roleContext?: string // Optional role context for this stakeholder role
+  localTitles?: string[] // Free-text position/title descriptions
 }
 
 /** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */

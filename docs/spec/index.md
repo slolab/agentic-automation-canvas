@@ -12,7 +12,7 @@ The AAC specification serves multiple purposes:
 
 2. **Validation**: Enables programmatic validation of canvas data to ensure completeness and correctness before export.
 
-3. **Interoperability**: Ensures generated RO-Crates follow established standards (RO-Crate 1.1, Schema.org, DCAT, PROV-O) for integration with research infrastructure.
+3. **Interoperability**: Ensures generated RO-Crates follow established standards (RO-Crate, Schema.org, DCAT, PROV-O) for integration with research infrastructure.
 
 4. **Documentation**: Serves as a reference for understanding the data model, field semantics, and relationships between entities.
 
@@ -39,10 +39,10 @@ The specification is organized into several sections:
 
 ## Schema Version
 
-The current schema version is **0.11.6 (Beta)**. The schema follows semantic versioning.
+The current schema version is **0.12.0 (Beta)**. The schema follows semantic versioning.
 
 !!! warning "Beta Testing Phase"
-    Version 0.11.6 is a **beta release** for testing and feedback. The schema structure and fields 
+    Version 0.12.0 is a **beta release** for testing and feedback. The schema structure and fields 
     may change before the stable 1.0.0 release. We welcome feedback and contributions during this phase.
 
 See the [Conformance](conformance.md) section for details on versioning and compatibility.
@@ -63,7 +63,7 @@ Validation can be performed:
 
 The AAC specification builds on and integrates with:
 
-- **RO-Crate 1.1**: Research Object Crate specification for packaging research outputs
+- **RO-Crate 1.2**: Research Object Crate specification for packaging research outputs
 - **Schema.org**: Vocabulary for structured data on the web
 - **W3C DCAT**: Data Catalog Vocabulary for describing datasets
 - **W3C PROV-O**: Provenance Ontology for describing activities and agents

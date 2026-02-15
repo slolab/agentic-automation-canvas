@@ -40,39 +40,14 @@ The minimal example shows:
 
 ## Download
 
-**What you download from the web form:**
+- [minimal-example.json](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/examples/minimal-example.json) - RO-Crate JSON-LD (what you get from "Download RO-Crate")
+- [minimal-canvas.json](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/examples/minimal-canvas.json) - Canvas JSON for validation and programmatic use
 
-- [minimal-example.json](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/examples/minimal-example.json) - RO-Crate JSON-LD format. **This is what you get when you click "Download RO-Crate"** in the web application. The download is a ZIP file containing `ro-crate-metadata.json` following RO-Crate 1.1 specification.
-
-**For validation and programmatic use:**
-
-- [minimal-canvas.json](https://github.com/slolab/agentic-automation-canvas/blob/main/schema/examples/minimal-canvas.json) - Canvas JSON format that validates against the AAC schema. This is the internal format used by the web form. Use this format if you want to validate against the schema or work with the data programmatically.
+See [Examples overview](index.md) for details on the two formats.
 
 ## Validation
 
-This example is validated against the schema in CI. Validate locally:
-
-```bash
-uv run python tools/validate-examples.py
-```
-
-Or validate this specific file:
-
-```bash
-uv run python -c "
-import json
-import jsonschema
-
-with open('schema/canvas-schema.json', 'r') as f:
-    schema = json.load(f)
-
-with open('schema/examples/minimal-canvas.json', 'r') as f:
-    canvas = json.load(f)
-
-jsonschema.validate(instance=canvas, schema=schema)
-print('✓ Valid')
-"
-```
+This example is validated in CI. See the [validator documentation](../validator.md) for local validation instructions.
 
 ## Next Steps
 

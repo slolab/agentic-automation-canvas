@@ -54,7 +54,7 @@ This will:
 **Note:** The examples directory contains both:
 
 - **Canvas JSON files** (e.g., `minimal-canvas.json`, `complete-canvas.json`) - These are validated against the schema. This is the internal format used by the web form.
-- **RO-Crate files** (e.g., `minimal-example.json`, `complete-example.json`) - These are skipped by the validator. RO-Crate is the packaged format you download from the web form, which follows RO-Crate 1.1 specification and is validated separately.
+- **RO-Crate files** (e.g., `minimal-example.json`, `complete-example.json`) - These are skipped by the validator. RO-Crate is the packaged format you download from the web form, which follows the RO-Crate specification and is validated separately.
 
 #### Validate a Specific File
 

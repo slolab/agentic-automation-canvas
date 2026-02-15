@@ -5,6 +5,26 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-02-11
+
+### Changed
+- RO-Crate upgraded from spec 1.1 to 1.2: `@context` and `conformsTo` bumped to `https://w3id.org/ro/crate/1.2`
+- Root dataset now includes `datePublished` (MUST in RO-Crate 1.2)
+- Preview file renamed from `preview.html` to `ro-crate-preview.html` per spec naming convention
+- Preview entity no longer added to root dataset `hasPart` (SHOULD NOT per 1.2); uses `about` back-reference instead
+- README slimmed down: Standards Compliance and Schema Profile sections replaced with links to spec docs; broken links to `IMPLEMENTATION_PLAN.md` and `docs/ARCHITECTURE.md` removed
+- RO-Crate version number consolidated to single source of truth in `docs/spec/index.md`; removed from 10+ other doc locations to prevent drift
+- `docs/mapping.md`: Developer Feasibility section updated to reflect embedded `aac:developerFeasibility` (was incorrectly documenting the removed separate-file approach)
+- Example docs (`minimal.md`, `complete.md`) trimmed: deduplicated validation snippets and two-format explanations into links
+
+### Added
+- Configurable `license` field on `ProjectDefinition`; when set, generates a license contextual entity in the RO-Crate graph
+
+### Removed
+- Deprecated `requirement.stakeholder` (singular string) field from schema — use `requirement.stakeholders` (array of Person IDs) instead
+- Legacy `userExpectations.stakeholders` project-level array from schema, types, export, and import — stakeholders are now per-task only
+- Legacy stakeholder import/export code paths and validation logic
+
 ## [0.11.6] - 2026-02-10
 
 ### Added
@@ -143,14 +163,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Person identity and role model
 - Governance stages with agents
 - Dataset metadata with DUO terms
-- Standards compliance (RO-Crate 1.1, Schema.org, DCAT, PROV-O, P-Plan, FRAPO)
+- Standards compliance (RO-Crate 1.2, Schema.org, DCAT, PROV-O, P-Plan, FRAPO)
 
 ### Schema Structure
 - Main properties: `version`, `versionDate`, `persons`, `project`, `userExpectations`, `developerFeasibility`, `governance`, `dataAccess`, `outcomes`
 - Schema definitions: `BenefitValue`, `Benefit`
 
 ### Standards Integration
-- RO-Crate 1.1 packaging
+- RO-Crate 1.2 packaging
 - Schema.org Project/ResearchProject types
 - W3C DCAT for datasets
 - W3C PROV-O for provenance

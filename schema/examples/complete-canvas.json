@@ -78,19 +78,8 @@
             "confidenceUser": "medium",
             "confidenceDev": "medium"
           }
-        ]
-      }
-    ],
-    "stakeholders": [
-      {
-        "personId": "person-0",
-        "role": "Principal Investigator",
-        "values": ["data quality", "time savings"]
-      },
-      {
-        "personId": "person-1",
-        "role": "Technical Lead",
-        "values": ["system reliability", "scalability"]
+        ],
+        "stakeholders": ["person-0", "person-1"]
       }
     ]
   },

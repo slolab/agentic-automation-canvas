@@ -1,6 +1,6 @@
 /**
  * RO-Crate download functionality
- * Generates ZIP file with ro-crate-metadata.json, preview.html, and README
+ * Generates ZIP file with ro-crate-metadata.json, ro-crate-preview.html, and README
  */
 
 import JSZip from 'jszip'
@@ -32,14 +32,14 @@ This RO-Crate package contains metadata describing an Agentic Automation Canvas 
 ### Contents
 
 - \`ro-crate-metadata.json\`: RO-Crate metadata file (includes project, requirements, developer feasibility, etc.)
-- \`preview.html\`: One-page canvas summary (open in browser)
+- \`ro-crate-preview.html\`: One-page canvas summary (open in browser)
 - \`benefit-display.json\`: Benefit display groups for dashboard (if available)
 - This README: Project overview
 
 ### Standards Compliance
 
 This RO-Crate follows:
-- RO-Crate 1.1 specification
+- RO-Crate specification
 - Schema.org vocabularies (Project, ResearchProject, CreativeWork)
 - W3C DCAT (Data Catalog Vocabulary)
 - W3C PROV-O (Provenance Ontology)
@@ -65,14 +65,11 @@ function getProjectVersion(canvasData?: CanvasData): string {
 
 function addPreviewToRocrate(rocrate: ROCrateJSONLD): void {
   rocrate['@graph'].push({
-    '@id': 'preview.html',
+    '@id': 'ro-crate-preview.html',
     '@type': 'schema:CreativeWork',
     'schema:name': 'Canvas Summary Preview',
+    about: { '@id': './' },
   })
-  const root = rocrate['@graph'].find((e) => e['@id'] === './') as { hasPart?: Array<{ '@id': string }> }
-  if (root) {
-    root.hasPart = [...(root.hasPart || []), { '@id': 'preview.html' }]
-  }
 }
 
 /**
@@ -90,7 +87,7 @@ export async function downloadROCrateZip(
     const summary = computeCanvasSummary(canvasData)
     const version = getProjectVersion(canvasData)
     const html = generateCanvasPreviewHtml(canvasData, summary, version)
-    zip.file('preview.html', html)
+    zip.file('ro-crate-preview.html', html)
     addPreviewToRocrate(rocrate)
   }
 
@@ -139,7 +136,7 @@ export async function buildROCrateZipBuffer(
     const summary = computeCanvasSummary(canvasData)
     const version = getProjectVersion(canvasData)
     const html = generateCanvasPreviewHtml(canvasData, summary, version)
-    zip.file('preview.html', html)
+    zip.file('ro-crate-preview.html', html)
     addPreviewToRocrate(rocrate)
   }
 

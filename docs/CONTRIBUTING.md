@@ -85,7 +85,7 @@ If you're modifying the schema (`schema/` directory):
 
 All changes must maintain compliance with:
 
-- RO-Crate 1.1 specification
+- RO-Crate specification
 - Schema.org vocabularies
 - W3C DCAT, PROV-O, P-Plan
 - FRAPO, DUO ontologies

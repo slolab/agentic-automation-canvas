@@ -44,7 +44,7 @@ The AAC specification follows [Semantic Versioning](https://semver.org/) (SemVer
 - **PATCH** version (0.0.X): Bug fixes and documentation updates
 
 !!! warning "Beta Versions (0.x.x)"
-    Versions starting with `0.` (e.g., 0.11.6) are considered **beta releases**. During the beta phase:
+    Versions starting with `0.` (e.g., 0.12.0) are considered **beta releases**. During the beta phase:
 
     - Breaking changes may occur between minor versions (0.10 → 0.11)
     - Feedback and testing are encouraged
@@ -169,7 +169,7 @@ Controlled vocabularies (e.g., benefit types, TRL levels) **MAY** be extended in
 
 AAC canvases exported as RO-Crates **MUST** conform to:
 
-- RO-Crate 1.1 specification
+- RO-Crate specification
 - Schema.org vocabulary usage as specified in mappings
 - W3C DCAT, PROV-O, and other referenced standards
 

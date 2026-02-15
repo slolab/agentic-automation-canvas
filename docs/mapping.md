@@ -56,13 +56,11 @@ Roles are exported as separate `schema:Role` nodes that reference Person entitie
 
 ### Stakeholder Mappings
 
-Stakeholders are now managed per-task (in `requirement.stakeholders` array). Legacy project-level stakeholders (`userExpectations.stakeholders`) are deprecated and will be removed in 0.12.0.
+Stakeholders are managed per-task (in `requirement.stakeholders` array).
 
 | Canvas Field | RO-Crate Representation | Notes |
 |-------------|-------------------------|-------|
 | `requirements[].stakeholders` | Person entity references | Array of Person IDs (per-task) |
-| Legacy: `userExpectations.stakeholders[].personId` | Person entity reference | DEPRECATED: Links to `#person-N` |
-| Legacy: `userExpectations.stakeholders[].role` | `schema:Role` node | DEPRECATED: Separate entity |
 | All stakeholders (from all tasks) | `contributor` on Project | Aggregated array of Person references |
 
 ### Requirement/Task Entities
@@ -105,20 +103,11 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 
 ### Developer Feasibility
 
-Developer feasibility assessment is exported as a separate JSON file (`developer-feasibility.json`) in the RO-Crate package, following RO-Crate best practices for complex structured data.
+Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:developerFeasibility`. All fields from the canvas `developerFeasibility` object are preserved as-is.
 
-| Canvas Field | RO-Crate Representation | Notes |
-|-------------|-------------------------|-------|
-| `developerFeasibility` | Separate file entity | `schema:File` entity with `@id: "developer-feasibility.json"` |
-| File content | JSON structure | All `developerFeasibility` fields preserved as-is in JSON file |
-
-**File Entity Properties:**
-- `@type`: `schema:File`
-- `name`: "Developer Feasibility Assessment"
-- `description`: "Technical feasibility assessment including Technology Readiness Level (TRL), risk assessment, and technology choices"
-- `schema:encodingFormat`: "application/json"
-
-**Note:** The developer feasibility data is not embedded in the RO-Crate metadata graph. It is included as a separate file that can be imported back into the canvas application.
+| Canvas Field | RO-Crate Property | Notes |
+|-------------|-------------------|-------|
+| `developerFeasibility` | `aac:developerFeasibility` on root dataset | Embedded JSON object with all fields preserved |
 
 ### Governance Stage Entities
 

@@ -174,6 +174,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         if (step!['aac:dependsOn'] && Array.isArray(step!['aac:dependsOn'])) {
           req.dependsOn = step!['aac:dependsOn'] as string[]
         }
+        if (step!['aac:stakeholders'] && Array.isArray(step!['aac:stakeholders'])) {
+          req.stakeholders = step!['aac:stakeholders'] as string[]
+        }
         if (step!['aac:feasibility'] && typeof step!['aac:feasibility'] === 'object') {
           const feasibility = step!['aac:feasibility'] as any
           // Migrate old string effortEstimate to structured format
@@ -301,54 +304,6 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       affiliation,
       orcid,
       roleContext: personEntity['aac:roleContext'] as string | undefined,
-    }
-  }
-
-  // Find stakeholders (contributors to project)
-  if (projectEntity && projectEntity.contributor) {
-    const contributorRefs = Array.isArray(projectEntity.contributor) 
-      ? projectEntity.contributor 
-      : [projectEntity.contributor]
-    
-    const stakeholders = contributorRefs
-      .map((ref: any) => {
-        const entity = findEntity(graph, ref['@id'])
-        if (!entity) return null
-        
-        const entityType = Array.isArray(entity['@type'])
-          ? entity['@type'][0]
-          : entity['@type']
-        // Handle both prefixed and non-prefixed Person type
-        const normalizedType = entityType?.replace('schema:', '') || entityType
-        if (normalizedType !== 'Person') return null
-
-        const personData = extractPersonData(entity)
-        // Extract Person ID (remove # prefix if present)
-        const personId = entity['@id'].replace('#', '')
-        
-        // Get role from schema:Role nodes (prefer stakeholder context) or legacy embedded roles
-        const stakeholderRolesFromNodes = personData.rolesFromNodes
-          .filter(r => r.roleContext === 'stakeholder')
-          .map(r => r.role)
-        
-        // Use role from Role nodes first, then legacy embedded roles
-        const roles = stakeholderRolesFromNodes.length > 0 
-          ? stakeholderRolesFromNodes 
-          : personData.roles.filter(r => r !== 'stakeholder')
-        const primaryRole = roles.length > 0 ? roles[0] : undefined
-        
-        return {
-          personId: personId,
-          role: primaryRole,
-        }
-      })
-      .filter((stakeholder): stakeholder is NonNullable<typeof stakeholder> => stakeholder !== null)
-
-    if (stakeholders.length > 0) {
-      if (!canvasData.userExpectations) {
-        canvasData.userExpectations = {}
-      }
-      canvasData.userExpectations.stakeholders = stakeholders
     }
   }
 

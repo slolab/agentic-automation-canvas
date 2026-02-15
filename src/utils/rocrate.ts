@@ -1,6 +1,6 @@
 /**
  * RO-Crate JSON-LD generator
- * Following RO-Crate 1.1 specification with Schema.org, DCAT, PROV-O, FRAPO mappings
+ * Following RO-Crate 1.2 specification with Schema.org, DCAT, PROV-O, FRAPO mappings
  */
 
 import type { CanvasData, Benefit } from '@/types/canvas'
@@ -389,7 +389,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     '@id': 'ro-crate-metadata.json',
     '@type': 'schema:CreativeWork',
     conformsTo: {
-      '@id': 'https://w3id.org/ro/crate/1.1',
+      '@id': 'https://w3id.org/ro/crate/1.2',
     },
     about: {
       '@id': './',
@@ -402,6 +402,17 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     '@type': ['schema:Dataset', 'dcat:Dataset'],
     name: data.project.title || 'Agentic Automation Project',
     description: data.project.description,
+    datePublished: new Date().toISOString().split('T')[0],
+  }
+
+  // Optional license on root dataset (RO-Crate 1.2 SHOULD)
+  if (data.project.license) {
+    rootDataset.license = { '@id': data.project.license }
+    graph.push({
+      '@id': data.project.license,
+      '@type': 'schema:CreativeWork',
+      identifier: data.project.license,
+    })
   }
 
   const projectId = generateId('project')
@@ -545,6 +556,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.feasibility && Object.keys(req.feasibility).length > 0) {
         stepEntity['aac:feasibility'] = req.feasibility
       }
+      if (req.stakeholders && req.stakeholders.length > 0) {
+        stepEntity['aac:stakeholders'] = req.stakeholders
+      }
       graph.push(stepEntity)
     })
 
@@ -568,14 +582,6 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.stakeholders) {
         req.stakeholders.forEach((personId) => taskStakeholderIds.add(personId))
       }
-    })
-  }
-  
-  // Also support legacy format (stakeholders at userExpectations level) for backward compatibility
-  // DEPRECATED: Will be removed in 0.12.0. Stakeholders are now managed per-task (requirement.stakeholders).
-  if (data.userExpectations?.stakeholders) {
-    data.userExpectations.stakeholders.forEach((stakeholder) => {
-      taskStakeholderIds.add(stakeholder.personId)
     })
   }
   
@@ -936,7 +942,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
 
   // Extended @context with all required prefixes
   const context: (string | Record<string, string>)[] = [
-    'https://w3id.org/ro/crate/1.1/context',
+    'https://w3id.org/ro/crate/1.2/context',
     {
       schema: 'https://schema.org/',
       prov: 'http://www.w3.org/ns/prov#',

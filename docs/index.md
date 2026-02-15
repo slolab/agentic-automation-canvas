@@ -1,7 +1,7 @@
 # Agentic Automation Canvas (AAC)
 
 !!! warning "Beta Release"
-    **Version 0.11.6 (Beta)**: This specification is currently in beta testing. The schema and documentation 
+    **Version 0.12.0 (Beta)**: This specification is currently in beta testing. The schema and documentation 
     may change before the stable 1.0.0 release. Feedback and contributions are welcome!
 
 The **Agentic Automation Canvas (AAC)** is a framework for designing and documenting agentic automation solutions driven by generative AI. Agentic systems are designed to replace human judgment in a reliable way, requiring a control inversion where the system takes command of tasks while humans step back accordingly. The AAC provides a structured approach to capture project metadata, user expectations, feasibility considerations, governance requirements, and outcomes—all while generating machine-readable outputs that integrate with FAIR Digital Object ecosystems.
@@ -32,7 +32,7 @@ All schema artifacts, examples, and documentation are served from this stable na
 
 **Stability Promises:**
 
-- **Beta Phase (0.9.x)**: During beta testing, the schema structure may change. Breaking changes will be documented in the changelog.
+- **Beta Phase (0.x.x)**: During beta testing, the schema structure may change. Breaking changes will be documented in the changelog.
 - **Stable (1.0+)**: After 1.0.0, schema `$id` URIs, property names, required fields, and core structure will remain stable within major versions.
 - **Versioned Changes**: Breaking changes will only occur in major version increments (e.g., 1.0 → 2.0), with deprecation notices in advance.
 - **Additive Evolution**: Minor versions may add optional fields, new controlled vocabularies, or extended examples without breaking existing implementations.
@@ -85,7 +85,7 @@ All schema artifacts, examples, and documentation are served from this stable na
 
 The Agentic Automation Canvas follows established standards:
 
-- **RO-Crate 1.1**: Research Object Crate specification
+- **RO-Crate**: Research Object Crate specification
 - **Schema.org**: Project, ResearchProject, CreativeWork types
 - **W3C DCAT**: Data Catalog Vocabulary for datasets
 - **W3C PROV-O**: Provenance Ontology for activities

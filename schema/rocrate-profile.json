@@ -7,7 +7,7 @@
   "required": ["@context", "@graph"],
   "properties": {
     "@context": {
-      "const": "https://w3id.org/ro/crate/1.1/context"
+      "const": "https://w3id.org/ro/crate/1.2/context"
     },
     "@graph": {
       "type": "array",
@@ -22,7 +22,7 @@
               "conformsTo": {
                 "type": "object",
                 "properties": {
-                  "@id": { "const": "https://w3id.org/ro/crate/1.1" }
+                  "@id": { "const": "https://w3id.org/ro/crate/1.2" }
                 }
               }
             },
@@ -35,9 +35,10 @@
               "@type": {
                 "type": "array",
                 "contains": { "const": "Dataset" }
-              }
+              },
+              "datePublished": { "type": "string" }
             },
-            "required": ["@id", "@type"]
+            "required": ["@id", "@type", "datePublished"]
           },
           {
             "description": "Project Entity",

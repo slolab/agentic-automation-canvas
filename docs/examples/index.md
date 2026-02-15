@@ -32,7 +32,7 @@ The examples directory contains two formats representing the same data:
 
 - **Canvas JSON** (e.g., `minimal-canvas.json`): The internal data format that validates against the AAC schema. This is what the web form uses internally and what you'd use for programmatic validation.
 
-- **RO-Crate JSON** (e.g., `minimal-example.json`): The packaged format you **download from the web form**. When you click "Download RO-Crate" in the web application, you get a ZIP file containing `ro-crate-metadata.json` in RO-Crate format, following RO-Crate 1.1 specification.
+- **RO-Crate JSON** (e.g., `minimal-example.json`): The packaged format you **download from the web form**. When you click "Download RO-Crate" in the web application, you get a ZIP file containing `ro-crate-metadata.json` in RO-Crate format, following the RO-Crate specification.
 
 **Important**: When you download from the web form, you get **RO-Crate format** (the packaged, standards-compliant format). Canvas JSON is the internal format used for validation and programmatic access.
 
