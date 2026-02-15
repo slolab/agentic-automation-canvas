@@ -215,7 +215,7 @@ const props = defineProps<Props>()
 const isExpanded = ref(!props.person.name || props.person.name.trim() === '')
 
 // Load function roles from vocabulary
-const functionRolesList = computed(() => {
+const functionRolesList = computed((): { id: string; label: string }[] => {
   return (functionRolesData as any).roles || []
 })
 
@@ -247,7 +247,7 @@ const functionRolesError = computed(() => {
   if (roles.length === 0) {
     return 'At least one functional role is required'
   }
-  return null
+  return undefined
 })
 
 // Handle role selection from dropdown

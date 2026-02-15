@@ -88,7 +88,7 @@
               'form-input',
               index > 0 ? 'bg-gray-100 text-gray-500 cursor-not-allowed' : ''
             ]"
-            @change="handleUnitChange(index, ($event.target as HTMLSelectElement).value)"
+            @change="handleUnitChange(index, ($event.target as HTMLSelectElement).value as TimeUnit)"
           >
             <option value="minutes">minutes</option>
             <option value="hours">hours</option>
@@ -267,8 +267,8 @@ function getTimeUnitForBenefit(_benefit: Benefit): TimeUnit {
 }
 
 // Handle unit change - update all time benefits to use the same unit
-function handleUnitChange(index: number, unit: TimeUnit) {
-  const newUnit = unit as TimeUnit
+function handleUnitChange(_index: number, unit: TimeUnit) {
+  const newUnit = unit
   // Update all time benefits to use the same unit
   localBenefits.value = localBenefits.value.map((b) => ({
     ...b,

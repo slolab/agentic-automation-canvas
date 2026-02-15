@@ -33,6 +33,7 @@ export interface ProjectDefinition {
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
   roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
   roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
+  creator?: string[] // Person IDs of project creators
   // License for RO-Crate export (e.g. "https://creativecommons.org/licenses/by/4.0/")
   license?: string
   // Version management (stored at project level for ROcrate compatibility)
@@ -137,6 +138,7 @@ export interface Person {
   affiliation?: string // Optional disambiguation
   orcid?: string // Optional stable identifier (e.g., ORCID)
   functionRoles?: string[] // Functional roles from controlled vocabulary
+  localTitles?: string[] // Free-text position/title descriptions
 }
 
 /** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */

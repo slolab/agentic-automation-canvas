@@ -301,7 +301,7 @@
                     :id="`task-${requirement.id}-risk`"
                     :value="requirement.feasibility?.technicalRisk || ''"
                     class="form-input"
-                    @change="updateTaskFeasibility(requirement.id, { technicalRisk: ($event.target as HTMLSelectElement).value || undefined })"
+                    @change="updateTaskFeasibility(requirement.id, { technicalRisk: (($event.target as HTMLSelectElement).value || undefined) as RequirementFeasibility['technicalRisk'] })"
                   >
                     <option value="">Use project default</option>
                     <option value="low">Low</option>
@@ -1169,7 +1169,10 @@ const initLocalData = (): DeveloperFeasibility => {
   }
 }
 
-const localData = ref<DeveloperFeasibility>(initLocalData())
+const localData = ref<Required<Pick<DeveloperFeasibility, 'trlLevel'>> & DeveloperFeasibility>((() => {
+  const d = initLocalData()
+  return { ...d, trlLevel: d.trlLevel || {} }
+})())
 
 // Ensure nested objects always exist
 if (!localData.value.trlLevel) {
@@ -1416,7 +1419,7 @@ function updateTaskFeasibility(taskId: string, partial: Partial<RequirementFeasi
 }
 
 function handleModelSelectionChange(taskId: string, value: string) {
-  const modelSelection = value || undefined
+  const modelSelection = (value || undefined) as RequirementFeasibility['modelSelection']
   const updates: Partial<RequirementFeasibility> = { modelSelection }
   
   // Clear model name if task becomes deterministic
