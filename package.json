@@ -1,6 +1,6 @@
 {
   "name": "agentic-automation-canvas",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "description": "Agentic Automation Canvas - Interactive form for capturing project metadata and generating RO-Crate packages",
   "author": "Sebastian Lobentanzer, slolab",
   "license": "Apache-2.0",
