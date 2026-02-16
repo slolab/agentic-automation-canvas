@@ -118,8 +118,15 @@
               </div>
 
               <div>
-                <h3 class="font-semibold text-gray-900 mb-2">Learn More</h3>
+                <h3 class="font-semibold text-gray-900 mb-2">Beta Notice</h3>
                 <p>
+                  The AAC schema is currently in beta. The schema structure and fields may change before the stable 1.0.0 release. We welcome feedback and contributions during this phase.
+                </p>
+              </div>
+
+              <div>
+                <h3 class="font-semibold text-gray-900 mb-2">Learn More</h3>
+                <p class="mb-2">
                   For detailed documentation, schema reference, examples, and validation tools, visit the 
                   <a
                     :href="`${baseUrl}docs/`"
@@ -127,6 +134,21 @@
                     rel="noopener noreferrer"
                     class="text-primary-600 hover:text-primary-800 underline"
                   >Agentic Automation Canvas documentation</a>.
+                </p>
+                <p>
+                  Read the manuscript:
+                  <a
+                    href="https://slolab.github.io/aac-manuscript/"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary-600 hover:text-primary-800 underline"
+                  >HTML</a> ·
+                  <a
+                    href="https://slolab.github.io/aac-manuscript/manuscript.pdf"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="text-primary-600 hover:text-primary-800 underline"
+                  >PDF</a>
                 </p>
               </div>
             </div>

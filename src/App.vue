@@ -104,7 +104,17 @@
               >
                 v{{ appVersion }}
               </span>
-              <span class="text-gray-400 text-xs italic">Schema subject to change until v1.0 release</span>
+              <span class="text-gray-400 text-xs italic">Read the paper: <a
+                href="https://slolab.github.io/aac-manuscript/"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary-600 hover:text-primary-800 underline"
+              >online</a> / <a
+                href="https://slolab.github.io/aac-manuscript/manuscript.pdf"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-primary-600 hover:text-primary-800 underline"
+              >PDF</a></span>
             </div>
           </div>
           <a
