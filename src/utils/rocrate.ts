@@ -502,6 +502,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
     })
   }
 
+  // Track emitted model URIs for deduplication
+  const emittedModelUris = new Set<string>()
+
   // 4. User Expectations as P-Plan
   if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
     const planId = generateId('user-plan')
@@ -555,6 +558,23 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       }
       if (req.feasibility && Object.keys(req.feasibility).length > 0) {
         stepEntity['aac:feasibility'] = req.feasibility
+      }
+      // Emit SoftwareApplication entity for model card URI
+      if (req.feasibility?.modelCardUri) {
+        const modelUri = req.feasibility.modelCardUri
+        stepEntity['aac:model'] = { '@id': modelUri }
+        if (!emittedModelUris.has(modelUri)) {
+          emittedModelUris.add(modelUri)
+          const modelEntity: ROCrateEntity = {
+            '@id': modelUri,
+            '@type': 'schema:SoftwareApplication',
+            'schema:applicationCategory': 'Machine Learning Model',
+          }
+          if (req.feasibility.modelName) {
+            modelEntity.name = req.feasibility.modelName
+          }
+          graph.push(modelEntity)
+        }
       }
       if (req.stakeholders && req.stakeholders.length > 0) {
         stepEntity['aac:stakeholders'] = req.stakeholders
@@ -796,6 +816,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       }
       if (dataset.pid) {
         datasetEntity.identifier = dataset.pid
+      }
+      if (dataset.datasetSheetUri) {
+        datasetEntity['schema:url'] = dataset.datasetSheetUri
       }
       if (dataset.duoTerms && dataset.duoTerms.length > 0) {
         datasetEntity['dct:conformsTo'] = dataset.duoTerms.map(term => ({ '@id': term }))

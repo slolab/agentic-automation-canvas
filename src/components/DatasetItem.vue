@@ -167,6 +167,36 @@
         />
       </FormField>
 
+      <FormField
+        :id="`dataset-sheet-uri-${index}`"
+        label="Dataset Sheet URI"
+        help-text="Link to a FAIR dataset sheet or data documentation"
+        tooltip="A URI pointing to a FAIR dataset sheet or other structured documentation for this dataset. Dataset sheets describe provenance, collection methods, preprocessing, intended uses, and ethical considerations. This helps ensure FAIR (Findable, Accessible, Interoperable, Reusable) data practices."
+      >
+        <div class="flex items-center gap-2">
+          <input
+            :id="`dataset-sheet-uri-${index}`"
+            :value="dataset.datasetSheetUri || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://example.org/dataset-sheets/my-dataset"
+            @input="update({ ...dataset, datasetSheetUri: ($event.target as HTMLInputElement).value || undefined })"
+          />
+          <a
+            v-if="dataset.datasetSheetUri"
+            :href="dataset.datasetSheetUri"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+            title="Open dataset sheet"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+      </FormField>
+
       <div>
         <label class="form-label mb-2 flex items-center gap-2">
           <a href="https://github.com/EBISPOT/DUO" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-800 underline" title="DUO (Data Use Ontology) - machine-readable data use permissions">DUO Terms</a>

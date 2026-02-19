@@ -205,6 +205,19 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           }
           req.feasibility = feasibility as import('@/types/canvas').RequirementFeasibility
         }
+        // Fallback: import modelCardUri from aac:model reference if not already set in feasibility blob
+        const modelRef = step!['aac:model'] as { '@id': string } | undefined
+        if (modelRef?.['@id'] && !req.feasibility?.modelCardUri) {
+          if (!req.feasibility) req.feasibility = {}
+          req.feasibility.modelCardUri = modelRef['@id']
+          // Also try to import modelName from the SoftwareApplication entity
+          if (!req.feasibility.modelName) {
+            const modelEntity = findEntity(graph, modelRef['@id'])
+            if (modelEntity?.name) {
+              req.feasibility.modelName = modelEntity.name as string
+            }
+          }
+        }
         return req
       })
 
@@ -467,6 +480,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
             ? (accessRights as any)
             : undefined,
         pid: (dataset.identifier as string) || undefined,
+        datasetSheetUri: (dataset['schema:url'] as string) || undefined,
         duoTerms: duoTerms
           ? (Array.isArray(duoTerms) 
               ? duoTerms.map((term: any) => typeof term === 'object' && term !== null && '@id' in term ? term['@id'] : term)

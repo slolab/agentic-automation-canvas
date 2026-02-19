@@ -81,6 +81,7 @@ export const exampleData: CanvasData = {
           feasibilityNotes: 'Extraction requires extensive agentic capabilities to handle diverse document formats and extract structured information. Needs robust error handling and validation.',
           modelSelection: 'frontier-model',
           modelName: 'gpt-4o',
+          modelCardUri: 'https://platform.openai.com/docs/models/gpt-4o',
           technologyApproach: {
             architecture: 'agents',
             agenticDetails: {
@@ -250,9 +251,10 @@ export const exampleData: CanvasData = {
         feasibility: {
           technicalRisk: 'low',
           effortEstimate: { value: 3.5, unit: 'weeks' },
-          feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. GPT-4o would not be necessary for this task, but is used because the pipeline already uses it in the first step.',
+          feasibilityNotes: 'Simple agentic routing based on document category and extracted metadata. Uses lightweight agent framework for decision-making. A smaller model like GLM-5 is sufficient for this classification task.',
           modelSelection: 'frontier-model',
-          modelName: 'gpt-4o',
+          modelName: 'GLM-5',
+          modelCardUri: 'https://huggingface.co/zai-org/GLM-5',
           technologyApproach: {
             architecture: 'agents',
             agenticDetails: {
@@ -517,6 +519,7 @@ export const exampleData: CanvasData = {
         license: 'https://creativecommons.org/licenses/by/4.0/',
         accessRights: 'restricted',
         pid: 'https://example.org/datasets/doc-archive-2024',
+        datasetSheetUri: 'https://huggingface.co/datasets/Voxel51/high-quality-invoice-images-for-ocr',
         containsPersonalData: true,
       },
       {
