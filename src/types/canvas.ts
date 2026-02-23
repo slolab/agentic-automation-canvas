@@ -91,6 +91,8 @@ export interface RequirementFeasibility {
   modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other' | 'none'
   /** Specific model name/version for this task */
   modelName?: string
+  /** URI pointing to the model's model card */
+  modelCardUri?: string
   /** Technology approach for this task. Set to 'none' if task is deterministic and doesn't require LLMs */
   technologyApproach?: {
     architecture?: 'none' | 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
@@ -201,6 +203,8 @@ export interface Dataset {
   accessRights?: 'open' | 'restricted' | 'confidential' | 'highly-restricted'
   duoTerms?: string[]
   pid?: string
+  /** URI pointing to a FAIR dataset sheet */
+  datasetSheetUri?: string
   publisher?: string
   containsPersonalData?: boolean
   sensitivityLevel?: string

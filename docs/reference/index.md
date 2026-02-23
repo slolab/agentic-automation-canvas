@@ -53,6 +53,7 @@ A benefit metric for a requirement
 |----------|------|----------|-------------|-------------|----------|
 | `accessRights` | string | Yes |  |  | DCAT/Dublin Core |
 | `containsPersonalData` | boolean | No |  |  | AAC |
+| `datasetSheetUri` | string | No | URI pointing to a FAIR dataset sheet | Format: `uri` | AAC |
 | `description` | string | No |  |  | Schema.org |
 | `duoTerms` | array of string | No |  |  | DCAT/Dublin Core |
 | `format` | string | No |  |  | Schema.org |
@@ -225,6 +226,7 @@ Optional per-task feasibility (overrides project-level defaults)
 | `algorithms` | array of string | No |  |  | AAC |
 | `effortEstimate` | object | No |  |  | — |
 | `feasibilityNotes` | string | No |  |  | AAC |
+| `modelCardUri` | string | No | URI pointing to the model's model card | Format: `uri` | AAC |
 | `modelName` | string | No | Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct') |  | AAC |
 | `modelSelection` | string | No | Type of model to be used (if applicable). Set to 'none' if task is deterministic. | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other`, `none` | AAC |
 | `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |

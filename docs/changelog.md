@@ -5,6 +5,12 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- Model Card URI field on task feasibility — link to model card documentation; RO-Crate export: `schema:SoftwareApplication` with `schema:url`, step linked via `aac:model` and `prov:used`
+- Dataset Sheet URI field on datasets — link to FAIR dataset sheet / landing page; RO-Crate export: `dcat:landingPage` (import still accepts legacy `schema:url`)
+
 ## [0.12.2] - 2026-02-15
 
 ### Added

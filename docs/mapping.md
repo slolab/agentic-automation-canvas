@@ -103,11 +103,15 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 
 ### Developer Feasibility
 
-Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:developerFeasibility`. All fields from the canvas `developerFeasibility` object are preserved as-is.
+Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:developerFeasibility`. All fields from the canvas `developerFeasibility` object are preserved as-is. Per-task feasibility (including model card URI) is embedded in each requirement under `aac:feasibility`. When `modelCardUri` is set, the export also:
+
+- Creates a `schema:SoftwareApplication` entity with `@id` = model card URI, `schema:url` = same URI (Schema.org “URL of the item”), and optional `name` from `modelName`.
+- Links the plan step to that entity via `aac:model` and `prov:used` (PROV-O: “activity used entity”).
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
 | `developerFeasibility` | `aac:developerFeasibility` on root dataset | Embedded JSON object with all fields preserved |
+| `requirements[].feasibility.modelCardUri` | Step: `aac:model`, `prov:used`; Model entity: `@id`, `schema:url` | Standard terms: PROV-O `prov:used`, Schema.org `schema:url` on SoftwareApplication |
 
 ### Governance Stage Entities
 
@@ -133,6 +137,7 @@ Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:
 | `datasets[].license` | `license` | `{ @id: "URL" }` |
 | `datasets[].accessRights` | `dct:accessRights` | Access level |
 | `datasets[].pid` | `identifier` | PID/DOI |
+| `datasets[].datasetSheetUri` | `dcat:landingPage` | `{ @id: URI }` — DCAT: “Web page that opens the dataset or its metadata” (FAIR dataset sheet) |
 | `datasets[].publisher` | `publisher` | Publisher name |
 | `datasets[].duoTerms` | `dct:conformsTo` | Array of `{ @id: DUO_URL }` |
 | `datasets[].containsPersonalData` | `aac:containsPersonalData` | Boolean |

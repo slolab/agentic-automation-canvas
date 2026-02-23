@@ -80,4 +80,110 @@ describe('parseROCrateToCanvas', () => {
     expect(canvasData.project.description).toBe('Legacy description')
     expect(canvasData.project.version).toBe('0.1.0')
   })
+
+  describe('model card URI import', () => {
+    it('preserves modelCardUri through feasibility blob round-trip', () => {
+      const crate: ROCrateJSONLD = {
+        '@context': 'https://w3id.org/ro/crate/1.2/context',
+        '@graph': [
+          ...minimalRocrateFixture['@graph'],
+          {
+            '@id': '#user-plan',
+            '@type': ['prov:Plan', 'p-plan:Plan'],
+            name: 'User Plan',
+            'p-plan:hasStep': [{ '@id': '#req-1' }],
+          },
+          {
+            '@id': '#req-1',
+            '@type': 'p-plan:Step',
+            name: 'Task with model card',
+            description: 'desc',
+            'aac:benefits': [],
+            'aac:feasibility': {
+              modelSelection: 'frontier-model',
+              modelName: 'gpt-4o',
+              modelCardUri: 'https://example.com/model-card/gpt-4o',
+            },
+          },
+        ],
+      }
+      const canvasData = parseROCrateToCanvas(crate)
+      const req = canvasData.userExpectations?.requirements?.[0]
+      expect(req?.feasibility?.modelCardUri).toBe('https://example.com/model-card/gpt-4o')
+    })
+
+    it('imports modelCardUri from aac:model reference fallback', () => {
+      const crate: ROCrateJSONLD = {
+        '@context': 'https://w3id.org/ro/crate/1.2/context',
+        '@graph': [
+          ...minimalRocrateFixture['@graph'],
+          {
+            '@id': '#user-plan',
+            '@type': ['prov:Plan', 'p-plan:Plan'],
+            name: 'User Plan',
+            'p-plan:hasStep': [{ '@id': '#req-1' }],
+          },
+          {
+            '@id': '#req-1',
+            '@type': 'p-plan:Step',
+            name: 'Task with model ref',
+            description: 'desc',
+            'aac:benefits': [],
+            'aac:feasibility': { modelSelection: 'frontier-model' },
+            'aac:model': { '@id': 'https://example.com/model-card/gpt-4o' },
+          },
+          {
+            '@id': 'https://example.com/model-card/gpt-4o',
+            '@type': 'schema:SoftwareApplication',
+            name: 'gpt-4o',
+            'schema:applicationCategory': 'Machine Learning Model',
+          },
+        ],
+      }
+      const canvasData = parseROCrateToCanvas(crate)
+      const req = canvasData.userExpectations?.requirements?.[0]
+      expect(req?.feasibility?.modelCardUri).toBe('https://example.com/model-card/gpt-4o')
+      expect(req?.feasibility?.modelName).toBe('gpt-4o')
+    })
+  })
+
+  describe('dataset sheet URI import', () => {
+    it('imports datasetSheetUri from dcat:landingPage on dataset entity', () => {
+      const crate: ROCrateJSONLD = {
+        '@context': 'https://w3id.org/ro/crate/1.2/context',
+        '@graph': [
+          ...minimalRocrateFixture['@graph'],
+          {
+            '@id': '#dataset-0',
+            '@type': 'dcat:Dataset',
+            name: 'Test Dataset',
+            'dct:accessRights': 'open',
+            'dcat:landingPage': { '@id': 'https://example.com/sheets/ds-1' },
+          },
+        ],
+      }
+      const canvasData = parseROCrateToCanvas(crate)
+      const ds = canvasData.dataAccess?.datasets?.[0]
+      expect(ds?.datasetSheetUri).toBe('https://example.com/sheets/ds-1')
+    })
+
+    it('imports datasetSheetUri from schema:url for backward compatibility', () => {
+      const crate: ROCrateJSONLD = {
+        '@context': 'https://w3id.org/ro/crate/1.2/context',
+        '@graph': [
+          ...minimalRocrateFixture['@graph'],
+          {
+            '@id': '#dataset-0',
+            '@type': 'dcat:Dataset',
+            name: 'Legacy Dataset',
+            'dct:accessRights': 'open',
+            'schema:url': 'https://example.com/legacy/sheet',
+          },
+        ],
+      }
+      const canvasData = parseROCrateToCanvas(crate)
+      const ds = canvasData.dataAccess?.datasets?.[0]
+      expect(ds?.datasetSheetUri).toBe('https://example.com/legacy/sheet')
+    })
+  })
 })

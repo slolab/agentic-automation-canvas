@@ -137,6 +137,11 @@
                     "type": "string",
                     "description": "Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct')"
                   },
+                  "modelCardUri": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URI pointing to the model's model card"
+                  },
                   "technologyApproach": {
                     "type": "object",
                     "description": "Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs.",
@@ -282,6 +287,7 @@
                 "items": { "type": "string", "format": "uri" }
               },
               "pid": { "type": "string", "format": "uri" },
+              "datasetSheetUri": { "type": "string", "format": "uri", "description": "URI pointing to a FAIR dataset sheet" },
               "publisher": { "type": "string" },
               "containsPersonalData": { "type": "boolean" },
               "sensitivityLevel": { "type": "string" }

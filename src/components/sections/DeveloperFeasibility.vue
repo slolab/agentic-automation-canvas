@@ -412,6 +412,40 @@
                 </div>
 
                 <FormField
+                  :id="`task-${requirement.id}-model-card-uri`"
+                  label="Model Card URI"
+                  help-text="Link to the model's model card documentation"
+                  tooltip="A URI pointing to the model card for the selected model. Model cards describe a model's intended uses, limitations, training data, and evaluation results. Examples: Hugging Face model page, internal model registry link."
+                >
+                  <div class="flex items-center gap-2">
+                    <input
+                      :id="`task-${requirement.id}-model-card-uri`"
+                      :value="requirement.feasibility?.modelCardUri || ''"
+                      type="url"
+                      class="form-input flex-1"
+                      :disabled="requirement.feasibility?.modelSelection === 'none' || requirement.feasibility?.technologyApproach?.architecture === 'none'"
+                      placeholder="https://huggingface.co/org/model"
+                      @blur="updateTaskFeasibility(requirement.id, { modelCardUri: ($event.target as HTMLInputElement).value || undefined })"
+                    />
+                    <a
+                      v-if="requirement.feasibility?.modelCardUri"
+                      :href="requirement.feasibility.modelCardUri"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+                      title="Open model card"
+                    >
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  </div>
+                  <p v-if="requirement.feasibility?.modelSelection === 'none' || requirement.feasibility?.technologyApproach?.architecture === 'none'" class="text-xs text-gray-500 mt-1">
+                    Not applicable for deterministic tasks
+                  </p>
+                </FormField>
+
+                <FormField
                   :id="`task-${requirement.id}-tech-approach`"
                   label="Technology Architecture"
                   help-text="Primary technology architecture approach"
@@ -1422,11 +1456,12 @@ function handleModelSelectionChange(taskId: string, value: string) {
   const modelSelection = (value || undefined) as RequirementFeasibility['modelSelection']
   const updates: Partial<RequirementFeasibility> = { modelSelection }
   
-  // Clear model name if task becomes deterministic
+  // Clear model name and model card URI if task becomes deterministic
   if (modelSelection === 'none') {
     updates.modelName = undefined
+    updates.modelCardUri = undefined
   }
-  
+
   updateTaskFeasibility(taskId, updates)
 }
 
@@ -1446,9 +1481,10 @@ function updateTaskTechApproach(taskId: string, architecture: string) {
       : undefined,
   }
   
-  // Clear model name if task becomes deterministic
+  // Clear model name and model card URI if task becomes deterministic
   if (arch === 'none') {
     updates.modelName = undefined
+    updates.modelCardUri = undefined
     updates.modelSelection = 'none'
   }
 

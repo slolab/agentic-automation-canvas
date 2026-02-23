@@ -79,7 +79,12 @@
             "confidenceDev": "medium"
           }
         ],
-        "stakeholders": ["person-0", "person-1"]
+        "stakeholders": ["person-0", "person-1"],
+        "feasibility": {
+          "modelSelection": "frontier-model",
+          "modelName": "gpt-4o",
+          "modelCardUri": "https://platform.openai.com/docs/models/gpt-4o"
+        }
       }
     ]
   },
@@ -158,6 +163,7 @@
           "https://purl.org/ga4gh/duo.owl#DUO:0000006"
         ],
         "pid": "https://example.org/datasets/bio-research-2025",
+        "datasetSheetUri": "https://huggingface.co/datasets/junma/CVPR-BiomedSegFM",
         "publisher": "Biomedical Research Institute",
         "containsPersonalData": false,
         "sensitivityLevel": "medium"
