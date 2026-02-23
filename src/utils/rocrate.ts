@@ -559,16 +559,18 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.feasibility && Object.keys(req.feasibility).length > 0) {
         stepEntity['aac:feasibility'] = req.feasibility
       }
-      // Emit SoftwareApplication entity for model card URI
+      // Emit SoftwareApplication entity for model card URI; link step to model via PROV
       if (req.feasibility?.modelCardUri) {
         const modelUri = req.feasibility.modelCardUri
         stepEntity['aac:model'] = { '@id': modelUri }
+        stepEntity['prov:used'] = { '@id': modelUri }
         if (!emittedModelUris.has(modelUri)) {
           emittedModelUris.add(modelUri)
           const modelEntity: ROCrateEntity = {
             '@id': modelUri,
             '@type': 'schema:SoftwareApplication',
             'schema:applicationCategory': 'Machine Learning Model',
+            'schema:url': modelUri,
           }
           if (req.feasibility.modelName) {
             modelEntity.name = req.feasibility.modelName
@@ -818,7 +820,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         datasetEntity.identifier = dataset.pid
       }
       if (dataset.datasetSheetUri) {
-        datasetEntity['schema:url'] = dataset.datasetSheetUri
+        datasetEntity['dcat:landingPage'] = { '@id': dataset.datasetSheetUri }
       }
       if (dataset.duoTerms && dataset.duoTerms.length > 0) {
         datasetEntity['dct:conformsTo'] = dataset.duoTerms.map(term => ({ '@id': term }))

@@ -105,15 +105,17 @@ describe('generateROCrate', () => {
       expect(modelEntity).toBeDefined()
       expect(modelEntity['@type']).toBe('schema:SoftwareApplication')
       expect(modelEntity['schema:applicationCategory']).toBe('Machine Learning Model')
+      expect(modelEntity['schema:url']).toBe('https://example.com/model-card/gpt-4o')
       expect(modelEntity.name).toBe('gpt-4o')
     })
 
-    it('step entity has aac:model reference', () => {
+    it('step entity has aac:model and prov:used reference to model', () => {
       const out = generateROCrate(dataWithModelCard)
       const step = out['@graph'].find(
         (e: Record<string, unknown>) => e['@id'] === '#req-1',
       ) as Record<string, unknown>
       expect(step['aac:model']).toEqual({ '@id': 'https://example.com/model-card/gpt-4o' })
+      expect(step['prov:used']).toEqual({ '@id': 'https://example.com/model-card/gpt-4o' })
     })
 
     it('no model entity emitted when modelCardUri is absent', () => {
@@ -166,7 +168,7 @@ describe('generateROCrate', () => {
   })
 
   describe('dataset sheet URI export', () => {
-    it('sets schema:url when datasetSheetUri is present', () => {
+    it('sets dcat:landingPage when datasetSheetUri is present', () => {
       const dataWithSheet: CanvasData = {
         project: { title: 'Dataset Sheet Test', description: '' },
         dataAccess: {
@@ -184,10 +186,10 @@ describe('generateROCrate', () => {
       const dsEntity = out['@graph'].find(
         (e: Record<string, unknown>) => e['@id'] === '#dataset-0',
       ) as Record<string, unknown>
-      expect(dsEntity['schema:url']).toBe('https://example.com/sheets/ds-1')
+      expect(dsEntity['dcat:landingPage']).toEqual({ '@id': 'https://example.com/sheets/ds-1' })
     })
 
-    it('no schema:url when datasetSheetUri is absent', () => {
+    it('no dcat:landingPage when datasetSheetUri is absent', () => {
       const dataNoSheet: CanvasData = {
         project: { title: 'No Sheet Test', description: '' },
         dataAccess: {
@@ -200,7 +202,7 @@ describe('generateROCrate', () => {
       const dsEntity = out['@graph'].find(
         (e: Record<string, unknown>) => e['@id'] === '#dataset-0',
       ) as Record<string, unknown>
-      expect(dsEntity['schema:url']).toBeUndefined()
+      expect(dsEntity['dcat:landingPage']).toBeUndefined()
     })
   })
 })

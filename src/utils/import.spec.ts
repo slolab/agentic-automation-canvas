@@ -148,7 +148,7 @@ describe('parseROCrateToCanvas', () => {
   })
 
   describe('dataset sheet URI import', () => {
-    it('imports datasetSheetUri from schema:url on dataset entity', () => {
+    it('imports datasetSheetUri from dcat:landingPage on dataset entity', () => {
       const crate: ROCrateJSONLD = {
         '@context': 'https://w3id.org/ro/crate/1.2/context',
         '@graph': [
@@ -158,13 +158,32 @@ describe('parseROCrateToCanvas', () => {
             '@type': 'dcat:Dataset',
             name: 'Test Dataset',
             'dct:accessRights': 'open',
-            'schema:url': 'https://example.com/sheets/ds-1',
+            'dcat:landingPage': { '@id': 'https://example.com/sheets/ds-1' },
           },
         ],
       }
       const canvasData = parseROCrateToCanvas(crate)
       const ds = canvasData.dataAccess?.datasets?.[0]
       expect(ds?.datasetSheetUri).toBe('https://example.com/sheets/ds-1')
+    })
+
+    it('imports datasetSheetUri from schema:url for backward compatibility', () => {
+      const crate: ROCrateJSONLD = {
+        '@context': 'https://w3id.org/ro/crate/1.2/context',
+        '@graph': [
+          ...minimalRocrateFixture['@graph'],
+          {
+            '@id': '#dataset-0',
+            '@type': 'dcat:Dataset',
+            name: 'Legacy Dataset',
+            'dct:accessRights': 'open',
+            'schema:url': 'https://example.com/legacy/sheet',
+          },
+        ],
+      }
+      const canvasData = parseROCrateToCanvas(crate)
+      const ds = canvasData.dataAccess?.datasets?.[0]
+      expect(ds?.datasetSheetUri).toBe('https://example.com/legacy/sheet')
     })
   })
 })
