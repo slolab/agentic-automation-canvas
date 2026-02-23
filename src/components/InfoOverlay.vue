@@ -144,11 +144,11 @@
                     class="text-primary-600 hover:text-primary-800 underline"
                   >HTML</a> ·
                   <a
-                    href="https://slolab.github.io/aac-manuscript/manuscript.pdf"
+                    href="https://arxiv.org/abs/2602.15090"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="text-primary-600 hover:text-primary-800 underline"
-                  >PDF</a>
+                  >arXiv</a>
                 </p>
               </div>
             </div>
