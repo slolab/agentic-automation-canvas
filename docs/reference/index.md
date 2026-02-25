@@ -41,6 +41,21 @@ A benefit metric for a requirement
 | `target` | number | No | Target value when direction is 'targetIsBetter' |  | AAC |
 | `valueMeaning` | string | Yes | Whether baseline/expected are absolute measured values or improvement deltas | Enum: `absolute`, `delta` | AAC |
 
+## Risk
+
+A risk assessment for a requirement, paralleling benefit metrics
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `description` | string | No | Detailed description of the risk |  | Schema.org |
+| `id` | string | Yes | Unique identifier for the risk |  | AAC |
+| `impact` | string | Yes | Severity if the risk materialises | Enum: `low`, `medium`, `high`, `critical` | AAC |
+| `likelihood` | string | Yes | Probability of the risk occurring | Enum: `low`, `medium`, `high`, `critical` | AAC |
+| `mitigation` | string | No | Strategy to mitigate or address the risk |  | AAC |
+| `riskCategory` | string | Yes | Category of risk | Enum: `technical`, `data`, `compliance`, `operational`, `ethical`, `adoption` | AAC |
+| `status` | string | Yes | Current status of the risk | Enum: `identified`, `mitigated`, `accepted`, `resolved` | AAC |
+| `title` | string | Yes | Short title for the risk | Min length: 1 | Schema.org |
+
 ## DataAccess
 
 | Property | Type | Required | Description | Constraints | Ontology |
@@ -104,11 +119,12 @@ Technology Readiness Level - project-level maturity assessment
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `agents` | array of object | No |  |  | — |
-| `complianceStandards` | array of string | No |  |  | AAC |
+| `complianceStandards` | array of oneOf | No | Compliance standards as plain strings or structured framework references |  | AAC |
 | `endDate` | string | No |  | Format: `date` | Schema.org |
 | `id` | string | Yes |  |  | AAC |
 | `milestones` | array of string | No |  |  | P-Plan |
 | `name` | string | Yes |  |  | Schema.org |
+| `policyCardUri` | string | No | URI pointing to a Policy Card (machine-readable deployment governance artifact) governing this stage | Format: `uri` | AAC |
 | `startDate` | string | No |  | Format: `date` | Schema.org |
 
 ## Governance Stage Agent
@@ -229,6 +245,7 @@ Optional per-task feasibility (overrides project-level defaults)
 | `modelCardUri` | string | No | URI pointing to the model's model card | Format: `uri` | AAC |
 | `modelName` | string | No | Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct') |  | AAC |
 | `modelSelection` | string | No | Type of model to be used (if applicable). Set to 'none' if task is deterministic. | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other`, `none` | AAC |
+| `risks` | array of [Risk](#risk) | No | Per-task risk assessments paralleling benefits |  | AAC |
 | `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `technologyApproach` | object | No | Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs. |  | — |
 | `tools` | array of string | No |  |  | AAC |
