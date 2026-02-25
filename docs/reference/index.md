@@ -225,6 +225,7 @@ Technology Readiness Level - project-level maturity assessment
 | `priority` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `stakeholders` | array of string | No | Person IDs of stakeholders for this task |  | AAC |
 | `status` | string | No |  | Enum: `planned`, `in-progress`, `completed`, `cancelled` | AAC |
+| `targetPopulation` | string | No | The user population whose benefit estimates this task captures (e.g., 'junior researchers', 'clinical staff with 3+ years experience'). Specifying this makes heterogeneity explicit when different user groups are expected to benefit differently from the same type of task. |  | AAC |
 | `timeUnit` | string | No | Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency. | Enum: `minutes`, `hours` | AAC |
 | `title` | string | Yes |  | Min length: 1 | Schema.org |
 | `unitCategory` | string | No |  | Enum: `item`, `interaction`, `computation`, `other` | AAC |
