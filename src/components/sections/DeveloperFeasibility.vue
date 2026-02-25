@@ -546,7 +546,7 @@
                 <!-- Agentic Details -->
                 <div v-if="requirement.feasibility?.technologyApproach?.architecture === 'agents'" class="mt-4 pl-4 border-l-2 border-gray-200 space-y-4">
                   <h6 class="text-sm font-medium text-gray-900">Agentic Details</h6>
-                  <FormField :id="`task-${requirement.id}-agent-framework`" label="Framework" help-text="Agentic framework or pattern used for this task">
+                  <FormField :id="`task-${requirement.id}-agent-framework`" label="Framework" help-text="Type a name and press Enter to add a chip, or separate multiple with commas" tooltip="Each agentic framework or pattern is stored as a separate chip. Type a single name and press Enter, or enter several at once separated by commas (e.g. ReAct, MCP).">
                     <div class="space-y-2">
                       <div class="flex flex-wrap gap-2">
                         <span
@@ -572,13 +572,13 @@
                         v-model="agenticFrameworkInputs[requirement.id]"
                         type="text"
                         class="form-input"
-                        placeholder="e.g., ReAct, MCP, Plan-and-Execute"
+                        placeholder="Type a name and press Enter (e.g. ReAct)"
                         @keydown.enter.prevent="addAgenticFramework(requirement.id)"
                         @blur="addAgenticFramework(requirement.id)"
                       />
                     </div>
                   </FormField>
-                  <FormField :id="`task-${requirement.id}-agent-tools`" label="Tools" help-text="Tools available to the agent (MCP tools, custom tools, APIs)">
+                  <FormField :id="`task-${requirement.id}-agent-tools`" label="Tools" help-text="Type a name and press Enter to add a chip, or separate multiple with commas" tooltip="Each tool available to the agent (MCP tools, custom tools, APIs) is stored as a separate chip. Type a single name and press Enter, or enter several at once separated by commas (e.g. file_search, browser).">
                     <div class="space-y-2">
                       <div class="flex flex-wrap gap-2">
                         <span
@@ -604,13 +604,13 @@
                         v-model="agenticToolsInputs[requirement.id]"
                         type="text"
                         class="form-input"
-                        placeholder="e.g., file_search, browser, database_query"
+                        placeholder="Type a name and press Enter (e.g. file_search)"
                         @keydown.enter.prevent="addAgenticTool(requirement.id)"
                         @blur="addAgenticTool(requirement.id)"
                       />
                     </div>
                   </FormField>
-                  <FormField :id="`task-${requirement.id}-agent-orchestration`" label="Orchestration" help-text="Orchestration framework or library used to manage agent workflows">
+                  <FormField :id="`task-${requirement.id}-agent-orchestration`" label="Orchestration" help-text="Type a name and press Enter to add a chip, or separate multiple with commas" tooltip="Each orchestration framework or library is stored as a separate chip. Type a single name and press Enter, or enter several at once separated by commas (e.g. LangGraph, AutoGPT).">
                     <div class="space-y-2">
                       <div class="flex flex-wrap gap-2">
                         <span
@@ -636,7 +636,7 @@
                         v-model="agenticOrchestrationInputs[requirement.id]"
                         type="text"
                         class="form-input"
-                        placeholder="e.g., LangGraph, AutoGPT"
+                        placeholder="Type a name and press Enter (e.g. LangGraph)"
                         @keydown.enter.prevent="addAgenticOrchestration(requirement.id)"
                         @blur="addAgenticOrchestration(requirement.id)"
                       />
@@ -649,7 +649,8 @@
                   <FormField
                     :id="`task-${requirement.id}-algorithms`"
                     label="Algorithms / Technologies"
-                    help-text="Algorithms, models, or technologies used for this task"
+                    help-text="Type a name and press Enter to add a chip, or separate multiple with commas"
+                    tooltip="Each algorithm, model, or technology is stored as a separate chip. Type a single name and press Enter, or enter several at once separated by commas (e.g. BERT, OCR, rule-based)."
                   >
                     <div class="space-y-2">
                       <div class="flex flex-wrap gap-2">
@@ -676,7 +677,7 @@
                         v-model="algorithmsInputs[requirement.id]"
                         type="text"
                         class="form-input"
-                        placeholder="e.g., BERT, rule-based, OCR"
+                        placeholder="Type a name and press Enter (e.g. BERT)"
                         @keydown.enter.prevent="addAlgorithm(requirement.id)"
                         @blur="addAlgorithm(requirement.id)"
                       />
@@ -686,7 +687,8 @@
                   <FormField
                     :id="`task-${requirement.id}-tools`"
                     label="Tools / Frameworks"
-                    help-text="Development tools, libraries, or frameworks used for this task"
+                    help-text="Type a name and press Enter to add a chip, or separate multiple with commas"
+                    tooltip="Each tool, library, or framework is stored as a separate chip. Type a single name and press Enter, or enter several at once separated by commas (e.g. LangChain, OpenAI API)."
                   >
                     <div class="space-y-2">
                       <div class="flex flex-wrap gap-2">
@@ -713,7 +715,7 @@
                         v-model="toolsInputs[requirement.id]"
                         type="text"
                         class="form-input"
-                        placeholder="e.g., LangChain, OpenAI API"
+                        placeholder="Type a name and press Enter (e.g. LangChain)"
                         @keydown.enter.prevent="addTool(requirement.id)"
                         @blur="addTool(requirement.id)"
                       />
@@ -1674,18 +1676,21 @@ function updateTaskFineTuningDetails(taskId: string, field: 'baseModel' | 'tunin
 
 // Agentic framework (array - add multiple items)
 function addAgenticFramework(taskId: string) {
-  const value = agenticFrameworkInputs.value[taskId]?.trim()
-  if (!value) return
-  
+  const raw = agenticFrameworkInputs.value[taskId]
+  if (!raw) return
+  const values = raw.split(',').map(v => v.trim()).filter(Boolean)
+  if (!values.length) return
+
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
 
   const existingFrameworks = requirement.feasibility?.technologyApproach?.agenticDetails?.framework || []
-  if (existingFrameworks.includes(value)) return
+  const newValues = values.filter(v => !existingFrameworks.includes(v))
+  if (!newValues.length) { agenticFrameworkInputs.value[taskId] = ''; return }
 
   const agenticDetails = {
     ...requirement.feasibility?.technologyApproach?.agenticDetails,
-    framework: [...existingFrameworks, value],
+    framework: [...existingFrameworks, ...newValues],
   }
 
   const techApproach = {
@@ -1720,18 +1725,21 @@ function removeAgenticFramework(taskId: string, framework: string) {
 
 // Agentic tools (array)
 function addAgenticTool(taskId: string) {
-  const value = agenticToolsInputs.value[taskId]?.trim()
-  if (!value) return
-  
+  const raw = agenticToolsInputs.value[taskId]
+  if (!raw) return
+  const values = raw.split(',').map(v => v.trim()).filter(Boolean)
+  if (!values.length) return
+
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
 
   const existingTools = requirement.feasibility?.technologyApproach?.agenticDetails?.tools || []
-  if (existingTools.includes(value)) return
+  const newValues = values.filter(v => !existingTools.includes(v))
+  if (!newValues.length) { agenticToolsInputs.value[taskId] = ''; return }
 
   const agenticDetails = {
     ...requirement.feasibility?.technologyApproach?.agenticDetails,
-    tools: [...existingTools, value],
+    tools: [...existingTools, ...newValues],
   }
 
   const techApproach = {
@@ -1766,18 +1774,21 @@ function removeAgenticTool(taskId: string, tool: string) {
 
 // Agentic orchestration (array - add multiple items)
 function addAgenticOrchestration(taskId: string) {
-  const value = agenticOrchestrationInputs.value[taskId]?.trim()
-  if (!value) return
-  
+  const raw = agenticOrchestrationInputs.value[taskId]
+  if (!raw) return
+  const values = raw.split(',').map(v => v.trim()).filter(Boolean)
+  if (!values.length) return
+
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
 
   const existingOrchestrations = requirement.feasibility?.technologyApproach?.agenticDetails?.orchestration || []
-  if (existingOrchestrations.includes(value)) return
+  const newValues = values.filter(v => !existingOrchestrations.includes(v))
+  if (!newValues.length) { agenticOrchestrationInputs.value[taskId] = ''; return }
 
   const agenticDetails = {
     ...requirement.feasibility?.technologyApproach?.agenticDetails,
-    orchestration: [...existingOrchestrations, value],
+    orchestration: [...existingOrchestrations, ...newValues],
   }
 
   const techApproach = {
@@ -1812,16 +1823,19 @@ function removeAgenticOrchestration(taskId: string, orchestration: string) {
 
 // Algorithms (array)
 function addAlgorithm(taskId: string) {
-  const value = algorithmsInputs.value[taskId]?.trim()
-  if (!value) return
-  
+  const raw = algorithmsInputs.value[taskId]
+  if (!raw) return
+  const values = raw.split(',').map(v => v.trim()).filter(Boolean)
+  if (!values.length) return
+
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
 
   const existingAlgorithms = requirement.feasibility?.algorithms || []
-  if (existingAlgorithms.includes(value)) return
-
-  updateTaskFeasibility(taskId, { algorithms: [...existingAlgorithms, value] })
+  const newValues = values.filter(v => !existingAlgorithms.includes(v))
+  if (newValues.length) {
+    updateTaskFeasibility(taskId, { algorithms: [...existingAlgorithms, ...newValues] })
+  }
   algorithmsInputs.value[taskId] = ''
 }
 
@@ -1837,16 +1851,19 @@ function removeAlgorithm(taskId: string, algorithm: string) {
 
 // Tools (array)
 function addTool(taskId: string) {
-  const value = toolsInputs.value[taskId]?.trim()
-  if (!value) return
-  
+  const raw = toolsInputs.value[taskId]
+  if (!raw) return
+  const values = raw.split(',').map(v => v.trim()).filter(Boolean)
+  if (!values.length) return
+
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
 
   const existingTools = requirement.feasibility?.tools || []
-  if (existingTools.includes(value)) return
-
-  updateTaskFeasibility(taskId, { tools: [...existingTools, value] })
+  const newValues = values.filter(v => !existingTools.includes(v))
+  if (newValues.length) {
+    updateTaskFeasibility(taskId, { tools: [...existingTools, ...newValues] })
+  }
   toolsInputs.value[taskId] = ''
 }
 
