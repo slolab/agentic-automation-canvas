@@ -256,7 +256,14 @@ function renderGovernance(data: CanvasData): string | undefined {
     }
 
     if (stage.complianceStandards?.length) {
-      parts.push(bullet('Compliance', stage.complianceStandards.join(', '))!)
+      const formatted = stage.complianceStandards.map((c) => {
+        if (typeof c === 'string') return c
+        const label = c.framework
+        const clauses = c.clauses?.length ? ` [${c.clauses.join(', ')}]` : ''
+        const uri = c.uri ? ` <${c.uri}>` : ''
+        return `${label}${clauses}${uri}`
+      })
+      parts.push(bullet('Compliance', formatted.join(', '))!)
     }
 
     if (stage.agents?.length) {
