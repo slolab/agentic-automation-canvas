@@ -2,7 +2,7 @@
   <div class="space-y-6">
     <div>
       <h2 class="section-header flex items-center gap-2">
-        <span>Tasks & Expectations</span>
+        <span>Tasks & Benefits</span>
         <InfoTooltip
           content="<strong>What goes here:</strong> The automation tasks you need to accomplish.<br/><br/><strong>Benefits:</strong> Each task can have multiple benefits across five types: Time (savings), Quality (improvements), Risk (reduction), Enablement (new capabilities), and Cost (savings). Use the Edit Benefits button to define detailed benefit metrics.<br/><br/><strong>Stakeholders:</strong> Add stakeholders directly to each task from the persons list. This makes it clear which stakeholders are interested in each specific task.<br/><br/><strong>Workflow tip:</strong> Start with task descriptions, then define value model fields and benefits. Add stakeholders per-task after creating persons. Tasks are represented as P-Plan Steps and link to governance stages."
           position="top"

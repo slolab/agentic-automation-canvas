@@ -83,7 +83,19 @@
         "feasibility": {
           "modelSelection": "frontier-model",
           "modelName": "gpt-4o",
-          "modelCardUri": "https://platform.openai.com/docs/models/gpt-4o"
+          "modelCardUri": "https://platform.openai.com/docs/models/gpt-4o",
+          "risks": [
+            {
+              "id": "risk-1",
+              "riskCategory": "data",
+              "title": "Data quality degradation",
+              "description": "Input data quality may vary significantly, affecting processing accuracy",
+              "likelihood": "medium",
+              "impact": "high",
+              "mitigation": "Implement data validation pipeline and quality scoring before processing",
+              "status": "mitigated"
+            }
+          ]
         }
       }
     ]
@@ -146,7 +158,16 @@
           "Core processing engine completed",
           "Integration testing passed"
         ],
-        "complianceStandards": ["GDPR", "HIPAA"]
+        "complianceStandards": [
+          "GDPR",
+          "HIPAA",
+          {
+            "framework": "NIST AI RMF",
+            "clauses": ["GOVERN-1", "MAP-1", "MEASURE-1"],
+            "uri": "https://www.nist.gov/artificial-intelligence/ai-risk-management-framework"
+          }
+        ],
+        "policyCardUri": "https://example.org/policy-cards/bio-ai-deployment.json"
       }
     ]
   },

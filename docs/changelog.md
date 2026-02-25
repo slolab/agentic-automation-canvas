@@ -5,6 +5,27 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0]
+
+### Added
+- **Per-task risk assessments** paralleling benefits: each task's feasibility can now include a `risks` array with category (technical, data, compliance, operational, ethical, adoption), title, description, likelihood, impact, mitigation strategy, and status
+- Risk assessment UI in Feasibility & Risks section with collapsible risk cards per task
+- Collapsed task-level feasibility view shows risk assessment count alongside feasibility count
+- **Policy Card URI** field on governance stages: optional `policyCardUri` linking to a machine-readable Policy Card deployment governance artifact
+- Policy Card URI input with external link in governance stage UI
+- **Structured compliance standards**: `complianceStandards` now accepts both plain strings and structured objects with `framework`, `clauses` (array), and `uri` fields
+- "Add Structured" mode in governance stage compliance UI for framework/clauses/URI entry
+- `Risk` definition added to JSON Schema `$defs`
+- RO-Crate export: `aac:policyCardUri` on governance stage entities
+- Risk and governance field mappings documented in `docs/mapping.md`
+- Example data: 4 risk examples across tasks, structured compliance standards (ISO/IEC 42001, Policy Card v1.0), Policy Card URI on Deployment stage
+
+### Changed
+- **Tab rename**: "Tasks & Expectations" → "Tasks & Benefits"
+- **Tab rename**: "Developer Feasibility" → "Feasibility & Risks"
+- Section headers and descriptions updated to reflect the balanced benefits/risks framing
+- Completion calculation handles structured compliance standard objects
+
 ## [0.12.3]
 
 ### Added

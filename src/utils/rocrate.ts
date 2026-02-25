@@ -778,9 +778,14 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         }
       }
 
-      // Add compliance standards
+      // Add compliance standards (strings or structured objects)
       if (stage.complianceStandards && stage.complianceStandards.length > 0) {
         activityEntity['aac:complianceStandard'] = stage.complianceStandards
+      }
+
+      // Add Policy Card URI
+      if (stage.policyCardUri) {
+        activityEntity['aac:policyCardUri'] = stage.policyCardUri
       }
 
       // Link to previous stage

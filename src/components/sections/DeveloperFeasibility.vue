@@ -2,24 +2,25 @@
   <div class="space-y-6">
     <div>
       <h2 class="section-header flex items-center gap-2">
-        <span class="flex-1 min-w-0">Developer Feasibility</span>
+        <span class="flex-1 min-w-0">Feasibility & Risks</span>
         <span class="flex-shrink-0">
           <InfoTooltip
-            content="<strong>What goes here:</strong> Technical feasibility assessment at project and task levels.<br/><br/><strong>Project-level:</strong> Simple, generic defaults that apply to all tasks (TRL, overall risk, effort estimate).<br/><br/><strong>Task-level:</strong> Optional detailed feasibility assessments for individual tasks. Use these when tasks differ significantly from project defaults or require specific technologies (e.g., LLMs, RAG, MCP). Tasks that are deterministic and don't require LLMs can be marked accordingly."
+            content="<strong>What goes here:</strong> Technical feasibility assessment and risk identification at project and task levels.<br/><br/><strong>Project-level:</strong> Simple, generic defaults that apply to all tasks (TRL, overall risk, effort estimate).<br/><br/><strong>Task-level:</strong> Optional detailed feasibility assessments and risk registers for individual tasks. Use these when tasks differ significantly from project defaults or require specific technologies (e.g., LLMs, RAG, MCP). Tasks that are deterministic and don't require LLMs can be marked accordingly."
             position="top"
           />
         </span>
       </h2>
       <p class="section-description">
-        Assess technical feasibility at project and task levels. Project-level provides simple defaults; task-level allows detailed overrides when needed.
+        Assess technical feasibility and identify risks at project and task levels. Project-level provides simple defaults; task-level allows detailed overrides and per-task risk assessment.
       </p>
       <p class="mt-3 text-sm text-gray-600 mb-2">
-        This canvas balances user expectations and task outcomes with technical feasibility and developer burden. While the Tasks & Expectations section captures desired benefits and value, this section assesses what's technically achievable and at what cost.
+        This canvas balances expected benefits (Tasks & Benefits) with technical feasibility, developer effort, and identified risks. Together they form a realistic picture of what can be achieved and what could go wrong.
       </p>
       <ul class="text-sm text-gray-600 mb-4 list-disc ml-6 space-y-1">
         <li><strong>Project-level feasibility</strong> sets realistic defaults for technical risk, effort, and maturity that apply across all tasks</li>
         <li><strong>Task-level feasibility</strong> allows fine-tuning when individual tasks differ significantly in complexity or technology requirements</li>
-        <li><strong>Align estimates</strong> between expected benefits and technical effort to ensure realistic project planning</li>
+        <li><strong>Risk assessment</strong> per task captures what could go wrong, how likely and severe, and how to mitigate it</li>
+        <li><strong>Align estimates</strong> between expected benefits, technical effort, and identified risks for realistic project planning</li>
       </ul>
     </div>
 
@@ -225,8 +226,14 @@
               <h3 class="text-lg font-semibold text-gray-900">Task-Level Feasibility</h3>
             </div>
             <div class="text-sm text-gray-600">
-              <span v-if="tasksWithFeasibility.length > 0">
-                {{ tasksWithFeasibility.length }} {{ tasksWithFeasibility.length === 1 ? 'task' : 'tasks' }} with custom feasibility
+              <span v-if="tasksWithFeasibility.length > 0 || tasksWithRisks.length > 0">
+                <span v-if="tasksWithFeasibility.length > 0">
+                  {{ tasksWithFeasibility.length }} {{ tasksWithFeasibility.length === 1 ? 'task' : 'tasks' }} with custom feasibility
+                </span>
+                <span v-if="tasksWithFeasibility.length > 0 && tasksWithRisks.length > 0"> &middot; </span>
+                <span v-if="tasksWithRisks.length > 0">
+                  {{ tasksWithRisks.length }} {{ tasksWithRisks.length === 1 ? 'task' : 'tasks' }} with risk assessment
+                </span>
               </span>
               <span v-else class="text-gray-400 italic">
                 No task-level feasibility assessments yet. Click to add assessments for individual tasks.
@@ -713,6 +720,140 @@
                     </div>
                   </FormField>
                 </div>
+
+                <!-- Risk Assessment -->
+                <div class="border-t border-gray-200 pt-4 mt-4">
+                  <div class="flex items-center justify-between mb-3">
+                    <h5 class="text-sm font-medium text-gray-900 flex items-center gap-2">
+                      Risk Assessment
+                      <InfoTooltip
+                        content="Identify risks for this task: what could go wrong, how likely and severe it is, and how to mitigate it. Risk categories: <strong>Technical</strong> (implementation challenges), <strong>Data</strong> (quality, availability, privacy), <strong>Compliance</strong> (regulatory, legal), <strong>Operational</strong> (reliability, availability), <strong>Ethical</strong> (bias, fairness), <strong>Adoption</strong> (user acceptance, workflow integration)."
+                        position="top"
+                      />
+                    </h5>
+                    <button
+                      type="button"
+                      @click="addRisk(requirement.id)"
+                      class="btn-secondary text-xs"
+                    >
+                      + Add Risk
+                    </button>
+                  </div>
+
+                  <div v-if="!requirement.feasibility?.risks?.length" class="text-sm text-gray-400 italic">
+                    No risks identified yet
+                  </div>
+
+                  <div v-else class="space-y-3">
+                    <div
+                      v-for="(risk, riskIdx) in requirement.feasibility.risks"
+                      :key="risk.id"
+                      class="border border-gray-200 rounded-lg p-3 space-y-3"
+                    >
+                      <div class="flex items-start justify-between gap-2">
+                        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <FormField :id="`task-${requirement.id}-risk-${riskIdx}-title`" label="Title">
+                            <input
+                              :id="`task-${requirement.id}-risk-${riskIdx}-title`"
+                              :value="risk.title"
+                              type="text"
+                              class="form-input"
+                              placeholder="e.g., Model hallucination on edge cases"
+                              @blur="updateRisk(requirement.id, riskIdx, { title: ($event.target as HTMLInputElement).value })"
+                            />
+                          </FormField>
+                          <FormField :id="`task-${requirement.id}-risk-${riskIdx}-category`" label="Category">
+                            <select
+                              :id="`task-${requirement.id}-risk-${riskIdx}-category`"
+                              :value="risk.riskCategory"
+                              class="form-input"
+                              @change="updateRisk(requirement.id, riskIdx, { riskCategory: ($event.target as HTMLSelectElement).value as Risk['riskCategory'] })"
+                            >
+                              <option value="technical">Technical</option>
+                              <option value="data">Data</option>
+                              <option value="compliance">Compliance</option>
+                              <option value="operational">Operational</option>
+                              <option value="ethical">Ethical</option>
+                              <option value="adoption">Adoption</option>
+                            </select>
+                          </FormField>
+                        </div>
+                        <button
+                          type="button"
+                          @click="removeRisk(requirement.id, riskIdx)"
+                          class="text-sm text-red-600 hover:text-red-800 mt-6"
+                          aria-label="Remove risk"
+                        >
+                          Remove
+                        </button>
+                      </div>
+
+                      <FormField :id="`task-${requirement.id}-risk-${riskIdx}-description`" label="Description">
+                        <textarea
+                          :id="`task-${requirement.id}-risk-${riskIdx}-description`"
+                          :value="risk.description || ''"
+                          rows="2"
+                          class="form-input"
+                          placeholder="Describe the risk in detail"
+                          @blur="updateRisk(requirement.id, riskIdx, { description: ($event.target as HTMLTextAreaElement).value || undefined })"
+                        />
+                      </FormField>
+
+                      <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <FormField :id="`task-${requirement.id}-risk-${riskIdx}-likelihood`" label="Likelihood">
+                          <select
+                            :id="`task-${requirement.id}-risk-${riskIdx}-likelihood`"
+                            :value="risk.likelihood"
+                            class="form-input"
+                            @change="updateRisk(requirement.id, riskIdx, { likelihood: ($event.target as HTMLSelectElement).value as Risk['likelihood'] })"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                          </select>
+                        </FormField>
+                        <FormField :id="`task-${requirement.id}-risk-${riskIdx}-impact`" label="Impact">
+                          <select
+                            :id="`task-${requirement.id}-risk-${riskIdx}-impact`"
+                            :value="risk.impact"
+                            class="form-input"
+                            @change="updateRisk(requirement.id, riskIdx, { impact: ($event.target as HTMLSelectElement).value as Risk['impact'] })"
+                          >
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                          </select>
+                        </FormField>
+                        <FormField :id="`task-${requirement.id}-risk-${riskIdx}-status`" label="Status">
+                          <select
+                            :id="`task-${requirement.id}-risk-${riskIdx}-status`"
+                            :value="risk.status"
+                            class="form-input"
+                            @change="updateRisk(requirement.id, riskIdx, { status: ($event.target as HTMLSelectElement).value as Risk['status'] })"
+                          >
+                            <option value="identified">Identified</option>
+                            <option value="mitigated">Mitigated</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="resolved">Resolved</option>
+                          </select>
+                        </FormField>
+                      </div>
+
+                      <FormField :id="`task-${requirement.id}-risk-${riskIdx}-mitigation`" label="Mitigation Strategy">
+                        <textarea
+                          :id="`task-${requirement.id}-risk-${riskIdx}-mitigation`"
+                          :value="risk.mitigation || ''"
+                          rows="2"
+                          class="form-input"
+                          placeholder="How will this risk be addressed?"
+                          @blur="updateRisk(requirement.id, riskIdx, { mitigation: ($event.target as HTMLTextAreaElement).value || undefined })"
+                        />
+                      </FormField>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -955,7 +1096,7 @@
 import { ref, watch, computed } from 'vue'
 import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
-import type { DeveloperFeasibility, RequirementFeasibility, Benefit } from '@/types/canvas'
+import type { DeveloperFeasibility, RequirementFeasibility, Benefit, Risk } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import type { Requirement } from '@/types/canvas'
 import { markdownToHtml } from '@/utils/markdown'
@@ -984,6 +1125,10 @@ const requirements = computed(() => canvasData.value.userExpectations?.requireme
 
 const tasksWithFeasibility = computed(() => {
   return requirements.value.filter((r) => r.feasibility && Object.keys(r.feasibility).length > 0)
+})
+
+const tasksWithRisks = computed(() => {
+  return requirements.value.filter((r) => r.feasibility?.risks && r.feasibility.risks.length > 0)
 })
 
 const tasksWithEffort = computed(() => {
@@ -1713,6 +1858,45 @@ function removeTool(taskId: string, tool: string) {
   const updatedTools = existingTools.filter((t) => t !== tool)
 
   updateTaskFeasibility(taskId, { tools: updatedTools.length > 0 ? updatedTools : undefined })
+}
+
+function addRisk(taskId: string) {
+  const requirement = requirements.value.find((r) => r.id === taskId)
+  if (!requirement) return
+
+  if (!requirement.feasibility) {
+    addTaskFeasibility(taskId)
+  }
+
+  const existingRisks = requirement.feasibility?.risks || []
+  const newRisk: Risk = {
+    id: `risk-${Date.now()}`,
+    riskCategory: 'technical',
+    title: '',
+    likelihood: 'medium',
+    impact: 'medium',
+    status: 'identified',
+  }
+
+  updateTaskFeasibility(taskId, { risks: [...existingRisks, newRisk] })
+}
+
+function removeRisk(taskId: string, riskIdx: number) {
+  const requirement = requirements.value.find((r) => r.id === taskId)
+  if (!requirement?.feasibility?.risks) return
+
+  const updated = [...requirement.feasibility.risks]
+  updated.splice(riskIdx, 1)
+  updateTaskFeasibility(taskId, { risks: updated.length > 0 ? updated : undefined })
+}
+
+function updateRisk(taskId: string, riskIdx: number, partial: Partial<Risk>) {
+  const requirement = requirements.value.find((r) => r.id === taskId)
+  if (!requirement?.feasibility?.risks) return
+
+  const updated = [...requirement.feasibility.risks]
+  updated[riskIdx] = { ...updated[riskIdx], ...partial }
+  updateTaskFeasibility(taskId, { risks: updated })
 }
 </script>
 

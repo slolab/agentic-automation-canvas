@@ -124,7 +124,24 @@ Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:
 | `stages[].agents` (person type) | `wasAssociatedWith` + Role nodes | Person reference + separate Role entity |
 | `stages[].agents` (org/software) | `wasAssociatedWith` | Separate org/software entity |
 | `stages[].milestones` | `hasMilestone` | Array of CreativeWork entities |
-| `stages[].complianceStandards` | `aac:complianceStandard` | Array of strings |
+| `stages[].complianceStandards` | `aac:complianceStandard` | Array of strings or structured objects (framework, clauses, uri) |
+| `stages[].policyCardUri` | `aac:policyCardUri` | URI to a Policy Card deployment governance artifact |
+
+### Risk Entities
+
+Risks are embedded within each requirement's feasibility under `aac:feasibility.risks`.
+
+| Canvas Field | RO-Crate Property | Notes |
+|-------------|-------------------|-------|
+| `requirements[].feasibility.risks` | `aac:feasibility.risks` | Array of Risk objects embedded in feasibility |
+| `risks[].id` | `id` | Unique risk identifier |
+| `risks[].riskCategory` | `riskCategory` | Enum: technical, data, compliance, operational, ethical, adoption |
+| `risks[].title` | `title` | Short risk title |
+| `risks[].description` | `description` | Detailed description |
+| `risks[].likelihood` | `likelihood` | Enum: low, medium, high, critical |
+| `risks[].impact` | `impact` | Enum: low, medium, high, critical |
+| `risks[].mitigation` | `mitigation` | Mitigation strategy |
+| `risks[].status` | `status` | Enum: identified, mitigated, accepted, resolved |
 
 ### Dataset Entities
 

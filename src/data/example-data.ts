@@ -92,6 +92,38 @@ export const exampleData: CanvasData = {
           },
           algorithms: ['OCR (Optical Character Recognition)', 'Natural Language Processing', 'Named Entity Recognition'],
           tools: ['Python', 'LangChain', 'OpenAI API', 'Document Processing API'],
+          risks: [
+            {
+              id: 'risk-1',
+              riskCategory: 'technical',
+              title: 'Model hallucination on edge cases',
+              description: 'LLM may extract incorrect values from non-standard document formats (handwritten, scanned, multi-column layouts), leading to silent data errors.',
+              likelihood: 'high',
+              impact: 'high',
+              mitigation: 'Implement confidence scoring and flag low-confidence extractions for human review. Maintain a test suite of 50+ edge-case documents.',
+              status: 'mitigated',
+            },
+            {
+              id: 'risk-2',
+              riskCategory: 'data',
+              title: 'PII exposure in extraction pipeline',
+              description: 'Documents may contain personal data (SSNs, health records) that could be inadvertently logged or sent to external APIs.',
+              likelihood: 'medium',
+              impact: 'critical',
+              mitigation: 'Implement PII detection as a pre-processing step. Redact sensitive fields before sending to external APIs. Use data-in-transit encryption.',
+              status: 'identified',
+            },
+            {
+              id: 'risk-3',
+              riskCategory: 'adoption',
+              title: 'User distrust of automated extraction',
+              description: 'Data entry staff may resist automation due to concerns about job displacement or lack of trust in AI accuracy.',
+              likelihood: 'medium',
+              impact: 'medium',
+              mitigation: 'Involve end users in validation testing. Position automation as augmentation (handle routine docs) rather than replacement. Retrain staff for exception handling.',
+              status: 'identified',
+            },
+          ],
         },
         benefits: [
           {
@@ -333,6 +365,18 @@ export const exampleData: CanvasData = {
           },
           algorithms: ['Pattern matching', 'Rule-based validation', 'Keyword detection'],
           tools: ['Python', 'Regular expressions', 'Compliance rule engine'],
+          risks: [
+            {
+              id: 'risk-4',
+              riskCategory: 'compliance',
+              title: 'Incomplete compliance rule coverage',
+              description: 'Rule-based validation may not cover all regulatory requirements, especially as regulations evolve (e.g., new GDPR interpretations, sector-specific rules).',
+              likelihood: 'medium',
+              impact: 'high',
+              mitigation: 'Schedule quarterly compliance rule reviews with legal team. Maintain a regulatory change log and update rules within 30 days of new guidance.',
+              status: 'accepted',
+            },
+          ],
         },
         benefits: [
           {
@@ -427,7 +471,15 @@ export const exampleData: CanvasData = {
             kpi: 'Requirements document signed off',
           },
         ],
-        complianceStandards: ['GDPR', 'Data Protection'],
+        complianceStandards: [
+          'GDPR',
+          'Data Protection',
+          {
+            framework: 'ISO/IEC 42001',
+            clauses: ['ISO42001-4', 'ISO42001-6'],
+            uri: 'https://www.iso.org/standard/81230.html',
+          },
+        ],
       },
       {
         id: 'stage-2',
@@ -505,7 +557,15 @@ export const exampleData: CanvasData = {
             kpi: 'Zero downtime deployment',
           },
         ],
-        complianceStandards: ['GDPR'],
+        complianceStandards: [
+          'GDPR',
+          {
+            framework: 'Policy Card v1.0',
+            clauses: ['controls.action_rules', 'obligations', 'monitoring.logging', 'kpis_thresholds'],
+            uri: 'https://example.org/policy-cards/doc-processing-deployment.json',
+          },
+        ],
+        policyCardUri: 'https://example.org/policy-cards/doc-processing-deployment.json',
       },
     ],
   },

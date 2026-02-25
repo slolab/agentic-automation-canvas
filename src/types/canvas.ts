@@ -77,6 +77,21 @@ export interface Benefit {
   assumptions?: string
 }
 
+export type RiskCategory = 'technical' | 'data' | 'compliance' | 'operational' | 'ethical' | 'adoption'
+export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical'
+export type RiskStatus = 'identified' | 'mitigated' | 'accepted' | 'resolved'
+
+export interface Risk {
+  id: string
+  riskCategory: RiskCategory
+  title: string
+  description?: string
+  likelihood: RiskSeverity
+  impact: RiskSeverity
+  mitigation?: string
+  status: RiskStatus
+}
+
 /** Per-task feasibility (optional overrides for project-level feasibility) */
 export interface RequirementFeasibility {
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
@@ -108,6 +123,8 @@ export interface RequirementFeasibility {
       orchestration?: string[] // e.g., LangGraph (single-item array, new entry replaces existing)
     }
   }
+  /** Per-task risk assessments paralleling benefits */
+  risks?: Risk[]
 }
 
 export interface Requirement {
@@ -170,6 +187,13 @@ export interface Milestone {
   kpi?: string
 }
 
+/** Structured compliance standard with framework reference and optional clause mapping */
+export interface ComplianceStandard {
+  framework: string
+  clauses?: string[]
+  uri?: string
+}
+
 export interface GovernanceStage {
   id: string
   name: string
@@ -177,7 +201,9 @@ export interface GovernanceStage {
   endDate?: string
   agents?: Agent[]
   milestones?: Milestone[]
-  complianceStandards?: string[]
+  complianceStandards?: (string | ComplianceStandard)[]
+  /** URI pointing to a Policy Card governing this stage */
+  policyCardUri?: string
 }
 
 export interface Agent {
