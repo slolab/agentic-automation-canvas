@@ -149,6 +149,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         if (step!['aac:volumePerMonth'] !== undefined) {
           req.volumePerMonth = step!['aac:volumePerMonth'] as number
         }
+        if (step!['aac:targetPopulation']) {
+          req.targetPopulation = step!['aac:targetPopulation'] as string
+        }
         // Migrate old requirement-level oversight to first time benefit
         // Map RO-Crate field name (aac:humanOversightMinutesPerUnit) to internal schema field name (oversightMinutesPerUnit)
         if (step!['aac:humanOversightMinutesPerUnit'] !== undefined) {
@@ -444,6 +447,10 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         stage.complianceStandards = Array.isArray(complianceStandard)
           ? complianceStandard as string[]
           : [complianceStandard as string]
+      }
+
+      if (activity['aac:policyCardUri']) {
+        stage.policyCardUri = activity['aac:policyCardUri'] as string
       }
 
       return stage
