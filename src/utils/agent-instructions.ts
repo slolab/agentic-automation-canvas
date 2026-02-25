@@ -131,6 +131,9 @@ function renderRequirements(data: CanvasData): string | undefined {
     if (req.stakeholders?.length) {
       parts.push(bullet('Stakeholders', req.stakeholders.map((id: string) => personName(id, persons)).join(', '))!)
     }
+    if (req.targetPopulation) {
+      parts.push(bullet('Target population', req.targetPopulation)!)
+    }
 
     // Benefits as acceptance criteria
     if (req.benefits?.length) {

@@ -147,6 +147,8 @@ export interface Requirement {
   dependsOn?: string[]
   /** Person IDs of stakeholders for this task */
   stakeholders?: string[]
+  /** User population whose benefit estimates this task captures (e.g., 'junior researchers', 'all clinical staff') */
+  targetPopulation?: string
   /** Optional per-task feasibility (overrides or complements global DeveloperFeasibility) */
   feasibility?: RequirementFeasibility
 }

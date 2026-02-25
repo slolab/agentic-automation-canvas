@@ -43,6 +43,7 @@
         "unitCategory": "computation",
         "volumePerMonth": 120,
         "timeUnit": "minutes",
+        "targetPopulation": "biomedical researchers with data processing experience",
         "benefits": [
           {
             "benefitType": "time",

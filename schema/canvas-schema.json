@@ -112,6 +112,10 @@
                 "items": { "type": "string" },
                 "description": "Person IDs of stakeholders for this task"
               },
+              "targetPopulation": {
+                "type": "string",
+                "description": "The user population whose benefit estimates this task captures (e.g., 'junior researchers', 'clinical staff with 3+ years experience'). Specifying this makes heterogeneity explicit when different user groups are expected to benefit differently from the same type of task."
+              },
               "feasibility": {
                 "type": "object",
                 "description": "Optional per-task feasibility (overrides project-level defaults)",

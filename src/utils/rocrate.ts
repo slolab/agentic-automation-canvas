@@ -543,6 +543,9 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.volumePerMonth !== undefined) {
         stepEntity['aac:volumePerMonth'] = req.volumePerMonth
       }
+      if (req.targetPopulation) {
+        stepEntity['aac:targetPopulation'] = req.targetPopulation
+      }
       // Export oversight from first time benefit (for backward compatibility)
       // RO-Crate uses 'humanOversightMinutesPerUnit' for backward compatibility with older crates
       const timeBenefit = req.benefits?.find(b => b.benefitType === 'time')
