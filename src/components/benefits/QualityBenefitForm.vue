@@ -123,7 +123,7 @@
       <!-- Confidence -->
       <div class="grid grid-cols-2 gap-4">
         <div>
-          <label class="form-label">User Confidence</label>
+          <label class="form-label flex items-center gap-1">User Confidence <InfoTooltip content="How confident is the <strong>user / domain expert</strong> that this benefit estimate is realistic? Based on their experience with current workflows and understanding of the task. Disagreement between user and developer confidence highlights areas for discussion." position="top" /></label>
           <select
             :value="benefit.confidenceUser || ''"
             class="form-input"
@@ -136,7 +136,7 @@
           </select>
         </div>
         <div>
-          <label class="form-label">Developer Confidence</label>
+          <label class="form-label flex items-center gap-1">Developer Confidence <InfoTooltip content="How confident is the <strong>developer / technical team</strong> that this benefit can be delivered as estimated? Based on technical feasibility, system complexity, and implementation experience. Disagreement between user and developer confidence highlights areas for discussion." position="top" /></label>
           <select
             :value="benefit.confidenceDev || ''"
             class="form-input"
