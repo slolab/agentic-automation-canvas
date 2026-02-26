@@ -52,8 +52,8 @@ export const exampleData: CanvasData = {
     requirements: [
       {
         id: 'req-1',
-        title: 'Extract key information from documents',
-        description: `Automatically extract structured information (names, dates, amounts, categories) from diverse incoming documents (invoices, forms, reports) using agentic AI systems. This task demonstrates a complex, high-value automation opportunity where LLMs excel at handling format variability.
+        title: 'Extract key information from documents (senior)',
+        description: `Automatically extract structured information (names, dates, amounts, categories) from diverse incoming documents (invoices, forms, reports) using agentic AI systems. This task captures benefit estimates for **experienced data entry staff** who already process documents efficiently.
 
 **Rationale**: Document extraction is a prime candidate for agentic automation because it requires:
 - Handling diverse document formats and layouts
@@ -62,18 +62,20 @@ export const exampleData: CanvasData = {
 - Adapting to edge cases through reasoning
 
 **Best Practices Demonstrated**:
-- Using per-unit aggregation for time benefits (8 min → 2 min per document)
+- Using per-unit aggregation for time benefits (10 min → 2 min per document for senior staff)
 - Tracking multiple benefit types: time savings, quality improvements (error rate reduction), and risk mitigation (compliance incidents)
 - Setting realistic oversight expectations (1 min/unit for human review of extracted data)
 - High user confidence but medium developer confidence reflects uncertainty in production performance
+- **Heterogeneity modelling**: This task has a companion (req-1b) for new/junior staff with different baseline performance and benefit estimates
 
 **References**: For agentic document processing approaches, see frameworks like ReAct (Yao et al., 2022) and MCP (Model Context Protocol) for tool-augmented extraction.`,
-        userStory: 'As a data entry clerk, I want documents to be automatically processed so that I can focus on exception handling instead of routine data entry',
+        userStory: 'As an experienced data entry clerk, I want documents to be automatically processed so that I can focus on exception handling instead of routine data entry',
         priority: 'high',
         status: 'in-progress',
         unitOfWork: 'one document',
         unitCategory: 'item',
-        volumePerMonth: 500,
+        volumePerMonth: 350,
+        targetPopulation: 'experienced data entry staff (2+ years)',
         stakeholders: ['person-0'],
         feasibility: {
           technicalRisk: 'high',
@@ -92,6 +94,38 @@ export const exampleData: CanvasData = {
           },
           algorithms: ['OCR (Optical Character Recognition)', 'Natural Language Processing', 'Named Entity Recognition'],
           tools: ['Python', 'LangChain', 'OpenAI API', 'Document Processing API'],
+          risks: [
+            {
+              id: 'risk-1',
+              riskCategory: 'technical',
+              title: 'Model hallucination on edge cases',
+              description: 'LLM may extract incorrect values from non-standard document formats (handwritten, scanned, multi-column layouts), leading to silent data errors.',
+              likelihood: 'high',
+              impact: 'high',
+              mitigation: 'Implement confidence scoring and flag low-confidence extractions for human review. Maintain a test suite of 50+ edge-case documents.',
+              status: 'mitigated',
+            },
+            {
+              id: 'risk-2',
+              riskCategory: 'data',
+              title: 'PII exposure in extraction pipeline',
+              description: 'Documents may contain personal data (SSNs, health records) that could be inadvertently logged or sent to external APIs.',
+              likelihood: 'medium',
+              impact: 'critical',
+              mitigation: 'Implement PII detection as a pre-processing step. Redact sensitive fields before sending to external APIs. Use data-in-transit encryption.',
+              status: 'identified',
+            },
+            {
+              id: 'risk-3',
+              riskCategory: 'adoption',
+              title: 'User distrust of automated extraction',
+              description: 'Data entry staff may resist automation due to concerns about job displacement or lack of trust in AI accuracy.',
+              likelihood: 'medium',
+              impact: 'medium',
+              mitigation: 'Involve end users in validation testing. Position automation as augmentation (handle routine docs) rather than replacement. Retrain staff for exception handling.',
+              status: 'identified',
+            },
+          ],
         },
         benefits: [
           {
@@ -102,12 +136,12 @@ export const exampleData: CanvasData = {
             valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
             benefitUnit: 'minutes',
-            baseline: { type: 'numeric', value: 8 },
+            baseline: { type: 'numeric', value: 10 },
             expected: { type: 'numeric', value: 2 },
             oversightMinutesPerUnit: 1,
             confidenceUser: 'high',
             confidenceDev: 'medium',
-            assumptions: 'Documents are mostly standardized formats (80% invoices, 15% forms, 5% custom). Complex documents may require more oversight. Extraction accuracy validated through spot-checking 10% of documents. Human oversight focuses on verifying extracted amounts and dates for financial accuracy.',
+            assumptions: 'Experienced staff process documents in ~10 min. Automation reduces this to ~2 min with only 1 min oversight for quick spot-checks -- senior staff can verify extracted values at a glance because they know what correct output looks like. Net saving: 7 min/unit.',
           },
           {
             benefitType: 'quality',
@@ -117,11 +151,11 @@ export const exampleData: CanvasData = {
             valueMeaning: 'absolute',
             aggregationBasis: 'perUnit',
             benefitUnit: '%',
-            baseline: { type: 'numeric', value: 5 },
+            baseline: { type: 'numeric', value: 3 },
             expected: { type: 'numeric', value: 1 },
             confidenceUser: 'high',
             confidenceDev: 'medium',
-            assumptions: 'Assumes validation pipeline catches 95% of errors through schema validation and range checks. Remaining 5% errors are primarily edge cases (handwritten text, unusual formats) that require human review.',
+            assumptions: 'Experienced staff have a low baseline error rate (3%). Automation expected to reduce to 1% through schema validation. Improvement is real but smaller than for junior staff.',
           },
           {
             benefitType: 'risk',
@@ -131,11 +165,94 @@ export const exampleData: CanvasData = {
             valueMeaning: 'absolute',
             aggregationBasis: 'perMonth',
             benefitUnit: 'incidents/month',
-            baseline: { type: 'numeric', value: 3 },
-            expected: { type: 'numeric', value: 0.5 },
+            baseline: { type: 'numeric', value: 1 },
+            expected: { type: 'numeric', value: 0.3 },
             confidenceUser: 'medium',
             confidenceDev: 'medium',
-            assumptions: 'Automated processing ensures consistent handling per policy, reducing human error in compliance-sensitive documents. Baseline of 3 incidents/month reflects occasional policy misinterpretation by staff. Expected 0.5 incidents/month accounts for system errors requiring escalation.',
+            assumptions: 'Experienced staff already have low compliance incident rates. Automation provides incremental improvement through consistent policy enforcement.',
+          },
+        ],
+      },
+      {
+        id: 'req-1b',
+        title: 'Extract key information from documents (junior)',
+        description: `Same extraction task as req-1, but capturing benefit estimates for **new/junior data entry staff** (under 1 year of experience). Junior staff have higher baseline processing times and error rates, so automation delivers proportionally larger benefits for this population.
+
+**Heterogeneity Rationale**: Evidence consistently shows that automation benefits vary by user experience level. Junior staff:
+- Spend much more time per document (18 min vs. 10 min for experienced staff)
+- Have higher error rates (8% vs. 3%)
+- Experience more compliance incidents (4/month vs. 1/month)
+- Need far more oversight of automated output (12 min vs. 1 min per unit) because they lack the expertise to quickly verify correctness
+
+Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the net time saving per unit is **lower** for junior staff (4 min vs. 7 min) because the oversight burden is so large. Junior staff essentially have to re-verify the entire output, eroding most of the automation benefit. This illustrates why both heterogeneity and oversight costs must be modelled explicitly.`,
+        userStory: 'As a new data entry clerk, I want documents to be automatically processed so that I can learn from the system output and reduce my error rate',
+        priority: 'high',
+        status: 'in-progress',
+        unitOfWork: 'one document',
+        unitCategory: 'item',
+        volumePerMonth: 150,
+        targetPopulation: 'new data entry staff (under 1 year experience)',
+        stakeholders: ['person-0'],
+        feasibility: {
+          technicalRisk: 'high',
+          effortEstimate: { value: 16, unit: 'person-hours' },
+          feasibilityNotes: 'Same extraction system as req-1; no additional model development. Effort covers designing the structured onboarding programme (manual processing exercises, training materials) and configuring the oversight workflow for junior staff.',
+          risks: [
+            {
+              id: 'risk-junior-1',
+              riskCategory: 'adoption',
+              title: 'Delayed learning of document processing fundamentals',
+              description: 'Junior staff who rely on automated extraction from the start may never develop the manual skills and domain intuition needed to identify edge cases, validate output quality, or handle system failures. This creates a fragile dependency where staff cannot fall back to manual processing when the system is unavailable or produces incorrect results.',
+              likelihood: 'high',
+              impact: 'medium',
+              mitigation: 'Implement a structured onboarding period (first 3 months) where junior staff process a subset of documents manually before transitioning to automated workflows. Require periodic manual processing exercises to maintain baseline skills. Include explanations in automated output so staff learn the reasoning behind extractions.',
+              status: 'identified',
+            },
+          ],
+        },
+        benefits: [
+          {
+            benefitType: 'time',
+            metricId: 'processingTime',
+            metricLabel: 'Processing time',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perUnit',
+            benefitUnit: 'minutes',
+            baseline: { type: 'numeric', value: 18 },
+            expected: { type: 'numeric', value: 2 },
+            oversightMinutesPerUnit: 12,
+            confidenceUser: 'medium',
+            confidenceDev: 'low',
+            assumptions: 'Junior staff currently take ~18 min per document. While gross time saving is large (16 min), junior staff lack the domain knowledge to quickly validate automated output -- they must step through each extracted field against the source document to confirm correctness, taking ~12 min of oversight per unit. Net saving: only 4 min/unit vs. 7 min/unit for senior staff. This counterintuitive result (higher gross savings, lower net savings) illustrates why oversight costs must be modelled explicitly and why heterogeneity matters.',
+          },
+          {
+            benefitType: 'quality',
+            metricId: 'errorRate',
+            metricLabel: 'Error Rate',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perUnit',
+            benefitUnit: '%',
+            baseline: { type: 'numeric', value: 8 },
+            expected: { type: 'numeric', value: 1.5 },
+            confidenceUser: 'medium',
+            confidenceDev: 'low',
+            assumptions: 'Junior staff have a higher baseline error rate (8%). Automation reduces this substantially, but developer confidence is lower because junior staff may accept incorrect automated output without adequate scrutiny.',
+          },
+          {
+            benefitType: 'risk',
+            metricId: 'complianceIncidents',
+            metricLabel: 'Compliance Incidents',
+            direction: 'decreaseIsBetter',
+            valueMeaning: 'absolute',
+            aggregationBasis: 'perMonth',
+            benefitUnit: 'incidents/month',
+            baseline: { type: 'numeric', value: 4 },
+            expected: { type: 'numeric', value: 0.5 },
+            confidenceUser: 'medium',
+            confidenceDev: 'low',
+            assumptions: 'Junior staff generate more compliance incidents (4/month) due to unfamiliarity with policies. Automation enforces consistent handling, but developer confidence is low because junior staff oversight of automated compliance decisions is less reliable.',
           },
         ],
       },
@@ -164,6 +281,7 @@ export const exampleData: CanvasData = {
         unitOfWork: 'one document',
         unitCategory: 'item',
         volumePerMonth: 500,
+        targetPopulation: 'all operations department staff',
         dependsOn: ['req-1'],
         stakeholders: ['person-1', 'person-2'],
         feasibility: {
@@ -246,6 +364,7 @@ export const exampleData: CanvasData = {
         unitOfWork: 'one routing decision',
         unitCategory: 'item',
         volumePerMonth: 500,
+        targetPopulation: 'team leads and operations managers',
         dependsOn: ['req-2'],
         stakeholders: ['person-0', 'person-1', 'person-2'],
         feasibility: {
@@ -321,6 +440,7 @@ export const exampleData: CanvasData = {
         unitOfWork: 'one document validation',
         unitCategory: 'item',
         volumePerMonth: 500,
+        targetPopulation: 'compliance and security officers',
         dependsOn: ['req-1'],
         stakeholders: ['person-2'],
         feasibility: {
@@ -333,6 +453,18 @@ export const exampleData: CanvasData = {
           },
           algorithms: ['Pattern matching', 'Rule-based validation', 'Keyword detection'],
           tools: ['Python', 'Regular expressions', 'Compliance rule engine'],
+          risks: [
+            {
+              id: 'risk-4',
+              riskCategory: 'compliance',
+              title: 'Incomplete compliance rule coverage',
+              description: 'Rule-based validation may not cover all regulatory requirements, especially as regulations evolve (e.g., new GDPR interpretations, sector-specific rules).',
+              likelihood: 'medium',
+              impact: 'high',
+              mitigation: 'Schedule quarterly compliance rule reviews with legal team. Maintain a regulatory change log and update rules within 30 days of new guidance.',
+              status: 'accepted',
+            },
+          ],
         },
         benefits: [
           {
@@ -427,7 +559,15 @@ export const exampleData: CanvasData = {
             kpi: 'Requirements document signed off',
           },
         ],
-        complianceStandards: ['GDPR', 'Data Protection'],
+        complianceStandards: [
+          'GDPR',
+          'Data Protection',
+          {
+            framework: 'ISO/IEC 42001',
+            clauses: ['ISO42001-4', 'ISO42001-6'],
+            uri: 'https://www.iso.org/standard/81230.html',
+          },
+        ],
       },
       {
         id: 'stage-2',
@@ -505,7 +645,15 @@ export const exampleData: CanvasData = {
             kpi: 'Zero downtime deployment',
           },
         ],
-        complianceStandards: ['GDPR'],
+        complianceStandards: [
+          'GDPR',
+          {
+            framework: 'Policy Card v1.0',
+            clauses: ['controls.action_rules', 'obligations', 'monitoring.logging', 'kpis_thresholds'],
+            uri: 'https://example.org/policy-cards/doc-processing-deployment.json',
+          },
+        ],
+        policyCardUri: 'https://example.org/policy-cards/doc-processing-deployment.json',
       },
     ],
   },
@@ -595,6 +743,7 @@ export const exampleBenefitDisplay: BenefitDisplayState = {
       metricId: 'processingTime',
       benefitRefs: [
         { requirementId: 'req-1', benefitIndex: 0 },
+        { requirementId: 'req-1b', benefitIndex: 0 },
         { requirementId: 'req-2', benefitIndex: 0 },
         { requirementId: 'req-3', benefitIndex: 0 },
       ],
@@ -603,7 +752,10 @@ export const exampleBenefitDisplay: BenefitDisplayState = {
       id: 2,
       benefitType: 'quality',
       metricId: 'errorRate',
-      benefitRefs: [{ requirementId: 'req-1', benefitIndex: 1 }],
+      benefitRefs: [
+        { requirementId: 'req-1', benefitIndex: 1 },
+        { requirementId: 'req-1b', benefitIndex: 1 },
+      ],
     },
     {
       id: 3,

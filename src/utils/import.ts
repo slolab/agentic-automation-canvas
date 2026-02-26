@@ -5,7 +5,7 @@
 
 import JSZip from 'jszip'
 import type { ROCrateJSONLD, ROCrateEntity } from '@/types/rocrate'
-import type { CanvasData } from '@/types/canvas'
+import type { CanvasData, ComplianceStandard } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { normalizeCanvasData } from '@/utils/migrate'
 
@@ -148,6 +148,9 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
         }
         if (step!['aac:volumePerMonth'] !== undefined) {
           req.volumePerMonth = step!['aac:volumePerMonth'] as number
+        }
+        if (step!['aac:targetPopulation']) {
+          req.targetPopulation = step!['aac:targetPopulation'] as string
         }
         // Migrate old requirement-level oversight to first time benefit
         // Map RO-Crate field name (aac:humanOversightMinutesPerUnit) to internal schema field name (oversightMinutesPerUnit)
@@ -442,8 +445,12 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       const complianceStandard = activity['aac:complianceStandard'] || activity.complianceStandard
       if (complianceStandard) {
         stage.complianceStandards = Array.isArray(complianceStandard)
-          ? complianceStandard as string[]
-          : [complianceStandard as string]
+          ? complianceStandard as (string | ComplianceStandard)[]
+          : [complianceStandard as string | ComplianceStandard]
+      }
+
+      if (activity['aac:policyCardUri']) {
+        stage.policyCardUri = activity['aac:policyCardUri'] as string
       }
 
       return stage

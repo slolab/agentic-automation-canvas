@@ -112,6 +112,10 @@
                 "items": { "type": "string" },
                 "description": "Person IDs of stakeholders for this task"
               },
+              "targetPopulation": {
+                "type": "string",
+                "description": "The user population whose benefit estimates this task captures (e.g., 'junior researchers', 'clinical staff with 3+ years experience'). Specifying this makes heterogeneity explicit when different user groups are expected to benefit differently from the same type of task."
+              },
               "feasibility": {
                 "type": "object",
                 "description": "Optional per-task feasibility (overrides project-level defaults)",
@@ -176,6 +180,11 @@
                         }
                       }
                     }
+                  },
+                  "risks": {
+                    "type": "array",
+                    "description": "Per-task risk assessments paralleling benefits",
+                    "items": { "$ref": "#/$defs/Risk" }
                   }
                 }
               }
@@ -258,7 +267,26 @@
               },
               "complianceStandards": {
                 "type": "array",
-                "items": { "type": "string" }
+                "description": "Compliance standards as plain strings or structured framework references",
+                "items": {
+                  "oneOf": [
+                    { "type": "string" },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "framework": { "type": "string", "description": "Name of the compliance framework (e.g., 'NIST AI RMF', 'ISO/IEC 42001', 'EU AI Act')" },
+                        "clauses": { "type": "array", "items": { "type": "string" }, "description": "Specific clauses or tokens (e.g., 'GOVERN-1', 'Article 72')" },
+                        "uri": { "type": "string", "format": "uri", "description": "URI to the framework or standard document" }
+                      },
+                      "required": ["framework"]
+                    }
+                  ]
+                }
+              },
+              "policyCardUri": {
+                "type": "string",
+                "format": "uri",
+                "description": "URI pointing to a Policy Card (machine-readable deployment governance artifact) governing this stage"
               }
             },
             "required": ["id", "name"]
@@ -457,6 +485,37 @@
         }
       },
       "required": ["benefitType", "metricId", "metricLabel", "direction", "valueMeaning", "benefitUnit", "baseline", "expected"]
+    },
+    "Risk": {
+      "type": "object",
+      "description": "A risk assessment for a requirement, paralleling benefit metrics",
+      "properties": {
+        "id": { "type": "string", "description": "Unique identifier for the risk" },
+        "riskCategory": {
+          "type": "string",
+          "enum": ["technical", "data", "compliance", "operational", "ethical", "adoption"],
+          "description": "Category of risk"
+        },
+        "title": { "type": "string", "minLength": 1, "description": "Short title for the risk" },
+        "description": { "type": "string", "description": "Detailed description of the risk" },
+        "likelihood": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Probability of the risk occurring"
+        },
+        "impact": {
+          "type": "string",
+          "enum": ["low", "medium", "high", "critical"],
+          "description": "Severity if the risk materialises"
+        },
+        "mitigation": { "type": "string", "description": "Strategy to mitigate or address the risk" },
+        "status": {
+          "type": "string",
+          "enum": ["identified", "mitigated", "accepted", "resolved"],
+          "description": "Current status of the risk"
+        }
+      },
+      "required": ["id", "riskCategory", "title", "likelihood", "impact", "status"]
     }
   }
 }

@@ -400,6 +400,22 @@
           </button>
         </div>
 
+        <FormField
+          :id="`req-target-population-${index}`"
+          label="Target Population"
+          tooltip="Specify which user group or population the benefit estimates below apply to. Different user populations often experience different levels of benefit from the same automation (e.g., junior vs. senior researchers). When heterogeneity matters, create separate tasks for each population with their own benefit values."
+          help-text="Who do these benefit estimates apply to?"
+        >
+          <input
+            :id="`req-target-population-${index}`"
+            :value="requirement.targetPopulation || ''"
+            type="text"
+            class="form-input"
+            placeholder="e.g., junior researchers, all clinical staff, non-computational users"
+            @input="update({ ...requirement, targetPopulation: ($event.target as HTMLInputElement).value || undefined })"
+          />
+        </FormField>
+
         <!-- Benefits Summary -->
         <div v-if="benefits.length === 0" class="text-sm text-gray-500 italic py-4 text-center bg-gray-50 rounded-lg">
           No benefits defined yet. Click "Edit Benefits" to add time, quality, risk, enablement, or cost benefits.
@@ -582,7 +598,7 @@ function getOversightPercentage(): number {
 }
 
 
-// Format time saved text for collapsed view (baseline − expected) × volume
+// Format time saved text for collapsed view: net savings = (baseline − expected) × volume − oversight
 const timeSavedText = computed(() => {
   if (!timeBenefit.value) return null
   
@@ -590,13 +606,16 @@ const timeSavedText = computed(() => {
   const volume = props.requirement.volumePerMonth
   
   if (savedPerUnit > 0 && volume) {
-    const totalMinutes = savedPerUnit * volume
-    if (totalMinutes >= 60) {
-      const hours = Math.floor(totalMinutes / 60)
-      const mins = Math.round(totalMinutes % 60)
+    const grossMinutes = savedPerUnit * volume
+    const oversightMinutes = getOversightMinutes(timeBenefit.value, volume)
+    const netMinutes = Math.max(0, grossMinutes - oversightMinutes)
+    if (netMinutes === 0) return null
+    if (netMinutes >= 60) {
+      const hours = Math.floor(netMinutes / 60)
+      const mins = Math.round(netMinutes % 60)
       return mins > 0 ? `${hours}h ${mins}m/month` : `${hours}h/month`
     }
-    return `${Math.round(totalMinutes)}m/month`
+    return `${Math.round(netMinutes)}m/month`
   }
   return null
 })

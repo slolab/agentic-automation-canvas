@@ -326,7 +326,16 @@
           :key="standardIndex"
           class="mb-2 p-2 bg-gray-50 rounded flex items-center justify-between"
         >
-          <span class="text-sm">{{ standard }}</span>
+          <div v-if="typeof standard === 'string'" class="text-sm">{{ standard }}</div>
+          <div v-else class="text-sm space-y-0.5">
+            <div class="font-medium">{{ standard.framework }}</div>
+            <div v-if="standard.clauses?.length" class="text-xs text-gray-500">
+              Clauses: {{ standard.clauses.join(', ') }}
+            </div>
+            <a v-if="standard.uri" :href="standard.uri" target="_blank" rel="noopener noreferrer" class="text-xs text-primary-600 hover:text-primary-800 underline">
+              {{ standard.uri }}
+            </a>
+          </div>
           <button
             type="button"
             @click="removeCompliance(standardIndex)"
@@ -335,14 +344,23 @@
             Remove
           </button>
         </div>
-        <button
-          type="button"
-          @click="showAddCompliance = true"
-          class="btn-secondary text-sm"
-        >
-          Add Compliance Standard
-        </button>
-        <div v-if="showAddCompliance" class="mt-2 p-3 bg-gray-50 rounded space-y-2">
+        <div class="flex gap-2">
+          <button
+            type="button"
+            @click="showAddCompliance = true; complianceMode = 'simple'"
+            class="btn-secondary text-sm"
+          >
+            Add Standard
+          </button>
+          <button
+            type="button"
+            @click="showAddCompliance = true; complianceMode = 'structured'"
+            class="btn-secondary text-sm"
+          >
+            Add Structured
+          </button>
+        </div>
+        <div v-if="showAddCompliance && complianceMode === 'simple'" class="mt-2 p-3 bg-gray-50 rounded space-y-2">
           <input
             v-model="newCompliance"
             type="text"
@@ -366,7 +384,75 @@
             </button>
           </div>
         </div>
+        <div v-if="showAddCompliance && complianceMode === 'structured'" class="mt-2 p-3 bg-gray-50 rounded space-y-2">
+          <input
+            v-model="newStructuredCompliance.framework"
+            type="text"
+            placeholder="Framework name (e.g., NIST AI RMF, ISO/IEC 42001)"
+            class="form-input text-sm"
+          />
+          <input
+            v-model="newStructuredCompliance.clausesStr"
+            type="text"
+            placeholder="Clauses, comma-separated (e.g., GOVERN-1, MAP-1)"
+            class="form-input text-sm"
+          />
+          <input
+            v-model="newStructuredCompliance.uri"
+            type="url"
+            placeholder="URI to framework document (optional)"
+            class="form-input text-sm"
+          />
+          <div class="flex gap-2">
+            <button
+              type="button"
+              @click="addStructuredCompliance"
+              class="btn-primary text-sm"
+              :disabled="!newStructuredCompliance.framework.trim()"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              @click="showAddCompliance = false; resetStructuredCompliance()"
+              class="btn-secondary text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
       </div>
+
+      <!-- Policy Card URI -->
+      <FormField
+        :id="`stage-policy-card-uri-${index}`"
+        label="Policy Card URI"
+        help-text="Link to a Policy Card (machine-readable deployment governance artifact) for this stage"
+        tooltip="A <a href='https://arxiv.org/abs/2510.24383' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline'>Policy Card</a> is a machine-readable, deployment-layer specification of operational rules, obligations, and compliance mappings for an AI system. Link a Policy Card here to connect planning governance to runtime enforcement."
+      >
+        <div class="flex items-center gap-2">
+          <input
+            :id="`stage-policy-card-uri-${index}`"
+            :value="stage.policyCardUri || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://example.org/policy-cards/my-policy-card.json"
+            @blur="update({ ...stage, policyCardUri: ($event.target as HTMLInputElement).value || undefined })"
+          />
+          <a
+            v-if="stage.policyCardUri"
+            :href="stage.policyCardUri"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+            title="Open policy card"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
+      </FormField>
 
       <!-- Done Button -->
       <div class="pt-4 border-t border-gray-200 mt-4">
@@ -409,7 +495,9 @@ const newAgent = ref<Agent>({ type: 'person' })
 const showAddMilestone = ref(false)
 const newMilestone = ref<Milestone>({ description: '', kpi: '' })
 const showAddCompliance = ref(false)
+const complianceMode = ref<'simple' | 'structured'>('simple')
 const newCompliance = ref<string>('')
+const newStructuredCompliance = ref({ framework: '', clausesStr: '', uri: '' })
 
 // Get available persons
 const availablePersons = computed<Person[]>(() => {
@@ -497,5 +585,28 @@ function addCompliance() {
 function removeCompliance(complianceIndex: number) {
   const updatedCompliance = (props.stage.complianceStandards || []).filter((_, idx) => idx !== complianceIndex)
   props.update({ ...props.stage, complianceStandards: updatedCompliance })
+}
+
+function resetStructuredCompliance() {
+  newStructuredCompliance.value = { framework: '', clausesStr: '', uri: '' }
+}
+
+function addStructuredCompliance() {
+  const framework = newStructuredCompliance.value.framework.trim()
+  if (!framework) return
+
+  const clauses = newStructuredCompliance.value.clausesStr
+    .split(',')
+    .map(c => c.trim())
+    .filter(c => c.length > 0)
+
+  const entry: { framework: string; clauses?: string[]; uri?: string } = { framework }
+  if (clauses.length > 0) entry.clauses = clauses
+  if (newStructuredCompliance.value.uri.trim()) entry.uri = newStructuredCompliance.value.uri.trim()
+
+  const updatedCompliance = [...(props.stage.complianceStandards || []), entry]
+  props.update({ ...props.stage, complianceStandards: updatedCompliance })
+  resetStructuredCompliance()
+  showAddCompliance.value = false
 }
 </script>

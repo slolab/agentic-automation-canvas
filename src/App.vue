@@ -1,5 +1,12 @@
 <template>
-  <div id="app" class="flex flex-col min-h-screen">
+  <div
+    id="app"
+    class="flex flex-col min-h-screen"
+    @dragenter.prevent="onDragEnter"
+    @dragover.prevent
+    @dragleave="onDragLeave"
+    @drop.prevent="onDrop"
+  >
     <header class="bg-white shadow-sm border-b border-gray-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div class="flex items-start justify-between">
@@ -201,6 +208,22 @@
         </div>
       </div>
     </footer>
+
+    <!-- Drag-and-drop overlay -->
+    <Teleport to="body">
+      <div
+        v-if="isDragging"
+        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 pointer-events-none"
+      >
+        <div class="bg-white rounded-xl shadow-2xl px-12 py-10 text-center max-w-md">
+          <svg class="w-16 h-16 mx-auto text-orange-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+          </svg>
+          <p class="text-lg font-semibold text-gray-900">Drop RO-Crate ZIP to import</p>
+          <p class="text-sm text-gray-500 mt-1">This will replace your current canvas data</p>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -211,6 +234,7 @@ import { useHeaderActionsMode } from './composables/useHeaderActionsMode'
 import { exampleData, exampleBenefitDisplay } from './data/example-data'
 import { generateROCrate, validateForExport, hasBlockingErrors } from './utils/rocrate'
 import { downloadROCrateZip } from './utils/download'
+import { importROCrateFromZip } from './utils/import'
 import CanvasForm from './components/CanvasForm.vue'
 import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
@@ -245,6 +269,60 @@ const loadExample = () => {
 
 const openInfo = () => {
   infoOverlay.value?.open()
+}
+
+// Drag-and-drop RO-Crate import
+const isDragging = ref(false)
+let dragCounter = 0
+
+const onDragEnter = (e: DragEvent) => {
+  if (e.dataTransfer?.types.includes('Files')) {
+    dragCounter++
+    isDragging.value = true
+  }
+}
+
+const onDragLeave = () => {
+  dragCounter--
+  if (dragCounter <= 0) {
+    dragCounter = 0
+    isDragging.value = false
+  }
+}
+
+const onDrop = async (e: DragEvent) => {
+  dragCounter = 0
+  isDragging.value = false
+
+  const file = e.dataTransfer?.files?.[0]
+  if (!file) return
+
+  const fileName = file.name.toLowerCase()
+  const isValidZip = fileName.endsWith('.zip') ||
+    file.type === 'application/zip' ||
+    file.type === 'application/x-zip-compressed'
+
+  if (!isValidZip) {
+    alert('Please drop a ZIP file containing an RO-Crate.')
+    return
+  }
+
+  if (!confirm(`Import RO-Crate from "${file.name}"?\n\nThis will replace your current canvas data.`)) {
+    return
+  }
+
+  try {
+    const result = await importROCrateFromZip(file)
+    importFromROCrate(result.canvasData, result.benefitDisplay, result.crateSchemaVersion, true, result.migrationWarnings)
+    if (result.migrationWarnings && result.migrationWarnings.length > 0) {
+      alert(`RO-Crate imported successfully.\n\nMigrations applied:\n${result.migrationWarnings.join('\n')}`)
+    } else {
+      alert('RO-Crate imported successfully!')
+    }
+  } catch (error) {
+    alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    console.error('Import error:', error)
+  }
 }
 
 const validation = computed(() => validateAll())

@@ -3,12 +3,10 @@
     <div
       v-if="isOpen"
       class="fixed inset-0 z-50 overflow-y-auto"
-      @click.self="close"
     >
       <!-- Backdrop -->
       <div 
         class="fixed inset-0 bg-black bg-opacity-50 transition-opacity" 
-        @click="close"
         @scroll.prevent
         @wheel.prevent.stop
         @touchmove.prevent.stop

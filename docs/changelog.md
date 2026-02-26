@@ -5,6 +5,40 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.0]
+
+### Added
+- **Per-task risk assessments** paralleling benefits: each task's feasibility can now include a `risks` array with category (technical, data, compliance, operational, ethical, adoption), title, description, likelihood, impact, mitigation strategy, and status
+- Risk assessment UI in Feasibility & Risks section with collapsible risk cards per task
+- Collapsed task-level feasibility view shows risk assessment count alongside feasibility count
+- **Policy Card URI** field on governance stages: optional `policyCardUri` linking to a machine-readable Policy Card deployment governance artifact
+- Policy Card URI input with external link in governance stage UI
+- **Structured compliance standards**: `complianceStandards` now accepts both plain strings and structured objects with `framework`, `clauses` (array), and `uri` fields
+- "Add Structured" mode in governance stage compliance UI for framework/clauses/URI entry
+- `Risk` definition added to JSON Schema `$defs`
+- RO-Crate export: `aac:policyCardUri` on governance stage entities
+- Risk and governance field mappings documented in `docs/mapping.md`
+- Example data: 4 risk examples across tasks, structured compliance standards (ISO/IEC 42001, Policy Card v1.0), Policy Card URI on Deployment stage
+- **Target population** field on requirements: optional `targetPopulation` string specifying which user group the benefit estimates apply to (e.g., "junior researchers", "senior clinical staff"), enabling explicit heterogeneity modelling
+- Target population input with tooltip in the Benefits section of each task
+- RO-Crate export: `aac:targetPopulation` on P-Plan step entities; AGENTS.md: target population listed per requirement
+- Schema and docs: `targetPopulation` property in JSON Schema, TypeScript interface, and `docs/spec/concepts.md`
+- Example data: document extraction task split into senior vs. junior staff variants with differing baseline, oversight, and net-savings values demonstrating heterogeneous benefits; "delayed learning" adoption risk on junior variant
+- **Confidence tooltips** on all benefit forms: User Confidence and Developer Confidence selectors now include InfoTooltip explaining each perspective and noting that disagreement highlights areas for discussion
+- **Chip input improvements** for Algorithms/Technologies, Tools/Frameworks, and agentic Framework/Tools/Orchestration fields: tooltips explaining chip-based entry, updated placeholders ("Type a name and press Enter"), comma-separated input automatically split into multiple chips
+- Risk assessment section added to schema reference documentation
+- **Drag-and-drop RO-Crate import**: drop a ZIP file anywhere on the canvas to import, with a confirmation dialog to prevent accidental data replacement
+
+### Changed
+- **Tab rename**: "Tasks & Expectations" → "Tasks & Benefits"
+- **Tab rename**: "Developer Feasibility" → "Feasibility & Risks"
+- Section headers and descriptions updated to reflect the balanced benefits/risks framing
+- Completion calculation handles structured compliance standard objects
+- Collapsed task view: time savings now show **net** savings (after subtracting oversight) instead of gross savings
+
+### Fixed
+- Benefits modal no longer closes on backdrop click or click-release outside the modal area, preventing accidental data loss
+
 ## [0.12.3]
 
 ### Added

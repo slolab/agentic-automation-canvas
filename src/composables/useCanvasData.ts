@@ -757,7 +757,7 @@ export function useCanvasData() {
         }
         if (stage.complianceStandards !== undefined && stage.complianceStandards.length > 0) {
           total += stage.complianceStandards.length
-          completed += stage.complianceStandards.filter(c => c?.trim()).length
+          completed += stage.complianceStandards.filter(c => typeof c === 'string' ? c.trim() : c?.framework?.trim()).length
         }
       })
     }

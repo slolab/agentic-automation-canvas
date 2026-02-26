@@ -26,9 +26,12 @@ A **task** represents a specific unit of work that the agentic system will perfo
 - Time unit standardization (minutes or hours)
 - Baseline performance metrics
 - Expected benefits (time, quality, risk, enablement, cost)
+- Target population (the user group whose benefit estimates this task captures)
 - Associated stakeholders (per-task, referenced by Person ID)
 
 Tasks are the fundamental building blocks for understanding what the agentic system will do and measuring its impact.
+
+The **target population** field makes heterogeneity explicit: different user groups often experience different levels of benefit from the same automation (e.g., junior vs. senior researchers, computational vs. non-computational users). When benefit estimates are expected to differ across populations, create separate tasks for each group -- each with its own target population and benefit values -- rather than assuming uniform effects.
 
 ## Contract
 
