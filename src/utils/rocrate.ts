@@ -333,6 +333,13 @@ class PersonRegistry {
   }
 
   /**
+   * Get the mutable entity for a person by ID (for adding extra fields before export)
+   */
+  getEntity(personId: string): ROCrateEntity | undefined {
+    return this.persons.get(personId)?.entity
+  }
+
+  /**
    * Get all Person entities for the graph (identity-only, no roles embedded)
    */
   getAllPersonEntities(): ROCrateEntity[] {
@@ -499,6 +506,17 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
           affiliation: person.affiliation,
         }
       )
+
+      // Add extra person fields directly to the entity
+      const entity = personRegistry.getEntity(rocratePersonId)
+      if (entity) {
+        if (person.functionRoles?.length) {
+          entity['aac:functionRoles'] = person.functionRoles
+        }
+        if (person.localTitle) {
+          entity['aac:localTitle'] = person.localTitle
+        }
+      }
     })
   }
 
