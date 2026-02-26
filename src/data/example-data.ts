@@ -283,7 +283,7 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
         unitCategory: 'item',
         volumePerMonth: 500,
         targetPopulation: 'all operations department staff',
-        dependsOn: ['req-1'],
+        dependsOn: ['req-1', 'req-1b'],
         stakeholders: ['person-1', 'person-2'],
         feasibility: {
           technicalRisk: 'low',
@@ -442,7 +442,7 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
         unitCategory: 'item',
         volumePerMonth: 500,
         targetPopulation: 'compliance and security officers',
-        dependsOn: ['req-1'],
+        dependsOn: ['req-1', 'req-1b'],
         stakeholders: ['person-2'],
         feasibility: {
           technicalRisk: 'low',
