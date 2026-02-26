@@ -154,18 +154,18 @@
       </FormField>
 
       <FormField
-        :id="`person-local-titles-${index}`"
-        label="Local Titles (Optional)"
-        help-text="Free-text local titles (e.g., 'Senior Research Scientist', 'Head of IT'). Comma-separated."
-        tooltip="Local titles are free-text descriptions of a person's position or title within their organization. These are optional and complement functional roles. Examples: 'Senior Research Scientist', 'Head of IT', 'Principal Investigator'. Enter multiple titles separated by commas."
+        :id="`person-local-title-${index}`"
+        label="Local Title (Optional)"
+        help-text="Free-text position or title (e.g., 'Senior Research Scientist', 'Head of IT')."
+        tooltip="A free-text description of this person's position or title within their organization. This is optional and complements functional roles. Examples: 'Senior Research Scientist', 'Head of IT', 'Principal Investigator'."
       >
         <input
-          :id="`person-local-titles-${index}`"
-          :value="(person.localTitles || []).join(', ')"
+          :id="`person-local-title-${index}`"
+          :value="person.localTitle || ''"
           type="text"
           class="form-input"
-          placeholder="e.g., Senior Research Scientist, Head of IT"
-          @input="handleLocalTitlesChange($event)"
+          placeholder="e.g., Senior Research Scientist"
+          @change="update({ ...person, localTitle: ($event.target as HTMLInputElement).value || undefined })"
         />
       </FormField>
 
@@ -269,13 +269,4 @@ function removeFunctionRole(roleId: string) {
   props.update({ ...props.person, functionRoles: newRoles.length > 0 ? newRoles : undefined })
 }
 
-// Handle local titles change
-function handleLocalTitlesChange(event: Event) {
-  const input = event.target as HTMLInputElement
-  const titles = input.value
-    .split(',')
-    .map(t => t.trim())
-    .filter(t => t.length > 0)
-  props.update({ ...props.person, localTitles: titles.length > 0 ? titles : undefined })
-}
 </script>

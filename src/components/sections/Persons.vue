@@ -66,10 +66,10 @@
             </div>
           </div>
           
-          <!-- Local Titles -->
-          <div v-if="person.localTitles && person.localTitles.length > 0" class="mt-2">
-            <div class="text-xs font-medium text-gray-700 mb-1">Local Titles:</div>
-            <div class="text-xs text-gray-600">{{ person.localTitles.join(', ') }}</div>
+          <!-- Local Title -->
+          <div v-if="person.localTitle" class="mt-2">
+            <div class="text-xs font-medium text-gray-700 mb-1">Title:</div>
+            <div class="text-xs text-gray-600">{{ person.localTitle }}</div>
           </div>
           
           <!-- Project Assignments -->

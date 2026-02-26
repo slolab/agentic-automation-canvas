@@ -65,10 +65,9 @@ The schema follows semantic versioning. Changes to the schema structure will be 
 - Functional roles are standardized terms (e.g., "project-lead", "developer", "researcher") defined in `vocabularies/function-roles.json`
 - These roles enable role aggregation and cross-project analysis
 
-**Local Titles (Optional)**
-- `localTitles` are free-text descriptions of a person's position or title within their organization
+**Local Title (Optional)**
+- `localTitle` is a free-text description of a person's position or title within their organization
 - Examples: "Senior Research Scientist", "Head of IT", "Principal Investigator"
-- Multiple titles can be provided as a comma-separated list
 
 **Person Identity Enforcement**
 - All persons are managed in a centralized `persons` array
@@ -125,7 +124,7 @@ The schema follows semantic versioning. Changes to the schema structure will be 
 
 **Person:**
 - `functionRoles.length >= 1` (required)
-- `localTitles` optional (free text)
+- `localTitle` optional (free text)
 - Unique `id` required
 
 **Project:**

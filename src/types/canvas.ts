@@ -159,7 +159,7 @@ export interface Person {
   affiliation?: string // Optional disambiguation
   orcid?: string // Optional stable identifier (e.g., ORCID)
   functionRoles?: string[] // Functional roles from controlled vocabulary
-  localTitles?: string[] // Free-text position/title descriptions
+  localTitle?: string // Free-text position/title description
 }
 
 /** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */
