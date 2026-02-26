@@ -27,6 +27,7 @@ export const exampleData: CanvasData = {
       name: 'Emma Rodriguez',
       affiliation: 'Compliance Department',
       functionRoles: ['compliance-officer', 'data-manager'],
+      localTitle: 'Senior Data Protection Officer',
     },
   ],
   project: {
