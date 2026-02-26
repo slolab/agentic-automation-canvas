@@ -115,6 +115,7 @@ The `schema/` directory contains standalone schema definitions (JSON Schema, RO-
 
 ## Documentation
 
+- [AGENTS.md](AGENTS.md) - Instructions for AI assistants and contributors (pre-PR checklist)
 - [Contributing Guide](docs/CONTRIBUTING.md) - Development guidelines
 - [Deployment Guide](docs/DEPLOYMENT.md) - GitHub Pages deployment
 

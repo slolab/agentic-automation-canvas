@@ -239,7 +239,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
   })
 
   // Create centralized persons array from Person entities
-  const persons: Array<{ id: string; name: string; affiliation?: string; orcid?: string }> = []
+  const persons: Array<{ id: string; name: string; affiliation?: string; orcid?: string; functionRoles?: string[]; localTitle?: string }> = []
   personEntities.forEach((personEntity) => {
     const affiliation = personEntity['schema:affiliation']
       ? (typeof personEntity['schema:affiliation'] === 'string' 
@@ -252,6 +252,14 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       ? (typeof identifier === 'string' ? identifier : (identifier as { '@id': string })['@id'])
       : undefined
 
+    const functionRoles = Array.isArray(personEntity['aac:functionRoles'])
+      ? personEntity['aac:functionRoles'] as string[]
+      : undefined
+
+    const localTitle = typeof personEntity['aac:localTitle'] === 'string'
+      ? personEntity['aac:localTitle']
+      : undefined
+
     // Extract Person ID (remove # prefix if present)
     const personId = personEntity['@id'].replace('#', '')
     
@@ -260,6 +268,8 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       name: (personEntity.name as string) || '',
       affiliation,
       orcid,
+      functionRoles,
+      localTitle,
     })
   })
 

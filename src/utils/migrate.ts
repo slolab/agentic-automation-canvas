@@ -135,9 +135,25 @@ export function normalizeCanvasData(data: CanvasData): NormalizeResult {
         : undefined,
   }
 
+  // Migrate persons: localTitles (string[]) → localTitle (string)
+  const normalizedPersons = data.persons?.map((person) => {
+    const p = person as any
+    if (p.localTitles && !p.localTitle) {
+      const joined = Array.isArray(p.localTitles) ? p.localTitles.join(', ') : String(p.localTitles)
+      const { localTitles: _, ...rest } = p
+      return { ...rest, localTitle: joined }
+    }
+    if (p.localTitles) {
+      const { localTitles: _, ...rest } = p
+      return rest
+    }
+    return person
+  })
+
   const result: CanvasData = {
     ...data,
     project: normalizedProject,
+    persons: normalizedPersons,
     userExpectations: {
       ...data.userExpectations,
       requirements: normalizedReqs,

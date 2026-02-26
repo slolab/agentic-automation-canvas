@@ -5,6 +5,18 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1]
+
+### Changed
+- **Person local title**: `localTitles` (string array, comma-separated) simplified to `localTitle` (single string), fixing a reactive bug where spaces could not be typed; migration joins existing arrays on import
+
+### Fixed
+- **RO-Crate round-trip**: `targetPopulation` now imported (was exported but never read back)
+- **RO-Crate round-trip**: `policyCardUri` on governance stages now imported (was exported but never read back)
+- **RO-Crate round-trip**: `functionRoles` and `localTitle` on Person entities now exported and imported (both were previously silently dropped, with functionRoles loss causing a validation error on reimport)
+- **Compliance standards type**: import type assertion corrected from `string[]` to `(string | ComplianceStandard)[]` to match the actual union type
+- **Example data**: junior extraction task (req-1b) now connected in dependency graph — req-2 and req-4 depend on both `req-1` and `req-1b`; Emma Rodriguez has `localTitle` demonstrating the field
+
 ## [0.13.0]
 
 ### Added
@@ -35,9 +47,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Section headers and descriptions updated to reflect the balanced benefits/risks framing
 - Completion calculation handles structured compliance standard objects
 - Collapsed task view: time savings now show **net** savings (after subtracting oversight) instead of gross savings
+- **AGENTS.md minimised**: stripped governance stages, deliverables, evaluations, stakeholders, risk ratings, effort estimates, TRL, and project metadata; output now contains only title, objective, requirements with acceptance criteria, tech approach, data sources, and constraints — roughly 60% fewer tokens
+- AGENTS.md header includes canvas semantic version as a target-version instruction for the agent
 
 ### Fixed
 - Benefits modal no longer closes on backdrop click or click-release outside the modal area, preventing accidental data loss
+- **AGENTS.md compliance rendering**: structured compliance standards (objects with framework/clauses/uri) no longer render as `[object Object]`
 
 ## [0.12.3]
 
