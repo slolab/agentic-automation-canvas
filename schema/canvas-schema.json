@@ -353,7 +353,25 @@
               "doi": { "type": "string", "format": "uri" },
               "authors": {
                 "type": "array",
-                "items": { "type": "string" }
+                "description": "Publication authors. Each author is either a reference to a Person entity or a free-text organization/consortium name.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": { "type": "string", "enum": ["person", "organization"] },
+                    "personId": { "type": "string", "description": "Reference to Person entity ID (required when type is 'person')" },
+                    "name": { "type": "string", "description": "Name for organization authors (required when type is 'organization')" }
+                  },
+                  "required": ["type"],
+                  "if": {
+                    "properties": { "type": { "const": "person" } }
+                  },
+                  "then": {
+                    "required": ["personId"]
+                  },
+                  "else": {
+                    "required": ["name"]
+                  }
+                }
               },
               "date": { "type": "string", "format": "date" }
             },

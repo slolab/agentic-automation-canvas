@@ -907,7 +907,13 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
         pubEntity.identifier = pub.doi
       }
       if (pub.authors && pub.authors.length > 0) {
-        pubEntity.author = pub.authors.map(name => ({ '@type': 'schema:Person', name }))
+        pubEntity.author = pub.authors.map(a => {
+          if (a.type === 'person' && a.personId) {
+            const person = data.persons?.find(p => p.id === a.personId)
+            return { '@type': 'schema:Person', name: person?.name || a.personId, '@id': `#${a.personId}` }
+          }
+          return { '@type': 'schema:Organization', name: a.name || '' }
+        })
       }
       if (pub.date && isValidDate(pub.date)) {
         pubEntity.datePublished = pub.date

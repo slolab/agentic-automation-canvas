@@ -208,7 +208,10 @@
         "id": "pub-1",
         "title": "Biomedical AI Automation: A Case Study",
         "doi": "https://doi.org/10.1234/example.2025.001",
-        "authors": ["Dr. Jane Smith", "Dr. John Doe"],
+        "authors": [
+          { "type": "person", "personId": "person-0" },
+          { "type": "person", "personId": "person-1" }
+        ],
         "date": "2025-07-15"
       }
     ],

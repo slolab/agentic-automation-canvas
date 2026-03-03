@@ -87,20 +87,90 @@
         />
       </FormField>
 
-      <FormField
-        :id="`pub-authors-${index}`"
-        label="Authors"
-        help-text="Comma-separated list of authors"
-        tooltip="List all authors separated by commas. Format: 'Last, First, Last, First'. Example: 'Smith, John, Doe, Jane'. This helps attribute credit and track contributions."
-      >
-        <input
-          :id="`pub-authors-${index}`"
-          :value="(publication.authors || []).join(', ')"
-          type="text"
-          class="form-input"
-          @input="update({ ...publication, authors: ($event.target as HTMLInputElement).value.split(',').map(s => s.trim()).filter(s => s) })"
-        />
-      </FormField>
+      <div>
+        <label class="form-label mb-2 flex items-center gap-2">
+          <span>Authors</span>
+          <span class="text-xs text-gray-500 font-normal ml-2">
+            (select persons or add organizations)
+          </span>
+        </label>
+        <div
+          v-for="(author, authorIndex) in (publication.authors || [])"
+          :key="authorIndex"
+          class="mb-2 p-2 bg-gray-50 rounded flex items-center justify-between"
+        >
+          <span class="text-sm">
+            {{ author.type === 'person' ? getPersonName(author.personId) : author.name }}
+            <span class="text-xs text-gray-500">({{ author.type }})</span>
+          </span>
+          <button
+            type="button"
+            @click="removeAuthor(authorIndex)"
+            class="text-red-600 hover:text-red-800 text-sm"
+          >
+            Remove
+          </button>
+        </div>
+        <button
+          type="button"
+          @click="showAddAuthor = true"
+          class="btn-secondary text-sm"
+        >
+          Add Author
+        </button>
+        <div v-if="showAddAuthor" class="mt-2 p-3 bg-gray-50 rounded space-y-2">
+          <select
+            v-model="newAuthor.type"
+            class="form-input text-sm"
+          >
+            <option value="person">Person</option>
+            <option value="organization">Organization</option>
+          </select>
+          <div v-if="newAuthor.type === 'person'">
+            <select
+              v-model="newAuthor.personId"
+              class="form-input text-sm"
+              :class="{ 'border-red-300': !newAuthor.personId }"
+            >
+              <option value="">Select a person...</option>
+              <option
+                v-for="person in availablePersons"
+                :key="person.id"
+                :value="person.id"
+              >
+                {{ person.name }} {{ person.affiliation ? `(${person.affiliation})` : '' }}
+              </option>
+            </select>
+            <p v-if="!availablePersons.length" class="text-xs text-yellow-600 mt-1">
+              No persons available. Please add persons in the "Persons" section first.
+            </p>
+          </div>
+          <input
+            v-else
+            v-model="newAuthor.name"
+            type="text"
+            placeholder="Organization or consortium name"
+            class="form-input text-sm"
+          />
+          <div class="flex gap-2">
+            <button
+              type="button"
+              @click="addAuthor"
+              class="btn-primary text-sm"
+              :disabled="newAuthor.type === 'person' ? !newAuthor.personId : !newAuthor.name?.trim()"
+            >
+              Add
+            </button>
+            <button
+              type="button"
+              @click="showAddAuthor = false; resetNewAuthor()"
+              class="btn-secondary text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
 
       <FormField
         :id="`pub-date-${index}`"
@@ -134,9 +204,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
-import type { Publication } from '@/types/canvas'
+import type { Publication, PublicationAuthor, Person } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
 
 interface Props {
   publication: Publication
@@ -145,8 +216,43 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-// New publications (without title) start expanded
+const { canvasData } = useCanvasData()
+
 const isExpanded = ref(!props.publication.title || props.publication.title.trim() === '')
+
+const showAddAuthor = ref(false)
+const newAuthor = ref<PublicationAuthor>({ type: 'person' })
+
+const availablePersons = computed<Person[]>(() => {
+  return canvasData.value.persons || []
+})
+
+function getPersonName(personId?: string): string {
+  if (!personId) return 'Unassigned Person'
+  const person = availablePersons.value.find(p => p.id === personId)
+  return person?.name || 'Unknown Person'
+}
+
+function resetNewAuthor() {
+  newAuthor.value = { type: 'person' }
+}
+
+function addAuthor() {
+  if (newAuthor.value.type === 'person') {
+    if (!newAuthor.value.personId) return
+  } else {
+    if (!newAuthor.value.name?.trim()) return
+  }
+  const updatedAuthors = [...(props.publication.authors || []), { ...newAuthor.value }]
+  props.update({ ...props.publication, authors: updatedAuthors })
+  resetNewAuthor()
+  showAddAuthor.value = false
+}
+
+function removeAuthor(authorIndex: number) {
+  const updatedAuthors = (props.publication.authors || []).filter((_, idx) => idx !== authorIndex)
+  props.update({ ...props.publication, authors: updatedAuthors.length > 0 ? updatedAuthors : undefined })
+}
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

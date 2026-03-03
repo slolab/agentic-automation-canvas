@@ -170,11 +170,19 @@ Technology Readiness Level - project-level maturity assessment
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `authors` | array of string | No |  |  | Schema.org |
+| `authors` | array of object | No | Publication authors. Each author is either a reference to a Person entity or a free-text organization/consortium name. |  | Schema.org |
 | `date` | string | No |  | Format: `date` | Schema.org |
 | `doi` | string | No |  | Format: `uri` | Schema.org |
 | `id` | string | Yes |  |  | AAC |
 | `title` | string | Yes |  |  | Schema.org |
+
+## Outcomes Publication Author
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `name` | string | No | Name for organization authors (required when type is 'organization') |  | Schema.org |
+| `personId` | string | No | Reference to Person entity ID (required when type is 'person') |  | AAC |
+| `type` | string | Yes |  | Enum: `person`, `organization` | AAC |
 
 ## Person
 

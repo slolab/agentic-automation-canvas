@@ -584,12 +584,22 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       }
 
       if (isPublication) {
+        const rawAuthors = Array.isArray(entity.author) ? entity.author : []
+        const authors = rawAuthors
+          .filter((a: any) => a && a.name)
+          .map((a: any) => {
+            const refId = a['@id']?.replace('#', '')
+            const entityType = Array.isArray(a['@type']) ? a['@type'][0] : a['@type']
+            const isOrg = entityType === 'schema:Organization' || entityType === 'Organization'
+            if (!isOrg && refId) {
+              return { type: 'person' as const, personId: refId }
+            }
+            return { type: 'organization' as const, name: a.name as string }
+          })
         publications.push({
           ...outcome,
           doi: outcome.pid,
-          authors: Array.isArray(entity.author)
-            ? entity.author.map((a: any) => a.name).filter(Boolean)
-            : [],
+          authors: authors.length > 0 ? authors : undefined,
         })
       } else {
         deliverables.push({
