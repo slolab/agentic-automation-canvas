@@ -5,6 +5,14 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0]
+
+### Fixed
+- **Dataset deliverable import collision**: deliverables with `type: "Dataset"` in outcomes no longer duplicated into the data access panel on RO-Crate re-import (which caused a validation error due to missing `accessRights`)
+
+### Changed
+- **Structured publication authors**: authors refactored from plain strings to structured person/organization objects — persons can be selected from the canvas persons list, organizations entered as free text, matching the governance agents pattern; schema, UI, RO-Crate import/export, and examples updated accordingly
+
 ## [0.13.1]
 
 ### Changed
