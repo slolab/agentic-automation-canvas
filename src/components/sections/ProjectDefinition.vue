@@ -92,12 +92,12 @@
                   </span>
                 </template>
               </div>
-              <div v-if="localDomains.length > 0 || localKeywords.length > 0" class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                <span v-if="localDomains.length > 0">
-                  <span class="font-medium">Domains:</span> {{ localDomains.map(d => d.value).join(', ') }}
+              <div v-if="(canvasData.project.domain || []).length > 0 || (canvasData.project.keywords || []).length > 0" class="flex flex-wrap items-center gap-3 text-xs text-gray-500">
+                <span v-if="(canvasData.project.domain || []).length > 0">
+                  <span class="font-medium">Domains:</span> {{ canvasData.project.domain!.join(', ') }}
                 </span>
-                <span v-if="localKeywords.length > 0">
-                  <span class="font-medium">Keywords:</span> {{ localKeywords.map(k => k.value).join(', ') }}
+                <span v-if="(canvasData.project.keywords || []).length > 0">
+                  <span class="font-medium">Keywords:</span> {{ canvasData.project.keywords!.join(', ') }}
                 </span>
               </div>
             </div>
@@ -304,49 +304,77 @@
         <FormField
           id="project-domains"
           label="Domains"
-          help-text="Research domain(s) or field(s) of application. Add one domain per entry."
-          tooltip="Specify the research domain(s) or field(s) where your automation applies. Examples: Biomedical, Computer Science, Finance, Healthcare. These improve discoverability of your project in repositories and help others find relevant automation solutions. Add multiple domains if your project spans multiple fields."
+          help-text="Type a name and press Enter to add, or separate multiple with commas"
+          tooltip="Specify the research domain(s) or field(s) where your automation applies. Examples: Biomedical, Computer Science, Finance, Healthcare. These improve discoverability of your project in repositories and help others find relevant automation solutions."
         >
-          <MultiValueInput
-            v-model="localDomains"
-            label="domain"
-            :create-default="() => ({ value: '' })"
-          >
-            <template #input="{ item, index, update }">
-              <input
-                :id="`domain-${index}`"
-                :value="item.value"
-                type="text"
-                class="form-input"
-                placeholder="e.g., Biomedical"
-                @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
-              />
-            </template>
-          </MultiValueInput>
+          <div class="space-y-2">
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="domain in (canvasData.project.domain || [])"
+                :key="domain"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 text-gray-800 text-sm"
+              >
+                {{ domain }}
+                <button
+                  type="button"
+                  @click="removeDomainChip(domain)"
+                  class="text-gray-500 hover:text-red-600"
+                  aria-label="Remove domain"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <input
+              id="project-domains"
+              v-model="domainInput"
+              type="text"
+              class="form-input"
+              placeholder="Type a domain and press Enter (e.g. Biomedical)"
+              @keydown.enter.prevent="addDomainChips"
+              @blur="addDomainChips"
+            />
+          </div>
         </FormField>
 
         <FormField
           id="project-keywords"
           label="Keywords"
-          help-text="Keywords or tags for the project. Add one keyword per entry."
-          tooltip="Add relevant keywords or tags that describe your project. Examples: AI, automation, NLP, document processing, workflow. Keywords improve searchability and help categorize your project. Use specific terms that others might search for."
+          help-text="Type a keyword and press Enter to add, or separate multiple with commas"
+          tooltip="Add relevant keywords or tags that describe your project. Examples: AI, automation, NLP, document processing, workflow. Keywords improve searchability and help categorize your project."
         >
-          <MultiValueInput
-            v-model="localKeywords"
-            label="keyword"
-            :create-default="() => ({ value: '' })"
-          >
-            <template #input="{ item, index, update }">
-              <input
-                :id="`keyword-${index}`"
-                :value="item.value"
-                type="text"
-                class="form-input"
-                placeholder="e.g., AI"
-                @input="update({ ...item, value: ($event.target as HTMLInputElement).value })"
-              />
-            </template>
-          </MultiValueInput>
+          <div class="space-y-2">
+            <div class="flex flex-wrap gap-2">
+              <span
+                v-for="keyword in (canvasData.project.keywords || [])"
+                :key="keyword"
+                class="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-100 text-gray-800 text-sm"
+              >
+                {{ keyword }}
+                <button
+                  type="button"
+                  @click="removeKeywordChip(keyword)"
+                  class="text-gray-500 hover:text-red-600"
+                  aria-label="Remove keyword"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            </div>
+            <input
+              id="project-keywords"
+              v-model="keywordInput"
+              type="text"
+              class="form-input"
+              placeholder="Type a keyword and press Enter (e.g. AI)"
+              @keydown.enter.prevent="addKeywordChips"
+              @blur="addKeywordChips"
+            />
+          </div>
         </FormField>
 
         <FormField
@@ -601,7 +629,6 @@
 <script setup lang="ts">
 import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
-import MultiValueInput from '../MultiValueInput.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import type { ProjectDefinition, Requirement, Benefit } from '@/types/canvas'
 import type { BenefitDisplayGroup, BenefitRef } from '@/types/benefitDisplay'
@@ -641,19 +668,41 @@ const versionError = computed(() => {
   return versionErr ? versionErr.message : undefined
 })
 
-// Convert domain/keywords arrays to objects for MultiValueInput
-const initDomains = () => {
-  const domains = canvasData.value.project.domain || []
-  return domains.map((d: string) => ({ value: d }))
+// Chip inputs for domains and keywords
+const domainInput = ref('')
+const keywordInput = ref('')
+
+function addDomainChips() {
+  const values = domainInput.value.split(',').map(s => s.trim()).filter(Boolean)
+  if (values.length === 0) return
+  const current = canvasData.value.project.domain || []
+  const unique = values.filter(v => !current.includes(v))
+  if (unique.length > 0) {
+    updateProject({ domain: [...current, ...unique] })
+  }
+  domainInput.value = ''
 }
 
-const initKeywords = () => {
-  const keywords = canvasData.value.project.keywords || []
-  return keywords.map((k: string) => ({ value: k }))
+function removeDomainChip(domain: string) {
+  const current = canvasData.value.project.domain || []
+  updateProject({ domain: current.filter(d => d !== domain) })
 }
 
-const localDomains = ref<Array<{ value: string }>>(initDomains())
-const localKeywords = ref<Array<{ value: string }>>(initKeywords())
+function addKeywordChips() {
+  const values = keywordInput.value.split(',').map(s => s.trim()).filter(Boolean)
+  if (values.length === 0) return
+  const current = canvasData.value.project.keywords || []
+  const unique = values.filter(v => !current.includes(v))
+  if (unique.length > 0) {
+    updateProject({ keywords: [...current, ...unique] })
+  }
+  keywordInput.value = ''
+}
+
+function removeKeywordChip(keyword: string) {
+  const current = canvasData.value.project.keywords || []
+  updateProject({ keywords: current.filter(k => k !== keyword) })
+}
 
 // State flags for update coordination (declared early for use in functions)
 let isLocalUpdate = false
@@ -1096,9 +1145,6 @@ watch(
         version: newProject.version || canvasData.value.version || '0.1.0',
         versionDate: newProject.versionDate || canvasData.value.versionDate || new Date().toISOString().split('T')[0],
       }
-      // Sync domain and keywords arrays
-      localDomains.value = (newProject.domain || []).map((d: string) => ({ value: d }))
-      localKeywords.value = (newProject.keywords || []).map((k: string) => ({ value: k }))
       // Reset flag after syncing
       nextTick(() => {
         isSyncingFromCanvas = false
@@ -1108,32 +1154,6 @@ watch(
   { deep: true, immediate: false }
 )
 
-// Watch for local changes to domain and keywords
-watch(localDomains, async (newDomains) => {
-  // Skip if we're currently syncing from canvasData to avoid circular updates
-  if (isSyncingFromCanvas) return
-  
-  isLocalUpdate = true
-  updateProject({
-    domain: newDomains.map((d) => d.value).filter((v) => v.trim()),
-    keywords: localKeywords.value.map((k) => k.value).filter((v) => v.trim()),
-  })
-  await nextTick()
-  isLocalUpdate = false
-}, { deep: true, immediate: false })
-
-watch(localKeywords, async (newKeywords) => {
-  // Skip if we're currently syncing from canvasData to avoid circular updates
-  if (isSyncingFromCanvas) return
-  
-  isLocalUpdate = true
-  updateProject({
-    domain: localDomains.value.map((d) => d.value).filter((v) => v.trim()),
-    keywords: newKeywords.map((k) => k.value).filter((v) => v.trim()),
-  })
-  await nextTick()
-  isLocalUpdate = false
-}, { deep: true, immediate: false })
 
 const update = async () => {
   // Skip if we're currently syncing from canvasData to avoid circular updates
