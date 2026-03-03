@@ -472,8 +472,10 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
   }
 
   // Find datasets (DCAT) - handle both prefixed and non-prefixed types
+  // Exclude outcome deliverables that happen to have Dataset type to avoid
+  // duplicating them in the data access panel without required accessRights
   const datasetEntities = findEntitiesByType(graph, ['Dataset', 'dcat:Dataset', 'schema:Dataset']).filter(
-    (entity) => entity['@id'] !== './'
+    (entity) => entity['@id'] !== './' && entity['aac:outcomeType'] !== 'deliverable'
   )
   if (datasetEntities.length > 0) {
     const datasets = datasetEntities.map((dataset) => {
