@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - **Structured publication authors**: authors refactored from plain strings to structured person/organization objects — persons can be selected from the canvas persons list, organizations entered as free text, matching the governance agents pattern; schema, UI, RO-Crate import/export, and examples updated accordingly
+- **Chip inputs for project domains and keywords**: replaced add/remove row inputs with inline chip pattern (type and press Enter, or comma-separate multiple); simplified data flow by removing intermediate refs
+- **ESLint config**: `_`-prefixed variables now ignored by `no-unused-vars`, matching the standard destructuring discard convention
 
 ## [0.13.1]
 
