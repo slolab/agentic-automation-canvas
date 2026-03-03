@@ -5,6 +5,18 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.14.0]
+
+### Fixed
+- **Dataset deliverable import collision**: deliverables with `type: "Dataset"` in outcomes no longer duplicated into the data access panel on RO-Crate re-import (which caused a validation error due to missing `accessRights`)
+- **Stale display group labels**: collapsed project view now derives benefit metric labels from actual task benefits (ground truth) instead of cached display group metadata, so renaming a benefit metric updates the summary in real time; a watcher also keeps the stored metadata in sync for compatibility checks and persistence
+- **Display group ordering**: collapsed benefit lines now sorted by display group slot number
+
+### Changed
+- **Structured publication authors**: authors refactored from plain strings to structured person/organization objects — persons can be selected from the canvas persons list, organizations entered as free text, matching the governance agents pattern; schema, UI, RO-Crate import/export, and examples updated accordingly
+- **Chip inputs for project domains and keywords**: replaced add/remove row inputs with inline chip pattern (type and press Enter, or comma-separate multiple); simplified data flow by removing intermediate refs
+- **ESLint config**: `_`-prefixed variables now ignored by `no-unused-vars`, matching the standard destructuring discard convention
+
 ## [0.13.1]
 
 ### Changed

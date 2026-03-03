@@ -714,7 +714,10 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
         id: 'pub-1',
         title: 'Automated Document Processing: A Case Study',
         doi: 'https://doi.org/10.1234/example.2024.001',
-        authors: ['Michael Chen', 'Sarah Johnson'],
+        authors: [
+          { type: 'person', personId: 'person-1' },
+          { type: 'person', personId: 'person-0' },
+        ],
         date: '2024-07-15',
       },
     ],

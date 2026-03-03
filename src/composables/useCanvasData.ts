@@ -828,7 +828,7 @@ export function useCanvasData() {
         }
         if (pub.authors !== undefined && pub.authors.length > 0) {
           total += pub.authors.length
-          completed += pub.authors.filter(a => a?.trim()).length
+          completed += pub.authors.filter(a => a.type === 'person' ? !!a.personId : !!a.name?.trim()).length
         }
         if (pub.date !== undefined) {
           total++

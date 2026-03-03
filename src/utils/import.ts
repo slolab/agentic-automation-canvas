@@ -472,8 +472,10 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
   }
 
   // Find datasets (DCAT) - handle both prefixed and non-prefixed types
+  // Exclude outcome deliverables that happen to have Dataset type to avoid
+  // duplicating them in the data access panel without required accessRights
   const datasetEntities = findEntitiesByType(graph, ['Dataset', 'dcat:Dataset', 'schema:Dataset']).filter(
-    (entity) => entity['@id'] !== './'
+    (entity) => entity['@id'] !== './' && entity['aac:outcomeType'] !== 'deliverable'
   )
   if (datasetEntities.length > 0) {
     const datasets = datasetEntities.map((dataset) => {
@@ -582,12 +584,22 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
       }
 
       if (isPublication) {
+        const rawAuthors = Array.isArray(entity.author) ? entity.author : []
+        const authors = rawAuthors
+          .filter((a: any) => a && a.name)
+          .map((a: any) => {
+            const refId = a['@id']?.replace('#', '')
+            const entityType = Array.isArray(a['@type']) ? a['@type'][0] : a['@type']
+            const isOrg = entityType === 'schema:Organization' || entityType === 'Organization'
+            if (!isOrg && refId) {
+              return { type: 'person' as const, personId: refId }
+            }
+            return { type: 'organization' as const, name: a.name as string }
+          })
         publications.push({
           ...outcome,
           doi: outcome.pid,
-          authors: Array.isArray(entity.author)
-            ? entity.author.map((a: any) => a.name).filter(Boolean)
-            : [],
+          authors: authors.length > 0 ? authors : undefined,
         })
       } else {
         deliverables.push({

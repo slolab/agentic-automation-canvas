@@ -253,11 +253,17 @@ export interface Deliverable {
   pid?: string
 }
 
+export interface PublicationAuthor {
+  type: 'person' | 'organization'
+  personId?: string
+  name?: string
+}
+
 export interface Publication {
   id: string
   title: string
   doi?: string
-  authors?: string[]
+  authors?: PublicationAuthor[]
   date?: string
 }
 
