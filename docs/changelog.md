@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - **Dataset deliverable import collision**: deliverables with `type: "Dataset"` in outcomes no longer duplicated into the data access panel on RO-Crate re-import (which caused a validation error due to missing `accessRights`)
+- **Stale display group labels**: collapsed project view now derives benefit metric labels from actual task benefits (ground truth) instead of cached display group metadata, so renaming a benefit metric updates the summary in real time; a watcher also keeps the stored metadata in sync for compatibility checks and persistence
+- **Display group ordering**: collapsed benefit lines now sorted by display group slot number
 
 ### Changed
 - **Structured publication authors**: authors refactored from plain strings to structured person/organization objects — persons can be selected from the canvas persons list, organizations entered as free text, matching the governance agents pattern; schema, UI, RO-Crate import/export, and examples updated accordingly

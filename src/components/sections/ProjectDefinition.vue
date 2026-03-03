@@ -1045,27 +1045,39 @@ const benefitCountTags = computed(() => {
     .map((type) => ({ type, count: counts[type] }))
 })
 
+// Resolve the first valid benefit for a display group (ground truth for metric/type)
+function resolveFirstBenefit(g: BenefitDisplayGroup, reqs: Requirement[]) {
+  for (const ref of g.benefitRefs) {
+    const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
+    const benefit = req?.benefits?.[ref.benefitIndex]
+    if (benefit) return benefit
+  }
+  return undefined
+}
+
 // Display groups with aggregated value for collapsed view (one line per group: tag + metric + value)
 const displayGroupLinesForCollapsed = computed(() => {
   const reqs = canvasData.value.userExpectations?.requirements || []
   return benefitDisplay.value.displayGroups
     .filter((g) => {
-      // Filter out groups with no benefit references
       if (g.benefitRefs.length === 0) return false
-      // Filter out groups where all references point to non-existent tasks
       return g.benefitRefs.some((ref) => {
         const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
         return req && req.benefits && req.benefits[ref.benefitIndex]
       })
     })
     .map((g) => {
-      const metricLabel = g.metricId
-        ? (getMetricDisplayLabel(g.benefitType, g.metricId) || g.metricId)
+      const firstBenefit = resolveFirstBenefit(g, reqs)
+      const benefitType = firstBenefit?.benefitType || g.benefitType
+      const metricId = firstBenefit?.metricId || g.metricId
+      const metricLabel = metricId
+        ? (getMetricDisplayLabel(benefitType, metricId, firstBenefit?.metricLabel) || metricId)
         : 'Benefit'
       const valueDisplay = formatDisplayGroupValue(g, reqs)
-      return { id: g.id, benefitType: g.benefitType, metricLabel, valueDisplay }
+      return { id: g.id, benefitType, metricLabel, valueDisplay }
     })
-    .filter((line) => line.valueDisplay !== '—') // Filter out lines that would show only dashes
+    .filter((line) => line.valueDisplay !== '—')
+    .sort((a, b) => a.id - b.id)
 })
 
 // Display benefit metric in collapsed view (rough estimate only, when no task benefits)
@@ -1154,6 +1166,27 @@ watch(
   { deep: true, immediate: false }
 )
 
+// Keep display group metadata (benefitType, metricId) in sync with actual benefits
+watch(
+  () => canvasData.value.userExpectations?.requirements,
+  () => {
+    const reqs = canvasData.value.userExpectations?.requirements || []
+    let changed = false
+    for (const g of benefitDisplay.value.displayGroups) {
+      const firstBenefit = resolveFirstBenefit(g, reqs)
+      if (!firstBenefit) continue
+      if (g.benefitType !== firstBenefit.benefitType || g.metricId !== firstBenefit.metricId) {
+        g.benefitType = firstBenefit.benefitType
+        g.metricId = firstBenefit.metricId
+        changed = true
+      }
+    }
+    if (changed) {
+      benefitDisplay.value = { ...benefitDisplay.value, displayGroups: [...benefitDisplay.value.displayGroups] }
+    }
+  },
+  { deep: true }
+)
 
 const update = async () => {
   // Skip if we're currently syncing from canvasData to avoid circular updates
