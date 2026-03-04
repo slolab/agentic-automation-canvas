@@ -77,14 +77,28 @@
         help-text="Digital Object Identifier (DOI) as a full URL (e.g., https://doi.org/10.1234/example). Publications use <a href='https://schema.org/ScholarlyArticle' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org ScholarlyArticle type'>schema:ScholarlyArticle</a> type."
         tooltip="The DOI (Digital Object Identifier) of the publication as a full URL. Format: https://doi.org/10.1234/example. If the publication doesn't have a DOI yet, leave this blank. DOIs provide stable references to publications and enable proper citation tracking."
       >
-        <input
-          :id="`pub-doi-${index}`"
-          :value="publication.doi || ''"
-          type="url"
-          class="form-input"
-          placeholder="https://doi.org/10.1234/example"
-          @input="update({ ...publication, doi: ($event.target as HTMLInputElement).value })"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            :id="`pub-doi-${index}`"
+            :value="publication.doi || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://doi.org/10.1234/example"
+            @input="update({ ...publication, doi: ($event.target as HTMLInputElement).value })"
+          />
+          <a
+            v-if="publication.doi && isHttpUrl(publication.doi)"
+            :href="publication.doi"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+            title="Open DOI"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
       </FormField>
 
       <div>
@@ -217,6 +231,10 @@ interface Props {
 
 const props = defineProps<Props>()
 const { canvasData } = useCanvasData()
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
 
 const isExpanded = ref(!props.publication.title || props.publication.title.trim() === '')
 

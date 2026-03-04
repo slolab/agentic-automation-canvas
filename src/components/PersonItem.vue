@@ -94,15 +94,29 @@
         help-text="ORCID identifier (e.g., https://orcid.org/0000-0000-0000-0001). Provides a stable identifier for cross-project person linking."
         tooltip="An ORCID (Open Researcher and Contributor ID) provides a persistent identifier for researchers. Format: https://orcid.org/0000-0000-0000-0001. Using ORCID enables stable cross-project person linking and helps maintain provenance across different projects and systems."
       >
-        <input
-          :id="`person-orcid-${index}`"
-          :value="person.orcid || ''"
-          type="url"
-          class="form-input"
-          placeholder="https://orcid.org/0000-0000-0000-0001"
-          autocomplete="off"
-          @input="update({ ...person, orcid: ($event.target as HTMLInputElement).value || undefined })"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            :id="`person-orcid-${index}`"
+            :value="person.orcid || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://orcid.org/0000-0000-0000-0001"
+            autocomplete="off"
+            @input="update({ ...person, orcid: ($event.target as HTMLInputElement).value || undefined })"
+          />
+          <a
+            v-if="person.orcid && isHttpUrl(person.orcid)"
+            :href="person.orcid"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+            title="Open ORCID profile"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
       </FormField>
 
       <FormField
@@ -210,6 +224,11 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
+
 // New persons (without name) start expanded so they can be filled in
 // Existing persons start collapsed
 const isExpanded = ref(!props.person.name || props.person.name.trim() === '')

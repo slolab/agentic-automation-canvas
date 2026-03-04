@@ -116,14 +116,28 @@
           help-text="Persistent Identifier (PID) or Digital Object Identifier (DOI) for the deliverable (e.g., https://doi.org/10.1234/example)"
           tooltip="A persistent identifier (PID) or DOI for the deliverable if it has been published or assigned one. Use a DOI if published (e.g., https://doi.org/10.1234/software), or another PID for versioned deliverables. PIDs enable stable references and help track deliverable versions."
         >
-          <input
-            :id="`deliverable-pid-${index}`"
-            :value="deliverable.pid || ''"
-            type="url"
-            class="form-input"
-            placeholder="https://doi.org/10.1234/example"
-            @input="update({ ...deliverable, pid: ($event.target as HTMLInputElement).value })"
-          />
+          <div class="flex items-center gap-2">
+            <input
+              :id="`deliverable-pid-${index}`"
+              :value="deliverable.pid || ''"
+              type="url"
+              class="form-input flex-1"
+              placeholder="https://doi.org/10.1234/example"
+              @input="update({ ...deliverable, pid: ($event.target as HTMLInputElement).value })"
+            />
+            <a
+              v-if="deliverable.pid && isHttpUrl(deliverable.pid)"
+              :href="deliverable.pid"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+              title="Open PID"
+            >
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+          </div>
         </FormField>
       </div>
 
@@ -156,6 +170,11 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
+
 // New deliverables (without title) start expanded
 const isExpanded = ref(!props.deliverable.title || props.deliverable.title.trim() === '')
 

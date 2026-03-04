@@ -141,14 +141,28 @@
         help-text="License URI (e.g., https://creativecommons.org/licenses/by/4.0/). Maps to <a href='http://purl.org/dc/terms/license' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Dublin Core Terms license property'>dct:license</a>."
         tooltip="The license URI that specifies how the dataset can be used. Common licenses: CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/), CC0 (https://creativecommons.org/publicdomain/zero/1.0/), or custom licenses. This clarifies usage rights and helps ensure compliance with data licensing requirements."
       >
-        <input
-          :id="`dataset-license-${index}`"
-          :value="dataset.license || ''"
-          type="url"
-          class="form-input"
-          placeholder="https://creativecommons.org/licenses/by/4.0/"
-          @input="update({ ...dataset, license: ($event.target as HTMLInputElement).value })"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            :id="`dataset-license-${index}`"
+            :value="dataset.license || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://creativecommons.org/licenses/by/4.0/"
+            @input="update({ ...dataset, license: ($event.target as HTMLInputElement).value })"
+          />
+          <a
+            v-if="dataset.license && isHttpUrl(dataset.license)"
+            :href="dataset.license"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+            title="Open license"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
       </FormField>
 
       <FormField
@@ -157,14 +171,28 @@
         help-text="DOI or other persistent identifier"
         tooltip="A persistent identifier (PID) or Digital Object Identifier (DOI) for the dataset. Use a DOI if published (e.g., https://doi.org/10.1234/dataset), or another PID for internal datasets. PIDs enable stable references and help track dataset versions and citations."
       >
-        <input
-          :id="`dataset-pid-${index}`"
-          :value="dataset.pid || ''"
-          type="url"
-          class="form-input"
-          placeholder="https://doi.org/10.1234/example"
-          @input="update({ ...dataset, pid: ($event.target as HTMLInputElement).value })"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            :id="`dataset-pid-${index}`"
+            :value="dataset.pid || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://doi.org/10.1234/example"
+            @input="update({ ...dataset, pid: ($event.target as HTMLInputElement).value })"
+          />
+          <a
+            v-if="dataset.pid && isHttpUrl(dataset.pid)"
+            :href="dataset.pid"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
+            title="Open PID"
+          >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
+        </div>
       </FormField>
 
       <FormField
@@ -183,7 +211,7 @@
             @input="update({ ...dataset, datasetSheetUri: ($event.target as HTMLInputElement).value || undefined })"
           />
           <a
-            v-if="dataset.datasetSheetUri"
+            v-if="dataset.datasetSheetUri && isHttpUrl(dataset.datasetSheetUri)"
             :href="dataset.datasetSheetUri"
             target="_blank"
             rel="noopener noreferrer"
@@ -214,6 +242,18 @@
           class="mb-2 p-2 bg-gray-50 rounded flex items-center justify-between"
         >
           <span class="text-sm font-mono text-xs break-all">{{ term }}</span>
+          <a
+            v-if="isHttpUrl(term)"
+            :href="term"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary-600 hover:text-primary-800 flex-shrink-0 ml-1"
+            title="Open DUO term"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          </a>
           <button
             type="button"
             @click="removeDuoTerm(termIndex)"
@@ -303,6 +343,11 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
+
 // New datasets (without title) start expanded
 const isExpanded = ref(!props.dataset.title || props.dataset.title.trim() === '')
 

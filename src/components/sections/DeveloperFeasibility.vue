@@ -435,7 +435,7 @@
                       @blur="updateTaskFeasibility(requirement.id, { modelCardUri: ($event.target as HTMLInputElement).value || undefined })"
                     />
                     <a
-                      v-if="requirement.feasibility?.modelCardUri"
+                      v-if="requirement.feasibility?.modelCardUri && isHttpUrl(requirement.feasibility.modelCardUri)"
                       :href="requirement.feasibility.modelCardUri"
                       target="_blank"
                       rel="noopener noreferrer"
@@ -1105,6 +1105,10 @@ import { markdownToHtml } from '@/utils/markdown'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 
 const { canvasData, updateDeveloperFeasibility, updateUserExpectations } = useCanvasData()
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
 
 function updateRequirement(taskId: string, updatedRequirement: Requirement) {
   const requirements = canvasData.value.userExpectations?.requirements || []

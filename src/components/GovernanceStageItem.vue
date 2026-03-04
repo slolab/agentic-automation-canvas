@@ -332,9 +332,12 @@
             <div v-if="standard.clauses?.length" class="text-xs text-gray-500">
               Clauses: {{ standard.clauses.join(', ') }}
             </div>
-            <a v-if="standard.uri" :href="standard.uri" target="_blank" rel="noopener noreferrer" class="text-xs text-primary-600 hover:text-primary-800 underline">
+            <a v-if="standard.uri && isHttpUrl(standard.uri)" :href="standard.uri" target="_blank" rel="noopener noreferrer" class="text-xs text-primary-600 hover:text-primary-800 underline">
               {{ standard.uri }}
             </a>
+            <span v-else-if="standard.uri" class="text-xs text-gray-500">
+              {{ standard.uri }}
+            </span>
           </div>
           <button
             type="button"
@@ -440,7 +443,7 @@
             @blur="update({ ...stage, policyCardUri: ($event.target as HTMLInputElement).value || undefined })"
           />
           <a
-            v-if="stage.policyCardUri"
+            v-if="stage.policyCardUri && isHttpUrl(stage.policyCardUri)"
             :href="stage.policyCardUri"
             target="_blank"
             rel="noopener noreferrer"
@@ -486,6 +489,10 @@ interface Props {
 
 const props = defineProps<Props>()
 const { canvasData } = useCanvasData()
+
+function isHttpUrl(value: string): boolean {
+  return /^https?:\/\//i.test(value)
+}
 
 // New stages (without name) start expanded
 const isExpanded = ref(!props.stage.name || props.stage.name.trim() === '')
