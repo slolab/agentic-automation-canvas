@@ -150,18 +150,7 @@
             placeholder="https://creativecommons.org/licenses/by/4.0/"
             @input="update({ ...dataset, license: ($event.target as HTMLInputElement).value })"
           />
-          <a
-            v-if="dataset.license && isHttpUrl(dataset.license)"
-            :href="dataset.license"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
-            title="Open license"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
+          <ExternalLinkIcon :url="dataset.license ?? ''" title="Open license" />
         </div>
       </FormField>
 
@@ -180,18 +169,7 @@
             placeholder="https://doi.org/10.1234/example"
             @input="update({ ...dataset, pid: ($event.target as HTMLInputElement).value })"
           />
-          <a
-            v-if="dataset.pid && isHttpUrl(dataset.pid)"
-            :href="dataset.pid"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
-            title="Open PID"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
+          <ExternalLinkIcon :url="dataset.pid ?? ''" title="Open PID" />
         </div>
       </FormField>
 
@@ -210,18 +188,7 @@
             placeholder="https://example.org/dataset-sheets/my-dataset"
             @input="update({ ...dataset, datasetSheetUri: ($event.target as HTMLInputElement).value || undefined })"
           />
-          <a
-            v-if="dataset.datasetSheetUri && isHttpUrl(dataset.datasetSheetUri)"
-            :href="dataset.datasetSheetUri"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary-600 hover:text-primary-800 flex-shrink-0"
-            title="Open dataset sheet"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
+          <ExternalLinkIcon :url="dataset.datasetSheetUri ?? ''" title="Open dataset sheet" />
         </div>
       </FormField>
 
@@ -242,18 +209,7 @@
           class="mb-2 p-2 bg-gray-50 rounded flex items-center justify-between"
         >
           <span class="text-sm font-mono text-xs break-all">{{ term }}</span>
-          <a
-            v-if="isHttpUrl(term)"
-            :href="term"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary-600 hover:text-primary-800 flex-shrink-0 ml-1"
-            title="Open DUO term"
-          >
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-            </svg>
-          </a>
+          <ExternalLinkIcon :url="term" title="Open DUO term" size="sm" class="ml-1" />
           <button
             type="button"
             @click="removeDuoTerm(termIndex)"
@@ -334,6 +290,7 @@
 import { ref } from 'vue'
 import FormField from './FormField.vue'
 import InfoTooltip from './InfoTooltip.vue'
+import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Dataset } from '@/types/canvas'
 
 interface Props {
@@ -343,10 +300,6 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-
-function isHttpUrl(value: string): boolean {
-  return /^https?:\/\//i.test(value)
-}
 
 // New datasets (without title) start expanded
 const isExpanded = ref(!props.dataset.title || props.dataset.title.trim() === '')
