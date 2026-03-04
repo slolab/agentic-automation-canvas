@@ -77,14 +77,17 @@
         help-text="Digital Object Identifier (DOI) as a full URL (e.g., https://doi.org/10.1234/example). Publications use <a href='https://schema.org/ScholarlyArticle' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org ScholarlyArticle type'>schema:ScholarlyArticle</a> type."
         tooltip="The DOI (Digital Object Identifier) of the publication as a full URL. Format: https://doi.org/10.1234/example. If the publication doesn't have a DOI yet, leave this blank. DOIs provide stable references to publications and enable proper citation tracking."
       >
-        <input
-          :id="`pub-doi-${index}`"
-          :value="publication.doi || ''"
-          type="url"
-          class="form-input"
-          placeholder="https://doi.org/10.1234/example"
-          @input="update({ ...publication, doi: ($event.target as HTMLInputElement).value })"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            :id="`pub-doi-${index}`"
+            :value="publication.doi || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://doi.org/10.1234/example"
+            @input="update({ ...publication, doi: ($event.target as HTMLInputElement).value })"
+          />
+          <ExternalLinkIcon :url="publication.doi ?? ''" title="Open DOI" />
+        </div>
       </FormField>
 
       <div>
@@ -206,6 +209,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
+import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Publication, PublicationAuthor, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 

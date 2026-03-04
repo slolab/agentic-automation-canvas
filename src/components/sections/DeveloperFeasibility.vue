@@ -434,18 +434,7 @@
                       placeholder="https://huggingface.co/org/model"
                       @blur="updateTaskFeasibility(requirement.id, { modelCardUri: ($event.target as HTMLInputElement).value || undefined })"
                     />
-                    <a
-                      v-if="requirement.feasibility?.modelCardUri"
-                      :href="requirement.feasibility.modelCardUri"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-primary-600 hover:text-primary-800 flex-shrink-0"
-                      title="Open model card"
-                    >
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
-                    </a>
+                    <ExternalLinkIcon :url="requirement.feasibility?.modelCardUri ?? ''" title="Open model card" />
                   </div>
                   <p v-if="requirement.feasibility?.modelSelection === 'none' || requirement.feasibility?.technologyApproach?.architecture === 'none'" class="text-xs text-gray-500 mt-1">
                     Not applicable for deterministic tasks
@@ -1098,6 +1087,7 @@
 import { ref, watch, computed } from 'vue'
 import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
+import ExternalLinkIcon from '../ExternalLinkIcon.vue'
 import type { DeveloperFeasibility, RequirementFeasibility, Benefit, Risk } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import type { Requirement } from '@/types/canvas'
