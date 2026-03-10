@@ -71,11 +71,54 @@
 
     <!-- Task Dependency Graph -->
     <div v-if="requirements.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Task Dependency Graph</h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Task Dependency Graph</h3>
+        <div v-if="hasDependencies(requirements)" class="flex items-center gap-1">
+          <button
+            @click="zoomIn"
+            class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Zoom in"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12M6 12h12" />
+            </svg>
+          </button>
+          <button
+            @click="zoomOut"
+            class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Zoom out"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12" />
+            </svg>
+          </button>
+          <button
+            @click="resetZoom"
+            class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Fit to view"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+            </svg>
+          </button>
+        </div>
+      </div>
       <p v-if="!hasDependencies(requirements)" class="text-sm text-gray-500 italic mb-4">
         Add dependencies in task details to see workflow connections.
       </p>
-      <div ref="mermaidContainerRef" class="mermaid-diagram overflow-x-auto min-h-[100px] flex items-center justify-center p-4 bg-gray-50 rounded-lg" />
+      <div
+        ref="zoomContainerRef"
+        class="mermaid-zoom-container overflow-hidden min-h-[100px] bg-gray-50 rounded-lg relative"
+        :class="{ 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }"
+        @wheel="onWheel"
+        @mousedown="onMouseDown"
+      >
+        <div
+          ref="mermaidContainerRef"
+          class="mermaid-diagram p-4 origin-top-left"
+          :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoom})` }"
+        />
+      </div>
     </div>
 
     <!-- Time Savings per Task -->
@@ -270,7 +313,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import mermaid from 'mermaid'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
@@ -288,6 +331,101 @@ const governanceStages = computed(() => canvasData.value.governance?.stages || [
 
 const dependencyMermaid = computed(() => generateDependencyMermaid(requirements.value))
 const mermaidContainerRef = ref<HTMLElement | null>(null)
+const zoomContainerRef = ref<HTMLElement | null>(null)
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const isPanning = ref(false)
+const panStartX = ref(0)
+const panStartY = ref(0)
+
+const ZOOM_MIN = 0.3
+const ZOOM_MAX = 3
+const ZOOM_STEP = 0.15
+
+function zoomIn() {
+  zoom.value = Math.min(ZOOM_MAX, zoom.value + ZOOM_STEP)
+}
+
+function zoomOut() {
+  zoom.value = Math.max(ZOOM_MIN, zoom.value - ZOOM_STEP)
+}
+
+function resetZoom() {
+  if (!zoomContainerRef.value || !mermaidContainerRef.value) {
+    zoom.value = 1
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  const container = zoomContainerRef.value.getBoundingClientRect()
+  const svg = mermaidContainerRef.value.querySelector('svg')
+  if (!svg) {
+    zoom.value = 1
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  const svgWidth = svg.scrollWidth || svg.clientWidth
+  const svgHeight = svg.scrollHeight || svg.clientHeight
+  if (svgWidth === 0 || svgHeight === 0) {
+    zoom.value = 1
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  // Fit graph into container with some padding
+  const padX = 32
+  const padY = 32
+  const scaleX = (container.width - padX) / svgWidth
+  const scaleY = (container.height - padY) / svgHeight
+  zoom.value = Math.min(scaleX, scaleY, 1) // Don't zoom above 1x for fit
+  // Center the graph
+  const scaledWidth = svgWidth * zoom.value
+  const scaledHeight = svgHeight * zoom.value
+  panX.value = (container.width - scaledWidth) / 2
+  panY.value = (container.height - scaledHeight) / 2
+}
+
+function onWheel(event: WheelEvent) {
+  const delta = event.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
+  const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom.value + delta))
+  if (newZoom === zoom.value) return
+  event.preventDefault() // Only prevent page scroll when zoom actually changes
+
+  // Zoom toward cursor position
+  if (zoomContainerRef.value) {
+    const rect = zoomContainerRef.value.getBoundingClientRect()
+    const cursorX = event.clientX - rect.left
+    const cursorY = event.clientY - rect.top
+    const ratio = newZoom / zoom.value
+    panX.value = cursorX - ratio * (cursorX - panX.value)
+    panY.value = cursorY - ratio * (cursorY - panY.value)
+  }
+
+  zoom.value = newZoom
+}
+
+function onMouseDown(event: MouseEvent) {
+  if (event.button !== 0) return // left click only
+  isPanning.value = true
+  panStartX.value = event.clientX - panX.value
+  panStartY.value = event.clientY - panY.value
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', onMouseUp)
+}
+
+function onMouseMove(event: MouseEvent) {
+  if (!isPanning.value) return
+  panX.value = event.clientX - panStartX.value
+  panY.value = event.clientY - panStartY.value
+}
+
+function onMouseUp() {
+  isPanning.value = false
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup', onMouseUp)
+}
 
 async function renderMermaid() {
   if (!mermaidContainerRef.value || !dependencyMermaid.value) return
@@ -296,6 +434,8 @@ async function renderMermaid() {
     const id = `mermaid-dep-${Date.now()}`
     const { svg } = await mermaid.render(id, dependencyMermaid.value)
     mermaidContainerRef.value.innerHTML = svg
+    // Auto-fit after SVG is rendered and laid out
+    nextTick(() => requestAnimationFrame(() => resetZoom()))
   } catch (err) {
     mermaidContainerRef.value.innerHTML = `<p class="text-sm text-gray-500">Could not render diagram</p>`
   }
@@ -303,6 +443,11 @@ async function renderMermaid() {
 
 onMounted(() => renderMermaid())
 watch([dependencyMermaid, requirements], () => renderMermaid(), { deep: true })
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup', onMouseUp)
+})
 
 const taskCount = computed(() => requirements.value.length)
 
@@ -698,10 +843,13 @@ function benefitTypeBadgeClass(type: string): string {
 </script>
 
 <style scoped>
+.mermaid-zoom-container {
+  min-height: 200px;
+  max-height: 70vh;
+}
+
 .mermaid-diagram :deep(svg) {
-  max-width: 100%;
+  max-width: none;
   height: auto;
-  transform: scale(0.75);
-  transform-origin: top center;
 }
 </style>
