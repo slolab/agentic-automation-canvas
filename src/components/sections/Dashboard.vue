@@ -75,27 +75,33 @@
         <h3 class="text-lg font-semibold text-gray-900">Task Dependency Graph</h3>
         <div v-if="hasDependencies(requirements)" class="flex items-center gap-1">
           <button
+            type="button"
             @click="zoomIn"
             class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
             title="Zoom in"
+            aria-label="Zoom in"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12M6 12h12" />
             </svg>
           </button>
           <button
+            type="button"
             @click="zoomOut"
             class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
             title="Zoom out"
+            aria-label="Zoom out"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12" />
             </svg>
           </button>
           <button
+            type="button"
             @click="resetZoom"
             class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
             title="Fit to view"
+            aria-label="Fit to view"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
@@ -108,7 +114,7 @@
       </p>
       <div
         ref="zoomContainerRef"
-        class="mermaid-zoom-container overflow-hidden min-h-[100px] bg-gray-50 rounded-lg relative"
+        class="mermaid-zoom-container overflow-hidden min-h-[100px] bg-gray-50 rounded-lg relative select-none"
         :class="{ 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }"
         @wheel="onWheel"
         @mousedown="onMouseDown"
