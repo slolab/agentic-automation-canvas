@@ -127,6 +127,12 @@ export const exampleData: CanvasData = {
               status: 'identified',
             },
           ],
+          deploymentCost: {
+            costPerUnit: 0.02,
+            aggregationBasis: 'perUnit',
+            currency: 'USD',
+            costNotes: 'Based on frontier model API pricing at ~1–2K tokens per document for extraction.',
+          },
         },
         benefits: [
           {

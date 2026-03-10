@@ -112,6 +112,7 @@ Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:
 |-------------|-------------------|-------|
 | `developerFeasibility` | `aac:developerFeasibility` on root dataset | Embedded JSON object with all fields preserved |
 | `requirements[].feasibility.modelCardUri` | Step: `aac:model`, `prov:used`; Model entity: `@id`, `schema:url` | Standard terms: PROV-O `prov:used`, Schema.org `schema:url` on SoftwareApplication |
+| `requirements[].feasibility.deploymentCost` | `aac:feasibility.deploymentCost` | AAC-specific; cost per unit or per month, currency, notes |
 
 ### Governance Stage Entities
 
