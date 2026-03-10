@@ -466,11 +466,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import BenefitsModal from './BenefitsModal.vue'
 import type { Requirement, Benefit } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { parseTimeUnit } from '@/utils/timeUnitConversion'
@@ -488,7 +489,21 @@ const isExpanded = ref(!props.requirement.title || props.requirement.title.trim(
 const isBenefitsModalOpen = ref(false)
 
 // Get all requirements for normalization
-const { canvasData } = useCanvasData()
+const { canvasData, focusFieldRequest } = useCanvasData()
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'requirement' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 const allRequirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 const allPersons = computed(() => canvasData.value.persons || [])
 
