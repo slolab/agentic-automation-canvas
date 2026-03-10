@@ -15,7 +15,7 @@ export function generateDependencyMermaid(requirements: Requirement[]): string {
     nodes.set(req.id, safeId)
   })
 
-  const lines: string[] = ['graph LR']
+  const lines: string[] = ['graph TB']
   requirements.forEach((req) => {
     const safeId = nodes.get(req.id) || idToSafeId(req.id)
     const label = (req.title || req.description || req.id || safeId)
