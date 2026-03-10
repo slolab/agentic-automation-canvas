@@ -96,7 +96,13 @@
               "mitigation": "Implement data validation pipeline and quality scoring before processing",
               "status": "mitigated"
             }
-          ]
+          ],
+          "deploymentCost": {
+            "costPerUnit": 0.03,
+            "aggregationBasis": "perUnit",
+            "currency": "USD",
+            "costNotes": "Based on Claude API pricing at ~1.5K tokens/interaction"
+          }
         }
       }
     ]
