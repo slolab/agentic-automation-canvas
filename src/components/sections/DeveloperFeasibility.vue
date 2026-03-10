@@ -159,7 +159,7 @@
               step="0.1"
               class="form-input"
               placeholder="e.g., 12"
-              @input="updateEffortValue(($event.target as HTMLInputElement).value)"
+              @change="updateEffortValue(($event.target as HTMLInputElement).value)"
             />
           </FormField>
           <FormField
@@ -332,7 +332,7 @@
                       step="0.1"
                       class="form-input"
                       placeholder="e.g., 2"
-                      @input="updateTaskEffortValue(requirement.id, ($event.target as HTMLInputElement).value)"
+                      @change="updateTaskEffortValue(requirement.id, ($event.target as HTMLInputElement).value)"
                     />
                   </FormField>
                   <FormField
@@ -401,7 +401,7 @@
                       :value="requirement.feasibility?.deploymentCost?.aggregationBasis === 'perUnit' ? requirement.feasibility?.deploymentCost?.costPerUnit : requirement.feasibility?.deploymentCost?.costPerMonth"
                       class="form-input"
                       :placeholder="requirement.feasibility?.deploymentCost?.aggregationBasis === 'perUnit' ? 'e.g. 0.05' : 'e.g. 50'"
-                      @input="updateDeploymentCostValue(requirement, $event)"
+                      @change="updateDeploymentCostValue(requirement, $event)"
                     />
                   </FormField>
 
