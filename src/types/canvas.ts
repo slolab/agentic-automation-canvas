@@ -92,6 +92,15 @@ export interface Risk {
   status: RiskStatus
 }
 
+/** Deployment cost estimate for running an automated task */
+export interface DeploymentCost {
+  costPerUnit?: number        // cost per interaction/unit of work
+  costPerMonth?: number       // flat monthly cost
+  aggregationBasis: 'perUnit' | 'perMonth'
+  currency: 'USD' | 'EUR'
+  costNotes?: string
+}
+
 /** Per-task feasibility (optional overrides for project-level feasibility) */
 export interface RequirementFeasibility {
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
@@ -125,6 +134,8 @@ export interface RequirementFeasibility {
   }
   /** Per-task risk assessments paralleling benefits */
   risks?: Risk[]
+  /** Estimated deployment/operational cost for running this task */
+  deploymentCost?: DeploymentCost
 }
 
 export interface Requirement {
