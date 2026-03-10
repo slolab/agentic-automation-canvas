@@ -37,3 +37,9 @@ export function aggregateDeploymentCosts(requirements: Requirement[]): Map<strin
 
   return totals
 }
+
+/** Format a deployment cost amount for display (e.g. "$12.50 USD"). */
+export function formatDeploymentCost(amount: number, currency: string): string {
+  const symbol = currency === 'EUR' ? '\u20AC' : '$'
+  return `${symbol}${amount.toFixed(2)} ${currency}`
+}

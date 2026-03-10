@@ -269,7 +269,12 @@
           >
             <div class="flex items-start justify-between mb-3">
               <div class="flex-1">
-                <h4 class="font-medium text-gray-900">{{ requirement.title || requirement.id }}</h4>
+                <div class="flex items-center gap-2 flex-wrap">
+                  <h4 class="font-medium text-gray-900">{{ requirement.title || requirement.id }}</h4>
+                  <span v-if="taskMonthlyCost(requirement)" class="text-xs text-amber-700 font-medium">
+                    {{ taskMonthlyCost(requirement) }}/mo
+                  </span>
+                </div>
                 <div v-if="requirement.description" class="text-sm text-gray-600 mt-1">
                   <p class="text-xs text-gray-500 mb-1 italic">From task description:</p>
                   <div class="markdown-content" v-html="formatDescription(requirement.description)"></div>
@@ -952,8 +957,8 @@
       </div>
     </div>
 
-    <!-- Effort Summary -->
-    <div v-if="tasksWithEffort.length > 0" class="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200">
+    <!-- Development and Deployment Cost -->
+    <div v-if="tasksForDevAndDeploymentSummary.length > 0" class="border border-gray-200 rounded-lg overflow-hidden transition-all duration-200">
       <!-- Collapsed View -->
       <button
         v-if="!cardExpanded.effortSummary"
@@ -963,29 +968,35 @@
         <div class="flex items-start justify-between gap-4">
           <div class="flex-1 min-w-0 space-y-3">
             <div class="flex items-center gap-2">
-              <h3 class="text-lg font-semibold text-gray-900">Development Effort Summary</h3>
+              <h3 class="text-lg font-semibold text-gray-900">Development and Deployment Cost</h3>
             </div>
             <div class="text-sm text-gray-600">
               <div class="flex items-center gap-4 mb-2 flex-wrap">
-                <span class="font-medium">Total: {{ formatTotalEffort() }}</span>
+                <span v-if="tasksWithEffort.length > 0" class="font-medium">Total effort: {{ formatTotalEffort() }}</span>
+                <span v-if="totalDeploymentCostSummary" class="font-medium text-amber-700">
+                  Deployment: {{ totalDeploymentCostSummary }}
+                </span>
                 <span v-if="totalTimeSavedPersonHours > 0" class="font-medium text-green-700">
                   Time Benefits: {{ formatTimeSaved(totalTimeSavedPersonHours) }}/month
                 </span>
                 <span v-if="totalAmortizationMonths !== null" class="font-medium text-blue-700">
                   Until Amortization: {{ totalAmortizationMonths.toFixed(1) }} months
                 </span>
-                <span>{{ tasksWithEffort.length }} {{ tasksWithEffort.length === 1 ? 'task' : 'tasks' }} with effort estimates</span>
+                <span>{{ tasksForDevAndDeploymentSummary.length }} {{ tasksForDevAndDeploymentSummary.length === 1 ? 'task' : 'tasks' }}</span>
               </div>
-              <!-- Effort and benefit bars for each task -->
+              <!-- Effort and deployment cost per task -->
               <div class="space-y-3 mt-3">
                 <div
-                  v-for="req in tasksWithEffort"
+                  v-for="req in tasksForDevAndDeploymentSummary"
                   :key="req.id"
                   class="space-y-2"
                 >
-                  <!-- Title row with badges on the right -->
-                  <div class="flex items-center justify-between">
-                    <span class="text-xs text-gray-600 font-medium">{{ req.title || req.id }}</span>
+                  <!-- Title row: title, deployment cost (if any), then badges -->
+                  <div class="flex items-center justify-between gap-2 flex-wrap">
+                    <div class="flex items-center gap-2 min-w-0 flex-1">
+                      <span class="text-xs text-gray-600 font-medium">{{ req.title || req.id }}</span>
+                      <span v-if="taskMonthlyCost(req)" class="text-xs text-amber-700 font-medium whitespace-nowrap">{{ taskMonthlyCost(req) }}/mo</span>
+                    </div>
                     <!-- Benefit type badges -->
                     <div v-if="getBenefitTypes(req).length > 0" class="flex flex-wrap gap-1">
                       <span
@@ -999,8 +1010,8 @@
                     </div>
                   </div>
                   
-                  <!-- Effort bar -->
-                  <div class="flex items-center gap-3">
+                  <!-- Effort bar (only if task has effort) -->
+                  <div v-if="req.feasibility?.effortEstimate?.value" class="flex items-center gap-3">
                     <span class="text-xs text-gray-400 w-24 truncate">Effort</span>
                     <div class="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden relative">
                       <div
@@ -1040,11 +1051,11 @@
       <!-- Expanded View -->
       <div v-else class="p-4 space-y-4">
         <div class="flex items-center justify-between mb-2">
-          <h3 class="text-sm font-semibold text-gray-900">Development Effort Summary</h3>
+          <h3 class="text-sm font-semibold text-gray-900">Development and Deployment Cost</h3>
           <button
             @click="cardExpanded.effortSummary = false"
             class="text-gray-400 hover:text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary-500 rounded p-1"
-            aria-label="Collapse Effort Summary"
+            aria-label="Collapse Development and Deployment Cost"
           >
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
@@ -1054,13 +1065,22 @@
 
         <div class="space-y-4">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="bg-gray-50 rounded-lg p-4">
+            <div v-if="tasksWithEffort.length > 0" class="bg-gray-50 rounded-lg p-4">
               <div class="flex items-center justify-between mb-2">
                 <span class="text-sm font-medium text-gray-700">Total Effort</span>
                 <span class="text-lg font-semibold text-gray-900">{{ formatTotalEffort() }}</span>
               </div>
               <div class="text-xs text-gray-600 mt-1">
                 Sum of all task-level effort estimates
+              </div>
+            </div>
+            <div v-if="totalDeploymentCostSummary" class="bg-amber-50 rounded-lg p-4">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-sm font-medium text-gray-700">Deployment Cost</span>
+                <span class="text-lg font-semibold text-amber-800">{{ totalDeploymentCostSummary }}/mo</span>
+              </div>
+              <div class="text-xs text-gray-600 mt-1">
+                Per-month cost by currency
               </div>
             </div>
             <div v-if="totalTimeSavedPersonHours > 0" class="bg-green-50 rounded-lg p-4">
@@ -1084,19 +1104,22 @@
           </div>
 
           <div class="space-y-3">
-            <h4 class="text-sm font-medium text-gray-900">Effort vs Time Benefits by Task</h4>
+            <h4 class="text-sm font-medium text-gray-900">Effort and deployment cost by task</h4>
             <p class="text-xs text-gray-500 mb-3">
-              Note: Only time benefits are shown here. Tasks may also have quality, risk, enablement, or cost benefits (see badges).
+              Deployment cost (per month) is shown next to each task. Only time benefits are shown in bars; tasks may also have quality, risk, enablement, or cost benefits (see badges).
             </p>
             <div class="space-y-4">
               <div
-                v-for="req in tasksWithEffort"
+                v-for="req in tasksForDevAndDeploymentSummary"
                 :key="req.id"
                 class="border border-gray-200 rounded-lg p-4"
               >
                 <div class="flex items-center justify-between mb-3">
                   <div class="flex-1">
-                    <span class="text-sm font-medium text-gray-900">{{ req.title || req.id }}</span>
+                    <div class="flex items-center gap-2 flex-wrap">
+                      <span class="text-sm font-medium text-gray-900">{{ req.title || req.id }}</span>
+                      <span v-if="taskMonthlyCost(req)" class="text-sm text-amber-700 font-medium">{{ taskMonthlyCost(req) }}/mo</span>
+                    </div>
                     <!-- Benefit type badges -->
                     <div v-if="getBenefitTypes(req).length > 0" class="flex flex-wrap gap-1.5 mt-2">
                       <span
@@ -1111,8 +1134,8 @@
                   </div>
                 </div>
                 
-                <!-- Effort -->
-                <div class="mb-3">
+                <!-- Effort (only if task has effort) -->
+                <div v-if="req.feasibility?.effortEstimate?.value" class="mb-3">
                   <div class="flex items-center justify-between mb-1">
                     <span class="text-xs text-gray-600">Effort</span>
                     <span class="text-xs font-medium text-purple-700">{{ formatEffort(req.feasibility?.effortEstimate) }}</span>
@@ -1156,6 +1179,7 @@
               type="button"
               @click="cardExpanded.effortSummary = false"
               class="btn-secondary w-full flex items-center justify-center gap-2"
+              aria-label="Collapse Development and Deployment Cost"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
@@ -1179,6 +1203,7 @@ import { useCanvasData } from '@/composables/useCanvasData'
 import type { Requirement } from '@/types/canvas'
 import { markdownToHtml } from '@/utils/markdown'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
+import { getMonthlyDeploymentCost, formatDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
 
 const { canvasData, updateDeveloperFeasibility, updateUserExpectations } = useCanvasData()
 
@@ -1209,8 +1234,31 @@ const tasksWithRisks = computed(() => {
   return requirements.value.filter((r) => r.feasibility?.risks && r.feasibility.risks.length > 0)
 })
 
+function taskMonthlyCost(req: Requirement): string {
+  const cost = getMonthlyDeploymentCost(req)
+  if (cost === 0) return ''
+  return formatDeploymentCost(cost, req.feasibility?.deploymentCost?.currency || 'USD')
+}
+
 const tasksWithEffort = computed(() => {
   return requirements.value.filter((r) => r.feasibility?.effortEstimate?.value !== undefined && r.feasibility.effortEstimate.value > 0)
+})
+
+/** Tasks that have effort and/or deployment cost, for the Development and Deployment Cost section */
+const tasksForDevAndDeploymentSummary = computed(() => {
+  return requirements.value.filter(
+    (r) =>
+      (r.feasibility?.effortEstimate?.value !== undefined && r.feasibility.effortEstimate.value > 0) ||
+      getMonthlyDeploymentCost(r) > 0
+  )
+})
+
+const totalDeploymentCostSummary = computed(() => {
+  const totals = aggregateDeploymentCosts(requirements.value)
+  if (totals.size === 0) return ''
+  return Array.from(totals.entries())
+    .map(([currency, amount]) => formatDeploymentCost(amount, currency))
+    .join(' + ')
 })
 
 // Calculate total effort (normalize to person-hours for aggregation)
@@ -1287,10 +1335,10 @@ const totalTimeSavedPersonHours = computed(() => {
   }, 0)
 })
 
-// Get maximum time saved for normalization
+// Get maximum time saved for normalization (use same list as Development and Deployment Cost section)
 const maxTimeSavedPersonHours = computed(() => {
-  if (tasksWithEffort.value.length === 0) return 0
-  const saved = tasksWithEffort.value.map(req => getTimeSavedPersonHours(req))
+  if (tasksForDevAndDeploymentSummary.value.length === 0) return 0
+  const saved = tasksForDevAndDeploymentSummary.value.map(req => getTimeSavedPersonHours(req))
   return Math.max(...saved, 0)
 })
 
@@ -1707,11 +1755,6 @@ function updateDeploymentCostValue(req: Requirement, event: Event) {
     dc.costPerMonth = isNaN(val) ? undefined : val
   }
   update()
-}
-
-function formatDeploymentCost(amount: number, currency: string): string {
-  const symbol = currency === 'EUR' ? '\u20AC' : '$'
-  return `${symbol}${amount.toFixed(2)} ${currency}`
 }
 
 function handleModelSelectionChange(taskId: string, value: string) {

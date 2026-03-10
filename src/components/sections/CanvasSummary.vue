@@ -162,6 +162,9 @@
               <p v-if="summary.developerFeasibility.amortizationMonths !== null" class="text-xs">
                 ~{{ summary.developerFeasibility.amortizationMonths!.toFixed(1) }} mo until amortization
               </p>
+              <p v-if="Object.keys(summary.developerFeasibility.deploymentCostTotalsPerMonth).length > 0">
+                Total deployment cost: {{ formatDeploymentCostSummary(summary.developerFeasibility.deploymentCostTotalsPerMonth) }}/mo
+              </p>
               <p v-if="summary.developerFeasibility.feasibilityNotes">{{ summary.developerFeasibility.feasibilityNotes }}</p>
               <div v-if="summary.userExpectations.taskCount > 0" class="mt-2">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
@@ -255,6 +258,7 @@
 import { computed } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { computeCanvasSummary, type CanvasSummaryData, isLink, parseUserStory } from '@/utils/canvasSummary'
+import { formatDeploymentCost } from '@/utils/deploymentCost'
 import InfoTooltip from '../InfoTooltip.vue'
 import CanvasBlockIcon from './CanvasBlockIcon.vue'
 
@@ -271,6 +275,12 @@ const feasibilityProgress = computed(() => {
   return Math.round((n / total) * 100)
 })
 
+function formatDeploymentCostSummary(totals: Record<string, number>): string {
+  const entries = Object.entries(totals).filter(([, amount]) => amount > 0)
+  if (entries.length === 0) return ''
+  return entries.map(([currency, amount]) => formatDeploymentCost(amount, currency)).join(' + ')
+}
+
 function isEmptyProject(p: CanvasSummaryData['project']): boolean {
   const noTitle = !p.title || p.title === 'Untitled Project'
   return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver && p.domain.length === 0
@@ -281,6 +291,7 @@ function isEmptyUserExpectations(u: CanvasSummaryData['userExpectations']): bool
 }
 
 function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility']): boolean {
+  const hasDeploymentCost = Object.keys(d.deploymentCostTotalsPerMonth).length > 0
   return (
     d.trlCurrent === null &&
     d.trlTarget === null &&
@@ -288,7 +299,8 @@ function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility'
     !d.effortEstimate &&
     d.amortizationMonths === null &&
     !d.feasibilityNotes.trim() &&
-    d.tasksWithDedicatedFeasibility.length === 0
+    d.tasksWithDedicatedFeasibility.length === 0 &&
+    !hasDeploymentCost
   )
 }
 

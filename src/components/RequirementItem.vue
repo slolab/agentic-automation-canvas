@@ -83,6 +83,13 @@
               </svg>
               {{ effortText }}
             </span>
+            <!-- Deployment cost -->
+            <span v-if="deploymentCostText" class="flex items-center gap-1 text-amber-700 font-medium">
+              <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ deploymentCostText }}/mo
+            </span>
           </div>
           <!-- Time savings bar -->
           <div v-if="maxTotalTimeSaved > 0" class="mt-2">
@@ -476,6 +483,7 @@ import { applyFieldFocus } from '@/utils/fieldNavigation'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { parseTimeUnit } from '@/utils/timeUnitConversion'
+import { getMonthlyDeploymentCost, formatDeploymentCost } from '@/utils/deploymentCost'
 
 interface Props {
   requirement: Requirement
@@ -646,6 +654,12 @@ const effortText = computed(() => {
   if (!effort || effort.value === undefined || effort.value === 0) return null
   const unitLabel = effort.unit === 'person-hours' ? 'person-hours' : 'weeks'
   return `${effort.value} ${unitLabel}`
+})
+
+const deploymentCostText = computed(() => {
+  const cost = getMonthlyDeploymentCost(props.requirement)
+  if (cost === 0) return null
+  return formatDeploymentCost(cost, props.requirement.feasibility?.deploymentCost?.currency || 'USD')
 })
 
 const effortValue = computed(() => {

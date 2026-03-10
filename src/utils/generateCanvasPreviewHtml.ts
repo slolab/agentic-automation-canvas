@@ -11,6 +11,7 @@ import governanceSvg from '@/assets/icons/canvas/governance.svg?raw'
 import dataSvg from '@/assets/icons/canvas/data.svg?raw'
 import outcomesSvg from '@/assets/icons/canvas/outcomes.svg?raw'
 import { isLink, parseUserStory, type CanvasSummaryData } from './canvasSummary'
+import { formatDeploymentCost } from './deploymentCost'
 
 function escapeHtml(str: string): string {
   return str
@@ -30,7 +31,15 @@ function isEmptyUserExpectations(u: CanvasSummaryData['userExpectations']): bool
   return u.taskCount === 0 && Object.keys(u.benefitTypeCounts).length === 0 && u.tasks.length === 0
 }
 
+function formatDeploymentCostSummaryHtml(totals: Record<string, number>): string {
+  const entries = Object.entries(totals).filter(([, amount]) => amount > 0)
+  if (entries.length === 0) return ''
+  const text = entries.map(([currency, amount]) => formatDeploymentCost(amount, currency)).join(' + ')
+  return `<p>Total deployment cost: ${escapeHtml(text)}/mo</p>`
+}
+
 function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility']): boolean {
+  const hasDeploymentCost = Object.keys(d.deploymentCostTotalsPerMonth).length > 0
   return (
     d.trlCurrent === null &&
     d.trlTarget === null &&
@@ -38,7 +47,8 @@ function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility'
     !d.effortEstimate &&
     d.amortizationMonths === null &&
     !d.feasibilityNotes.trim() &&
-    d.tasksWithDedicatedFeasibility.length === 0
+    d.tasksWithDedicatedFeasibility.length === 0 &&
+    !hasDeploymentCost
   )
 }
 
@@ -216,6 +226,7 @@ export function generateCanvasPreviewHtml(
       ${summary.developerFeasibility.technicalRisk ? `<p>Risk: <span class="capitalize">${escapeHtml(summary.developerFeasibility.technicalRisk)}</span></p>` : ''}
       ${summary.developerFeasibility.effortEstimate ? `<p>Effort: ${escapeHtml(summary.developerFeasibility.effortEstimate)}</p>` : ''}
       ${summary.developerFeasibility.amortizationMonths != null ? `<p class="text-xs">~${summary.developerFeasibility.amortizationMonths.toFixed(1)} mo until amortization</p>` : ''}
+      ${formatDeploymentCostSummaryHtml(summary.developerFeasibility.deploymentCostTotalsPerMonth)}
       ${summary.developerFeasibility.feasibilityNotes ? `<p>${escapeHtml(summary.developerFeasibility.feasibilityNotes)}</p>` : ''}
       ${taskLevelHtml}
     `
