@@ -228,7 +228,7 @@ describe('generateROCrate', () => {
       },
     }
     const out = generateROCrate(data)
-    const step = out['@graph'].find((e: any) => e['@id'] === '#req-1')
+    const step = out['@graph'].find((e: any) => e['@id'] === '#req-1') as any
     expect(step['aac:feasibility'].deploymentCost).toEqual({
       costPerUnit: 0.05,
       aggregationBasis: 'perUnit',
