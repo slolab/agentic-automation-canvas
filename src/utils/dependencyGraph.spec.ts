@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateDependencyMermaid, hasDependencies } from './dependencyGraph'
+import { generateDependencyMermaid, hasDependencies, wrapLabel } from './dependencyGraph'
 import type { Requirement } from '@/types/canvas'
 
 function makeReq(overrides: Partial<Requirement> & { id: string }): Requirement {
@@ -38,13 +38,10 @@ describe('generateDependencyMermaid', () => {
     expect(result).toContain('a --> b')
   })
 
-  it('truncates labels to 40 characters', () => {
-    const longTitle = 'A'.repeat(50)
-    const reqs = [makeReq({ id: 'x', title: longTitle })]
+  it('wraps long labels onto multiple lines', () => {
+    const reqs = [makeReq({ id: 'x', title: 'Extract key information from documents and emails' })]
     const result = generateDependencyMermaid(reqs)
-    const match = result.match(/x\["(.+?)"\]/)
-    expect(match).toBeTruthy()
-    expect(match![1].length).toBe(40)
+    expect(result).toContain('<br/>')
   })
 
   it('does not create self-referencing edges', () => {
@@ -57,6 +54,27 @@ describe('generateDependencyMermaid', () => {
     const reqs = [makeReq({ id: 'task-1', title: '', description: '' })]
     const result = generateDependencyMermaid(reqs)
     expect(result).toContain('task_1["task-1"]')
+  })
+})
+
+describe('wrapLabel', () => {
+  it('returns short text unchanged', () => {
+    expect(wrapLabel('Hello world', 30)).toBe('Hello world')
+  })
+
+  it('wraps at word boundaries', () => {
+    expect(wrapLabel('Extract key information from documents', 30)).toBe(
+      'Extract key information from<br/>documents'
+    )
+  })
+
+  it('handles multiple wraps', () => {
+    const result = wrapLabel('This is a very long label that should wrap onto multiple lines', 20)
+    expect(result).toBe('This is a very long<br/>label that should<br/>wrap onto multiple<br/>lines')
+  })
+
+  it('does not break a single long word', () => {
+    expect(wrapLabel('Superlongwordwithoutspaces', 10)).toBe('Superlongwordwithoutspaces')
   })
 })
 
