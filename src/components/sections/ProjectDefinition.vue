@@ -637,11 +637,12 @@ import ExternalLinkIcon from '../ExternalLinkIcon.vue'
 import type { ProjectDefinition, Requirement, Benefit } from '@/types/canvas'
 import type { BenefitDisplayGroup, BenefitRef } from '@/types/benefitDisplay'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 
-const { canvasData, benefitDisplay, markChangedSinceImport, updateProject, validateProject: validateProjectFn } = useCanvasData()
+const { canvasData, benefitDisplay, markChangedSinceImport, updateProject, validateProject: validateProjectFn, focusFieldRequest } = useCanvasData()
 
 // Initialize localData with proper array references
 const initLocalData = (): ProjectDefinition => {
@@ -868,6 +869,20 @@ function removeFromDisplayGroup(row: BenefitRow, slotId: number): void {
 
 // Collapsible state - start collapsed to show the nice overview, expand if project is completely empty
 const isExpanded = ref(false) // Always start collapsed to show the overview
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'project') return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 // Format date for display
 function formatDate(dateStr: string): string {
