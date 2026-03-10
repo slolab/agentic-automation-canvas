@@ -287,11 +287,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import InfoTooltip from './InfoTooltip.vue'
 import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Dataset } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
 interface Props {
   dataset: Dataset
@@ -303,6 +305,22 @@ const props = defineProps<Props>()
 
 // New datasets (without title) start expanded
 const isExpanded = ref(!props.dataset.title || props.dataset.title.trim() === '')
+
+const { focusFieldRequest } = useCanvasData()
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'dataset' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 const showAddDuoTerm = ref(false)
 const newDuoTerm = ref<string>('')
