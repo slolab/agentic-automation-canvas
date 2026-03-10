@@ -116,7 +116,6 @@
         ref="zoomContainerRef"
         class="mermaid-zoom-container overflow-hidden min-h-[100px] bg-gray-50 rounded-lg relative select-none"
         :class="{ 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }"
-        @wheel="onWheel"
         @mousedown="onMouseDown"
       >
         <div
@@ -391,25 +390,6 @@ function resetZoom() {
   const scaledHeight = svgHeight * zoom.value
   panX.value = (container.width - scaledWidth) / 2
   panY.value = (container.height - scaledHeight) / 2
-}
-
-function onWheel(event: WheelEvent) {
-  const delta = event.deltaY > 0 ? -ZOOM_STEP : ZOOM_STEP
-  const newZoom = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, zoom.value + delta))
-  if (newZoom === zoom.value) return
-  event.preventDefault() // Only prevent page scroll when zoom actually changes
-
-  // Zoom toward cursor position
-  if (zoomContainerRef.value) {
-    const rect = zoomContainerRef.value.getBoundingClientRect()
-    const cursorX = event.clientX - rect.left
-    const cursorY = event.clientY - rect.top
-    const ratio = newZoom / zoom.value
-    panX.value = cursorX - ratio * (cursorX - panX.value)
-    panY.value = cursorY - ratio * (cursorY - panY.value)
-  }
-
-  zoom.value = newZoom
 }
 
 function onMouseDown(event: MouseEvent) {
