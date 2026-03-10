@@ -368,6 +368,92 @@
                 />
               </FormField>
 
+              <!-- Deployment Cost -->
+              <div class="border-t border-gray-100 pt-4 mt-4">
+                <h5 class="text-sm font-medium text-gray-700 mb-3">Deployment Cost</h5>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <FormField
+                    :id="`deployment-cost-basis-${requirement.id}`"
+                    label="Cost basis"
+                  >
+                    <select
+                      :id="`deployment-cost-basis-${requirement.id}`"
+                      :value="requirement.feasibility?.deploymentCost?.aggregationBasis || ''"
+                      class="form-input"
+                      @change="updateDeploymentCostField(requirement, 'aggregationBasis', ($event.target as HTMLSelectElement).value || undefined)"
+                    >
+                      <option value="">Not specified</option>
+                      <option value="perUnit">Per interaction</option>
+                      <option value="perMonth">Per month</option>
+                    </select>
+                  </FormField>
+
+                  <FormField
+                    v-if="requirement.feasibility?.deploymentCost?.aggregationBasis"
+                    :id="`deployment-cost-value-${requirement.id}`"
+                    :label="requirement.feasibility?.deploymentCost?.aggregationBasis === 'perUnit' ? 'Cost per interaction' : 'Monthly cost'"
+                  >
+                    <input
+                      :id="`deployment-cost-value-${requirement.id}`"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      :value="requirement.feasibility?.deploymentCost?.aggregationBasis === 'perUnit' ? requirement.feasibility?.deploymentCost?.costPerUnit : requirement.feasibility?.deploymentCost?.costPerMonth"
+                      class="form-input"
+                      :placeholder="requirement.feasibility?.deploymentCost?.aggregationBasis === 'perUnit' ? 'e.g. 0.05' : 'e.g. 50'"
+                      @input="updateDeploymentCostValue(requirement, $event)"
+                    />
+                  </FormField>
+
+                  <FormField
+                    v-if="requirement.feasibility?.deploymentCost?.aggregationBasis"
+                    :id="`deployment-cost-currency-${requirement.id}`"
+                    label="Currency"
+                  >
+                    <select
+                      :id="`deployment-cost-currency-${requirement.id}`"
+                      :value="requirement.feasibility?.deploymentCost?.currency || 'USD'"
+                      class="form-input"
+                      @change="updateDeploymentCostField(requirement, 'currency', ($event.target as HTMLSelectElement).value)"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                    </select>
+                  </FormField>
+                </div>
+
+                <!-- Estimated monthly cost (computed, for perUnit mode) -->
+                <div
+                  v-if="requirement.feasibility?.deploymentCost?.aggregationBasis === 'perUnit' && requirement.feasibility?.deploymentCost?.costPerUnit && requirement.volumePerMonth"
+                  class="mt-2 text-sm text-gray-600 bg-gray-50 rounded px-3 py-2"
+                >
+                  Estimated monthly cost:
+                  <span class="font-medium">
+                    {{ formatDeploymentCost(requirement.feasibility.deploymentCost.costPerUnit * requirement.volumePerMonth, requirement.feasibility.deploymentCost.currency) }}
+                  </span>
+                  <span class="text-xs text-gray-500 ml-1">
+                    ({{ requirement.feasibility.deploymentCost.costPerUnit }} &times; {{ requirement.volumePerMonth }} {{ requirement.unitOfWork || 'units' }}/mo)
+                  </span>
+                </div>
+
+                <!-- Cost notes -->
+                <div v-if="requirement.feasibility?.deploymentCost?.aggregationBasis" class="mt-3">
+                  <FormField
+                    :id="`deployment-cost-notes-${requirement.id}`"
+                    label="Cost notes"
+                  >
+                    <textarea
+                      :id="`deployment-cost-notes-${requirement.id}`"
+                      :value="requirement.feasibility?.deploymentCost?.costNotes || ''"
+                      class="form-input"
+                      rows="2"
+                      placeholder="e.g. Based on GPT-4o pricing at ~2K tokens/call"
+                      @input="updateDeploymentCostField(requirement, 'costNotes', ($event.target as HTMLTextAreaElement).value || undefined)"
+                    />
+                  </FormField>
+                </div>
+              </div>
+
               <!-- Technology Approach -->
               <div class="border-t border-gray-200 pt-4">
                 <h5 class="text-sm font-medium text-gray-900 mb-3">Technology Approach</h5>
@@ -1088,7 +1174,7 @@ import { ref, watch, computed } from 'vue'
 import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import ExternalLinkIcon from '../ExternalLinkIcon.vue'
-import type { DeveloperFeasibility, RequirementFeasibility, Benefit, Risk } from '@/types/canvas'
+import type { DeveloperFeasibility, RequirementFeasibility, Benefit, Risk, DeploymentCost } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
 import type { Requirement } from '@/types/canvas'
 import { markdownToHtml } from '@/utils/markdown'
@@ -1587,6 +1673,45 @@ function updateTaskFeasibility(taskId: string, partial: Partial<RequirementFeasi
     ...requirement,
     feasibility: Object.keys(cleaned).length > 0 ? cleaned : undefined,
   })
+}
+
+// Deployment cost helpers
+function ensureDeploymentCost(req: Requirement): DeploymentCost {
+  if (!req.feasibility) req.feasibility = {}
+  if (!req.feasibility.deploymentCost) {
+    req.feasibility.deploymentCost = { aggregationBasis: 'perUnit', currency: 'USD' }
+  }
+  return req.feasibility.deploymentCost
+}
+
+function updateDeploymentCostField(req: Requirement, field: string, value: any) {
+  if (!value && field === 'aggregationBasis') {
+    // Clear deployment cost when basis is unset
+    if (req.feasibility) {
+      delete req.feasibility.deploymentCost
+    }
+    update()
+    return
+  }
+  const dc = ensureDeploymentCost(req)
+  ;(dc as any)[field] = value
+  update()
+}
+
+function updateDeploymentCostValue(req: Requirement, event: Event) {
+  const dc = ensureDeploymentCost(req)
+  const val = parseFloat((event.target as HTMLInputElement).value)
+  if (dc.aggregationBasis === 'perUnit') {
+    dc.costPerUnit = isNaN(val) ? undefined : val
+  } else {
+    dc.costPerMonth = isNaN(val) ? undefined : val
+  }
+  update()
+}
+
+function formatDeploymentCost(amount: number, currency: string): string {
+  const symbol = currency === 'EUR' ? '\u20AC' : '$'
+  return `${symbol}${amount.toFixed(2)} ${currency}`
 }
 
 function handleModelSelectionChange(taskId: string, value: string) {
