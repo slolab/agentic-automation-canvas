@@ -481,7 +481,7 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
           deploymentCost: {
             costPerMonth: 45,
             aggregationBasis: 'perMonth',
-            currency: 'EUR',
+            currency: 'USD',
             costNotes: 'Validation service flat fee; no per-doc API. Covers rule engine and compliance lexicon updates.',
           },
           risks: [
