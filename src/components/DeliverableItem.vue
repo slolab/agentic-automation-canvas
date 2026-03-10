@@ -148,10 +148,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Deliverable } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
 interface Props {
   deliverable: Deliverable
@@ -163,6 +165,22 @@ const props = defineProps<Props>()
 
 // New deliverables (without title) start expanded
 const isExpanded = ref(!props.deliverable.title || props.deliverable.title.trim() === '')
+
+const { focusFieldRequest } = useCanvasData()
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'deliverable' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
