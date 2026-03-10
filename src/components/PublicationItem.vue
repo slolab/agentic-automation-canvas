@@ -207,11 +207,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Publication, PublicationAuthor, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
 interface Props {
   publication: Publication
@@ -220,9 +221,23 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { canvasData } = useCanvasData()
+const { canvasData, focusFieldRequest } = useCanvasData()
 
 const isExpanded = ref(!props.publication.title || props.publication.title.trim() === '')
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'publication' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 const showAddAuthor = ref(false)
 const newAuthor = ref<PublicationAuthor>({ type: 'person' })
