@@ -37,36 +37,47 @@
       </div>
     </div>
 
-    <!-- Workflow Visualization -->
+    <!-- Governance Timeline (Gantt-style) -->
     <div v-if="governanceStages.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Governance Workflow</h3>
-      <div class="overflow-x-auto">
-        <div class="flex items-center gap-4 min-w-max pb-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Governance Timeline</h3>
+      <div v-if="governanceTimeline && governanceTimeline.stages.length > 0" class="space-y-3">
+        <!-- Axis labels -->
+        <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
+          <span>{{ governanceTimeline.axisStartLabel }}</span>
+          <span>{{ governanceTimeline.axisEndLabel }}</span>
+        </div>
+        <!-- Timeline track -->
+        <div class="relative w-full h-24 md:h-28 bg-gray-50 rounded-md border border-dashed border-gray-200 overflow-hidden">
+          <!-- Baseline -->
+          <div class="absolute left-0 right-0 top-1/2 h-px bg-gray-200" />
+          <!-- Stage bars -->
           <div
-            v-for="(stage, index) in governanceStages"
+            v-for="stage in governanceTimeline.stages"
             :key="stage.id"
-            class="flex items-center"
+            class="absolute"
+            :style="{
+              left: stage.left + '%',
+              width: stage.width + '%',
+              top: `calc(10% + ${stage.row * 40}px)`
+            }"
           >
-            <div class="flex flex-col items-center">
-              <div
-                class="w-24 h-24 rounded-lg border-2 flex items-center justify-center text-center p-2"
-                :class="getStageColor(index)"
-              >
-                <span class="text-xs font-medium">{{ stage.name }}</span>
-              </div>
-              <div v-if="stage.startDate || stage.endDate" class="text-xs text-gray-500 mt-2">
-                <div v-if="stage.startDate">{{ formatDate(stage.startDate) }}</div>
-                <div v-if="stage.endDate">→ {{ formatDate(stage.endDate) }}</div>
-              </div>
+            <div
+              class="rounded-md border text-xs px-2 py-1 shadow-sm flex items-center gap-2 bg-white"
+              :class="getStageColor(stage.index)"
+            >
+              <span class="font-medium truncate max-w-[10rem] md:max-w-[14rem]">{{ stage.name }}</span>
             </div>
-            <div v-if="index < governanceStages.length - 1" class="mx-2">
-              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
+            <div class="mt-1 text-[10px] text-gray-500">
+              <span v-if="stage.startDate">{{ formatDate(stage.startDate) }}</span>
+              <span v-if="stage.startDate && stage.endDate"> → </span>
+              <span v-if="stage.endDate">{{ formatDate(stage.endDate) }}</span>
             </div>
           </div>
         </div>
       </div>
+      <p v-else class="text-sm text-gray-500 italic">
+        Add start and end dates to governance stages to see the timeline.
+      </p>
     </div>
 
     <!-- Task Dependency Graph -->
@@ -333,6 +344,87 @@ const { canvasData, benefitDisplay } = useCanvasData()
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 const governanceStages = computed(() => canvasData.value.governance?.stages || [])
+
+interface GovernanceTimelineStage {
+  id: string
+  name: string
+  startDate?: string
+  endDate?: string
+  left: number
+  width: number
+  row: number
+  index: number
+}
+
+interface GovernanceTimeline {
+  stages: GovernanceTimelineStage[]
+  axisStartLabel: string
+  axisEndLabel: string
+}
+
+const governanceTimeline = computed<GovernanceTimeline | null>(() => {
+  const stages = governanceStages.value
+  if (!stages.length) return null
+
+  // Parse dates and filter to those with at least one date
+  const parsed = stages.map((s, index) => {
+    const start = s.startDate ? new Date(s.startDate).getTime() : NaN
+    const end = s.endDate ? new Date(s.endDate).getTime() : NaN
+    return { raw: s, index, start, end }
+  })
+
+  const validForAxis = parsed.filter(p => !Number.isNaN(p.start) || !Number.isNaN(p.end))
+  if (!validForAxis.length) {
+    return {
+      stages: [],
+      axisStartLabel: '',
+      axisEndLabel: '',
+    }
+  }
+
+  const minStart = Math.min(...validForAxis.map(p => Number.isNaN(p.start) ? p.end : p.start))
+  const maxEnd = Math.max(...validForAxis.map(p => Number.isNaN(p.end) ? p.start : p.end))
+  if (!Number.isFinite(minStart) || !Number.isFinite(maxEnd) || minStart === maxEnd) {
+    return {
+      stages: [],
+      axisStartLabel: '',
+      axisEndLabel: '',
+    }
+  }
+
+  const totalSpan = maxEnd - minStart
+  const rowCount = 3
+
+  const timelineStages: GovernanceTimelineStage[] = parsed.map((p, idx) => {
+    const s = p.raw
+    const startMs = !Number.isNaN(p.start) ? p.start : minStart
+    const endMs = !Number.isNaN(p.end) ? p.end : startMs + totalSpan * 0.05
+    const clampedStart = Math.max(minStart, Math.min(endMs, startMs))
+    const clampedEnd = Math.max(clampedStart, Math.min(maxEnd, endMs))
+    const left = ((clampedStart - minStart) / totalSpan) * 100
+    const width = Math.max(2, ((clampedEnd - clampedStart) / totalSpan) * 100)
+    const row = idx % rowCount
+    return {
+      id: s.id,
+      name: s.name || `Stage ${idx + 1}`,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      left,
+      width,
+      row,
+      index: p.index,
+    }
+  })
+
+  const axisStartLabel = formatDate(new Date(minStart).toISOString())
+  const axisEndLabel = formatDate(new Date(maxEnd).toISOString())
+
+  return {
+    stages: timelineStages,
+    axisStartLabel,
+    axisEndLabel,
+  }
+})
 
 const dependencyMermaid = computed(() => generateDependencyMermaid(requirements.value))
 const mermaidContainerRef = ref<HTMLElement | null>(null)
