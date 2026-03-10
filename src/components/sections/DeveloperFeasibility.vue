@@ -415,15 +415,15 @@
                     :id="`deployment-cost-currency-${requirement.id}`"
                     label="Currency"
                   >
-                    <select
+                  <input
                       :id="`deployment-cost-currency-${requirement.id}`"
-                      :value="requirement.feasibility?.deploymentCost?.currency || 'USD'"
+                    type="text"
+                    maxlength="3"
+                    :value="requirement.feasibility?.deploymentCost?.currency || ''"
                       class="form-input"
-                      @change="updateDeploymentCostField(requirement, 'currency', ($event.target as HTMLSelectElement).value)"
-                    >
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                    </select>
+                    placeholder="e.g. USD"
+                    @change="updateDeploymentCostField(requirement, 'currency', formatCurrencyCode(($event.target as HTMLInputElement).value))"
+                  />
                   </FormField>
                 </div>
 
@@ -1238,6 +1238,14 @@ function taskMonthlyCost(req: Requirement): string {
   const cost = getMonthlyDeploymentCost(req)
   if (cost === 0) return ''
   return formatDeploymentCost(cost, req.feasibility?.deploymentCost?.currency || 'USD')
+}
+
+function formatCurrencyCode(raw: string): string | undefined {
+  const trimmed = (raw || '').trim().toUpperCase()
+  if (!trimmed) return undefined
+  // Accept only 3-letter currency codes
+  if (!/^[A-Z]{3}$/.test(trimmed)) return raw // let schema validation surface the error
+  return trimmed
 }
 
 const tasksWithEffort = computed(() => {

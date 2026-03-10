@@ -550,13 +550,12 @@ const hasDeploymentCosts = computed(() => deploymentCostTotals.value.size > 0)
 const summaryGridCols = computed(() => hasDeploymentCosts.value ? 'md:grid-cols-4' : 'md:grid-cols-3')
 
 function formatCurrency(amount: number, currency: string): string {
-  const symbol = currency === 'EUR' ? '\u20AC' : '$'
-  return `${symbol}${amount.toFixed(2)} ${currency}`
+  return `${amount.toFixed(2)} ${currency}`
 }
 
 function formatDeploymentCostSummary(): string {
   const totals = deploymentCostTotals.value
-  if (totals.size === 0) return '$0'
+  if (totals.size === 0) return '0.00'
   return Array.from(totals.entries())
     .map(([currency, amount]) => formatCurrency(amount, currency))
     .join(' + ')

@@ -207,8 +207,8 @@
                       },
                       "currency": {
                         "type": "string",
-                        "enum": ["USD", "EUR"],
-                        "description": "Currency for the cost estimate"
+                        "pattern": "^[A-Z]{3}$",
+                        "description": "Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP)"
                       },
                       "costNotes": {
                         "type": "string",

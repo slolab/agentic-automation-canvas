@@ -97,7 +97,8 @@ export interface DeploymentCost {
   costPerUnit?: number        // cost per interaction/unit of work
   costPerMonth?: number       // flat monthly cost
   aggregationBasis: 'perUnit' | 'perMonth'
-  currency: 'USD' | 'EUR'
+  /** Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP) */
+  currency: string
   costNotes?: string
 }
 

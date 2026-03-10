@@ -270,7 +270,7 @@ Estimated deployment/operational cost for running this automated task
 | `costNotes` | string | No | Assumptions or notes about the cost estimate |  | AAC |
 | `costPerMonth` | number | No | Flat monthly deployment cost | Minimum: 0 | AAC |
 | `costPerUnit` | number | No | Cost per interaction/unit of work | Minimum: 0 | AAC |
-| `currency` | string | Yes | Currency for the cost estimate | Enum: `USD`, `EUR` | AAC |
+| `currency` | string | Yes | Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP) | Pattern: `^[A-Z]{3}$` | AAC |
 
 ## UserExpectations Requirement Feasibility EffortEstimate
 
