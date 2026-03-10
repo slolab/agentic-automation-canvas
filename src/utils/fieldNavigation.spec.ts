@@ -52,7 +52,7 @@ describe('fieldToNavTarget', () => {
       sectionId: 'user-expectations', itemType: 'requirement', itemIndex: 2, domFieldId: 'req-volume-2',
     })
   })
-  it('maps requirements[0].benefits (unmapped sub-field → null domFieldId)', () => {
+  it('maps requirements[0].benefits to Edit Benefits button', () => {
     const result = fieldToNavTarget('requirements[0].benefits')
     expect(result?.sectionId).toBe('user-expectations')
     expect(result?.itemType).toBe('requirement')
@@ -64,10 +64,6 @@ describe('fieldToNavTarget', () => {
     expect(result?.itemType).toBe('requirement')
     expect(result?.itemIndex).toBe(1)
     expect(result?.domFieldId).toBe('req-benefits-edit-1')
-  })
-  it('maps requirements[0].benefits to Edit Benefits button', () => {
-    const result = fieldToNavTarget('requirements[0].benefits')
-    expect(result?.domFieldId).toBe('req-benefits-edit-0')
   })
   it('maps requirements[1].netTimeSaved to Edit Benefits button', () => {
     const result = fieldToNavTarget('requirements[1].netTimeSaved')
