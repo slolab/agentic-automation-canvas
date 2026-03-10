@@ -14,7 +14,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 gap-4 mb-6" :class="summaryGridCols">
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 class="text-sm font-medium text-blue-900 mb-1">Total Time Saved</h3>
         <p class="text-2xl font-bold text-blue-700">{{ totalHoursSavedPerMonth }} hrs/month</p>
@@ -29,6 +29,11 @@
         <h3 class="text-sm font-medium text-purple-900 mb-1">Tasks</h3>
         <p class="text-2xl font-bold text-purple-700">{{ taskCount }}</p>
         <p class="text-xs text-purple-600 mt-1">Automation tasks</p>
+      </div>
+      <div v-if="hasDeploymentCosts" class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <h3 class="text-sm font-medium text-amber-900 mb-1">Deployment Cost</h3>
+        <p class="text-2xl font-bold text-amber-700">{{ formatDeploymentCostSummary() }}</p>
+        <p class="text-xs text-amber-600 mt-1">per month</p>
       </div>
     </div>
 
@@ -137,6 +142,9 @@
               </div>
               <div class="text-sm text-gray-500">
                 Oversight: {{ formatMinutes(getOversightMinutesForReq(req)) }}
+              </div>
+              <div v-if="getTaskMonthlyCost(req)" class="text-sm text-amber-600 font-medium">
+                {{ getTaskMonthlyCost(req) }}/mo
               </div>
             </div>
           </div>
@@ -271,6 +279,7 @@ import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { generateDependencyMermaid, hasDependencies } from '@/utils/dependencyGraph'
 import type { Requirement, Benefit } from '@/types/canvas'
+import { getMonthlyDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
 
 const { canvasData, benefitDisplay } = useCanvasData()
 
@@ -381,6 +390,33 @@ const valueTypeBreakdown = computed(() => {
     percentage: Math.round((count / total) * 100)
   }))
 })
+
+// Deployment cost aggregation
+const deploymentCostTotals = computed(() => aggregateDeploymentCosts(requirements.value))
+
+const hasDeploymentCosts = computed(() => deploymentCostTotals.value.size > 0)
+
+const summaryGridCols = computed(() => hasDeploymentCosts.value ? 'md:grid-cols-4' : 'md:grid-cols-3')
+
+function formatCurrency(amount: number, currency: string): string {
+  const symbol = currency === 'EUR' ? '\u20AC' : '$'
+  return `${symbol}${amount.toFixed(2)} ${currency}`
+}
+
+function formatDeploymentCostSummary(): string {
+  const totals = deploymentCostTotals.value
+  if (totals.size === 0) return '$0'
+  return Array.from(totals.entries())
+    .map(([currency, amount]) => formatCurrency(amount, currency))
+    .join(' + ')
+}
+
+function getTaskMonthlyCost(req: Requirement): string {
+  const cost = getMonthlyDeploymentCost(req)
+  if (cost === 0) return ''
+  const currency = req.feasibility?.deploymentCost?.currency || 'USD'
+  return formatCurrency(cost, currency)
+}
 
 // Helper functions
 function formatMinutes(minutes: number): string {
