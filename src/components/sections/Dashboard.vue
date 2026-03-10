@@ -41,15 +41,11 @@
     <div v-if="governanceStages.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Governance Timeline</h3>
       <div v-if="governanceTimeline && governanceTimeline.stages.length > 0" class="space-y-3">
-        <!-- Axis labels -->
-        <div class="flex items-center justify-between text-xs text-gray-500 mb-1">
-          <span>{{ governanceTimeline.axisStartLabel }}</span>
-          <span>{{ governanceTimeline.axisEndLabel }}</span>
-        </div>
         <!-- Timeline track -->
-        <div class="relative w-full h-24 md:h-28 bg-gray-50 rounded-md border border-dashed border-gray-200 overflow-hidden">
-          <!-- Baseline -->
-          <div class="absolute left-0 right-0 top-1/2 h-px bg-gray-200" />
+        <div
+          class="relative w-full bg-gray-50 rounded-md border border-dashed border-gray-200 overflow-hidden"
+          :style="{ height: governanceTimeline.height + 'px' }"
+        >
           <!-- Stage bars -->
           <div
             v-for="stage in governanceTimeline.stages"
@@ -58,12 +54,12 @@
             :style="{
               left: stage.left + '%',
               width: stage.width + '%',
-              top: `calc(10% + ${stage.row * 40}px)`
+              top: (8 + stage.row * 44) + 'px'
             }"
           >
             <div
               class="rounded-md border text-xs px-2 py-1 shadow-sm flex items-center gap-2 bg-white"
-              :class="getStageColor(stage.index)"
+              :class="getGovernanceStageChipClass(stage, stage.index)"
             >
               <span class="font-medium truncate max-w-[10rem] md:max-w-[14rem]">{{ stage.name }}</span>
             </div>
@@ -72,6 +68,17 @@
               <span v-if="stage.startDate && stage.endDate"> → </span>
               <span v-if="stage.endDate">{{ formatDate(stage.endDate) }}</span>
             </div>
+          </div>
+          <!-- Bottom axis (in reserved area so chip date labels do not overlap) -->
+          <div class="absolute left-0 right-0 bottom-6 h-px bg-gray-300" aria-hidden="true" />
+          <div
+            v-for="tick in governanceTimeline.axisTicks"
+            :key="tick.left"
+            class="absolute flex flex-col items-center text-[10px] text-gray-500"
+            :style="{ left: tick.left + '%', bottom: '0.25rem', transform: 'translateX(-50%)' }"
+          >
+            <div class="w-px h-2 bg-gray-400 mb-0.5" />
+            <div class="whitespace-nowrap">{{ tick.label }}</div>
           </div>
         </div>
       </div>
@@ -356,10 +363,15 @@ interface GovernanceTimelineStage {
   index: number
 }
 
+interface GovernanceAxisTick {
+  left: number
+  label: string
+}
+
 interface GovernanceTimeline {
   stages: GovernanceTimelineStage[]
-  axisStartLabel: string
-  axisEndLabel: string
+  axisTicks: GovernanceAxisTick[]
+  height: number
 }
 
 const governanceTimeline = computed<GovernanceTimeline | null>(() => {
@@ -377,8 +389,8 @@ const governanceTimeline = computed<GovernanceTimeline | null>(() => {
   if (!validForAxis.length) {
     return {
       stages: [],
-      axisStartLabel: '',
-      axisEndLabel: '',
+      axisTicks: [],
+      height: 80,
     }
   }
 
@@ -387,13 +399,16 @@ const governanceTimeline = computed<GovernanceTimeline | null>(() => {
   if (!Number.isFinite(minStart) || !Number.isFinite(maxEnd) || minStart === maxEnd) {
     return {
       stages: [],
-      axisStartLabel: '',
-      axisEndLabel: '',
+      axisTicks: [],
+      height: 80,
     }
   }
 
   const totalSpan = maxEnd - minStart
-  const rowCount = 3
+  const rowCount = parsed.length || 1
+  const barRowHeight = 44
+  const topPadding = 8
+  const bottomAxisSpace = 44
 
   const timelineStages: GovernanceTimelineStage[] = parsed.map((p, idx) => {
     const s = p.raw
@@ -403,7 +418,7 @@ const governanceTimeline = computed<GovernanceTimeline | null>(() => {
     const clampedEnd = Math.max(clampedStart, Math.min(maxEnd, endMs))
     const left = ((clampedStart - minStart) / totalSpan) * 100
     const width = Math.max(2, ((clampedEnd - clampedStart) / totalSpan) * 100)
-    const row = idx % rowCount
+    const row = idx
     return {
       id: s.id,
       name: s.name || `Stage ${idx + 1}`,
@@ -416,13 +431,31 @@ const governanceTimeline = computed<GovernanceTimeline | null>(() => {
     }
   })
 
-  const axisStartLabel = formatDate(new Date(minStart).toISOString())
-  const axisEndLabel = formatDate(new Date(maxEnd).toISOString())
+  // Build evenly spaced axis ticks with granularity based on total span
+  const dayMs = 24 * 60 * 60 * 1000
+  let tickCount = 4
+  if (totalSpan > 90 * dayMs && totalSpan <= 365 * dayMs) {
+    tickCount = 6
+  } else if (totalSpan > 365 * dayMs) {
+    tickCount = 7
+  }
+  const axisTicks: GovernanceAxisTick[] = []
+  const step = totalSpan / (tickCount - 1)
+  for (let i = 0; i < tickCount; i++) {
+    const t = minStart + step * i
+    const left = (i / (tickCount - 1)) * 100
+    axisTicks.push({
+      left,
+      label: formatDate(new Date(t).toISOString()),
+    })
+  }
+
+  const height = topPadding + rowCount * barRowHeight + bottomAxisSpace
 
   return {
     stages: timelineStages,
-    axisStartLabel,
-    axisEndLabel,
+    axisTicks,
+    height,
   }
 })
 
@@ -724,15 +757,19 @@ function getOversightPercentage(req: Requirement): number {
   return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 
-function getStageColor(index: number): string {
-  const colors = [
-    'bg-blue-100 border-blue-300 text-blue-900',
-    'bg-green-100 border-green-300 text-green-900',
-    'bg-yellow-100 border-yellow-300 text-yellow-900',
-    'bg-purple-100 border-purple-300 text-purple-900',
-    'bg-pink-100 border-pink-300 text-pink-900',
+function getGovernanceStageChipClass(stage: { name: string }, index: number): string {
+  const isValidation = /validation/i.test(stage.name || '')
+  if (isValidation) return 'border-amber-500 text-amber-900'
+
+  const palette = [
+    'border-sky-500 text-sky-900',
+    'border-emerald-500 text-emerald-900',
+    'border-rose-500 text-rose-900',
+    'border-indigo-500 text-indigo-900',
+    'border-teal-500 text-teal-900',
+    'border-fuchsia-500 text-fuchsia-900',
   ]
-  return colors[index % colors.length]
+  return palette[index % palette.length]
 }
 
 // Per-task feasibility: use req.feasibility, or global DeveloperFeasibility when applicable
