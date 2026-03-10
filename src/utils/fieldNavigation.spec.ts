@@ -33,47 +33,47 @@ describe('fieldToNavTarget', () => {
 
   // Requirements — item-level
   it('maps requirements[0].title', () => {
-    expect(fieldToNavTarget('userExpectations.requirements[0].title')).toEqual({
+    expect(fieldToNavTarget('requirements[0].title')).toEqual({
       sectionId: 'user-expectations', itemType: 'requirement', itemIndex: 0, domFieldId: 'req-title-0',
     })
   })
   it('maps requirements[3].unitOfWork', () => {
-    expect(fieldToNavTarget('userExpectations.requirements[3].unitOfWork')).toEqual({
+    expect(fieldToNavTarget('requirements[3].unitOfWork')).toEqual({
       sectionId: 'user-expectations', itemType: 'requirement', itemIndex: 3, domFieldId: 'req-unit-3',
     })
   })
   it('maps requirements[1].unitCategory', () => {
-    expect(fieldToNavTarget('userExpectations.requirements[1].unitCategory')).toEqual({
+    expect(fieldToNavTarget('requirements[1].unitCategory')).toEqual({
       sectionId: 'user-expectations', itemType: 'requirement', itemIndex: 1, domFieldId: 'req-unit-category-1',
     })
   })
   it('maps requirements[2].volumePerMonth', () => {
-    expect(fieldToNavTarget('userExpectations.requirements[2].volumePerMonth')).toEqual({
+    expect(fieldToNavTarget('requirements[2].volumePerMonth')).toEqual({
       sectionId: 'user-expectations', itemType: 'requirement', itemIndex: 2, domFieldId: 'req-volume-2',
     })
   })
   it('maps requirements[0].benefits (unmapped sub-field → null domFieldId)', () => {
-    const result = fieldToNavTarget('userExpectations.requirements[0].benefits')
+    const result = fieldToNavTarget('requirements[0].benefits')
     expect(result?.sectionId).toBe('user-expectations')
     expect(result?.itemType).toBe('requirement')
     expect(result?.itemIndex).toBe(0)
     expect(result?.domFieldId).toBeNull()
   })
   it('maps nested benefit field — expands item, no specific field', () => {
-    const result = fieldToNavTarget('userExpectations.requirements[1].benefits[0].metricLabel')
+    const result = fieldToNavTarget('requirements[1].benefits[0].metricLabel')
     expect(result?.itemType).toBe('requirement')
     expect(result?.itemIndex).toBe(1)
     expect(result?.domFieldId).toBeNull()
   })
 
   // Datasets
-  it('maps dataAccess.datasets[0].title', () => {
-    expect(fieldToNavTarget('dataAccess.datasets[0].title')).toEqual({
+  it('maps datasets[0].title', () => {
+    expect(fieldToNavTarget('datasets[0].title')).toEqual({
       sectionId: 'data-access', itemType: 'dataset', itemIndex: 0, domFieldId: 'dataset-title-0',
     })
   })
-  it('maps dataAccess.datasets[2].accessRights', () => {
-    expect(fieldToNavTarget('dataAccess.datasets[2].accessRights')).toEqual({
+  it('maps datasets[2].accessRights', () => {
+    expect(fieldToNavTarget('datasets[2].accessRights')).toEqual({
       sectionId: 'data-access', itemType: 'dataset', itemIndex: 2, domFieldId: 'dataset-access-2',
     })
   })

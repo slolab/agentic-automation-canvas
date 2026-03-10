@@ -42,8 +42,8 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
     return { sectionId: 'user-expectations', itemType: null, itemIndex: null, domFieldId: null }
   }
 
-  // ── userExpectations.requirements[n].subField ───────────────────────────────
-  const reqMatch = field.match(/^userExpectations\.requirements\[(\d+)\](?:\.(.+))?$/)
+  // ── requirements[n].subField ────────────────────────────────────────────────
+  const reqMatch = field.match(/^requirements\[(\d+)\](?:\.(.+))?$/)
   if (reqMatch) {
     const index = parseInt(reqMatch[1], 10)
     const subField = reqMatch[2] ?? ''
@@ -61,8 +61,8 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
     }
   }
 
-  // ── dataAccess.datasets[n].subField ─────────────────────────────────────────
-  const datasetMatch = field.match(/^dataAccess\.datasets\[(\d+)\](?:\.(.+))?$/)
+  // ── datasets[n].subField ────────────────────────────────────────────────────
+  const datasetMatch = field.match(/^datasets\[(\d+)\](?:\.(.+))?$/)
   if (datasetMatch) {
     const index = parseInt(datasetMatch[1], 10)
     const subField = datasetMatch[2] ?? ''
