@@ -61,6 +61,10 @@ describe('generateDependencyMermaid', () => {
 })
 
 describe('hasDependencies', () => {
+  it('returns false for an empty requirements array', () => {
+    expect(hasDependencies([])).toBe(false)
+  })
+
   it('returns false when no requirements have dependsOn', () => {
     const reqs = [makeReq({ id: 'a' })]
     expect(hasDependencies(reqs)).toBe(false)
