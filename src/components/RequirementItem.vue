@@ -390,6 +390,7 @@
         <div class="flex items-center justify-between mb-4">
           <h4 class="subsubsection-header mb-0">Benefits</h4>
           <button
+            :id="`req-benefits-edit-${index}`"
             @click="openBenefitsModal"
             class="btn-secondary text-sm flex items-center gap-2"
           >

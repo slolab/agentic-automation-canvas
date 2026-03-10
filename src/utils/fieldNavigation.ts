@@ -53,11 +53,16 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
       'unitCategory':   `req-unit-category-${index}`,
       'volumePerMonth': `req-volume-${index}`,
     }
+    // Benefit-related subFields (benefits, benefits[].*, benefits[n].*, netTimeSaved)
+    // all target the "Edit Benefits" button
+    const isBenefitField = subField === 'benefits' ||
+      subField.startsWith('benefits[') ||
+      subField === 'netTimeSaved'
     return {
       sectionId:  'user-expectations',
       itemType:   'requirement',
       itemIndex:  index,
-      domFieldId: domMap[subField] ?? null,
+      domFieldId: domMap[subField] ?? (isBenefitField ? `req-benefits-edit-${index}` : null),
     }
   }
 

@@ -57,13 +57,25 @@ describe('fieldToNavTarget', () => {
     expect(result?.sectionId).toBe('user-expectations')
     expect(result?.itemType).toBe('requirement')
     expect(result?.itemIndex).toBe(0)
-    expect(result?.domFieldId).toBeNull()
+    expect(result?.domFieldId).toBe('req-benefits-edit-0')
   })
   it('maps nested benefit field — expands item, no specific field', () => {
     const result = fieldToNavTarget('requirements[1].benefits[0].metricLabel')
     expect(result?.itemType).toBe('requirement')
     expect(result?.itemIndex).toBe(1)
-    expect(result?.domFieldId).toBeNull()
+    expect(result?.domFieldId).toBe('req-benefits-edit-1')
+  })
+  it('maps requirements[0].benefits to Edit Benefits button', () => {
+    const result = fieldToNavTarget('requirements[0].benefits')
+    expect(result?.domFieldId).toBe('req-benefits-edit-0')
+  })
+  it('maps requirements[1].netTimeSaved to Edit Benefits button', () => {
+    const result = fieldToNavTarget('requirements[1].netTimeSaved')
+    expect(result?.domFieldId).toBe('req-benefits-edit-1')
+  })
+  it('maps requirements[0].benefits[0].metricLabel to Edit Benefits button', () => {
+    const result = fieldToNavTarget('requirements[0].benefits[0].metricLabel')
+    expect(result?.domFieldId).toBe('req-benefits-edit-0')
   })
 
   // Datasets
