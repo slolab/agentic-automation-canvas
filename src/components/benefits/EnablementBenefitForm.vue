@@ -140,7 +140,7 @@
             step="0.1"
             class="form-input"
             placeholder="Current value"
-            @input="updateBenefit(index, { baseline: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
+            @change="updateBenefit(index, { baseline: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
           />
         </template>
       </div>
@@ -180,7 +180,7 @@
             step="0.1"
             class="form-input"
             placeholder="Expected value"
-            @input="updateBenefit(index, { expected: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
+            @change="updateBenefit(index, { expected: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
           />
         </template>
       </div>

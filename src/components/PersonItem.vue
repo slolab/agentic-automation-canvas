@@ -94,15 +94,18 @@
         help-text="ORCID identifier (e.g., https://orcid.org/0000-0000-0000-0001). Provides a stable identifier for cross-project person linking."
         tooltip="An ORCID (Open Researcher and Contributor ID) provides a persistent identifier for researchers. Format: https://orcid.org/0000-0000-0000-0001. Using ORCID enables stable cross-project person linking and helps maintain provenance across different projects and systems."
       >
-        <input
-          :id="`person-orcid-${index}`"
-          :value="person.orcid || ''"
-          type="url"
-          class="form-input"
-          placeholder="https://orcid.org/0000-0000-0000-0001"
-          autocomplete="off"
-          @input="update({ ...person, orcid: ($event.target as HTMLInputElement).value || undefined })"
-        />
+        <div class="flex items-center gap-2">
+          <input
+            :id="`person-orcid-${index}`"
+            :value="person.orcid || ''"
+            type="url"
+            class="form-input flex-1"
+            placeholder="https://orcid.org/0000-0000-0000-0001"
+            autocomplete="off"
+            @input="update({ ...person, orcid: ($event.target as HTMLInputElement).value || undefined })"
+          />
+          <ExternalLinkIcon :url="person.orcid ?? ''" title="Open ORCID profile" />
+        </div>
       </FormField>
 
       <FormField
@@ -199,6 +202,7 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import FormField from './FormField.vue'
+import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Person } from '@/types/canvas'
 import functionRolesData from '@/data/function-roles.json'
 
@@ -210,6 +214,7 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
 // New persons (without name) start expanded so they can be filled in
 // Existing persons start collapsed
 const isExpanded = ref(!props.person.name || props.person.name.trim() === '')

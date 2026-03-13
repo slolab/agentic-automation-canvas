@@ -1,6 +1,26 @@
 import type { Requirement } from '@/types/canvas'
 
 /**
+ * Wrap a label into multiple lines at word boundaries for Mermaid rendering.
+ */
+export function wrapLabel(text: string, maxLineWidth: number): string {
+  if (text.length <= maxLineWidth) return text
+  const words = text.split(' ')
+  const lines: string[] = []
+  let currentLine = ''
+  for (const word of words) {
+    if (currentLine && (currentLine + ' ' + word).length > maxLineWidth) {
+      lines.push(currentLine)
+      currentLine = word
+    } else {
+      currentLine = currentLine ? currentLine + ' ' + word : word
+    }
+  }
+  if (currentLine) lines.push(currentLine)
+  return lines.join('<br/>')
+}
+
+/**
  * Generate Mermaid flowchart syntax from requirements and their dependencies.
  * Uses safe node IDs (sanitized) and quoted labels for special characters.
  */
@@ -15,14 +35,14 @@ export function generateDependencyMermaid(requirements: Requirement[]): string {
     nodes.set(req.id, safeId)
   })
 
-  const lines: string[] = ['graph LR']
+  const lines: string[] = ['graph TB']
   requirements.forEach((req) => {
     const safeId = nodes.get(req.id) || idToSafeId(req.id)
-    const label = (req.title || req.description || req.id || safeId)
+    const rawLabel = (req.title || req.description || req.id || safeId)
       .replace(/"/g, "'")
       .replace(/\[/g, '(')
       .replace(/\]/g, ')')
-      .slice(0, 40)
+    const label = wrapLabel(rawLabel, 30)
     lines.push(`    ${safeId}["${label}"]`)
   })
   requirements.forEach((req) => {

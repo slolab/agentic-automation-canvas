@@ -116,14 +116,17 @@
           help-text="Persistent Identifier (PID) or Digital Object Identifier (DOI) for the deliverable (e.g., https://doi.org/10.1234/example)"
           tooltip="A persistent identifier (PID) or DOI for the deliverable if it has been published or assigned one. Use a DOI if published (e.g., https://doi.org/10.1234/software), or another PID for versioned deliverables. PIDs enable stable references and help track deliverable versions."
         >
-          <input
-            :id="`deliverable-pid-${index}`"
-            :value="deliverable.pid || ''"
-            type="url"
-            class="form-input"
-            placeholder="https://doi.org/10.1234/example"
-            @input="update({ ...deliverable, pid: ($event.target as HTMLInputElement).value })"
-          />
+          <div class="flex items-center gap-2">
+            <input
+              :id="`deliverable-pid-${index}`"
+              :value="deliverable.pid || ''"
+              type="url"
+              class="form-input flex-1"
+              placeholder="https://doi.org/10.1234/example"
+              @input="update({ ...deliverable, pid: ($event.target as HTMLInputElement).value })"
+            />
+            <ExternalLinkIcon :url="deliverable.pid ?? ''" title="Open PID" />
+          </div>
         </FormField>
       </div>
 
@@ -145,9 +148,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
+import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Deliverable } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
 interface Props {
   deliverable: Deliverable
@@ -156,8 +162,25 @@ interface Props {
 }
 
 const props = defineProps<Props>()
+
 // New deliverables (without title) start expanded
 const isExpanded = ref(!props.deliverable.title || props.deliverable.title.trim() === '')
+
+const { focusFieldRequest } = useCanvasData()
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'deliverable' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

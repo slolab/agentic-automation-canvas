@@ -6,6 +6,7 @@ import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
+import type { FocusFieldRequest } from '@/utils/fieldNavigation'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
 const BENEFIT_DISPLAY_STORAGE_KEY = 'agentic-automation-canvas-benefit-display'
@@ -41,6 +42,9 @@ const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
 
 // App-only: when set, CanvasForm switches to this section (e.g. after Load Example)
 const requestedSection = ref<string | null>(null)
+
+// App-only: when set, collapsible components expand and focus the specified field
+const focusFieldRequest = ref<FocusFieldRequest | null>(null)
 const requestSection = (section: string) => {
   requestedSection.value = section
 }
@@ -893,6 +897,7 @@ export function useCanvasData() {
     validateOutcomes,
     requestedSection,
     requestSection,
+    focusFieldRequest,
     dataVersion,
   }
 }

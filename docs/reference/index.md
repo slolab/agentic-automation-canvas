@@ -249,6 +249,7 @@ Optional per-task feasibility (overrides project-level defaults)
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `algorithms` | array of string | No |  |  | AAC |
+| `deploymentCost` | object | No | Estimated deployment/operational cost for running this automated task |  | — |
 | `effortEstimate` | object | No |  |  | — |
 | `feasibilityNotes` | string | No |  |  | AAC |
 | `modelCardUri` | string | No | URI pointing to the model's model card | Format: `uri` | AAC |
@@ -258,6 +259,18 @@ Optional per-task feasibility (overrides project-level defaults)
 | `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `technologyApproach` | object | No | Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs. |  | — |
 | `tools` | array of string | No |  |  | AAC |
+
+## UserExpectations Requirement Feasibility DeploymentCost
+
+Estimated deployment/operational cost for running this automated task
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `aggregationBasis` | string | Yes | Whether cost is specified per interaction (multiplied by volume) or as a flat monthly figure | Enum: `perUnit`, `perMonth` | AAC |
+| `costNotes` | string | No | Assumptions or notes about the cost estimate |  | AAC |
+| `costPerMonth` | number | No | Flat monthly deployment cost | Minimum: 0 | AAC |
+| `costPerUnit` | number | No | Cost per interaction/unit of work | Minimum: 0 | AAC |
+| `currency` | string | Yes | Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP) | Pattern: `^[A-Z]{3}$` | AAC |
 
 ## UserExpectations Requirement Feasibility EffortEstimate
 

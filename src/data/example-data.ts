@@ -127,6 +127,12 @@ export const exampleData: CanvasData = {
               status: 'identified',
             },
           ],
+          deploymentCost: {
+            costPerUnit: 0.02,
+            aggregationBasis: 'perUnit',
+            currency: 'USD',
+            costNotes: 'Based on frontier model API pricing at ~1–2K tokens per document for extraction.',
+          },
         },
         benefits: [
           {
@@ -210,6 +216,12 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
               status: 'identified',
             },
           ],
+          deploymentCost: {
+            costPerUnit: 0.02,
+            aggregationBasis: 'perUnit',
+            currency: 'USD',
+            costNotes: 'Same extraction pipeline as req-1; same per-document API cost regardless of user (senior vs junior).',
+          },
         },
         benefits: [
           {
@@ -295,6 +307,12 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
           },
           algorithms: ['Rule-based classification', 'Pattern matching'],
           tools: ['Python', 'JSON Schema validator'],
+          deploymentCost: {
+            costPerMonth: 15,
+            aggregationBasis: 'perMonth',
+            currency: 'USD',
+            costNotes: 'Deterministic rule engine; no API costs. Flat monthly estimate for hosting and maintenance.',
+          },
         },
         benefits: [
           {
@@ -384,6 +402,12 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
           },
           algorithms: ['Decision tree', 'Rule-based routing'],
           tools: ['Python', 'MCP framework', 'OpenAI API'],
+          deploymentCost: {
+            costPerUnit: 0.005,
+            aggregationBasis: 'perUnit',
+            currency: 'USD',
+            costNotes: 'Lightweight routing calls; small model. ~500 × $0.005 = $2.50/mo.',
+          },
         },
         benefits: [
           {
@@ -454,6 +478,12 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
           },
           algorithms: ['Pattern matching', 'Rule-based validation', 'Keyword detection'],
           tools: ['Python', 'Regular expressions', 'Compliance rule engine'],
+          deploymentCost: {
+            costPerMonth: 45,
+            aggregationBasis: 'perMonth',
+            currency: 'USD',
+            costNotes: 'Validation service flat fee; no per-doc API. Covers rule engine and compliance lexicon updates.',
+          },
           risks: [
             {
               id: 'risk-4',

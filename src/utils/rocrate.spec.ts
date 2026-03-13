@@ -205,4 +205,35 @@ describe('generateROCrate', () => {
       expect(dsEntity['dcat:landingPage']).toBeUndefined()
     })
   })
+
+  it('exports deploymentCost in feasibility blob', () => {
+    const data: CanvasData = {
+      project: { title: 'Test', description: 'Desc' },
+      userExpectations: {
+        requirements: [
+          {
+            id: 'req-1',
+            title: 'Task with cost',
+            benefits: [],
+            feasibility: {
+              deploymentCost: {
+                costPerUnit: 0.05,
+                aggregationBasis: 'perUnit' as const,
+                currency: 'USD' as const,
+                costNotes: 'GPT-4o pricing',
+              },
+            },
+          },
+        ],
+      },
+    }
+    const out = generateROCrate(data)
+    const step = out['@graph'].find((e: any) => e['@id'] === '#req-1') as any
+    expect(step['aac:feasibility'].deploymentCost).toEqual({
+      costPerUnit: 0.05,
+      aggregationBasis: 'perUnit',
+      currency: 'USD',
+      costNotes: 'GPT-4o pricing',
+    })
+  })
 })

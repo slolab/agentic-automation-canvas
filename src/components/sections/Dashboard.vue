@@ -14,7 +14,7 @@
     </div>
 
     <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div class="grid grid-cols-1 gap-4 mb-6" :class="summaryGridCols">
       <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 class="text-sm font-medium text-blue-900 mb-1">Total Time Saved</h3>
         <p class="text-2xl font-bold text-blue-700">{{ totalHoursSavedPerMonth }} hrs/month</p>
@@ -30,47 +30,118 @@
         <p class="text-2xl font-bold text-purple-700">{{ taskCount }}</p>
         <p class="text-xs text-purple-600 mt-1">Automation tasks</p>
       </div>
+      <div v-if="hasDeploymentCosts" class="bg-amber-50 border border-amber-200 rounded-lg p-4">
+        <h3 class="text-sm font-medium text-amber-900 mb-1">Deployment Cost</h3>
+        <p class="text-2xl font-bold text-amber-700">{{ formatDeploymentCostSummary() }}</p>
+        <p class="text-xs text-amber-600 mt-1">per month</p>
+      </div>
     </div>
 
-    <!-- Workflow Visualization -->
+    <!-- Governance Timeline (Gantt-style) -->
     <div v-if="governanceStages.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Governance Workflow</h3>
-      <div class="overflow-x-auto">
-        <div class="flex items-center gap-4 min-w-max pb-4">
+      <h3 class="text-lg font-semibold text-gray-900 mb-4">Governance Timeline</h3>
+      <div v-if="governanceTimeline && governanceTimeline.stages.length > 0" class="space-y-3">
+        <!-- Timeline track -->
+        <div
+          class="relative w-full bg-gray-50 rounded-md border border-dashed border-gray-200 overflow-hidden"
+          :style="{ height: governanceTimeline.height + 'px' }"
+        >
+          <!-- Stage bars -->
           <div
-            v-for="(stage, index) in governanceStages"
+            v-for="stage in governanceTimeline.stages"
             :key="stage.id"
-            class="flex items-center"
+            class="absolute"
+            :style="{
+              left: stage.left + '%',
+              width: stage.width + '%',
+              top: (8 + stage.row * 44) + 'px'
+            }"
           >
-            <div class="flex flex-col items-center">
-              <div
-                class="w-24 h-24 rounded-lg border-2 flex items-center justify-center text-center p-2"
-                :class="getStageColor(index)"
-              >
-                <span class="text-xs font-medium">{{ stage.name }}</span>
-              </div>
-              <div v-if="stage.startDate || stage.endDate" class="text-xs text-gray-500 mt-2">
-                <div v-if="stage.startDate">{{ formatDate(stage.startDate) }}</div>
-                <div v-if="stage.endDate">→ {{ formatDate(stage.endDate) }}</div>
-              </div>
+            <div
+              class="rounded-md border text-xs px-2 py-1 shadow-sm flex items-center gap-2 bg-white"
+              :class="getGovernanceStageChipClass(stage, stage.index)"
+            >
+              <span class="font-medium truncate max-w-[10rem] md:max-w-[14rem]">{{ stage.name }}</span>
             </div>
-            <div v-if="index < governanceStages.length - 1" class="mx-2">
-              <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-              </svg>
+            <div class="mt-1 text-[10px] text-gray-500">
+              <span v-if="stage.startDate">{{ formatDate(stage.startDate) }}</span>
+              <span v-if="stage.startDate && stage.endDate"> → </span>
+              <span v-if="stage.endDate">{{ formatDate(stage.endDate) }}</span>
             </div>
+          </div>
+          <!-- Bottom axis (in reserved area so chip date labels do not overlap) -->
+          <div class="absolute left-0 right-0 bottom-6 h-px bg-gray-300" aria-hidden="true" />
+          <div
+            v-for="tick in governanceTimeline.axisTicks"
+            :key="tick.left"
+            class="absolute flex flex-col items-center text-[10px] text-gray-500"
+            :style="{ left: tick.left + '%', bottom: '0.25rem', transform: 'translateX(-50%)' }"
+          >
+            <div class="w-px h-2 bg-gray-400 mb-0.5" />
+            <div class="whitespace-nowrap">{{ tick.label }}</div>
           </div>
         </div>
       </div>
+      <p v-else class="text-sm text-gray-500 italic">
+        Add start and end dates to governance stages to see the timeline.
+      </p>
     </div>
 
     <!-- Task Dependency Graph -->
     <div v-if="requirements.length > 0" class="bg-white border border-gray-200 rounded-lg p-6">
-      <h3 class="text-lg font-semibold text-gray-900 mb-4">Task Dependency Graph</h3>
+      <div class="flex items-center justify-between mb-4">
+        <h3 class="text-lg font-semibold text-gray-900">Task Dependency Graph</h3>
+        <div v-if="hasDependencies(requirements)" class="flex items-center gap-1">
+          <button
+            type="button"
+            @click="zoomIn"
+            class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Zoom in"
+            aria-label="Zoom in"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v12M6 12h12" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            @click="zoomOut"
+            class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Zoom out"
+            aria-label="Zoom out"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 12h12" />
+            </svg>
+          </button>
+          <button
+            type="button"
+            @click="resetZoom"
+            class="p-1.5 rounded hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-colors"
+            title="Fit to view"
+            aria-label="Fit to view"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5v-4m0 4h-4m4 0l-5-5" />
+            </svg>
+          </button>
+        </div>
+      </div>
       <p v-if="!hasDependencies(requirements)" class="text-sm text-gray-500 italic mb-4">
         Add dependencies in task details to see workflow connections.
       </p>
-      <div ref="mermaidContainerRef" class="mermaid-diagram overflow-x-auto min-h-[100px] flex items-center justify-center p-4 bg-gray-50 rounded-lg" />
+      <div
+        ref="zoomContainerRef"
+        class="mermaid-zoom-container overflow-hidden min-h-[100px] bg-gray-50 rounded-lg relative select-none"
+        :class="{ 'cursor-grab': !isPanning, 'cursor-grabbing': isPanning }"
+        @mousedown="onMouseDown"
+      >
+        <div
+          ref="mermaidContainerRef"
+          class="mermaid-diagram p-4 origin-top-left"
+          :style="{ transform: `translate(${panX}px, ${panY}px) scale(${zoom})` }"
+        />
+      </div>
     </div>
 
     <!-- Time Savings per Task -->
@@ -137,6 +208,9 @@
               </div>
               <div class="text-sm text-gray-500">
                 Oversight: {{ formatMinutes(getOversightMinutesForReq(req)) }}
+              </div>
+              <div v-if="getTaskMonthlyCost(req)" class="text-sm text-amber-600 font-medium">
+                {{ getTaskMonthlyCost(req) }}/mo
               </div>
             </div>
           </div>
@@ -262,7 +336,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, onMounted } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted, nextTick } from 'vue'
 import mermaid from 'mermaid'
 import { useCanvasData } from '@/composables/useCanvasData'
 import InfoTooltip from '../InfoTooltip.vue'
@@ -271,14 +345,198 @@ import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { generateDependencyMermaid, hasDependencies } from '@/utils/dependencyGraph'
 import type { Requirement, Benefit } from '@/types/canvas'
+import { getMonthlyDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
 
 const { canvasData, benefitDisplay } = useCanvasData()
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 const governanceStages = computed(() => canvasData.value.governance?.stages || [])
 
+interface GovernanceTimelineStage {
+  id: string
+  name: string
+  startDate?: string
+  endDate?: string
+  left: number
+  width: number
+  row: number
+  index: number
+}
+
+interface GovernanceAxisTick {
+  left: number
+  label: string
+}
+
+interface GovernanceTimeline {
+  stages: GovernanceTimelineStage[]
+  axisTicks: GovernanceAxisTick[]
+  height: number
+}
+
+const governanceTimeline = computed<GovernanceTimeline | null>(() => {
+  const stages = governanceStages.value
+  if (!stages.length) return null
+
+  // Parse dates and filter to those with at least one date
+  const parsed = stages.map((s, index) => {
+    const start = s.startDate ? new Date(s.startDate).getTime() : NaN
+    const end = s.endDate ? new Date(s.endDate).getTime() : NaN
+    return { raw: s, index, start, end }
+  })
+
+  const validForAxis = parsed.filter(p => !Number.isNaN(p.start) || !Number.isNaN(p.end))
+  if (!validForAxis.length) {
+    return {
+      stages: [],
+      axisTicks: [],
+      height: 80,
+    }
+  }
+
+  const minStart = Math.min(...validForAxis.map(p => Number.isNaN(p.start) ? p.end : p.start))
+  const maxEnd = Math.max(...validForAxis.map(p => Number.isNaN(p.end) ? p.start : p.end))
+  if (!Number.isFinite(minStart) || !Number.isFinite(maxEnd) || minStart === maxEnd) {
+    return {
+      stages: [],
+      axisTicks: [],
+      height: 80,
+    }
+  }
+
+  const totalSpan = maxEnd - minStart
+  const rowCount = parsed.length || 1
+  const barRowHeight = 44
+  const topPadding = 8
+  const bottomAxisSpace = 44
+
+  const timelineStages: GovernanceTimelineStage[] = parsed.map((p, idx) => {
+    const s = p.raw
+    const startMs = !Number.isNaN(p.start) ? p.start : minStart
+    const endMs = !Number.isNaN(p.end) ? p.end : startMs + totalSpan * 0.05
+    const clampedStart = Math.max(minStart, Math.min(endMs, startMs))
+    const clampedEnd = Math.max(clampedStart, Math.min(maxEnd, endMs))
+    const left = ((clampedStart - minStart) / totalSpan) * 100
+    const width = Math.max(2, ((clampedEnd - clampedStart) / totalSpan) * 100)
+    const row = idx
+    return {
+      id: s.id,
+      name: s.name || `Stage ${idx + 1}`,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      left,
+      width,
+      row,
+      index: p.index,
+    }
+  })
+
+  // Build evenly spaced axis ticks with granularity based on total span
+  const dayMs = 24 * 60 * 60 * 1000
+  let tickCount = 4
+  if (totalSpan > 90 * dayMs && totalSpan <= 365 * dayMs) {
+    tickCount = 6
+  } else if (totalSpan > 365 * dayMs) {
+    tickCount = 7
+  }
+  const axisTicks: GovernanceAxisTick[] = []
+  const step = totalSpan / (tickCount - 1)
+  for (let i = 0; i < tickCount; i++) {
+    const t = minStart + step * i
+    const left = (i / (tickCount - 1)) * 100
+    axisTicks.push({
+      left,
+      label: formatDate(new Date(t).toISOString()),
+    })
+  }
+
+  const height = topPadding + rowCount * barRowHeight + bottomAxisSpace
+
+  return {
+    stages: timelineStages,
+    axisTicks,
+    height,
+  }
+})
+
 const dependencyMermaid = computed(() => generateDependencyMermaid(requirements.value))
 const mermaidContainerRef = ref<HTMLElement | null>(null)
+const zoomContainerRef = ref<HTMLElement | null>(null)
+const zoom = ref(1)
+const panX = ref(0)
+const panY = ref(0)
+const isPanning = ref(false)
+const panStartX = ref(0)
+const panStartY = ref(0)
+
+const ZOOM_MIN = 0.3
+const ZOOM_MAX = 3
+const ZOOM_STEP = 0.15
+
+function zoomIn() {
+  zoom.value = Math.min(ZOOM_MAX, zoom.value + ZOOM_STEP)
+}
+
+function zoomOut() {
+  zoom.value = Math.max(ZOOM_MIN, zoom.value - ZOOM_STEP)
+}
+
+function resetZoom() {
+  if (!zoomContainerRef.value || !mermaidContainerRef.value) {
+    zoom.value = 1
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  const container = zoomContainerRef.value.getBoundingClientRect()
+  const svg = mermaidContainerRef.value.querySelector('svg')
+  if (!svg) {
+    zoom.value = 1
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  const svgWidth = svg.scrollWidth || svg.clientWidth
+  const svgHeight = svg.scrollHeight || svg.clientHeight
+  if (svgWidth === 0 || svgHeight === 0) {
+    zoom.value = 1
+    panX.value = 0
+    panY.value = 0
+    return
+  }
+  // Fit graph into container with some padding
+  const padX = 32
+  const padY = 32
+  const scaleX = (container.width - padX) / svgWidth
+  const scaleY = (container.height - padY) / svgHeight
+  zoom.value = Math.min(scaleX, scaleY, 1) // Don't zoom above 1x for fit
+  // Center the graph
+  const scaledWidth = svgWidth * zoom.value
+  const scaledHeight = svgHeight * zoom.value
+  panX.value = (container.width - scaledWidth) / 2
+  panY.value = (container.height - scaledHeight) / 2
+}
+
+function onMouseDown(event: MouseEvent) {
+  if (event.button !== 0) return // left click only
+  isPanning.value = true
+  panStartX.value = event.clientX - panX.value
+  panStartY.value = event.clientY - panY.value
+  window.addEventListener('mousemove', onMouseMove)
+  window.addEventListener('mouseup', onMouseUp)
+}
+
+function onMouseMove(event: MouseEvent) {
+  if (!isPanning.value) return
+  panX.value = event.clientX - panStartX.value
+  panY.value = event.clientY - panStartY.value
+}
+
+function onMouseUp() {
+  isPanning.value = false
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup', onMouseUp)
+}
 
 async function renderMermaid() {
   if (!mermaidContainerRef.value || !dependencyMermaid.value) return
@@ -287,6 +545,8 @@ async function renderMermaid() {
     const id = `mermaid-dep-${Date.now()}`
     const { svg } = await mermaid.render(id, dependencyMermaid.value)
     mermaidContainerRef.value.innerHTML = svg
+    // Auto-fit after SVG is rendered and laid out
+    nextTick(() => requestAnimationFrame(() => resetZoom()))
   } catch (err) {
     mermaidContainerRef.value.innerHTML = `<p class="text-sm text-gray-500">Could not render diagram</p>`
   }
@@ -294,6 +554,11 @@ async function renderMermaid() {
 
 onMounted(() => renderMermaid())
 watch([dependencyMermaid, requirements], () => renderMermaid(), { deep: true })
+
+onUnmounted(() => {
+  window.removeEventListener('mousemove', onMouseMove)
+  window.removeEventListener('mouseup', onMouseUp)
+})
 
 const taskCount = computed(() => requirements.value.length)
 
@@ -382,6 +647,32 @@ const valueTypeBreakdown = computed(() => {
   }))
 })
 
+// Deployment cost aggregation
+const deploymentCostTotals = computed(() => aggregateDeploymentCosts(requirements.value))
+
+const hasDeploymentCosts = computed(() => deploymentCostTotals.value.size > 0)
+
+const summaryGridCols = computed(() => hasDeploymentCosts.value ? 'md:grid-cols-4' : 'md:grid-cols-3')
+
+function formatCurrency(amount: number, currency: string): string {
+  return `${amount.toFixed(2)} ${currency}`
+}
+
+function formatDeploymentCostSummary(): string {
+  const totals = deploymentCostTotals.value
+  if (totals.size === 0) return '0.00'
+  return Array.from(totals.entries())
+    .map(([currency, amount]) => formatCurrency(amount, currency))
+    .join(' + ')
+}
+
+function getTaskMonthlyCost(req: Requirement): string {
+  const cost = getMonthlyDeploymentCost(req)
+  if (cost === 0) return ''
+  const currency = req.feasibility?.deploymentCost?.currency || 'USD'
+  return formatCurrency(cost, currency)
+}
+
 // Helper functions
 function formatMinutes(minutes: number): string {
   if (minutes >= 60) {
@@ -466,15 +757,19 @@ function getOversightPercentage(req: Requirement): number {
   return Math.round((oversightTime / maxTotalTimeSaved.value) * 100)
 }
 
-function getStageColor(index: number): string {
-  const colors = [
-    'bg-blue-100 border-blue-300 text-blue-900',
-    'bg-green-100 border-green-300 text-green-900',
-    'bg-yellow-100 border-yellow-300 text-yellow-900',
-    'bg-purple-100 border-purple-300 text-purple-900',
-    'bg-pink-100 border-pink-300 text-pink-900',
+function getGovernanceStageChipClass(stage: { name: string }, index: number): string {
+  const isValidation = /validation/i.test(stage.name || '')
+  if (isValidation) return 'border-amber-500 text-amber-900'
+
+  const palette = [
+    'border-sky-500 text-sky-900',
+    'border-emerald-500 text-emerald-900',
+    'border-rose-500 text-rose-900',
+    'border-indigo-500 text-indigo-900',
+    'border-teal-500 text-teal-900',
+    'border-fuchsia-500 text-fuchsia-900',
   ]
-  return colors[index % colors.length]
+  return palette[index % palette.length]
 }
 
 // Per-task feasibility: use req.feasibility, or global DeveloperFeasibility when applicable
@@ -662,10 +957,13 @@ function benefitTypeBadgeClass(type: string): string {
 </script>
 
 <style scoped>
+.mermaid-zoom-container {
+  min-height: 200px;
+  max-height: 70vh;
+}
+
 .mermaid-diagram :deep(svg) {
-  max-width: 100%;
+  max-width: none;
   height: auto;
-  transform: scale(0.75);
-  transform-origin: top center;
 }
 </style>

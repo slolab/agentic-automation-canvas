@@ -111,7 +111,15 @@
           "confidenceUser": "medium",
           "confidenceDev": "medium"
         }
-      ]
+      ],
+      "aac:feasibility": {
+        "deploymentCost": {
+          "costPerUnit": 0.03,
+          "aggregationBasis": "perUnit",
+          "currency": "USD",
+          "costNotes": "Based on Claude API pricing at ~1.5K tokens/interaction"
+        }
+      }
     },
     {
       "@id": "#stage-0",

@@ -101,20 +101,54 @@
     </div>
 
     <!-- Validation Errors -->
-    <div v-if="validation.errors.length > 0 || validation.warnings.length > 0" class="border-t border-gray-200 px-6 py-4 bg-gray-50">
-      <div v-if="validation.errors.length > 0" class="mb-4">
+    <div v-if="errorsWithTargets.length > 0 || warningsWithTargets.length > 0" class="border-t border-gray-200 px-6 py-4 bg-gray-50">
+      <div v-if="errorsWithTargets.length > 0" class="mb-4">
         <h3 class="text-sm font-semibold text-red-700 mb-2">Validation Errors</h3>
-        <ul class="list-disc list-inside space-y-1">
-          <li v-for="(error, index) in validation.errors" :key="index" class="text-sm text-red-600">
-            {{ error.message }}
+        <ul class="space-y-0.5">
+          <li v-for="(item, index) in errorsWithTargets" :key="index">
+            <button
+              v-if="item.target"
+              type="button"
+              class="group flex w-full items-start gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-red-50"
+              @click="navigateToError(item.error.field)"
+            >
+              <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-400 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <span class="flex-1 text-sm text-red-600">{{ item.error.message }}</span>
+              <span class="shrink-0 text-xs text-red-400 opacity-0 transition-opacity group-hover:opacity-100">
+                {{ sectionLabel(item.target.sectionId) }} <span aria-hidden="true">↗</span>
+              </span>
+            </button>
+            <span v-else class="flex items-start gap-2 px-1 py-0.5 text-sm text-red-600">
+              <span class="mt-0.5 h-3.5 w-3.5 shrink-0 text-red-300">•</span>
+              {{ item.error.message }}
+            </span>
           </li>
         </ul>
       </div>
-      <div v-if="validation.warnings.length > 0">
+      <div v-if="warningsWithTargets.length > 0">
         <h3 class="text-sm font-semibold text-yellow-700 mb-2">Warnings</h3>
-        <ul class="list-disc list-inside space-y-1">
-          <li v-for="(warning, index) in validation.warnings" :key="index" class="text-sm text-yellow-600">
-            {{ warning.message }}
+        <ul class="space-y-0.5">
+          <li v-for="(item, index) in warningsWithTargets" :key="index">
+            <button
+              v-if="item.target"
+              type="button"
+              class="group flex w-full items-start gap-2 rounded px-1 py-0.5 text-left transition-colors hover:bg-yellow-50"
+              @click="navigateToError(item.error.field)"
+            >
+              <svg class="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-500 transition-transform group-hover:translate-x-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+              <span class="flex-1 text-sm text-yellow-600">{{ item.error.message }}</span>
+              <span class="shrink-0 text-xs text-yellow-500 opacity-0 transition-opacity group-hover:opacity-100">
+                {{ sectionLabel(item.target.sectionId) }} <span aria-hidden="true">↗</span>
+              </span>
+            </button>
+            <span v-else class="flex items-start gap-2 px-1 py-0.5 text-sm text-yellow-600">
+              <span class="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-400">•</span>
+              {{ item.error.message }}
+            </span>
           </li>
         </ul>
       </div>
@@ -134,8 +168,9 @@ import DataAccessSensitivity from './sections/DataAccessSensitivity.vue'
 import OutcomesEvaluation from './sections/OutcomesEvaluation.vue'
 import Dashboard from './sections/Dashboard.vue'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { fieldToNavTarget, sectionLabel } from '@/utils/fieldNavigation'
 
-const { completionPercentage, validateAll, lastImportMigrationWarnings, clearMigrationWarnings, requestedSection, dataVersion } = useCanvasData()
+const { completionPercentage, validateAll, lastImportMigrationWarnings, clearMigrationWarnings, requestedSection, dataVersion, focusFieldRequest } = useCanvasData()
 
 const sections = [
   { id: 'canvas-summary', label: 'Canvas Summary' },
@@ -160,6 +195,13 @@ watch(requestedSection, (section) => {
 
 const validation = computed(() => validateAll())
 
+const errorsWithTargets = computed(() =>
+  validation.value.errors.map(e => ({ error: e, target: fieldToNavTarget(e.field) }))
+)
+const warningsWithTargets = computed(() =>
+  validation.value.warnings.map(w => ({ error: w, target: fieldToNavTarget(w.field) }))
+)
+
 const getCompletionBarColor = () => {
   if (completionPercentage.value.hasErrors) {
     return 'bg-red-500'
@@ -171,6 +213,14 @@ const getCompletionBarColor = () => {
     return 'bg-green-500'
   }
   return 'bg-primary-600'
+}
+
+function navigateToError(field: string) {
+  const target = fieldToNavTarget(field)
+  if (!target) return
+  activeSection.value = target.sectionId
+  if (target.itemType === null) return
+  focusFieldRequest.value = target
 }
 
 const getCompletionTextColor = () => {

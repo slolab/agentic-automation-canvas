@@ -186,4 +186,41 @@ describe('parseROCrateToCanvas', () => {
       expect(ds?.datasetSheetUri).toBe('https://example.com/legacy/sheet')
     })
   })
+
+  it('imports deploymentCost from feasibility blob', () => {
+    const crate: ROCrateJSONLD = {
+      '@context': 'https://w3id.org/ro/crate/1.2/context',
+      '@graph': [
+        ...minimalRocrateFixture['@graph'],
+        {
+          '@id': '#plan',
+          '@type': 'p-plan:Plan',
+          'p-plan:hasStep': [{ '@id': '#req-1' }],
+        },
+        {
+          '@id': '#req-1',
+          '@type': 'p-plan:Step',
+          name: 'Task with cost',
+          description: 'desc',
+          'aac:benefits': [],
+          'aac:feasibility': {
+            deploymentCost: {
+              costPerMonth: 50,
+              aggregationBasis: 'perMonth',
+              currency: 'EUR',
+              costNotes: 'GPU instance',
+            },
+          },
+        },
+      ],
+    }
+    const canvasData = parseROCrateToCanvas(crate)
+    const req = canvasData.userExpectations?.requirements?.[0]
+    expect(req?.feasibility?.deploymentCost).toEqual({
+      costPerMonth: 50,
+      aggregationBasis: 'perMonth',
+      currency: 'EUR',
+      costNotes: 'GPU instance',
+    })
+  })
 })

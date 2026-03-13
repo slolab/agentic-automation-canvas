@@ -101,7 +101,7 @@
           step="any"
           class="form-input"
           placeholder="e.g. cost per unit or total"
-          @input="updateBenefit(index, { baseline: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
+          @change="updateBenefit(index, { baseline: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
         />
       </div>
 
@@ -115,7 +115,7 @@
           step="any"
           class="form-input"
           placeholder="e.g. cost per unit or total"
-          @input="updateBenefit(index, { expected: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
+          @change="updateBenefit(index, { expected: { type: 'numeric', value: parseFloat(($event.target as HTMLInputElement).value) || 0 } })"
         />
       </div>
 

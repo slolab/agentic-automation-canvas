@@ -105,9 +105,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import type { Evaluation } from '@/types/canvas'
+import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
 interface Props {
   evaluation: Evaluation
@@ -118,6 +120,22 @@ interface Props {
 const props = defineProps<Props>()
 // New evaluations (without type) start expanded
 const isExpanded = ref(!props.evaluation.type || props.evaluation.type.trim() === '')
+
+const { focusFieldRequest } = useCanvasData()
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'evaluation' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 function formatDate(date: string): string {
   return new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })

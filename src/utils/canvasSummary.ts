@@ -5,6 +5,7 @@
 
 import type { CanvasData, Requirement } from '@/types/canvas'
 import { getTimeSavedPerUnit, getOversightMinutes } from './timeBenefits'
+import { aggregateDeploymentCosts } from './deploymentCost'
 
 const MAX_DESC_LEN = 300
 const MAX_FEASIBILITY_NOTES_LEN = 300
@@ -47,6 +48,8 @@ export interface DeveloperFeasibilityBlock {
   feasibilityNotes: string
   /** Task titles that have task-level feasibility overrides */
   tasksWithDedicatedFeasibility: string[]
+  /** Total deployment cost per month by currency (e.g. { USD: 150, EUR: 80 }) */
+  deploymentCostTotalsPerMonth: Record<string, number>
 }
 
 export interface DeliverableSummary {
@@ -239,6 +242,12 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     .filter((r) => hasDedicatedFeasibility(r))
     .map((r) => r.title || 'Untitled task')
 
+  const deploymentCostTotals = aggregateDeploymentCosts(requirements)
+  const deploymentCostTotalsPerMonth: Record<string, number> = {}
+  deploymentCostTotals.forEach((amount, currency) => {
+    deploymentCostTotalsPerMonth[currency] = amount
+  })
+
   const developerFeasibilityBlock: DeveloperFeasibilityBlock = {
     trlCurrent,
     trlTarget,
@@ -247,6 +256,7 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     amortizationMonths,
     feasibilityNotes: truncate(feas?.feasibilityNotes, MAX_FEASIBILITY_NOTES_LEN),
     tasksWithDedicatedFeasibility,
+    deploymentCostTotalsPerMonth,
   }
 
   // Governance block

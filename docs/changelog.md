@@ -5,6 +5,28 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.15.0] - 2026-03-10
+
+### Added
+- Per-task **deployment cost** modelling in the schema (`deploymentCost` under `requirements[].feasibility`) with support for per-unit (`perUnit`) and flat monthly (`perMonth`) costs; TypeScript types, validation, and reference docs updated accordingly
+- UI in **Feasibility & Risks** to capture deployment cost (aggregation basis, amount, currency, notes) per task
+- Deployment cost surfaced throughout the app:
+  - Dashboard summary card showing **total deployment cost per month** (grouped by currency)
+  - Per-task deployment cost in the dashboard’s **Time Savings per Task** list
+  - Per-task and aggregated deployment cost in the **Development and Deployment Cost** summary section
+  - Canvas Summary and RO-Crate HTML preview now include per-month deployment cost totals
+- Dashboard **Governance Timeline** card: Gantt-style visualization of governance stages on a proportional, date-based x-axis, with stages rendered as horizontal bars laid out sequentially along the timeline
+
+### Changed
+- Deployment cost `currency` field now accepts any **3-letter ISO currency code** (`^[A-Z]{3}$`, e.g., `USD`, `EUR`, `GBP`) instead of the fixed `USD`/`EUR` enum; UI uses a free-text uppercase 3-letter input
+- Deployment cost formatting across the app now uses **numeric amount + currency code** only (e.g. `12.50 USD`), with currency symbols removed for consistency
+- Example canvas data updated so **all example tasks** carry deployment cost estimates with a mix of per-unit/per-month and multiple currencies, providing a comprehensive test fixture for cost aggregation and display
+- Dashboard **Feasibility** section renamed and extended to **Development and Deployment Cost**, combining effort, time benefits, and deployment cost into a single, richer summary
+- Governance timeline chips restyled with a consistent white background and a discrete **per-stage color palette** (border + text only) so each stage is visually discriminated without reusing the summary-card background colors; the Validation stage uses an amber accent
+
+### Fixed
+- Disabled **scroll-wheel zoom** on the task dependency graph; zoom is now controlled only via the explicit zoom-in/zoom-out buttons and panning by drag, preventing accidental zooming while scrolling the page
+
 ## [0.14.0]
 
 ### Fixed

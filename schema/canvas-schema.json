@@ -185,6 +185,37 @@
                     "type": "array",
                     "description": "Per-task risk assessments paralleling benefits",
                     "items": { "$ref": "#/$defs/Risk" }
+                  },
+                  "deploymentCost": {
+                    "type": "object",
+                    "description": "Estimated deployment/operational cost for running this automated task",
+                    "properties": {
+                      "costPerUnit": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Cost per interaction/unit of work"
+                      },
+                      "costPerMonth": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Flat monthly deployment cost"
+                      },
+                      "aggregationBasis": {
+                        "type": "string",
+                        "enum": ["perUnit", "perMonth"],
+                        "description": "Whether cost is specified per interaction (multiplied by volume) or as a flat monthly figure"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "description": "Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP)"
+                      },
+                      "costNotes": {
+                        "type": "string",
+                        "description": "Assumptions or notes about the cost estimate"
+                      }
+                    },
+                    "required": ["aggregationBasis", "currency"]
                   }
                 }
               }
