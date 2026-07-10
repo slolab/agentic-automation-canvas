@@ -1018,7 +1018,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       'p-plan': 'http://purl.org/net/p-plan#',
       dct: 'http://purl.org/dc/terms/',
       dcat: 'http://www.w3.org/ns/dcat#',
-      aac: 'https://github.com/slolab/agentic-automation-canvas/schema/',
+      aac: 'https://w3id.org/aac/schema/',
     },
   ]
 
