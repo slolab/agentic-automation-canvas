@@ -42,6 +42,11 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
   // Find project entity
   const projectEntity = findEntitiesByType(graph, ['Project', 'ResearchProject', 'schema:Project', 'schema:ResearchProject'])[0]
   if (projectEntity) {
+    // Funding (FRAPO): the grant number lives on the frapo:Grant entity
+    // referenced by frapo:isFundedBy.
+    const fundingRef = projectEntity['frapo:isFundedBy'] as { '@id': string } | undefined
+    const grantEntity = fundingRef?.['@id'] ? findEntity(graph, fundingRef['@id']) : undefined
+    const fundingGrant = (grantEntity?.['frapo:hasGrantNumber'] as string) || undefined
     canvasData.project = {
       title: (projectEntity.name as string) || '',
       description: (projectEntity.description as string) || '',
@@ -64,6 +69,7 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
           ? [projectEntity.keywords as string]
           : undefined,
       projectId: (projectEntity.identifier as string) || undefined,
+      fundingGrant,
       headlineValue: (projectEntity['aac:headlineValue'] as string) || undefined,
       primaryValueDriver: (projectEntity['aac:primaryValueDriver'] as 'time' | 'quality' | 'risk' | 'enablement') || undefined,
       roughEstimateValue: (projectEntity['aac:roughEstimateValue'] as number) ?? undefined,

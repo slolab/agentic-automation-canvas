@@ -6,10 +6,12 @@ This document describes how Agentic Automation Canvas fields map to FRAPO (Fundi
 
 ### FRAPO Project Properties
 
-| Canvas Field | FRAPO Property | Type | Description |
+| Canvas Field | FRAPO Term | Type | Description |
 |-------------|----------------|------|-------------|
 | project | `frapo:Project` | Class | Project entity |
-| funding grant | `frapo:fundingGrant` | Grant | Associated grant |
+| funding grant | `frapo:isFundedBy` | Object property | Links the project to its `frapo:Grant` entity |
+| funding grant | `frapo:Grant` | Class | The grant that funds the project |
+| funding grant | `frapo:hasGrantNumber` | Datatype property | Grant number / identifier carried on the `frapo:Grant` |
 | lead organization | `frapo:leadOrganization` | Organization | Lead organization |
 | project status | `frapo:hasStatus` | Status | Project status |
 | start date | `frapo:hasStartDate` | Date | Project start date |
@@ -25,6 +27,24 @@ This document describes how Agentic Automation Canvas fields map to FRAPO (Fundi
 | deliverable | `frapo:deliverable` | Deliverable | Project deliverable |
 | deliverable type | `dct:type` | Literal | Type of deliverable |
 | due date | `dct:date` | Date | Deliverable due date |
+
+### Funding
+
+The exporter maps the canvas `funding grant` field to a dedicated
+`frapo:Grant` entity, linked from the project via `frapo:isFundedBy`:
+
+```json
+{
+  "@type": ["schema:Project", "schema:ResearchProject"],
+  "@id": "#project",
+  "frapo:isFundedBy": { "@id": "#grant" }
+}
+{
+  "@type": "frapo:Grant",
+  "@id": "#grant",
+  "frapo:hasGrantNumber": "ERC-2024-STG-101234567"
+}
+```
 
 ### Example Structure
 

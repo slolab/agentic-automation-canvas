@@ -236,4 +236,50 @@ describe('generateROCrate', () => {
       costNotes: 'GPT-4o pricing',
     })
   })
+
+  it('@context maps aac: to the persistent w3id.org namespace', () => {
+    const out = generateROCrate(minimalCanvasData)
+    const contextObj = (out['@context'] as Array<unknown>).find(
+      (c): c is Record<string, string> => typeof c === 'object' && c !== null,
+    ) as Record<string, string>
+    expect(contextObj.aac).toBe('https://w3id.org/aac/schema/')
+  })
+
+  it('emits fundingGrant as a FRAPO Grant entity linked via frapo:isFundedBy', () => {
+    const data: CanvasData = {
+      project: {
+        title: 'Funded Project',
+        description: '',
+        fundingGrant: 'ERC-2024-STG-101234567',
+      },
+    }
+    const out = generateROCrate(data)
+    // frapo namespace registered in @context
+    const contextObj = (out['@context'] as Array<unknown>).find(
+      (c): c is Record<string, string> => typeof c === 'object' && c !== null,
+    ) as Record<string, string>
+    expect(contextObj.frapo).toBe('http://purl.org/cerif/frapo/')
+    // project references the grant
+    const project = out['@graph'].find(
+      (e: { '@id': string }) => e['@id'] === '#project',
+    ) as Record<string, unknown>
+    const grantRef = project['frapo:isFundedBy'] as { '@id': string }
+    expect(grantRef).toBeDefined()
+    // grant entity carries the grant number
+    const grant = out['@graph'].find(
+      (e: { '@id': string }) => e['@id'] === grantRef['@id'],
+    ) as Record<string, unknown>
+    expect(grant['@type']).toBe('frapo:Grant')
+    expect(grant['frapo:hasGrantNumber']).toBe('ERC-2024-STG-101234567')
+  })
+
+  it('does not emit a Grant entity when fundingGrant is absent', () => {
+    const out = generateROCrate(minimalCanvasData)
+    const grant = out['@graph'].find((e: { '@type'?: unknown }) => e['@type'] === 'frapo:Grant')
+    expect(grant).toBeUndefined()
+    const project = out['@graph'].find(
+      (e: { '@id': string }) => e['@id'] === '#project',
+    ) as Record<string, unknown>
+    expect(project['frapo:isFundedBy']).toBeUndefined()
+  })
 })

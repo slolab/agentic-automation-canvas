@@ -458,6 +458,12 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   if (data.project.projectId) {
     projectEntity.identifier = data.project.projectId
   }
+  // Funding (FRAPO): link the project to a Grant entity so funding is
+  // expressed in FRAPO terms rather than as a bare string.
+  const grantId = generateId('grant')
+  if (data.project.fundingGrant) {
+    projectEntity['frapo:isFundedBy'] = { '@id': grantId }
+  }
   // Project-level value summary
   if (data.project.headlineValue) {
     projectEntity['aac:headlineValue'] = data.project.headlineValue
@@ -484,6 +490,15 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   }
 
   graph.push(projectEntity)
+
+  // Grant entity (FRAPO) — carries the funding grant number
+  if (data.project.fundingGrant) {
+    graph.push({
+      '@id': grantId,
+      '@type': 'frapo:Grant',
+      'frapo:hasGrantNumber': data.project.fundingGrant,
+    })
+  }
 
   // Initialize Person registry for deduplication
   // Map canvas personId to RO-Crate personId
@@ -1018,6 +1033,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       'p-plan': 'http://purl.org/net/p-plan#',
       dct: 'http://purl.org/dc/terms/',
       dcat: 'http://www.w3.org/ns/dcat#',
+      frapo: 'http://purl.org/cerif/frapo/',
       aac: 'https://w3id.org/aac/schema/',
     },
   ]
