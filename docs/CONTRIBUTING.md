@@ -58,32 +58,45 @@ Thank you for your interest in contributing to the Agentic Automation Canvas pro
 4. Ensure the build passes: `npm run build`
 5. Submit a pull request
 
-## Version bump and release
+## Releases (release-please)
 
-Deploy to GitHub Pages and the GitHub Release are **not** triggered by merging to `main`. They run only when a **version tag** (e.g. `v0.14.0`) is pushed. That way you can merge PRs first, then bump on `main`, so the auto-generated release notes include those PRs.
+Releases are automated with [release-please](https://github.com/googleapis/release-please)
+via `.github/workflows/release-please.yml`. Do not bump versions or edit the changelog for
+releases by hand.
 
-When releasing a new app/schema version:
+1. **Use Conventional Commit PR titles.** PRs are squash-merged, so the PR title becomes
+   the commit message release-please reads:
+    - `fix: ...` → patch release (0.15.0 → 0.15.1)
+    - `feat: ...` → minor release (0.15.0 → 0.16.0)
+    - `feat!: ...` or a `BREAKING CHANGE:` footer → minor bump while we are pre-1.0
+      (`bump-minor-pre-major` is enabled)
+    - `chore: ...`, `docs: ...`, `ci: ...` etc. → recorded, but no release on their own
+2. **Merge PRs to `main`.** The Release Please workflow opens (or updates) a release PR
+   titled `chore(main): release X.Y.Z` that bumps every version location and prepends a
+   generated section to `docs/changelog.md`.
+3. **Review the release PR** — you can edit its changelog before merging.
+4. **Merge the release PR.** release-please tags `vX.Y.Z`, creates the GitHub Release, and
+   the workflow dispatches **Deploy to GitHub Pages** at that tag.
 
-1. **Merge** all PRs you want in the release.
-2. **On `main`**, use [bump2version](https://github.com/c4urself/bump2version):
-   - **Install** (if needed): `uv sync`
-   - **Bump** (e.g. patch 0.10.2 → 0.10.3): `bump2version patch`
-     - Or: `bump2version minor` / `bump2version major`
-     - Or explicit: `bump2version --new-version 0.10.3 patch`
-     - Use `--allow-dirty` if the working directory has uncommitted changes (e.g. changelog edits)
-3. **Refresh package-lock.json**: `npm install`
-4. **Add a changelog entry** in `docs/changelog.md`: add a new `## [X.Y.Z] - YYYY-MM-DD` section at the top with your changes.
-5. **Commit** the version bump and changelog: e.g. `git add -A && git commit -m "Release vX.Y.Z"`
-6. **Push the commit and the new tag** so the workflow runs:
-   ```bash
-   git push origin main
-   git push origin vX.Y.Z
-   ```
-   Or in one go: `git push origin main --follow-tags`
+Version locations updated automatically: `package.json` and `package-lock.json` (native
+node updater), plus the lines annotated with `x-release-please-version` in
+`pyproject.toml`, `README.md`, `docs/index.md`, `docs/spec/index.md`,
+`docs/spec/conformance.md`, and `docs/schema/index.md` (listed under `extra-files` in
+`release-please-config.json`). If you add a new file that displays the version, annotate
+the line and add the file to `extra-files`.
 
-After you push the tag, the **Deploy to GitHub Pages** workflow runs (validate → build → deploy), and a **GitHub Release** is created for that tag with auto-generated release notes from PRs and commits since the previous tag.
+Notes and limitations:
 
-The `.bumpversion.cfg` config updates: `package.json`, `package-lock.json`, `docs/spec/index.md`, `docs/spec/conformance.md`, `docs/schema/index.md`, `docs/index.md`, `README.md`. It does not edit the changelog (you add that manually).
+- Workflows (CI) do not run on the release PR because it is created with `GITHUB_TOKEN`
+  (GitHub anti-recursion rule). CI is not a required check today; if branch protection
+  ever requires it, switch the release-please workflow to a Personal Access Token.
+- The repository setting **Allow GitHub Actions to create and approve pull requests**
+  (Settings → Actions → General) must be enabled.
+- New changelog sections use release-please's format (Features / Bug Fixes with commit
+  links); the hand-written Keep-a-Changelog entries below them remain as history.
+- `uv.lock` records the project's own version and is not part of the release PR, so it
+  lags one release behind; harmless (CI runs `uv sync`, not `uv sync --locked`) and
+  self-heals on the next `uv sync`.
 
 ## Schema Changes
 
