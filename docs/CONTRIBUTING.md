@@ -70,7 +70,8 @@ releases by hand.
     - `feat: ...` → minor release (0.15.0 → 0.16.0)
     - `feat!: ...` or a `BREAKING CHANGE:` footer → minor bump while we are pre-1.0
       (`bump-minor-pre-major` is enabled)
-    - `chore: ...`, `docs: ...`, `ci: ...` etc. → recorded, but no release on their own
+    - `chore: ...`, `docs: ...`, `ci: ...` etc. → no release on their own, and omitted
+      from the generated changelog (only feat/fix/perf/revert entries are listed)
 2. **Merge PRs to `main`.** The Release Please workflow opens (or updates) a release PR
    titled `chore(main): release X.Y.Z` that bumps every version location and prepends a
    generated section to `docs/changelog.md`.
