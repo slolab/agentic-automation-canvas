@@ -1,0 +1,19 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "include-component-in-tag": false,
+  "include-v-in-tag": true,
+  "bump-minor-pre-major": true,
+  "changelog-path": "docs/changelog.md",
+  "extra-files": [
+    "pyproject.toml",
+    "README.md",
+    "docs/index.md",
+    "docs/spec/index.md",
+    "docs/spec/conformance.md",
+    "docs/schema/index.md"
+  ],
+  "packages": {
+    ".": {}
+  }
+}
