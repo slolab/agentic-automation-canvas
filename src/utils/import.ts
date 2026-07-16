@@ -221,6 +221,30 @@ export function parseROCrateToCanvas(rocrate: ROCrateJSONLD): CanvasData {
             }
           }
         }
+        // Parse task-level data access (aac:dataAccess blob, mirrors feasibility)
+        if (step!['aac:dataAccess'] && typeof step!['aac:dataAccess'] === 'object') {
+          const rawLinks = (step!['aac:dataAccess'] as { datasetLinks?: unknown }).datasetLinks
+          if (Array.isArray(rawLinks)) {
+            const validActions = ['read', 'modify', 'process', 'generate']
+            const datasetLinks = rawLinks
+              .filter((l): l is Record<string, unknown> => Boolean(l) && typeof (l as Record<string, unknown>).datasetId === 'string')
+              .map((l) => {
+                const link: import('@/types/canvas').TaskDatasetLink = { datasetId: l.datasetId as string }
+                if (Array.isArray(l.agentActions)) {
+                  link.agentActions = l.agentActions.filter(
+                    (a): a is import('@/types/canvas').AgentDataAction => validActions.includes(a as string)
+                  )
+                }
+                if (typeof l.notes === 'string' && l.notes) {
+                  link.notes = l.notes
+                }
+                return link
+              })
+            if (datasetLinks.length > 0) {
+              req.dataAccess = { datasetLinks }
+            }
+          }
+        }
         return req
       })
 

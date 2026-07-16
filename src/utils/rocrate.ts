@@ -90,6 +90,14 @@ function generateId(prefix: string, index?: number): string {
 }
 
 /**
+ * Crate @id for a dataset. Preserves the canvas dataset id (like requirement
+ * ids) so task-level dataset links survive export → import roundtrips.
+ */
+function datasetCrateId(dataset: { id?: string }, index: number): string {
+  return dataset.id && /^[\w-]+$/.test(dataset.id) ? `#${dataset.id}` : generateId('dataset', index)
+}
+
+/**
  * Person identity for deduplication
  */
 interface PersonIdentity {
@@ -523,6 +531,12 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   // Track emitted model URIs for deduplication
   const emittedModelUris = new Set<string>()
 
+  // Map canvas dataset ids to crate ids so steps can reference the datasets they use
+  const datasetCrateIds = new Map<string, string>()
+  data.dataAccess?.datasets?.forEach((dataset, index) => {
+    datasetCrateIds.set(dataset.id, datasetCrateId(dataset, index))
+  })
+
   // 4. User Expectations as P-Plan
   if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
     const planId = generateId('user-plan')
@@ -580,11 +594,23 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       if (req.feasibility && Object.keys(req.feasibility).length > 0) {
         stepEntity['aac:feasibility'] = req.feasibility
       }
+      // Collect prov:used references (datasets used by this task + model card)
+      const provUsedRefs: Array<{ '@id': string }> = []
+      // Task-level data access: embed the blob and reference linked datasets
+      if (req.dataAccess?.datasetLinks && req.dataAccess.datasetLinks.length > 0) {
+        stepEntity['aac:dataAccess'] = req.dataAccess
+        req.dataAccess.datasetLinks.forEach((link) => {
+          const crateId = datasetCrateIds.get(link.datasetId)
+          if (crateId) {
+            provUsedRefs.push({ '@id': crateId })
+          }
+        })
+      }
       // Emit SoftwareApplication entity for model card URI; link step to model via PROV
       if (req.feasibility?.modelCardUri) {
         const modelUri = req.feasibility.modelCardUri
         stepEntity['aac:model'] = { '@id': modelUri }
-        stepEntity['prov:used'] = { '@id': modelUri }
+        provUsedRefs.push({ '@id': modelUri })
         if (!emittedModelUris.has(modelUri)) {
           emittedModelUris.add(modelUri)
           const modelEntity: ROCrateEntity = {
@@ -598,6 +624,11 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
           }
           graph.push(modelEntity)
         }
+      }
+      if (provUsedRefs.length === 1) {
+        stepEntity['prov:used'] = provUsedRefs[0]
+      } else if (provUsedRefs.length > 1) {
+        stepEntity['prov:used'] = provUsedRefs
       }
       if (req.stakeholders && req.stakeholders.length > 0) {
         stepEntity['aac:stakeholders'] = req.stakeholders
@@ -823,7 +854,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   // 6. Datasets (DCAT)
   if (data.dataAccess?.datasets && data.dataAccess.datasets.length > 0) {
     data.dataAccess.datasets.forEach((dataset, index) => {
-      const datasetId = generateId('dataset', index)
+      const datasetId = datasetCrateId(dataset, index)
       hasPart.push({ '@id': datasetId })
 
       const datasetEntity: ROCrateEntity = {

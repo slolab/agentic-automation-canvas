@@ -34,6 +34,35 @@ User expectations are represented as `prov:Plan` entities using P-Plan extension
 }
 ```
 
+## Task-Level Data Access
+
+Tasks declare which datasets they use and what the agent may do with them. Links
+are exported both as a machine-readable blob (`aac:dataAccess`) and as PROV
+usage relations from the step to the referenced `dcat:Dataset` entities:
+
+| Canvas Field | Property | Type | Description |
+|-------------|----------------|------|-------------|
+| task ↔ dataset link | `prov:used` | Entity | Step references each linked dataset (and the model card, if set) |
+| dataset links + agent actions | `aac:dataAccess` | Blob | `datasetLinks[]` with `datasetId`, `agentActions` (read / modify / process / generate), `notes` |
+
+### Example Structure
+
+```json
+{
+  "@id": "#task-deid",
+  "@type": "p-plan:Step",
+  "prov:used": { "@id": "#ds-letters" },
+  "aac:dataAccess": {
+    "datasetLinks": [
+      { "datasetId": "ds-letters", "agentActions": ["read", "process", "generate"] }
+    ]
+  }
+}
+```
+
+Dataset crate `@id`s preserve the canvas dataset id, so task-level links remain
+resolvable after export → import roundtrips.
+
 ## Governance & Staging
 
 Governance stages are represented as `prov:Activity` entities:

@@ -116,6 +116,29 @@
                 "type": "string",
                 "description": "The user population whose benefit estimates this task captures (e.g., 'junior researchers', 'clinical staff with 3+ years experience'). Specifying this makes heterogeneity explicit when different user groups are expected to benefit differently from the same type of task."
               },
+              "dataAccess": {
+                "type": "object",
+                "description": "Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab).",
+                "properties": {
+                  "datasetLinks": {
+                    "type": "array",
+                    "description": "Links to datasets this task uses, with agent permissions",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "datasetId": { "type": "string", "description": "Id of a dataset defined in dataAccess.datasets" },
+                        "agentActions": {
+                          "type": "array",
+                          "description": "What the agent is allowed to do with this dataset",
+                          "items": { "type": "string", "enum": ["read", "modify", "process", "generate"] }
+                        },
+                        "notes": { "type": "string", "description": "Free-text notes on this task-dataset link" }
+                      },
+                      "required": ["datasetId"]
+                    }
+                  }
+                }
+              },
               "feasibility": {
                 "type": "object",
                 "description": "Optional per-task feasibility (overrides project-level defaults)",

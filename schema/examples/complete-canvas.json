@@ -103,6 +103,15 @@
             "currency": "USD",
             "costNotes": "Based on Claude API pricing at ~1.5K tokens/interaction"
           }
+        },
+        "dataAccess": {
+          "datasetLinks": [
+            {
+              "datasetId": "dataset-0",
+              "agentActions": ["read", "process"],
+              "notes": "Restricted dataset processed by a frontier model — data-processing agreement with the model provider required."
+            }
+          ]
         }
       }
     ]

@@ -47,6 +47,10 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   if (reqMatch) {
     const index = parseInt(reqMatch[1], 10)
     const subField = reqMatch[2] ?? ''
+    // Task-level data access is edited from the Data Access tab, not Tasks & Benefits
+    if (subField === 'dataAccess' || subField.startsWith('dataAccess.')) {
+      return { sectionId: 'data-access', itemType: null, itemIndex: null, domFieldId: null }
+    }
     const domMap: Record<string, string> = {
       'title':          `req-title-${index}`,
       'unitOfWork':     `req-unit-${index}`,

@@ -6,6 +6,7 @@ import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
+import { collectDataAccessFlags } from '@/utils/dataAccessWarnings'
 import type { FocusFieldRequest } from '@/utils/fieldNavigation'
 
 const STORAGE_KEY = 'agentic-automation-canvas-data'
@@ -533,6 +534,21 @@ export function useCanvasData() {
     return errors
   }
 
+  // Advisory compliance flags from task-level data access (warnings only; hints stay inline in the tab)
+  const validateTaskDataAccess = (): ValidationError[] => {
+    const requirements = canvasData.value.userExpectations?.requirements || []
+    return collectDataAccessFlags(canvasData.value)
+      .filter((flag) => flag.level === 'warning')
+      .map((flag) => {
+        const index = requirements.findIndex((r) => r.id === flag.taskId)
+        return {
+          field: `requirements[${index}].dataAccess`,
+          message: flag.message,
+          severity: 'warning' as const,
+        }
+      })
+  }
+
   const validateOutcomes = (): ValidationError[] => {
     const errors: ValidationError[] = []
     const outcomes = canvasData.value.outcomes
@@ -583,6 +599,7 @@ export function useCanvasData() {
     allErrors.push(...validateProject())
     allErrors.push(...validateRequirements())
     allErrors.push(...validateDatasets())
+    allErrors.push(...validateTaskDataAccess())
     allErrors.push(...validateOutcomes())
 
     const errors = allErrors.filter(e => e.severity === 'error')
