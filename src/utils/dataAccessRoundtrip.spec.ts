@@ -92,4 +92,35 @@ describe('task data access roundtrip', () => {
     expect(datasetIds).toContain('ds-letters')
     expect(datasetIds).toContain('ds-clean')
   })
+
+  it('roundtrips links whose dataset id is not a valid crate fragment (e.g. a URI)', () => {
+    const data = clinicalCanvas()
+    data.dataAccess!.datasets![0].id = 'https://doi.org/10.1234/abc'
+    data.userExpectations!.requirements![0].dataAccess!.datasetLinks![0].datasetId =
+      'https://doi.org/10.1234/abc'
+
+    const crate = generateROCrate(data) as unknown as ROCrateJSONLD
+    const imported = parseROCrateToCanvas(crate)
+
+    // whatever id the dataset comes back under, the link must still point at it
+    const deid = imported.userExpectations?.requirements?.find((r) => r.id === 'task-deid')
+    const linkId = deid?.dataAccess?.datasetLinks?.[0]?.datasetId
+    const datasetIds = (imported.dataAccess?.datasets ?? []).map((d) => d.id)
+    expect(linkId).toBeTruthy()
+    expect(datasetIds).toContain(linkId)
+  })
+
+  it('never emits duplicate @ids when fallback and preserved dataset ids collide', () => {
+    const data = clinicalCanvas()
+    data.dataAccess!.datasets = [
+      // index 0 fails the fragment regex, so its fallback would be #dataset-0…
+      { id: 'https://doi.org/10.1234/abc', title: 'External corpus' },
+      // …which must not collide with this preserved id or with the task-deid step
+      { id: 'dataset-0', title: 'Legacy corpus' },
+      { id: 'task-deid', title: 'Same id as a task' },
+    ]
+    const crate = generateROCrate(data)
+    const ids = crate['@graph'].map((e: { '@id': string }) => e['@id'])
+    expect(new Set(ids).size).toBe(ids.length)
+  })
 })

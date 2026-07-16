@@ -39,6 +39,21 @@ describe('computeFrameworkProgress', () => {
     expect(computeFrameworkProgress(withEstimate).benefit).toBe(true)
   })
 
+  it('does not count a cleared rough estimate as a benefit', () => {
+    // v-model.number leaves '' when the input is emptied; older data can hold null
+    const cleared = emptyCanvas()
+    cleared.project.roughEstimateValue = '' as unknown as number
+    expect(computeFrameworkProgress(cleared).benefit).toBe(false)
+
+    const nulled = emptyCanvas()
+    nulled.project.roughEstimateValue = null as unknown as number
+    expect(computeFrameworkProgress(nulled).benefit).toBe(false)
+
+    const zero = emptyCanvas()
+    zero.project.roughEstimateValue = 0
+    expect(computeFrameworkProgress(zero).benefit).toBe(true)
+  })
+
   it('completes tasks when the first task has a title and a user story', () => {
     const data = emptyCanvas()
     data.userExpectations = {

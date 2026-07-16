@@ -90,11 +90,45 @@ function generateId(prefix: string, index?: number): string {
 }
 
 /**
- * Crate @id for a dataset. Preserves the canvas dataset id (like requirement
- * ids) so task-level dataset links survive export → import roundtrips.
+ * Crate @ids for all datasets, allocated up front. Preserves canvas dataset
+ * ids (like requirement ids) so task-level dataset links survive export →
+ * import roundtrips; ids that are not valid fragments or would duplicate an
+ * already-taken @id (another dataset, a step) get a unique #dataset-<n>
+ * fallback instead. byIndex drives entity emission; byCanvasId resolves links.
  */
-function datasetCrateId(dataset: { id?: string }, index: number): string {
-  return dataset.id && /^[\w-]+$/.test(dataset.id) ? `#${dataset.id}` : generateId('dataset', index)
+function buildDatasetCrateIds(data: CanvasData): {
+  byIndex: string[]
+  byCanvasId: Map<string, string>
+} {
+  const datasets = data.dataAccess?.datasets ?? []
+  const used = new Set<string>()
+  // Steps are emitted with these @ids (section 4); a dataset must never claim one
+  data.userExpectations?.requirements?.forEach((req, index) => {
+    used.add(req.id && /^[\w-]+$/.test(req.id) ? `#${req.id}` : generateId('requirement', index))
+  })
+
+  const byIndex: string[] = new Array(datasets.length)
+  const byCanvasId = new Map<string, string>()
+
+  // Preserve valid, unique canvas ids first so fallbacks can never displace them
+  datasets.forEach((dataset, index) => {
+    if (dataset.id && /^[\w-]+$/.test(dataset.id) && !used.has(`#${dataset.id}`)) {
+      byIndex[index] = `#${dataset.id}`
+      used.add(byIndex[index])
+    }
+  })
+  let fallback = 0
+  datasets.forEach((dataset, index) => {
+    if (byIndex[index] === undefined) {
+      while (used.has(generateId('dataset', fallback))) fallback++
+      byIndex[index] = generateId('dataset', fallback++)
+      used.add(byIndex[index])
+    }
+    if (!byCanvasId.has(dataset.id)) {
+      byCanvasId.set(dataset.id, byIndex[index])
+    }
+  })
+  return { byIndex, byCanvasId }
 }
 
 /**
@@ -531,11 +565,8 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   // Track emitted model URIs for deduplication
   const emittedModelUris = new Set<string>()
 
-  // Map canvas dataset ids to crate ids so steps can reference the datasets they use
-  const datasetCrateIds = new Map<string, string>()
-  data.dataAccess?.datasets?.forEach((dataset, index) => {
-    datasetCrateIds.set(dataset.id, datasetCrateId(dataset, index))
-  })
+  // Crate ids for datasets, so steps can reference the datasets they use
+  const datasetCrateIds = buildDatasetCrateIds(data)
 
   // 4. User Expectations as P-Plan
   if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
@@ -596,15 +627,19 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
       }
       // Collect prov:used references (datasets used by this task + model card)
       const provUsedRefs: Array<{ '@id': string }> = []
-      // Task-level data access: embed the blob and reference linked datasets
+      // Task-level data access: embed the blob and reference linked datasets.
+      // Link ids are rewritten to the crate ids so the blob can never disagree
+      // with the dataset @ids the importer derives ids from.
       if (req.dataAccess?.datasetLinks && req.dataAccess.datasetLinks.length > 0) {
-        stepEntity['aac:dataAccess'] = req.dataAccess
-        req.dataAccess.datasetLinks.forEach((link) => {
-          const crateId = datasetCrateIds.get(link.datasetId)
-          if (crateId) {
+        stepEntity['aac:dataAccess'] = {
+          ...req.dataAccess,
+          datasetLinks: req.dataAccess.datasetLinks.map((link) => {
+            const crateId = datasetCrateIds.byCanvasId.get(link.datasetId)
+            if (!crateId) return link // dangling link (deleted dataset): keep as-is
             provUsedRefs.push({ '@id': crateId })
-          }
-        })
+            return { ...link, datasetId: crateId.slice(1) }
+          }),
+        }
       }
       // Emit SoftwareApplication entity for model card URI; link step to model via PROV
       if (req.feasibility?.modelCardUri) {
@@ -854,7 +889,7 @@ export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptio
   // 6. Datasets (DCAT)
   if (data.dataAccess?.datasets && data.dataAccess.datasets.length > 0) {
     data.dataAccess.datasets.forEach((dataset, index) => {
-      const datasetId = datasetCrateId(dataset, index)
+      const datasetId = datasetCrateIds.byIndex[index]
       hasPart.push({ '@id': datasetId })
 
       const datasetEntity: ROCrateEntity = {

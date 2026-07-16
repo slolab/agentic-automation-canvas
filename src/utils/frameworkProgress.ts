@@ -37,7 +37,8 @@ export function computeFrameworkProgress(data: CanvasData): FrameworkProgress {
   const deliverables = data.outcomes?.deliverables ?? []
 
   const summary = filled(project.title) && filled(project.description)
-  const benefit = filled(project.headlineValue) || project.roughEstimateValue !== undefined
+  // Number.isFinite also rejects the '' a cleared v-model.number input leaves behind, and null from older data
+  const benefit = filled(project.headlineValue) || Number.isFinite(project.roughEstimateValue)
   const tasks = requirements.some((r) => filled(r.title) && filled(r.userStory))
   const feasibility = data.developerFeasibility?.technicalRisk !== undefined
   const dataAccess = datasets.some((d) => filled(d.title) && d.containsPersonalData !== undefined)

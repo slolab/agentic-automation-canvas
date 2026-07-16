@@ -95,11 +95,16 @@
                   @input="updateProject({ headlineValue: ($event.target as HTMLInputElement).value })"
                 />
               </div>
-              <template v-if="!showProjectStrip">
+              <div
+                v-if="!isEmptyProject(summary.project)"
+                class="space-y-1.5"
+                :class="{ 'canvas-fw-print-only': showProjectStrip }"
+              >
                 <p class="font-semibold">{{ summary.project.title }}</p>
                 <p v-if="summary.project.description" class="text-gray-600">{{ summary.project.description }}</p>
                 <p v-if="summary.project.headlineValue" class="font-medium">{{ summary.project.headlineValue }}</p>
-              </template>
+              </div>
+              <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showProjectStrip }">Not specified</p>
               <p v-if="summary.project.stage" class="text-xs uppercase">{{ summary.project.stage }}</p>
               <p v-if="summary.project.primaryValueDriver" class="text-xs">Primary value: {{ summary.project.primaryValueDriver }}</p>
               <div v-if="summary.project.domain.length" class="flex flex-wrap gap-1 text-xs">
@@ -174,12 +179,16 @@
                   @input="patchFirstTask({ targetPopulation: ($event.target as HTMLInputElement).value })"
                 />
               </div>
-              <p><strong>{{ summary.userExpectations.taskCount }}</strong> tasks</p>
-              <div v-if="visibleTasks.length" class="space-y-2">
+              <p v-if="summary.userExpectations.taskCount > 0">
+                <strong>{{ summary.userExpectations.taskCount }}</strong>
+                {{ summary.userExpectations.taskCount === 1 ? 'task' : 'tasks' }}
+              </p>
+              <div v-if="summary.userExpectations.tasks.length" class="space-y-2">
                 <div
-                  v-for="(t, i) in visibleTasks"
+                  v-for="(t, i) in summary.userExpectations.tasks"
                   :key="i"
                   class="border-l-2 border-gray-300 pl-2 py-0.5"
+                  :class="{ 'canvas-fw-print-only': showTasksStrip && i === 0 }"
                 >
                   <p class="font-medium text-gray-900">{{ t.title }}</p>
                   <p v-if="t.userStory" class="text-xs italic mt-0.5 user-story-text">
@@ -211,7 +220,11 @@
                   </button>
                 </div>
               </template>
-              <p v-if="isEmptyUserExpectations(summary.userExpectations) && !showTasksStrip" class="italic text-gray-400">Not specified</p>
+              <p
+                v-if="isEmptyUserExpectations(summary.userExpectations)"
+                class="italic text-gray-400"
+                :class="{ 'canvas-fw-print-only': showTasksStrip }"
+              >Not specified</p>
             </div>
           </div>
           <div class="canvas-bmc-block flex-[1] px-4 pt-2 pb-4">
@@ -261,7 +274,7 @@
                   <span v-for="s in summary.dataAccess.sensitivitySummary" :key="s" class="text-gray-600">{{ s }}</span>
                 </div>
               </template>
-              <p v-else-if="!showDataAccessStrip" class="italic text-gray-400">Not specified</p>
+              <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showDataAccessStrip }">Not specified</p>
             </div>
           </div>
         </div>
@@ -308,7 +321,7 @@
                 </span>
                 <span v-else-if="summary.developerFeasibility.trlTarget !== null">target {{ summary.developerFeasibility.trlTarget }}</span>
               </div>
-              <p v-if="summary.developerFeasibility.technicalRisk && !showFeasibilityStrip">Risk: <span class="capitalize">{{ summary.developerFeasibility.technicalRisk }}</span></p>
+              <p v-if="summary.developerFeasibility.technicalRisk" :class="{ 'canvas-fw-print-only': showFeasibilityStrip }">Risk: <span class="capitalize">{{ summary.developerFeasibility.technicalRisk }}</span></p>
               <p v-if="summary.developerFeasibility.effortEstimate">Effort: {{ summary.developerFeasibility.effortEstimate }}</p>
               <p v-if="summary.developerFeasibility.amortizationMonths !== null" class="text-xs">
                 ~{{ summary.developerFeasibility.amortizationMonths!.toFixed(1) }} mo until amortization
@@ -328,7 +341,11 @@
                   />
                 </div>
               </div>
-              <p v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility) && summary.userExpectations.taskCount === 0 && !showFeasibilityStrip" class="italic text-gray-400">Not specified</p>
+              <p
+                v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility) && summary.userExpectations.taskCount === 0"
+                class="italic text-gray-400"
+                :class="{ 'canvas-fw-print-only': showFeasibilityStrip }"
+              >Not specified</p>
             </div>
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
@@ -368,12 +385,16 @@
                 />
               </div>
               <template v-if="!isEmptyOutcomes(summary.outcomes)">
-                <template v-if="visibleDeliverables.length">
+                <template v-if="summary.outcomes.deliverables.length">
                   <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     {{ summary.outcomes.deliverableCount }} {{ summary.outcomes.deliverableCount === 1 ? 'deliverable' : 'deliverables' }}
                   </p>
                   <ul class="list-none space-y-0.5 text-xs">
-                    <li v-for="(d, i) in visibleDeliverables" :key="'d-' + i">
+                    <li
+                      v-for="(d, i) in summary.outcomes.deliverables"
+                      :key="'d-' + i"
+                      :class="{ 'canvas-fw-print-only': showOutcomesStrip && i === 0 }"
+                    >
                       <a
                         v-if="isLink(d.pid)"
                         :href="d.pid!"
@@ -414,7 +435,7 @@
                   </ul>
                 </template>
               </template>
-              <p v-else-if="!showOutcomesStrip" class="italic text-gray-400">Not specified</p>
+              <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showOutcomesStrip }">Not specified</p>
             </div>
           </div>
         </div>
@@ -511,14 +532,6 @@ const firstTask = computed<Requirement | undefined>(() => canvasData.value.userE
 const firstDataset = computed<Dataset | undefined>(() => canvasData.value.dataAccess?.datasets?.[0])
 const firstDeliverable = computed<Deliverable | undefined>(() => canvasData.value.outcomes?.deliverables?.[0])
 
-// Hide the first item from the rendered lists while its strip edits it (avoids double display)
-const visibleTasks = computed(() =>
-  showTasksStrip.value ? summary.value.userExpectations.tasks.slice(1) : summary.value.userExpectations.tasks
-)
-const visibleDeliverables = computed(() =>
-  showOutcomesStrip.value ? summary.value.outcomes.deliverables.slice(1) : summary.value.outcomes.deliverables
-)
-
 function patchFirstTask(patch: Partial<Requirement>) {
   const requirements = canvasData.value.userExpectations?.requirements || []
   if (requirements.length === 0) {
@@ -580,6 +593,11 @@ function formatDeploymentCostSummary(totals: Record<string, number>): string {
   const entries = Object.entries(totals).filter(([, amount]) => amount > 0)
   if (entries.length === 0) return ''
   return entries.map(([currency, amount]) => formatDeploymentCost(amount, currency)).join(' + ')
+}
+
+function isEmptyProject(p: CanvasSummaryData['project']): boolean {
+  const noTitle = !p.title || p.title === 'Untitled Project'
+  return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver && p.domain.length === 0
 }
 
 function isEmptyUserExpectations(u: CanvasSummaryData['userExpectations']): boolean {
@@ -773,10 +791,19 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
   box-shadow: 0 0 0 1px rgb(14 165 233 / 0.3);
 }
 
+/* Content a strip is currently editing is hidden on screen (avoids double
+   display) but must reappear in print, where the strips themselves are hidden */
+.canvas-fw-print-only {
+  display: none;
+}
+
 @media print {
   .canvas-fw-chip,
   .canvas-fw-strip {
     display: none;
+  }
+  .canvas-fw-print-only {
+    display: revert;
   }
 }
 

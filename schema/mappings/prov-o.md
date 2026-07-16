@@ -60,8 +60,10 @@ usage relations from the step to the referenced `dcat:Dataset` entities:
 }
 ```
 
-Dataset crate `@id`s preserve the canvas dataset id, so task-level links remain
-resolvable after export → import roundtrips.
+Dataset crate `@id`s preserve the canvas dataset id where it forms a valid,
+unique fragment; other datasets get a unique `#dataset-<n>` id, and the blob's
+`datasetId`s are rewritten to match the emitted `@id`s. Either way, task-level
+links remain resolvable after export → import roundtrips.
 
 ## Governance & Staging
 
