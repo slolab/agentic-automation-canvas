@@ -139,6 +139,23 @@ export interface RequirementFeasibility {
   deploymentCost?: DeploymentCost
 }
 
+/** What an agent may do with a dataset within a task */
+export type AgentDataAction = 'read' | 'modify' | 'process' | 'generate'
+
+/** Link between a task and one dataset it uses, with agent permissions */
+export interface TaskDatasetLink {
+  /** Dataset.id from dataAccess.datasets (single ground truth for datasets) */
+  datasetId: string
+  /** What the agent is allowed to do with this dataset */
+  agentActions?: AgentDataAction[]
+  notes?: string
+}
+
+/** Per-task data access: which datasets this task uses and what the agent may do with them */
+export interface RequirementDataAccess {
+  datasetLinks?: TaskDatasetLink[]
+}
+
 export interface Requirement {
   id: string
   title: string
@@ -163,6 +180,8 @@ export interface Requirement {
   targetPopulation?: string
   /** Optional per-task feasibility (overrides or complements global DeveloperFeasibility) */
   feasibility?: RequirementFeasibility
+  /** Optional per-task data access links (edited from the Data Access tab, like feasibility) */
+  dataAccess?: RequirementDataAccess
 }
 
 export interface Person {

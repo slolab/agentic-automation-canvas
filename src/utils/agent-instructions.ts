@@ -126,9 +126,29 @@ function renderDataSources(data: CanvasData): string | undefined {
 
   const parts: string[] = ['', '## Data']
   for (const ds of datasets) {
-    const details = [ds.format, ds.accessRights].filter(Boolean).join(', ')
+    const details = [ds.format, ds.accessRights, ds.containsPersonalData && 'contains personal data']
+      .filter(Boolean)
+      .join(', ')
     parts.push(`- ${ds.title}${details ? ` (${details})` : ''}`)
   }
+
+  // Per-task agent permissions from task-level data access links
+  const datasetById = new Map(datasets.map((ds) => [ds.id, ds]))
+  const permissionLines: string[] = []
+  for (const req of data.userExpectations?.requirements ?? []) {
+    for (const link of req.dataAccess?.datasetLinks ?? []) {
+      const ds = datasetById.get(link.datasetId)
+      if (!ds) continue
+      const actions = link.agentActions?.length ? link.agentActions.join(', ') : 'no actions specified'
+      const note = link.notes ? ` (${link.notes})` : ''
+      permissionLines.push(`- ${req.title}: ${ds.title} — ${actions}${note}`)
+    }
+  }
+  if (permissionLines.length) {
+    parts.push('', '### Agent data access by task', ...permissionLines, '')
+    parts.push('Do not let agents access datasets beyond the permissions listed above.')
+  }
+
   return lines(...parts)
 }
 

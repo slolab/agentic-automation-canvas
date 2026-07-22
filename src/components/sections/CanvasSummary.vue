@@ -9,8 +9,30 @@
         />
       </h2>
       <p class="section-description">
-        A single-page summary of your agentic automation project. Fill in the other sections to populate this overview.
+        A single-page summary of your agentic automation project. Start with the six essentials right here — the full detail lives in the other sections.
       </p>
+    </div>
+
+    <!-- Essentials guidance: start simple, go deeper when ready -->
+    <div
+      v-if="fwProgress.completeCount < 6"
+      class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
+      style="max-width: 1100px"
+    >
+      <p class="text-sm text-primary-900 m-0">
+        <strong>Start simple:</strong> fill in the essentials below. Click a block title to open the full section when you're ready.
+      </p>
+      <span class="text-sm font-semibold text-primary-700 whitespace-nowrap">{{ fwProgress.completeCount }}/6 essentials</span>
+    </div>
+    <div
+      v-else
+      class="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-800"
+      style="max-width: 1100px"
+    >
+      <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+      Essentials complete — click a block title to fill in the remaining fields.
     </div>
 
     <!-- Classic BMC-style canvas: white bg, thin grey grid, minimal layout -->
@@ -29,30 +51,73 @@
         <!-- Left column: 1/2 + 1/2 -->
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
           <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
-            <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
+            <h4 class="canvas-bmc-block-title flex flex-wrap items-center gap-2 text-gray-900">
               <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('project')">
                 Project Definition
-                <CanvasBlockIcon name="project" class="ml-auto" />
               </button>
+              <button
+                type="button"
+                class="canvas-fw-chip"
+                :class="{ 'canvas-fw-chip--done': fwProgress.summary && fwProgress.benefit }"
+                @click="toggleFwEdit('project')"
+              >
+                <template v-if="fwProgress.summary && fwProgress.benefit">essentials ✓</template>
+                <template v-else>essentials {{ (fwProgress.summary ? 1 : 0) + (fwProgress.benefit ? 1 : 0) }}/2</template>
+              </button>
+              <CanvasBlockIcon name="project" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
-              <p class="font-semibold">{{ summary.project.title }}</p>
-              <p v-if="summary.project.description" class="text-gray-600">{{ summary.project.description }}</p>
+              <div v-if="showProjectStrip" class="canvas-fw-strip" @focusout="onStripFocusOut('project', $event)">
+                <label class="canvas-fw-label" for="fw-project-title">Summary — what is this project?</label>
+                <input
+                  id="fw-project-title"
+                  class="canvas-fw-input font-semibold"
+                  type="text"
+                  placeholder="Project title"
+                  :value="canvasData.project.title"
+                  @input="updateProject({ title: ($event.target as HTMLInputElement).value })"
+                />
+                <textarea
+                  id="fw-project-description"
+                  class="canvas-fw-input"
+                  rows="2"
+                  placeholder="One or two sentences on what it does and for whom"
+                  :value="canvasData.project.description"
+                  @input="updateProject({ description: ($event.target as HTMLTextAreaElement).value })"
+                ></textarea>
+                <label class="canvas-fw-label" for="fw-project-benefit">Headline value — what do you hope to gain?</label>
+                <input
+                  id="fw-project-benefit"
+                  class="canvas-fw-input"
+                  type="text"
+                  placeholder="e.g. Saves clinician time on letter triage"
+                  :value="canvasData.project.headlineValue || ''"
+                  @input="updateProject({ headlineValue: ($event.target as HTMLInputElement).value })"
+                />
+              </div>
+              <div
+                v-if="!isEmptyProject(summary.project)"
+                class="space-y-1.5"
+                :class="{ 'canvas-fw-print-only': showProjectStrip }"
+              >
+                <p class="font-semibold">{{ summary.project.title }}</p>
+                <p v-if="summary.project.description" class="text-gray-600">{{ summary.project.description }}</p>
+                <p v-if="summary.project.headlineValue" class="font-medium">{{ summary.project.headlineValue }}</p>
+              </div>
+              <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showProjectStrip }">Not specified</p>
               <p v-if="summary.project.stage" class="text-xs uppercase">{{ summary.project.stage }}</p>
-              <p v-if="summary.project.headlineValue" class="font-medium">{{ summary.project.headlineValue }}</p>
               <p v-if="summary.project.primaryValueDriver" class="text-xs">Primary value: {{ summary.project.primaryValueDriver }}</p>
               <div v-if="summary.project.domain.length" class="flex flex-wrap gap-1 text-xs">
                 <span v-for="d in summary.project.domain" :key="d" class="text-gray-600">{{ d }}</span>
               </div>
-              <p v-if="isEmptyProject(summary.project)" class="italic text-gray-400">Not specified</p>
             </div>
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
             <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
               <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('governance')">
                 Governance
-                <CanvasBlockIcon name="governance" class="ml-auto" />
               </button>
+              <CanvasBlockIcon name="governance" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
               <template v-if="summary.governance.stages.length">
@@ -70,19 +135,60 @@
         <!-- Middle column: 2/3 + 1/3 -->
         <div class="canvas-bmc-col flex flex-col border-r-2 border-black">
           <div class="canvas-bmc-block flex-[2] border-b-2 border-black px-4 pt-2 pb-4">
-            <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
+            <h4 class="canvas-bmc-block-title flex flex-wrap items-center gap-2 text-gray-900">
               <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('user-expectations')">
                 User Expectations
-                <CanvasBlockIcon name="expectations" class="ml-auto" />
               </button>
+              <button
+                type="button"
+                class="canvas-fw-chip"
+                :class="{ 'canvas-fw-chip--done': fwProgress.tasks }"
+                @click="toggleFwEdit('tasks')"
+              >
+                <template v-if="fwProgress.tasks">essentials ✓</template>
+                <template v-else>essentials — first task</template>
+              </button>
+              <CanvasBlockIcon name="expectations" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
-              <p><strong>{{ summary.userExpectations.taskCount }}</strong> tasks</p>
+              <div v-if="showTasksStrip" class="canvas-fw-strip" @focusout="onStripFocusOut('tasks', $event)">
+                <label class="canvas-fw-label" for="fw-task-title">First task — what should be automated?</label>
+                <input
+                  id="fw-task-title"
+                  class="canvas-fw-input font-medium"
+                  type="text"
+                  placeholder="e.g. De-identify incoming letters"
+                  :value="firstTask?.title || ''"
+                  @input="patchFirstTask({ title: ($event.target as HTMLInputElement).value })"
+                />
+                <textarea
+                  id="fw-task-story"
+                  class="canvas-fw-input"
+                  rows="2"
+                  placeholder="As a …, I want …, so that …"
+                  :value="firstTask?.userStory || ''"
+                  @input="patchFirstTask({ userStory: ($event.target as HTMLTextAreaElement).value })"
+                ></textarea>
+                <label class="canvas-fw-label" for="fw-task-audience">Target population — who benefits?</label>
+                <input
+                  id="fw-task-audience"
+                  class="canvas-fw-input"
+                  type="text"
+                  placeholder="e.g. clinicians triaging referrals"
+                  :value="firstTask?.targetPopulation || ''"
+                  @input="patchFirstTask({ targetPopulation: ($event.target as HTMLInputElement).value })"
+                />
+              </div>
+              <p v-if="summary.userExpectations.taskCount > 0">
+                <strong>{{ summary.userExpectations.taskCount }}</strong>
+                {{ summary.userExpectations.taskCount === 1 ? 'task' : 'tasks' }}
+              </p>
               <div v-if="summary.userExpectations.tasks.length" class="space-y-2">
                 <div
                   v-for="(t, i) in summary.userExpectations.tasks"
                   :key="i"
                   class="border-l-2 border-gray-300 pl-2 py-0.5"
+                  :class="{ 'canvas-fw-print-only': showTasksStrip && i === 0 }"
                 >
                   <p class="font-medium text-gray-900">{{ t.title }}</p>
                   <p v-if="t.userStory" class="text-xs italic mt-0.5 user-story-text">
@@ -114,17 +220,51 @@
                   </button>
                 </div>
               </template>
-              <p v-if="isEmptyUserExpectations(summary.userExpectations)" class="italic text-gray-400">Not specified</p>
+              <p
+                v-if="isEmptyUserExpectations(summary.userExpectations)"
+                class="italic text-gray-400"
+                :class="{ 'canvas-fw-print-only': showTasksStrip }"
+              >Not specified</p>
             </div>
           </div>
           <div class="canvas-bmc-block flex-[1] px-4 pt-2 pb-4">
-            <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
+            <h4 class="canvas-bmc-block-title flex flex-wrap items-center gap-2 text-gray-900">
               <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('data-access')">
                 Data Access
-                <CanvasBlockIcon name="data" class="ml-auto" />
               </button>
+              <button
+                type="button"
+                class="canvas-fw-chip"
+                :class="{ 'canvas-fw-chip--done': fwProgress.dataAccess }"
+                @click="toggleFwEdit('dataAccess')"
+              >
+                <template v-if="fwProgress.dataAccess">essentials ✓</template>
+                <template v-else>essentials — main dataset</template>
+              </button>
+              <CanvasBlockIcon name="data" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
+              <div v-if="showDataAccessStrip" class="canvas-fw-strip" @focusout="onStripFocusOut('dataAccess', $event)">
+                <label class="canvas-fw-label" for="fw-dataset-title">Main dataset — what data does it touch?</label>
+                <input
+                  id="fw-dataset-title"
+                  class="canvas-fw-input"
+                  type="text"
+                  placeholder="e.g. Incoming patient letters"
+                  :value="firstDataset?.title || ''"
+                  @input="patchFirstDataset({ title: ($event.target as HTMLInputElement).value })"
+                />
+                <select
+                  id="fw-dataset-personal"
+                  class="canvas-fw-input"
+                  :value="personalDataAnswer"
+                  @change="setPersonalDataAnswer(($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="">Contains personal data?</option>
+                  <option value="yes">Yes — contains personal data</option>
+                  <option value="no">No personal data</option>
+                </select>
+              </div>
               <template v-if="!isEmptyDataAccess(summary.dataAccess)">
                 <p><strong>{{ summary.dataAccess.datasetCount }}</strong> datasets</p>
                 <div v-if="Object.keys(summary.dataAccess.accessRightsSummary).length" class="text-xs">
@@ -134,7 +274,7 @@
                   <span v-for="s in summary.dataAccess.sensitivitySummary" :key="s" class="text-gray-600">{{ s }}</span>
                 </div>
               </template>
-              <p v-else class="italic text-gray-400">Not specified</p>
+              <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showDataAccessStrip }">Not specified</p>
             </div>
           </div>
         </div>
@@ -142,13 +282,37 @@
         <!-- Right column: 1/2 + 1/2 -->
         <div class="canvas-bmc-col flex flex-col">
           <div class="canvas-bmc-block flex-1 border-b-2 border-black px-4 pt-2 pb-4">
-            <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
+            <h4 class="canvas-bmc-block-title flex flex-wrap items-center gap-2 text-gray-900">
               <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('developer-feasibility')">
                 Developer Feasibility
-                <CanvasBlockIcon name="feasibility" class="ml-auto" />
               </button>
+              <button
+                type="button"
+                class="canvas-fw-chip"
+                :class="{ 'canvas-fw-chip--done': fwProgress.feasibility }"
+                @click="toggleFwEdit('feasibility')"
+              >
+                <template v-if="fwProgress.feasibility">essentials ✓</template>
+                <template v-else>essentials — risk gut-check</template>
+              </button>
+              <CanvasBlockIcon name="feasibility" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-1.5">
+              <div v-if="showFeasibilityStrip" class="canvas-fw-strip" @focusout="onStripFocusOut('feasibility', $event)">
+                <label class="canvas-fw-label" for="fw-feasibility-risk">Overall technical risk — how risky does this feel?</label>
+                <select
+                  id="fw-feasibility-risk"
+                  class="canvas-fw-input"
+                  :value="canvasData.developerFeasibility?.technicalRisk || ''"
+                  @change="setTechnicalRisk(($event.target as HTMLSelectElement).value)"
+                >
+                  <option value="">Select risk level…</option>
+                  <option value="low">Low — mature tech, clear path</option>
+                  <option value="medium">Medium — some unknowns</option>
+                  <option value="high">High — significant unknowns</option>
+                  <option value="critical">Critical — unproven approach</option>
+                </select>
+              </div>
               <div v-if="summary.developerFeasibility.trlCurrent !== null || summary.developerFeasibility.trlTarget !== null">
                 <span>TRL</span>
                 <span v-if="summary.developerFeasibility.trlCurrent !== null">
@@ -157,7 +321,7 @@
                 </span>
                 <span v-else-if="summary.developerFeasibility.trlTarget !== null">target {{ summary.developerFeasibility.trlTarget }}</span>
               </div>
-              <p v-if="summary.developerFeasibility.technicalRisk">Risk: <span class="capitalize">{{ summary.developerFeasibility.technicalRisk }}</span></p>
+              <p v-if="summary.developerFeasibility.technicalRisk" :class="{ 'canvas-fw-print-only': showFeasibilityStrip }">Risk: <span class="capitalize">{{ summary.developerFeasibility.technicalRisk }}</span></p>
               <p v-if="summary.developerFeasibility.effortEstimate">Effort: {{ summary.developerFeasibility.effortEstimate }}</p>
               <p v-if="summary.developerFeasibility.amortizationMonths !== null" class="text-xs">
                 ~{{ summary.developerFeasibility.amortizationMonths!.toFixed(1) }} mo until amortization
@@ -177,24 +341,60 @@
                   />
                 </div>
               </div>
-              <p v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility) && summary.userExpectations.taskCount === 0" class="italic text-gray-400">Not specified</p>
+              <p
+                v-if="isEmptyDeveloperFeasibility(summary.developerFeasibility) && summary.userExpectations.taskCount === 0"
+                class="italic text-gray-400"
+                :class="{ 'canvas-fw-print-only': showFeasibilityStrip }"
+              >Not specified</p>
             </div>
           </div>
           <div class="canvas-bmc-block flex-1 px-4 pt-2 pb-4">
-            <h4 class="canvas-bmc-block-title flex items-center gap-2 text-gray-900">
+            <h4 class="canvas-bmc-block-title flex flex-wrap items-center gap-2 text-gray-900">
               <button type="button" class="canvas-bmc-block-title-link" @click="requestSection('outcomes')">
                 Outcomes
-                <CanvasBlockIcon name="outcomes" class="ml-auto" />
               </button>
+              <button
+                type="button"
+                class="canvas-fw-chip"
+                :class="{ 'canvas-fw-chip--done': fwProgress.outcomes }"
+                @click="toggleFwEdit('outcomes')"
+              >
+                <template v-if="fwProgress.outcomes">essentials ✓</template>
+                <template v-else>essentials — main deliverable</template>
+              </button>
+              <CanvasBlockIcon name="outcomes" />
             </h4>
             <div class="canvas-bmc-content text-sm text-gray-800 space-y-2">
+              <div v-if="showOutcomesStrip" class="canvas-fw-strip" @focusout="onStripFocusOut('outcomes', $event)">
+                <label class="canvas-fw-label" for="fw-deliverable-title">Main deliverable — what will exist at the end?</label>
+                <input
+                  id="fw-deliverable-title"
+                  class="canvas-fw-input"
+                  type="text"
+                  placeholder="e.g. Triage dashboard"
+                  :value="firstDeliverable?.title || ''"
+                  @input="patchFirstDeliverable({ title: ($event.target as HTMLInputElement).value })"
+                />
+                <input
+                  id="fw-deliverable-type"
+                  class="canvas-fw-input"
+                  type="text"
+                  placeholder="Type — e.g. Software, Report, Dataset"
+                  :value="firstDeliverable?.type || ''"
+                  @input="patchFirstDeliverable({ type: ($event.target as HTMLInputElement).value })"
+                />
+              </div>
               <template v-if="!isEmptyOutcomes(summary.outcomes)">
                 <template v-if="summary.outcomes.deliverables.length">
                   <p class="text-xs font-semibold uppercase tracking-wide text-gray-500">
                     {{ summary.outcomes.deliverableCount }} {{ summary.outcomes.deliverableCount === 1 ? 'deliverable' : 'deliverables' }}
                   </p>
                   <ul class="list-none space-y-0.5 text-xs">
-                    <li v-for="(d, i) in summary.outcomes.deliverables" :key="'d-' + i">
+                    <li
+                      v-for="(d, i) in summary.outcomes.deliverables"
+                      :key="'d-' + i"
+                      :class="{ 'canvas-fw-print-only': showOutcomesStrip && i === 0 }"
+                    >
                       <a
                         v-if="isLink(d.pid)"
                         :href="d.pid!"
@@ -235,7 +435,7 @@
                   </ul>
                 </template>
               </template>
-              <p v-else class="italic text-gray-400">Not specified</p>
+              <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showOutcomesStrip }">Not specified</p>
             </div>
           </div>
         </div>
@@ -255,18 +455,132 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { computeCanvasSummary, type CanvasSummaryData, isLink, parseUserStory } from '@/utils/canvasSummary'
+import { computeFrameworkProgress } from '@/utils/frameworkProgress'
 import { formatDeploymentCost } from '@/utils/deploymentCost'
+import type { Dataset, Deliverable, Requirement } from '@/types/canvas'
 import InfoTooltip from '../InfoTooltip.vue'
 import CanvasBlockIcon from './CanvasBlockIcon.vue'
 
-const { canvasData, requestSection } = useCanvasData()
+const {
+  canvasData,
+  requestSection,
+  updateProject,
+  updateUserExpectations,
+  updateDeveloperFeasibility,
+  updateDataAccess,
+  updateOutcomes,
+} = useCanvasData()
 
 const summary = computed<CanvasSummaryData>(() => computeCanvasSummary(canvasData.value))
 const today = new Date().toISOString().split('T')[0]
 const version = computed(() => canvasData.value.project?.version || canvasData.value.version || '0.1.0')
+
+// ── Essentials strips: the six loose entry boxes, one subset field group per block ──
+
+const fwProgress = computed(() => computeFrameworkProgress(canvasData.value))
+
+type FwBlock = 'project' | 'tasks' | 'feasibility' | 'dataAccess' | 'outcomes'
+const blockComplete = computed<Record<FwBlock, boolean>>(() => ({
+  project: fwProgress.value.summary && fwProgress.value.benefit,
+  tasks: fwProgress.value.tasks,
+  feasibility: fwProgress.value.feasibility,
+  dataAccess: fwProgress.value.dataAccess,
+  outcomes: fwProgress.value.outcomes,
+}))
+
+// Strips start open where the box is incomplete. Completing a box must NOT
+// collapse its strip by itself — the first keystroke of the last field would
+// close the editor mid-typing. A complete strip collapses when focus leaves
+// its block, or from its chip (guide, don't force).
+const fwEdit = ref<Record<FwBlock, boolean>>({
+  project: !blockComplete.value.project,
+  tasks: !blockComplete.value.tasks,
+  feasibility: !blockComplete.value.feasibility,
+  dataAccess: !blockComplete.value.dataAccess,
+  outcomes: !blockComplete.value.outcomes,
+})
+
+function toggleFwEdit(block: FwBlock) {
+  fwEdit.value[block] = !fwEdit.value[block]
+}
+
+// A box edited back to incomplete (e.g. its title cleared) reopens its strip
+watch(blockComplete, (now, prev) => {
+  for (const block of Object.keys(now) as FwBlock[]) {
+    if (prev[block] && !now[block]) fwEdit.value[block] = true
+  }
+})
+
+function onStripFocusOut(block: FwBlock, event: FocusEvent) {
+  const strip = event.currentTarget as HTMLElement
+  const next = event.relatedTarget as HTMLElement | null
+  // focus moved within this block (another strip field, the chip, the title) → keep editing
+  if (next && strip.closest('.canvas-bmc-block')?.contains(next)) return
+  if (blockComplete.value[block]) fwEdit.value[block] = false
+}
+
+const showProjectStrip = computed(() => fwEdit.value.project)
+const showTasksStrip = computed(() => fwEdit.value.tasks)
+const showFeasibilityStrip = computed(() => fwEdit.value.feasibility)
+const showDataAccessStrip = computed(() => fwEdit.value.dataAccess)
+const showOutcomesStrip = computed(() => fwEdit.value.outcomes)
+
+const firstTask = computed<Requirement | undefined>(() => canvasData.value.userExpectations?.requirements?.[0])
+const firstDataset = computed<Dataset | undefined>(() => canvasData.value.dataAccess?.datasets?.[0])
+const firstDeliverable = computed<Deliverable | undefined>(() => canvasData.value.outcomes?.deliverables?.[0])
+
+function patchFirstTask(patch: Partial<Requirement>) {
+  const requirements = canvasData.value.userExpectations?.requirements || []
+  if (requirements.length === 0) {
+    updateUserExpectations({ requirements: [{ id: `req-${Date.now()}`, title: '', benefits: [], ...patch }] })
+  } else {
+    const updated = [...requirements]
+    updated[0] = { ...updated[0], ...patch }
+    updateUserExpectations({ requirements: updated })
+  }
+}
+
+function setTechnicalRisk(value: string) {
+  updateDeveloperFeasibility({
+    technicalRisk: (value || undefined) as 'low' | 'medium' | 'high' | 'critical' | undefined,
+  })
+}
+
+function patchFirstDataset(patch: Partial<Dataset>) {
+  const datasets = canvasData.value.dataAccess?.datasets || []
+  if (datasets.length === 0) {
+    updateDataAccess({ datasets: [{ id: `dataset-${Date.now()}`, title: '', ...patch }] })
+  } else {
+    const updated = [...datasets]
+    updated[0] = { ...updated[0], ...patch }
+    updateDataAccess({ datasets: updated })
+  }
+}
+
+const personalDataAnswer = computed(() => {
+  const value = firstDataset.value?.containsPersonalData
+  if (value === true) return 'yes'
+  if (value === false) return 'no'
+  return ''
+})
+
+function setPersonalDataAnswer(answer: string) {
+  patchFirstDataset({ containsPersonalData: answer === '' ? undefined : answer === 'yes' })
+}
+
+function patchFirstDeliverable(patch: Partial<Deliverable>) {
+  const deliverables = canvasData.value.outcomes?.deliverables || []
+  if (deliverables.length === 0) {
+    updateOutcomes({ deliverables: [{ id: `deliverable-${Date.now()}`, title: '', type: '', ...patch }] })
+  } else {
+    const updated = [...deliverables]
+    updated[0] = { ...updated[0], ...patch }
+    updateOutcomes({ deliverables: updated })
+  }
+}
 
 const feasibilityProgress = computed(() => {
   const n = summary.value.developerFeasibility.tasksWithDedicatedFeasibility.length
@@ -362,7 +676,6 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
   gap: 0.5rem;
   flex: 1;
   min-width: 0;
-  width: 100%;
   text-align: left;
   background: none;
   border: none;
@@ -417,6 +730,81 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
 .canvas-feasibility-fill {
   background: linear-gradient(180deg, #374151 0%, #1f2937 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* Essentials strips: seamless inputs for the loose entry level */
+.canvas-fw-chip {
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  padding: 0.1rem 0.5rem;
+  border: 1px solid rgb(209 213 219);
+  border-radius: 9999px;
+  color: rgb(107 114 128);
+  background: rgb(249 250 251);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  /* chips live inside the uppercase block-title h4 */
+  text-transform: none;
+}
+.canvas-fw-chip:hover {
+  border-color: rgb(14 165 233);
+  color: rgb(2 132 199);
+}
+.canvas-fw-chip--done {
+  color: rgb(21 128 61);
+  border-color: rgb(187 247 208);
+  background: rgb(240 253 244);
+}
+.canvas-fw-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin-bottom: 0.625rem;
+}
+.canvas-fw-label {
+  font-size: 0.625rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgb(107 114 128);
+  font-weight: 600;
+}
+.canvas-fw-input {
+  width: 100%;
+  font-size: 0.8125rem;
+  padding: 0.3rem 0.45rem;
+  border: 1px dashed rgb(203 213 225);
+  border-radius: 0.25rem;
+  background: rgb(249 250 251);
+  color: rgb(17 24 39);
+}
+.canvas-fw-input::placeholder {
+  color: rgb(156 163 175);
+  font-style: italic;
+}
+.canvas-fw-input:focus {
+  outline: none;
+  border-style: solid;
+  border-color: rgb(14 165 233);
+  background: white;
+  box-shadow: 0 0 0 1px rgb(14 165 233 / 0.3);
+}
+
+/* Content a strip is currently editing is hidden on screen (avoids double
+   display) but must reappear in print, where the strips themselves are hidden */
+.canvas-fw-print-only {
+  display: none;
+}
+
+@media print {
+  .canvas-fw-chip,
+  .canvas-fw-strip {
+    display: none;
+  }
+  .canvas-fw-print-only {
+    display: revert;
+  }
 }
 
 .user-story-formulaic {

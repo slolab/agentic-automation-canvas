@@ -183,8 +183,9 @@ describe('generateROCrate', () => {
         },
       }
       const out = generateROCrate(dataWithSheet)
+      // canvas dataset ids are preserved as crate @ids
       const dsEntity = out['@graph'].find(
-        (e: Record<string, unknown>) => e['@id'] === '#dataset-0',
+        (e: Record<string, unknown>) => e['@id'] === '#ds-1',
       ) as Record<string, unknown>
       expect(dsEntity['dcat:landingPage']).toEqual({ '@id': 'https://example.com/sheets/ds-1' })
     })
@@ -200,7 +201,7 @@ describe('generateROCrate', () => {
       }
       const out = generateROCrate(dataNoSheet)
       const dsEntity = out['@graph'].find(
-        (e: Record<string, unknown>) => e['@id'] === '#dataset-0',
+        (e: Record<string, unknown>) => e['@id'] === '#ds-1',
       ) as Record<string, unknown>
       expect(dsEntity['dcat:landingPage']).toBeUndefined()
     })
