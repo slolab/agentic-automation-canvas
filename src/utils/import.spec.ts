@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { parseROCrateToCanvas } from '@/utils/import'
+import { generateROCrate } from '@/utils/rocrate'
 import type { ROCrateJSONLD } from '@/types/rocrate'
 
 /** Minimal RO-Crate 1.2: root dataset + one project entity, no requirements. */
@@ -222,5 +223,17 @@ describe('parseROCrateToCanvas', () => {
       currency: 'EUR',
       costNotes: 'GPU instance',
     })
+  })
+
+  it('recovers fundingGrant from a FRAPO Grant entity (export→import roundtrip)', () => {
+    const crate = generateROCrate({
+      project: {
+        title: 'Funded Project',
+        description: 'Desc',
+        fundingGrant: 'ERC-2024-STG-101234567',
+      },
+    })
+    const canvasData = parseROCrateToCanvas(crate)
+    expect(canvasData.project.fundingGrant).toBe('ERC-2024-STG-101234567')
   })
 })

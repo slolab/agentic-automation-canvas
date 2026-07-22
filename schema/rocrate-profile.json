@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://github.com/slolab/agentic-automation-canvas/schema/rocrate-profile.json",
+  "$id": "https://w3id.org/aac/schema/rocrate-profile.json",
   "title": "RO-Crate Profile for Agentic Automation Canvas",
   "description": "Profile definition for RO-Crate packages generated from Agentic Automation Canvas",
   "type": "object",
