@@ -2,20 +2,22 @@
 
 ## GitHub Pages Deployment
 
-The project is deployed to GitHub Pages **only when a version tag** (e.g. `v0.14.0`) is pushed. Merging to `main` does not trigger deploy; the version bump is done on `main` after merging so that the auto-generated release notes include the merged PRs.
+The project is deployed to GitHub Pages when a release is published. Releases are automated
+with [release-please](https://github.com/googleapis/release-please); merging feature PRs to
+`main` does not trigger a deploy on its own.
 
-### Automatic Deployment (on version tag push)
+### Automatic Deployment (via release-please)
 
-1. On `main`, bump the version (e.g. `bump2version patch`) and commit.
-2. Push the commit and the new tag:
-   ```bash
-   git push origin main --follow-tags
-   ```
-   Or push the tag explicitly: `git push origin vX.Y.Z`
-3. The **Deploy to GitHub Pages** workflow (`.github/workflows/deploy.yml`) runs: validate → build → deploy.
-4. A **GitHub Release** is created for that tag with auto-generated release notes (PRs and commits since the previous tag).
+1. Merge PRs to `main` (with Conventional Commit titles).
+2. release-please opens/updates a `chore(main): release X.Y.Z` PR; merge it to release.
+3. release-please tags `vX.Y.Z`, creates the GitHub Release, and dispatches the
+   **Deploy to GitHub Pages** workflow (`.github/workflows/deploy.yml`) at that tag:
+   validate → build → deploy.
 
-See [Contributing – Version bump and release](CONTRIBUTING.md#version-bump-and-release) for the full release steps.
+Pushing a `v*` tag manually also triggers the deploy workflow (fallback path).
+
+See [Contributing – Releases](CONTRIBUTING.md#releases-release-please) for the full
+release process.
 
 ### Manual Deployment
 

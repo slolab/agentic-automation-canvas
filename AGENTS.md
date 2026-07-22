@@ -45,13 +45,19 @@ Format:
 - Breaking changes (if any)
 
 #### Version and release
-User handles version bump and release after merge. **Deploy and GitHub Release run only when a version tag is pushed** (e.g. `v0.14.0`), not on merge to `main`. So: merge PR → on `main`, bump version → push tag → deploy and release run. Do not suggest that merging to `main` will deploy; note in PR if a version change is included and that the maintainer will bump and push the tag for release.
+Releases are automated with release-please. Merging PRs to `main` (Conventional Commit
+titles — PRs are squash-merged, so the PR title is what release-please reads) maintains a
+release PR; when the maintainer merges it, release-please tags `vX.Y.Z`, creates the
+GitHub Release, and dispatches the deploy workflow. Do not bump versions or edit
+`docs/changelog.md` for releases manually, and do not suggest that merging a feature PR
+deploys. Note in the PR whether the change is a `feat` (minor) or `fix` (patch) so the
+title can be set accordingly.
 
 ### Checklist
 - [ ] Lint passes
 - [ ] Build passes
 - [ ] Schema validation passes
 - [ ] Docs reviewed
-- [ ] Changelog updated
+- [ ] PR title follows Conventional Commits
 - [ ] Examples updated (if schema changed)
 - [ ] PR message ready

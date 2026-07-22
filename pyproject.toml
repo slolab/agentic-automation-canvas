@@ -1,6 +1,6 @@
 [project]
 name = "agentic-automation-canvas"
-version = "0.15.0"
+version = "0.15.0" # x-release-please-version
 description = "Agentic Automation Canvas - Schema tools and documentation"
 requires-python = ">=3.10"
 dependencies = [
@@ -9,14 +9,6 @@ dependencies = [
     "mkdocs-suppress-logs-plugin>=0.1.0",
     "jsonschema>=4.20.0",
     "pyyaml>=6.0.1",
-]
-
-[tool.uv]
-# dev-dependencies moved to dependency-groups (see below)
-
-[dependency-groups]
-dev = [
-    "bump2version>=1.0.0",
 ]
 
 [tool.hatch.build.targets.wheel]
