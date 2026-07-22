@@ -5,6 +5,13 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.16.0](https://github.com/slolab/agentic-automation-canvas/compare/v0.15.0...v0.16.0) (2026-07-22)
+
+
+### Features
+
+* essentials-first canvas summary and task-level data access ([#51](https://github.com/slolab/agentic-automation-canvas/issues/51)) ([9b4c3d5](https://github.com/slolab/agentic-automation-canvas/commit/9b4c3d5c05f1d7026e48c2d280ac20aad189b81a))
+
 ## [0.15.0] - 2026-03-10
 
 ### Added
