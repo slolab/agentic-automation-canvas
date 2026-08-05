@@ -226,6 +226,7 @@ Technology Readiness Level - project-level maturity assessment
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `benefits` | array of [Benefit](#benefit) | Yes | Array of benefit metrics for this requirement |  | AAC |
+| `dataAccess` | object | No | Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab). |  | — |
 | `dependsOn` | array of string | No | IDs of requirements this task depends on |  | AAC |
 | `description` | string | No |  |  | Schema.org |
 | `feasibility` | object | No | Optional per-task feasibility (overrides project-level defaults) |  | — |
@@ -241,6 +242,22 @@ Technology Readiness Level - project-level maturity assessment
 | `userStory` | string | No |  |  | P-Plan |
 | `value` | string | No |  |  | AAC |
 | `volumePerMonth` | number | No |  | Minimum: 1 | AAC |
+
+## UserExpectations Requirement DataAccess
+
+Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab).
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `datasetLinks` | array of object | No | Links to datasets this task uses, with agent permissions |  | — |
+
+## UserExpectations Requirement DataAccess DatasetLink
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `agentActions` | array of string | No | What the agent is allowed to do with this dataset |  | AAC |
+| `datasetId` | string | Yes | Id of a dataset defined in dataAccess.datasets |  | AAC |
+| `notes` | string | No | Free-text notes on this task-dataset link |  | AAC |
 
 ## UserExpectations Requirement Feasibility
 

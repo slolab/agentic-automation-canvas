@@ -35,6 +35,10 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 
 Visit the [live application](https://aac.slolab.ai) to start filling out your canvas.
 
+An independent [AAC v2 field test](https://aac.slolab.ai/v2/) is also available for
+45-minute consulting conversations that establish the project foundation before an MVP
+is defined. It does not replace the current canvas or its schema.
+
 ## Development
 
 ### Setup

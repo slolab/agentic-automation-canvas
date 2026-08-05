@@ -49,7 +49,9 @@ echo "🔗 Combining builds..."
 mkdir -p dist/agentic-automation-canvas
 # Move Vue app files to the base path
 mv dist/index.html dist/agentic-automation-canvas/ 2>/dev/null || true
+mv dist/v2 dist/agentic-automation-canvas/ 2>/dev/null || true
 mv dist/assets dist/agentic-automation-canvas/ 2>/dev/null || true
+mv dist/logo.svg dist/agentic-automation-canvas/ 2>/dev/null || true
 mv dist/favicon.svg dist/agentic-automation-canvas/ 2>/dev/null || true
 # Copy docs to the base path subdirectory
 mkdir -p dist/agentic-automation-canvas/docs
@@ -58,6 +60,7 @@ cp -r site/* dist/agentic-automation-canvas/docs/
 echo "✅ Build complete!"
 echo ""
 echo "📁 Vue app: dist/agentic-automation-canvas/"
+echo "📁 AAC v2 field test: dist/agentic-automation-canvas/v2/"
 echo "📁 Documentation: dist/agentic-automation-canvas/docs/"
 echo ""
 echo "To preview locally:"
