@@ -3,8 +3,9 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18649620.svg)](https://doi.org/10.5281/zenodo.18649620)
 
 > [!WARNING]
-> **Version 0.16.0 (Beta)**: This specification is currently in beta testing. The schema and documentation <!-- x-release-please-version -->
-> may change before the stable 1.0.0 release. Feedback and contributions are welcome!
+> **Application release 0.16.0 (Beta)**: The application is currently in beta testing. <!-- x-release-please-version -->
+> Its current AAC data contract is independently versioned as schema **0.17.0**. Both may
+> change before their stable 1.0.0 releases. Feedback and contributions are welcome!
 
 Using agentic systems driven by generative AI is a promising approach to processing efficiency. However, developing these systems is challenging in several ways. By design, they are meant to replace human judgment, hopefully in a reliable way; this implies that there needs to be a control inversion, allowing the system to take command of the task, while the human has to step back accordingly.
 

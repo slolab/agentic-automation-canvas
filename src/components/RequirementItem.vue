@@ -198,7 +198,7 @@
             :id="`req-priority-${index}`"
             :value="requirement.priority || ''"
             class="form-input"
-            @change="update({ ...requirement, priority: ($event.target as HTMLSelectElement).value as any })"
+            @change="update({ ...requirement, priority: ($event.target as HTMLSelectElement).value as Requirement['priority'] })"
           >
             <option value="">Select priority</option>
             <option value="low">Low</option>
@@ -217,7 +217,7 @@
             :id="`req-status-${index}`"
             :value="requirement.status || ''"
             class="form-input"
-            @change="update({ ...requirement, status: ($event.target as HTMLSelectElement).value as any })"
+            @change="update({ ...requirement, status: ($event.target as HTMLSelectElement).value as Requirement['status'] })"
           >
             <option value="">Select status</option>
             <option value="planned">Planned</option>
@@ -261,7 +261,7 @@
               :id="`req-unit-category-${index}`"
               :value="requirement.unitCategory || ''"
               class="form-input"
-              @change="update({ ...requirement, unitCategory: ($event.target as HTMLSelectElement).value as any || undefined })"
+              @change="update({ ...requirement, unitCategory: (($event.target as HTMLSelectElement).value || undefined) as Requirement['unitCategory'] })"
             >
               <option value="">Select category</option>
               <option value="item">Item</option>

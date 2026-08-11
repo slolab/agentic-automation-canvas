@@ -1,21 +1,29 @@
 <template>
   <div class="bg-white rounded-lg shadow-lg">
-    <!-- Migration warnings banner (one-time after import) -->
+    <!-- Load and import diagnostics are non-blocking and shown in one place. -->
     <div
-      v-if="lastImportMigrationWarnings.length > 0"
+      v-if="lastDiagnostics.length > 0"
       class="border-b border-amber-200 bg-amber-50 px-6 py-3 flex items-start justify-between gap-4"
     >
       <div class="flex-1 min-w-0">
-        <p class="text-sm font-medium text-amber-800">Import migrations applied</p>
+        <p class="text-sm font-medium text-amber-800">Canvas notices</p>
+        <p class="mt-1 text-sm text-amber-700">
+          The canvas was opened with all safely readable values. Some data did not match the current format:
+        </p>
         <ul class="mt-1 text-sm text-amber-700 list-disc list-inside">
-          <li v-for="(msg, i) in lastImportMigrationWarnings" :key="i">{{ msg }}</li>
+          <li
+            v-for="(diagnostic, index) in lastDiagnostics"
+            :key="`${diagnostic.code}:${diagnostic.path}:${index}`"
+          >
+            [{{ diagnostic.code }}] {{ diagnostic.path }}: {{ diagnostic.message }}
+          </li>
         </ul>
       </div>
       <button
         type="button"
-        @click="clearMigrationWarnings"
+        @click="clearDiagnostics"
         class="text-amber-700 hover:text-amber-900 shrink-0"
-        aria-label="Dismiss"
+        aria-label="Dismiss canvas notices"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
@@ -170,7 +178,15 @@ import Dashboard from './sections/Dashboard.vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { fieldToNavTarget, sectionLabel } from '@/utils/fieldNavigation'
 
-const { completionPercentage, validateAll, lastImportMigrationWarnings, clearMigrationWarnings, requestedSection, dataVersion, focusFieldRequest } = useCanvasData()
+const {
+  completionPercentage,
+  validateAll,
+  lastDiagnostics,
+  clearDiagnostics,
+  requestedSection,
+  dataVersion,
+  focusFieldRequest,
+} = useCanvasData()
 
 const sections = [
   { id: 'canvas-summary', label: 'Canvas Summary' },

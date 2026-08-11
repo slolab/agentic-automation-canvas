@@ -5,7 +5,9 @@
     {
       "id": "person-0",
       "name": "Dr. Jane Smith",
-      "affiliation": "Biomedical Research Institute"
+      "affiliation": "Biomedical Research Institute",
+      "functionRoles": ["project-lead", "domain-expert"],
+      "localTitle": "Principal Investigator"
     },
     {
       "id": "person-1",
@@ -23,6 +25,9 @@
     "endDate": "2025-12-31",
     "domain": ["Biomedical", "AI"],
     "keywords": ["AI", "biomedical", "automation", "data processing"],
+    "leadOrganization": "Biomedical Research Institute",
+    "creator": ["person-0", "person-1"],
+    "license": "https://creativecommons.org/licenses/by/4.0/",
     "headlineValue": "Saves time through automated data processing",
     "primaryValueDriver": "time",
     "roughEstimateValue": 10,
@@ -122,34 +127,11 @@
       "target": 7
     },
     "technicalRisk": "medium",
-    "algorithms": ["Machine Learning", "Natural Language Processing"],
-    "tools": ["Python", "TensorFlow", "Biomedical Data APIs"],
     "effortEstimate": {
       "value": 28,
       "unit": "weeks"
     },
-    "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling.",
-    "modelSelection": "frontier-model",
-    "modelName": "gpt-4o",
-    "baselineCapability": {
-      "taskPerformance": "moderate",
-      "successRate": 65,
-      "limitations": "Naive model struggles with domain-specific terminology and complex multi-step workflows",
-      "requiresCustomInstructions": true,
-      "customInstructionsComplexity": "high"
-    },
-    "expectedGains": {
-      "performanceImprovement": "significant",
-      "headroom": "high",
-      "justification": "Agentic capabilities will enable complex workflows that naive models cannot handle"
-    },
-    "implementationDifficulty": {
-      "skillAdditionDifficulty": "moderate",
-      "baselineComparisonRequired": true,
-      "validationMonitoringRequired": true,
-      "securityLevel": "medium"
-    },
-    "agenticExplanation": "Agentic capabilities added through tool use, structured workflows, and domain-specific instructions"
+    "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling."
   },
   "governance": {
     "stages": [
@@ -171,8 +153,13 @@
           }
         ],
         "milestones": [
-          "Core processing engine completed",
-          "Integration testing passed"
+          {
+            "description": "Core processing engine completed",
+            "kpi": "All core workflow tests pass"
+          },
+          {
+            "description": "Integration testing passed"
+          }
         ],
         "complianceStandards": [
           "GDPR",

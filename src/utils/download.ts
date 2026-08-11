@@ -19,8 +19,8 @@ function generateReadme(rocrate: ROCrateJSONLD, projectName: string): string {
     (entity) => entity['@type']?.includes('Project') || entity['@type']?.includes('ResearchProject')
   )
 
-  const title = (project as any)?.name || projectName
-  const description = (project as any)?.description || ''
+  const title = typeof project?.name === 'string' ? project.name : projectName
+  const description = typeof project?.description === 'string' ? project.description : ''
 
   return `# ${title}
 

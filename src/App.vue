@@ -232,9 +232,9 @@ import { ref, computed, onMounted } from 'vue'
 import { useCanvasData } from './composables/useCanvasData'
 import { useHeaderActionsMode } from './composables/useHeaderActionsMode'
 import { exampleData, exampleBenefitDisplay } from './data/example-data'
-import { generateROCrate, validateForExport, hasBlockingErrors } from './utils/rocrate'
+import { generateROCrate } from '@/rocrate/export'
 import { downloadROCrateZip } from './utils/download'
-import { importROCrateFromZip } from './utils/import'
+import { importROCrateFromZip } from '@/rocrate/container'
 import CanvasForm from './components/CanvasForm.vue'
 import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
@@ -313,12 +313,8 @@ const onDrop = async (e: DragEvent) => {
 
   try {
     const result = await importROCrateFromZip(file)
-    importFromROCrate(result.canvasData, result.benefitDisplay, result.crateSchemaVersion, true, result.migrationWarnings)
-    if (result.migrationWarnings && result.migrationWarnings.length > 0) {
-      alert(`RO-Crate imported successfully.\n\nMigrations applied:\n${result.migrationWarnings.join('\n')}`)
-    } else {
-      alert('RO-Crate imported successfully!')
-    }
+    importFromROCrate(result.canvasData, result.benefitDisplay, result.diagnostics)
+    alert('RO-Crate imported successfully!')
   } catch (error) {
     alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
     console.error('Import error:', error)
@@ -327,9 +323,7 @@ const onDrop = async (e: DragEvent) => {
 
 const validation = computed(() => validateAll())
 
-const canDownload = computed(() => {
-  return validation.value.isValid && !!(canvasData.value.project.title && canvasData.value.project.description)
-})
+const canDownload = computed(() => validation.value.isValid)
 
 const clearData = () => {
   if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
@@ -356,7 +350,7 @@ const downloadROCrate = async () => {
     }
   }
 
-  // Additional validation: check for null values and reference resolution
+  // Cross-reference integrity is semantic and cannot be expressed by JSON Schema alone.
   const additionalWarnings: string[] = []
   
   // Check Person references
@@ -392,64 +386,11 @@ const downloadROCrate = async () => {
     }
   }
 
-  // Validate for RO-Crate export (benefit semantics, aggregation consistency)
-  const exportErrors = validateForExport(canvasData.value)
-  
-  // Block export if there are critical errors
-  if (hasBlockingErrors(exportErrors)) {
-    const errorMessages = exportErrors
-      .filter(e => e.severity === 'error')
-      .map(e => `${e.path}: ${e.message}`)
-      .join('\n\n')
-    alert(`Export blocked due to validation errors:\n\n${errorMessages}\n\nPlease fix these issues before exporting.`)
-    return
-  }
-  
-  // Show warnings but allow proceeding
-  const warnings = exportErrors.filter(e => e.severity === 'warning')
-  if (warnings.length > 0) {
-    const warningMessages = warnings.map(e => `${e.path}: ${e.message}`).join('\n\n')
-    const proceed = confirm(`Export validation warnings:\n\n${warningMessages}\n\nDo you want to proceed anyway?`)
-    if (!proceed) {
-      return
-    }
-  }
-
   try {
     const rocrate = generateROCrate(canvasData.value, {
       benefitDisplay: benefitDisplay.value,
-      schemaVersion: appVersion !== '—' ? appVersion : undefined,
     })
-    
-    // Validate RO-Crate structure: check for null values
-    const nullValues: string[] = []
-    const checkForNulls = (obj: any, path: string = '') => {
-      if (obj === null) {
-        nullValues.push(path || 'root')
-        return
-      }
-      if (Array.isArray(obj)) {
-        obj.forEach((item, idx) => {
-          if (item === null) {
-            nullValues.push(`${path}[${idx}]`)
-          } else if (typeof item === 'object') {
-            checkForNulls(item, `${path}[${idx}]`)
-          }
-        })
-      } else if (typeof obj === 'object') {
-        Object.keys(obj).forEach(key => {
-          const newPath = path ? `${path}.${key}` : key
-          checkForNulls(obj[key], newPath)
-        })
-      }
-    }
-    checkForNulls(rocrate)
-    
-    if (nullValues.length > 0) {
-      console.warn('RO-Crate contains null values:', nullValues)
-      // Note: We'll filter these out in generateROCrate, but warn here
-    }
-    
+
     const projectName = canvasData.value.project.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')

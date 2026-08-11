@@ -3,7 +3,9 @@
  * All calculations are done in minutes internally, but we convert for display.
  */
 
-export type TimeUnit = 'minutes' | 'hours'
+import type { Requirement } from '@/types/canvas'
+
+export type TimeUnit = NonNullable<Requirement['timeUnit']>
 
 const MINUTES_PER_HOUR = 60
 

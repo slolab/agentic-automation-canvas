@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fieldToNavTarget } from './fieldNavigation'
+import { fieldToNavTarget } from '@/utils/fieldNavigation'
 
 describe('fieldToNavTarget', () => {
   // Project fields

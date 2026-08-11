@@ -1051,15 +1051,29 @@ const hasTaskBenefits = computed(() => {
 })
 
 // Benefit count by type for compact tags (category + number)
+const benefitTypes = [
+  'time',
+  'quality',
+  'risk',
+  'enablement',
+  'cost',
+] as const satisfies readonly Benefit['benefitType'][]
+
 const benefitCountTags = computed(() => {
   const reqs = canvasData.value.userExpectations?.requirements || []
-  const counts: Record<string, number> = { time: 0, quality: 0, risk: 0, enablement: 0, cost: 0 }
+  const counts: Record<Benefit['benefitType'], number> = {
+    time: 0,
+    quality: 0,
+    risk: 0,
+    enablement: 0,
+    cost: 0,
+  }
   reqs.forEach((r) => {
     (r.benefits || []).forEach((b) => {
       if (counts[b.benefitType] !== undefined) counts[b.benefitType]++
     })
   })
-  return (['time', 'quality', 'risk', 'enablement', 'cost'] as const)
+  return benefitTypes
     .filter((type) => counts[type] > 0)
     .map((type) => ({ type, count: counts[type] }))
 })

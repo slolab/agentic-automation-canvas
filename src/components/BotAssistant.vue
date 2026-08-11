@@ -52,7 +52,7 @@
           <select
             v-model="config.provider"
             class="w-full rounded border-gray-300 text-sm"
-            @change="updateConfig({ provider: ($event.target as HTMLSelectElement).value as any })"
+            @change="updateConfig({ provider: ($event.target as HTMLSelectElement).value as BotConfig['provider'] })"
           >
             <option value="ollama">Ollama (Local)</option>
             <option value="openai">OpenAI</option>
@@ -151,6 +151,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { useBotAssistant } from '@/composables/useBotAssistant'
+import type { BotConfig } from '@/composables/useBotAssistant'
 
 const { messages, isOpen, isLoading, config, sendMessage, clearMessages, updateConfig } = useBotAssistant()
 

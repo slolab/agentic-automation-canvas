@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
-import { generateROCrate } from '@/utils/rocrate'
-import { parseROCrateToCanvas } from '@/utils/import'
+import { generateROCrate } from '@/rocrate/export'
+import { mapROCrateToCanvasCandidate } from '@/rocrate/parse'
+import { recoverCanvasToCurrent } from '@/schema/recovery'
 import type { ROCrateJSONLD } from '@/types/rocrate'
 import type { CanvasData } from '@/types/canvas'
 
@@ -74,7 +75,7 @@ describe('task data access roundtrip', () => {
 
   it('roundtrips datasetLinks through export and import unchanged', () => {
     const crate = generateROCrate(clinicalCanvas()) as unknown as ROCrateJSONLD
-    const imported = parseROCrateToCanvas(crate)
+    const imported = recoverCanvasToCurrent(mapROCrateToCanvasCandidate(crate)).data
 
     const reqs = imported.userExpectations?.requirements ?? []
     const deid = reqs.find((r) => r.id === 'task-deid')
@@ -100,7 +101,7 @@ describe('task data access roundtrip', () => {
       'https://doi.org/10.1234/abc'
 
     const crate = generateROCrate(data) as unknown as ROCrateJSONLD
-    const imported = parseROCrateToCanvas(crate)
+    const imported = recoverCanvasToCurrent(mapROCrateToCanvasCandidate(crate)).data
 
     // whatever id the dataset comes back under, the link must still point at it
     const deid = imported.userExpectations?.requirements?.find((r) => r.id === 'task-deid')

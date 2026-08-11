@@ -385,7 +385,7 @@
                       :id="`deployment-cost-basis-${requirement.id}`"
                       :value="requirement.feasibility?.deploymentCost?.aggregationBasis || ''"
                       class="form-input"
-                      @change="updateDeploymentCostField(requirement, 'aggregationBasis', ($event.target as HTMLSelectElement).value || undefined)"
+                      @change="updateDeploymentCostBasis(requirement, ($event.target as HTMLSelectElement).value)"
                     >
                       <option value="">Not specified</option>
                       <option value="perUnit">Per interaction</option>
@@ -1416,12 +1416,20 @@ const algorithmsInputs = ref<Record<string, string>>({})
 const toolsInputs = ref<Record<string, string>>({})
 
 // Migrate old string effortEstimate to structured format
-function migrateEffortEstimate(effort: any): { value: number; unit: 'weeks' | 'person-hours' } | undefined {
+type EffortEstimate = NonNullable<DeveloperFeasibility['effortEstimate']>
+
+function migrateEffortEstimate(effort: unknown): EffortEstimate | undefined {
   if (!effort) return undefined
   
   // Already in new format
-  if (typeof effort === 'object' && effort.value !== undefined && effort.unit) {
-    return effort
+  if (
+    typeof effort === 'object' &&
+    'value' in effort &&
+    typeof effort.value === 'number' &&
+    'unit' in effort &&
+    (effort.unit === 'weeks' || effort.unit === 'person-hours')
+  ) {
+    return { value: effort.value, unit: effort.unit }
   }
   
   // Old string format - try to parse
@@ -1620,15 +1628,7 @@ const update = () => {
 function updateEffortValue(valueStr: string) {
   const value = valueStr === '' ? undefined : parseFloat(valueStr)
   if (value === undefined || isNaN(value)) {
-    if (localData.value.effortEstimate) {
-      localData.value.effortEstimate = {
-        ...localData.value.effortEstimate,
-        value: undefined as any
-      }
-      if (!localData.value.effortEstimate.value) {
-        localData.value.effortEstimate = undefined
-      }
-    }
+    localData.value.effortEstimate = undefined
   } else {
     if (!localData.value.effortEstimate) {
       localData.value.effortEstimate = { value, unit: 'weeks' }
@@ -1740,7 +1740,17 @@ function ensureDeploymentCost(req: Requirement): DeploymentCost {
   return req.feasibility.deploymentCost
 }
 
-function updateDeploymentCostField(req: Requirement, field: string, value: any) {
+function updateDeploymentCostBasis(req: Requirement, rawValue: string) {
+  const aggregationBasis: DeploymentCost['aggregationBasis'] | undefined =
+    rawValue === 'perUnit' || rawValue === 'perMonth' ? rawValue : undefined
+  updateDeploymentCostField(req, 'aggregationBasis', aggregationBasis)
+}
+
+function updateDeploymentCostField<K extends keyof DeploymentCost>(
+  req: Requirement,
+  field: K,
+  value: DeploymentCost[K] | undefined,
+) {
   if (!value && field === 'aggregationBasis') {
     // Clear deployment cost when basis is unset
     if (req.feasibility) {
@@ -1750,7 +1760,11 @@ function updateDeploymentCostField(req: Requirement, field: string, value: any) 
     return
   }
   const dc = ensureDeploymentCost(req)
-  ;(dc as any)[field] = value
+  if (value === undefined) {
+    delete dc[field]
+  } else {
+    dc[field] = value
+  }
   update()
 }
 

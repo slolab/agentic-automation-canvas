@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { V2_BLOCKS, V2_PROMPTS } from './framework'
+import { V2_BLOCKS, V2_PROMPTS } from '@/v2/framework'
 
 describe('AAC v2 framework definition', () => {
   it('has six visible blocks and twenty-two primary prompts', () => {

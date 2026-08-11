@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
-import { generateROCrate } from '@/utils/rocrate'
+import { generateROCrate } from '@/rocrate/export'
 import type { CanvasData } from '@/types/canvas'
+import { AAC_SCHEMA_VERSION } from '@/schema/contract'
 
 const minimalCanvasData: CanvasData = {
   project: {
     title: 'Minimal Project',
-    description: '',
+    description: 'Description',
   },
 }
 
@@ -29,10 +30,10 @@ describe('generateROCrate', () => {
     expect(typeof root['aac:version']).toBe('string')
   })
 
-  it('with schemaVersion option, root has aac:schemaVersion', () => {
-    const out = generateROCrate(minimalCanvasData, { schemaVersion: '0.10.0' })
+  it('root always has the current aac:schemaVersion', () => {
+    const out = generateROCrate(minimalCanvasData)
     const root = out['@graph'].find((e: { '@id': string }) => e['@id'] === './') as Record<string, unknown>
-    expect(root['aac:schemaVersion']).toBe('0.10.0')
+    expect(root['aac:schemaVersion']).toBe(AAC_SCHEMA_VERSION)
   })
 
   it('metadata descriptor conformsTo references RO-Crate 1.2', () => {
@@ -57,7 +58,7 @@ describe('generateROCrate', () => {
     const dataWithLicense: CanvasData = {
       project: {
         title: 'Licensed Project',
-        description: '',
+        description: 'Description',
         license: 'https://creativecommons.org/licenses/by/4.0/',
       },
     }
@@ -80,7 +81,7 @@ describe('generateROCrate', () => {
 
   describe('model card URI export', () => {
     const dataWithModelCard: CanvasData = {
-      project: { title: 'Model Card Test', description: '' },
+      project: { title: 'Model Card Test', description: 'Description' },
       userExpectations: {
         requirements: [
           {
@@ -120,7 +121,7 @@ describe('generateROCrate', () => {
 
     it('no model entity emitted when modelCardUri is absent', () => {
       const dataNoModelCard: CanvasData = {
-        project: { title: 'No Model Card', description: '' },
+        project: { title: 'No Model Card', description: 'Description' },
         userExpectations: {
           requirements: [
             {
@@ -141,7 +142,7 @@ describe('generateROCrate', () => {
 
     it('deduplicates when multiple tasks share the same model URI', () => {
       const dataSharedModel: CanvasData = {
-        project: { title: 'Shared Model', description: '' },
+        project: { title: 'Shared Model', description: 'Description' },
         userExpectations: {
           requirements: [
             {
@@ -170,7 +171,7 @@ describe('generateROCrate', () => {
   describe('dataset sheet URI export', () => {
     it('sets dcat:landingPage when datasetSheetUri is present', () => {
       const dataWithSheet: CanvasData = {
-        project: { title: 'Dataset Sheet Test', description: '' },
+        project: { title: 'Dataset Sheet Test', description: 'Description' },
         dataAccess: {
           datasets: [
             {
@@ -192,7 +193,7 @@ describe('generateROCrate', () => {
 
     it('no dcat:landingPage when datasetSheetUri is absent', () => {
       const dataNoSheet: CanvasData = {
-        project: { title: 'No Sheet Test', description: '' },
+        project: { title: 'No Sheet Test', description: 'Description' },
         dataAccess: {
           datasets: [
             { id: 'ds-1', title: 'Test Dataset', accessRights: 'open' },
@@ -229,8 +230,10 @@ describe('generateROCrate', () => {
       },
     }
     const out = generateROCrate(data)
-    const step = out['@graph'].find((e: any) => e['@id'] === '#req-1') as any
-    expect(step['aac:feasibility'].deploymentCost).toEqual({
+    const step = out['@graph'].find((entity) => entity['@id'] === '#req-1')
+    const feasibility = step?.['aac:feasibility']
+    expect(feasibility).toBeTypeOf('object')
+    expect((feasibility as Record<string, unknown>).deploymentCost).toEqual({
       costPerUnit: 0.05,
       aggregationBasis: 'perUnit',
       currency: 'USD',
@@ -250,7 +253,7 @@ describe('generateROCrate', () => {
     const data: CanvasData = {
       project: {
         title: 'Funded Project',
-        description: '',
+        description: 'Description',
         fundingGrant: 'ERC-2024-STG-101234567',
       },
     }

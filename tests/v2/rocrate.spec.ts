@@ -1,13 +1,13 @@
 import JSZip from 'jszip'
 import { describe, expect, it } from 'vitest'
-import { V2_FRAMEWORK_VERSION } from './framework'
+import { V2_FRAMEWORK_VERSION } from '@/v2/framework'
 import {
   buildV2ROCrateZip,
   generateFoundationMarkdown,
   generateV2ROCrate,
   importV2ROCrate,
-} from './rocrate'
-import { createEmptyV2Canvas } from './storage'
+} from '@/v2/rocrate'
+import { createEmptyV2Canvas } from '@/v2/storage'
 
 describe('AAC v2 RO-Crate', () => {
   it('generates the RO-Crate 1.2 metadata descriptor and versioned root dataset', () => {

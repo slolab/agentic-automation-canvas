@@ -149,7 +149,7 @@
 import { nextTick, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import {
   V2_BLOCKS,
-  type V2Block,
+  type V2BlockDefinition,
   type V2PromptId,
   type V2PromptDefinition,
 } from './framework'
@@ -164,7 +164,7 @@ import { downloadV2ROCrate, importV2ROCrate } from './rocrate'
 
 const canvas = ref(createEmptyV2Canvas())
 const fileInput = ref<HTMLInputElement | null>(null)
-const activeInfoBlock = ref<V2Block | null>(null)
+const activeInfoBlock = ref<V2BlockDefinition | null>(null)
 const panelCloseButton = ref<HTMLButtonElement | null>(null)
 const notice = ref('')
 let noticeTimer: ReturnType<typeof setTimeout> | undefined
@@ -206,7 +206,7 @@ function perspectiveLabel(
 }
 
 async function openBlockInfo(
-  block: V2Block,
+  block: V2BlockDefinition,
   trigger: HTMLButtonElement,
 ): Promise<void> {
   activeInfoBlock.value = block

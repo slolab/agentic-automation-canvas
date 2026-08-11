@@ -12,7 +12,6 @@ Examples:
 
 - `project.title` MUST be present and non-empty
 - `project.description` MUST be present and non-empty
-- `project.projectStage` MUST be present
 - `persons[].id` MUST be unique within the canvas
 
 ### SHOULD (Recommended)
@@ -22,6 +21,7 @@ Fields and behaviors marked as **SHOULD** are recommended but not mandatory. Imp
 Examples:
 
 - `project.startDate` and `project.endDate` SHOULD be provided when known
+- `project.projectStage` SHOULD be provided when known
 - `persons[].orcid` SHOULD be provided for researchers
 - Benefit metrics SHOULD include confidence levels and assumptions
 
@@ -37,14 +37,14 @@ Examples:
 
 ## Versioning Policy
 
-The AAC specification follows [Semantic Versioning](https://semver.org/) (SemVer):
+The AAC schema follows [Semantic Versioning](https://semver.org/) (SemVer) independently from application releases and per-canvas `project.version` values:
 
 - **MAJOR** version (X.0.0): Breaking changes that are incompatible with previous versions
 - **MINOR** version (0.X.0): Pre-release versions (beta/alpha), may include breaking changes
 - **PATCH** version (0.0.X): Bug fixes and documentation updates
 
 !!! warning "Beta Versions (0.x.x)"
-    Versions starting with `0.` (e.g., 0.16.0) are considered **beta releases**. During the beta phase: <!-- x-release-please-version -->
+    Versions starting with `0.` (e.g., 0.17.0) are considered **beta releases**. During the beta phase:
 
     - Breaking changes may occur between minor versions (0.10 → 0.11)
     - Feedback and testing are encouraged
@@ -62,7 +62,7 @@ Major version increments indicate breaking changes:
 
 **Migration**: Major version changes will include migration guides and tools to help convert data from previous versions.
 
-### Minor Version Changes
+### Minor Version Changes After 1.0
 
 Minor version increments add new capabilities without breaking existing implementations:
 
@@ -71,7 +71,7 @@ Minor version increments add new capabilities without breaking existing implemen
 - New example files
 - Enhanced documentation
 
-**Compatibility**: Data conforming to version X.Y.Z will also conform to version X.Y+1.0 (same major version).
+**Compatibility**: After 1.0, data conforming to version X.Y.Z will also conform to version X.Y+1.0 within the same major version. During the 0.x beta, only the current schema is fully supported; non-current input is recovered best-effort with diagnostics and no lossless compatibility guarantee.
 
 ### Patch Version Changes
 
@@ -103,9 +103,9 @@ Deprecated fields in the schema will be marked with:
 
 ## Validation Conformance
 
-A canvas is **conformant** if:
+A current canvas is **conformant** if:
 
-1. It validates against the JSON Schema at `https://w3id.org/aac/schema/aac.schema.json`
+1. It validates against the exact versioned JSON Schema declared by the document; the stable `https://w3id.org/aac/schema/aac.schema.json` URL discovers the current version
 2. All MUST requirements are satisfied
 3. All referenced entities exist (e.g., Person IDs referenced in stakeholders exist in the persons array)
 4. All controlled vocabulary terms are valid (e.g., TRL levels, benefit types)
@@ -145,7 +145,7 @@ If the agentic system processes PHI or other sensitive personal data:
 
 ### Data Access Rights
 
-**MUST**: Specify `accessRights` for all datasets.
+**SHOULD**: Specify `accessRights` for all datasets.
 
 **SHOULD**: Include DUO terms when datasets have use restrictions.
 
@@ -155,11 +155,7 @@ If the agentic system processes PHI or other sensitive personal data:
 
 ### Custom Fields
 
-The schema allows additional properties in certain sections. Custom fields:
-
-- **MAY** be added to objects that don't explicitly prohibit `additionalProperties: false`
-- **SHOULD** use namespaced prefixes (e.g., `custom:myField`) to avoid conflicts
-- **MUST NOT** conflict with existing field names
+AAC schema `0.17.0` rejects undeclared properties and does not preserve them during current-model recovery. Evaluation `metrics` is the sole intentionally open dictionary for metric-specific values. New interoperable fields require a new versioned AAC schema.
 
 ### Controlled Vocabularies
 

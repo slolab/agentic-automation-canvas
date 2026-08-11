@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { computeFrameworkProgress } from './frameworkProgress'
+import { computeFrameworkProgress } from '@/utils/frameworkProgress'
 import type { CanvasData } from '@/types/canvas'
 
 function emptyCanvas(): CanvasData {

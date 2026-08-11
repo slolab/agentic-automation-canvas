@@ -71,7 +71,7 @@
           <select
             :value="benefit.aggregationBasis || 'perUnit'"
             class="form-input"
-            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as any })"
+            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as Benefit['aggregationBasis'] })"
           >
             <option value="perUnit">Per Unit</option>
             <option value="perMonth">Per Month</option>
@@ -126,7 +126,7 @@
           <select
             :value="benefit.confidenceUser || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceUser: ($event.target as HTMLSelectElement).value as any || undefined })"
+            @change="updateBenefit(index, { confidenceUser: (($event.target as HTMLSelectElement).value || undefined) as Benefit['confidenceUser'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -139,7 +139,7 @@
           <select
             :value="benefit.confidenceDev || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceDev: ($event.target as HTMLSelectElement).value as any || undefined })"
+            @change="updateBenefit(index, { confidenceDev: (($event.target as HTMLSelectElement).value || undefined) as Benefit['confidenceDev'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>

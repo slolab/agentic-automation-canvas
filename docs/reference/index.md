@@ -27,13 +27,13 @@ A benefit metric for a requirement
 |----------|------|----------|-------------|-------------|----------|
 | `aggregationBasis` | string | No | How the benefit value is aggregated | Enum: `perUnit`, `perMonth`, `oneOff`<br>Default: `perUnit` | AAC |
 | `assumptions` | string | No | Key assumptions underlying the benefit estimate |  | AAC |
-| `baseline` | BenefitValue | Yes | Baseline value before automation |  | AAC |
+| `baseline` | BenefitValue | Yes |  |  | AAC |
 | `benefitType` | string | Yes | Type of benefit | Enum: `time`, `quality`, `risk`, `enablement`, `cost` | AAC |
 | `benefitUnit` | string | Yes | Unit for the benefit value (e.g., 'minutes', '%', 'incidents/month') |  | AAC |
 | `confidenceDev` | string | No | Developer's confidence in the benefit estimate | Enum: `low`, `medium`, `high` | AAC |
 | `confidenceUser` | string | No | User's confidence in the benefit estimate | Enum: `low`, `medium`, `high` | AAC |
 | `direction` | string | Yes | Indicates whether higher values, lower values, hitting a target, or boolean true is the desired outcome | Enum: `increaseIsBetter`, `decreaseIsBetter`, `targetIsBetter`, `boolIsBetter` | AAC |
-| `expected` | BenefitValue | Yes | Expected value after automation |  | AAC |
+| `expected` | BenefitValue | Yes |  |  | AAC |
 | `metricId` | string | Yes | Identifier for the metric (controlled vocabulary or 'custom') |  | AAC |
 | `metricLabel` | string | Yes | Human-readable label for the metric |  | AAC |
 | `oversightMinutesPerMonth` | number | No | Human oversight per month in minutes. Only used when aggregationBasis is 'perMonth'. Mutually exclusive with oversightMinutesPerUnit. Subtracted from gross time benefit. | Minimum: 0 | AAC |
@@ -66,7 +66,7 @@ A risk assessment for a requirement, paralleling benefit metrics
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `accessRights` | string | Yes |  |  | DCAT/Dublin Core |
+| `accessRights` | string | No |  | Enum: `open`, `restricted`, `confidential`, `highly-restricted` | DCAT/Dublin Core |
 | `containsPersonalData` | boolean | No |  |  | AAC |
 | `datasetSheetUri` | string | No | URI pointing to a FAIR dataset sheet | Format: `uri` | AAC |
 | `description` | string | No |  |  | Schema.org |
@@ -122,7 +122,7 @@ Technology Readiness Level - project-level maturity assessment
 | `complianceStandards` | array of oneOf | No | Compliance standards as plain strings or structured framework references |  | AAC |
 | `endDate` | string | No |  | Format: `date` | Schema.org |
 | `id` | string | Yes |  |  | AAC |
-| `milestones` | array of string | No |  |  | P-Plan |
+| `milestones` | array of object | No |  |  | P-Plan |
 | `name` | string | Yes |  |  | Schema.org |
 | `policyCardUri` | string | No | URI pointing to a Policy Card (machine-readable deployment governance artifact) governing this stage | Format: `uri` | AAC |
 | `startDate` | string | No |  | Format: `date` | Schema.org |
@@ -136,6 +136,13 @@ Technology Readiness Level - project-level maturity assessment
 | `role` | string | No |  |  | AAC |
 | `roleContext` | string | No | Optional role context |  | AAC |
 | `type` | string | Yes |  | Enum: `person`, `organization`, `software` | AAC |
+
+## Governance Stage Milestone
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `description` | string | Yes |  |  | Schema.org |
+| `kpi` | string | No |  |  | AAC |
 
 ## Outcomes
 
@@ -189,7 +196,9 @@ Technology Readiness Level - project-level maturity assessment
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `affiliation` | string | No | Optional disambiguation field |  | Schema.org |
+| `functionRoles` | array of string | No | Functional roles from the AAC controlled vocabulary |  | AAC |
 | `id` | string | Yes | Unique identifier for the Person (e.g., 'person-0', 'person-1') |  | AAC |
+| `localTitle` | string | No | Free-text position or title description |  | AAC |
 | `name` | string | Yes |  | Min length: 1 | Schema.org |
 | `orcid` | string | No | Optional stable identifier (e.g., ORCID) | Format: `uri` | Schema.org |
 
@@ -197,6 +206,7 @@ Technology Readiness Level - project-level maturity assessment
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
+| `creator` | array of string | No | Person IDs of project creators |  | AAC |
 | `description` | string | Yes |  | Min length: 1 | Schema.org |
 | `domain` | array of string | No |  |  | AAC |
 | `endDate` | string | No |  | Format: `date` | Schema.org |
@@ -204,10 +214,11 @@ Technology Readiness Level - project-level maturity assessment
 | `headlineValue` | string | No |  |  | AAC |
 | `keywords` | array of string | No |  |  | Schema.org |
 | `leadOrganization` | string | No |  |  | FRAPO |
+| `license` | string | No | License URI for the canvas and its RO-Crate export | Format: `uri` | Schema.org |
 | `objective` | string | No |  |  | Schema.org |
 | `primaryValueDriver` | string | No |  | Enum: `time`, `quality`, `risk`, `enablement`, `cost` | AAC |
 | `projectId` | string | No |  | Format: `uri` | Schema.org |
-| `projectStage` | string | Yes |  |  | FRAPO |
+| `projectStage` | string | No |  |  | FRAPO |
 | `roughEstimateUnit` | string | No | Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month') |  | AAC |
 | `roughEstimateValue` | number | No | Optional manual estimate of project-level benefit value when getting started (before task-level benefits) | Minimum: 0 | AAC |
 | `startDate` | string | No |  | Format: `date` | Schema.org |

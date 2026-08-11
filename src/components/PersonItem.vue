@@ -221,7 +221,7 @@ const isExpanded = ref(!props.person.name || props.person.name.trim() === '')
 
 // Load function roles from vocabulary
 const functionRolesList = computed((): { id: string; label: string }[] => {
-  return (functionRolesData as any).roles || []
+  return functionRolesData.roles
 })
 
 // Selected roles

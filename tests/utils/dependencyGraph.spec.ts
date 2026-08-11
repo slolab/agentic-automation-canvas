@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateDependencyMermaid, hasDependencies, wrapLabel } from './dependencyGraph'
+import { generateDependencyMermaid, hasDependencies, wrapLabel } from '@/utils/dependencyGraph'
 import type { Requirement } from '@/types/canvas'
 
 function makeReq(overrides: Partial<Requirement> & { id: string }): Requirement {

@@ -19,25 +19,7 @@ uv run python -m mkdocs build --quiet
 echo "📄 Preparing schema artifacts..."
 mkdir -p site/schema site/examples
 
-# Copy schema and update $id to w3id.org
-uv run python -c "
-import json
-import yaml
-
-with open('schema/canvas-schema.json', 'r') as f:
-    schema = json.load(f)
-
-# Update \$id to w3id.org
-schema['\$id'] = 'https://w3id.org/aac/schema/aac.schema.json'
-
-# Write updated schema
-with open('site/schema/aac.schema.json', 'w') as f:
-    json.dump(schema, f, indent=2)
-
-# Convert to YAML
-with open('site/schema/aac.schema.yaml', 'w') as f:
-    yaml.dump(schema, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-"
+uv run python tools/publish-schemas.py
 
 # Copy examples
 echo "📋 Copying examples..."

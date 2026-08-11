@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { evaluateTaskDatasetLink, collectDataAccessFlags } from './dataAccessWarnings'
+import { evaluateTaskDatasetLink, collectDataAccessFlags } from '@/utils/dataAccessWarnings'
 import type { CanvasData, Dataset, Requirement, TaskDatasetLink } from '@/types/canvas'
 
 function makeRequirement(overrides: Partial<Requirement> = {}): Requirement {

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { getMonthlyDeploymentCost, aggregateDeploymentCosts } from './deploymentCost'
+import { getMonthlyDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
 import type { Requirement } from '@/types/canvas'
 
 describe('getMonthlyDeploymentCost', () => {

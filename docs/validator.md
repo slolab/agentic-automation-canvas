@@ -2,6 +2,26 @@
 
 The AAC validator allows you to validate canvas files against the JSON Schema to ensure they conform to the specification.
 
+## Schema Source of Truth
+
+Released AAC contracts live in immutable directories under
+`schema/versions/<version>/`. `schema/manifest.json` selects the current JSON Schema and
+RO-Crate profile. The root-level `schema/canvas-schema.json` and
+`schema/rocrate-profile.json` files are generated aliases for that selection; they are
+convenient current-version entry points, not files to edit manually.
+
+The application contract is generated from the same source. In particular,
+`src/types/canvas.ts` contains generated TypeScript types and must not be edited by hand.
+Use these commands when working on the schema or schema-dependent code:
+
+```bash
+npm run schema:generate  # regenerate current aliases, types, and contract constants
+npm run schema:check     # fail if committed generated artifacts have drifted
+npm run typecheck        # check application and UI logic against generated types
+```
+
+`npm run build` runs the drift check and type-check before building.
+
 ## When Do You Need Validation?
 
 **If you use the web form**: Validation happens automatically! The web form validates your data as you fill it out and prevents download if there are validation errors. You don't need to validate separately.
@@ -44,7 +64,7 @@ uv run python tools/validate-examples.py
 
 This will:
 
-- Load the schema from `schema/canvas-schema.json`
+- Load the generated current alias from `schema/canvas-schema.json`
 - Find all `.json` files in `schema/examples/`
 - Skip RO-Crate files (they have `@context` and `@graph` properties)
 - Validate raw canvas JSON files against the schema
@@ -64,9 +84,13 @@ To validate a specific canvas file, you can use Python directly:
 import json
 import jsonschema
 from jsonschema import validate
+from pathlib import Path
 
-# Load schema
-with open('schema/canvas-schema.json', 'r') as f:
+# Resolve the exact current schema selected by the manifest.
+schema_root = Path('schema')
+with (schema_root / 'manifest.json').open() as f:
+    manifest = json.load(f)
+with (schema_root / manifest['currentSchema']).open() as f:
     schema = json.load(f)
 
 # Load your canvas file (use raw canvas JSON, not RO-Crate format)
@@ -149,17 +173,20 @@ A browser-based validator UI is planned for future releases. This will allow val
 
 ## Schema Location
 
-The validator uses the canonical schema at:
+The stable current-schema URL is:
 
 `https://w3id.org/aac/schema/aac.schema.json`
 
-For local validation, it uses `schema/canvas-schema.json` from the repository.
+Each versioned JSON Schema also has an exact versioned `$id`. In the repository,
+`schema/manifest.json` selects the exact current file under `schema/versions/`, while
+`schema/canvas-schema.json` is its generated stable alias. The example validator uses
+that alias and `npm run schema:check` guarantees that it matches the manifest selection.
 
 ## When Validation Happens
 
 ### In the Web Form
 
-The web form validates automatically:
+The web form validates current data automatically:
 
 - **Real-time validation**: As you fill out the form, fields are validated
 - **Download protection**: The "Download RO-Crate" button is disabled if there are validation errors
@@ -167,6 +194,19 @@ The web form validates automatically:
 - **Warnings**: Non-critical issues show warnings but allow export (with user confirmation)
 
 **Result**: If you successfully download an RO-Crate from the web form, it's already validated and conforms to the schema.
+
+### When Importing an Older or Malformed Crate
+
+Import is intentionally more tolerant than export. The importer detects the crate's
+`aac:schemaVersion` and maps every crate through the same current-model recovery path.
+Missing, non-current, and unknown versions, malformed optional entities, and recoverable
+parsing failures are logged and shown as import notices. Those findings do not prevent
+the canvas from opening: the tool displays whatever could be recovered. Historical
+versions have no lossless or version-specific compatibility guarantee.
+
+This tolerant behavior does not make the imported file valid under the current schema.
+Before a new crate can be exported, the recovered canvas must pass strict current-schema
+validation.
 
 ### With the Validator Tool
 

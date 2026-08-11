@@ -1,143 +1,140 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://w3id.org/aac/schema/rocrate-profile.json",
-  "title": "RO-Crate Profile for Agentic Automation Canvas",
-  "description": "Profile definition for RO-Crate packages generated from Agentic Automation Canvas",
+  "title": "AAC RO-Crate Profile 0.17.0",
+  "description": "Structural profile for RO-Crates exported from AAC schema 0.17.0.",
   "type": "object",
-  "required": ["@context", "@graph"],
+  "required": [
+    "@context",
+    "@graph"
+  ],
   "properties": {
     "@context": {
-      "const": "https://w3id.org/ro/crate/1.2/context"
+      "type": "array",
+      "minItems": 2,
+      "contains": {
+        "const": "https://w3id.org/ro/crate/1.2/context"
+      }
     },
     "@graph": {
       "type": "array",
       "minItems": 2,
       "items": {
-        "oneOf": [
-          {
-            "description": "RO-Crate Metadata File Descriptor",
+        "type": "object",
+        "required": [
+          "@id",
+          "@type"
+        ],
+        "properties": {
+          "@id": {
+            "type": "string"
+          },
+          "@type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
             "properties": {
-              "@id": { "const": "ro-crate-metadata.json" },
-              "@type": { "const": "CreativeWork" },
+              "@id": {
+                "const": "ro-crate-metadata.json"
+              },
+              "@type": {
+                "const": "schema:CreativeWork"
+              },
               "conformsTo": {
                 "type": "object",
                 "properties": {
-                  "@id": { "const": "https://w3id.org/ro/crate/1.2" }
-                }
-              }
-            },
-            "required": ["@id", "@type", "conformsTo"]
-          },
-          {
-            "description": "Root Dataset",
-            "properties": {
-              "@id": { "const": "./" },
-              "@type": {
-                "type": "array",
-                "contains": { "const": "Dataset" }
+                  "@id": {
+                    "const": "https://w3id.org/ro/crate/1.2"
+                  }
+                },
+                "required": [
+                  "@id"
+                ],
+                "additionalProperties": false
               },
-              "datePublished": { "type": "string" }
+              "about": {
+                "type": "object",
+                "properties": {
+                  "@id": {
+                    "const": "./"
+                  }
+                },
+                "required": [
+                  "@id"
+                ],
+                "additionalProperties": false
+              }
             },
-            "required": ["@id", "@type", "datePublished"]
-          },
-          {
-            "description": "Project Entity",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["Project", "ResearchProject"]
-                }
-              }
-            }
-          },
-          {
-            "description": "Plan Entity (P-Plan)",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["Plan", "p-plan:Plan"]
-                }
-              }
-            }
-          },
-          {
-            "description": "Activity Entity (PROV-O)",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": { "const": "Activity" }
-              }
-            }
-          },
-          {
-            "description": "Dataset Entity (DCAT)",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": { "const": "Dataset" }
-              }
-            }
-          },
-          {
-            "description": "Step Entity (P-Plan)",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["Step", "p-plan:Step"]
-                }
-              }
-            }
-          },
-          {
-            "description": "Person Entity",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["Person", "schema:Person"]
-                }
-              }
-            }
-          },
-          {
-            "description": "Role Entity (schema:Role for person-role relationships)",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["Role", "schema:Role"]
-                }
-              }
-            }
-          },
-          {
-            "description": "Organization Entity",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["Organization", "schema:Organization"]
-                }
-              }
-            }
-          },
-          {
-            "description": "CreativeWork Entity (Outcomes)",
-            "properties": {
-              "@type": {
-                "type": "array",
-                "contains": {
-                  "enum": ["CreativeWork", "ScholarlyArticle", "Report", "SoftwareApplication"]
-                }
-              }
-            }
+            "required": [
+              "@id",
+              "@type",
+              "conformsTo",
+              "about"
+            ]
           }
-        ]
-      }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "@id": {
+                "const": "./"
+              },
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "const": "schema:Dataset"
+                }
+              },
+              "datePublished": {
+                "type": "string",
+                "format": "date"
+              },
+              "aac:schemaVersion": {
+                "const": "0.17.0"
+              },
+              "conformsTo": {
+                "type": "object",
+                "properties": {
+                  "@id": {
+                    "const": "https://w3id.org/aac/profile/0.17.0"
+                  }
+                },
+                "required": [
+                  "@id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "@id",
+              "@type",
+              "datePublished",
+              "aac:schemaVersion",
+              "conformsTo"
+            ]
+          }
+        }
+      ]
     }
   },
-  "additionalProperties": false
+  "additionalProperties": false,
+  "$comment": "Current AAC RO-Crate profile alias for 0.17.0; exact profile: https://w3id.org/aac/profile/0.17.0"
 }

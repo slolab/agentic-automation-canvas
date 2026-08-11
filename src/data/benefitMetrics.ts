@@ -6,7 +6,7 @@
 
 import type { Benefit, BenefitValue } from '@/types/canvas'
 
-export type BenefitType = 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
+export type BenefitType = Benefit['benefitType']
 
 /** Display label for each metricId per benefit type. Custom metrics use metricLabel from the benefit. */
 export const METRIC_DISPLAY_LABELS: Record<BenefitType, Record<string, string>> = {

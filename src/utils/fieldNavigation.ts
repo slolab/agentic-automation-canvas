@@ -3,6 +3,52 @@
  * and provides a DOM helper to scroll+focus+highlight a field.
  */
 
+import type {
+  CanvasData,
+  Dataset,
+  Deliverable,
+  Evaluation,
+  Publication,
+  Requirement,
+} from '@/types/canvas'
+
+type FieldTargetFactory = (index: number) => string
+
+// Presentation-only exception: DOM ids and tab placement do not exist in JSON
+// Schema, so this mapping must be handwritten. Every AAC field key is still
+// checked against the generated domain types to make schema drift fail typecheck.
+const projectDomMap: Partial<Record<keyof CanvasData['project'], string>> = {
+  title: 'project-title',
+  description: 'project-description',
+  projectStage: 'project-stage',
+  version: 'project-version',
+}
+
+const requirementDomMap: Partial<Record<keyof Requirement, FieldTargetFactory>> = {
+  title: (index) => `req-title-${index}`,
+  unitOfWork: (index) => `req-unit-${index}`,
+  unitCategory: (index) => `req-unit-category-${index}`,
+  volumePerMonth: (index) => `req-volume-${index}`,
+}
+
+const datasetDomMap: Partial<Record<keyof Dataset, FieldTargetFactory>> = {
+  title: (index) => `dataset-title-${index}`,
+  accessRights: (index) => `dataset-access-${index}`,
+}
+
+const deliverableDomMap: Partial<Record<keyof Deliverable, FieldTargetFactory>> = {
+  title: (index) => `deliverable-title-${index}`,
+  type: (index) => `deliverable-type-${index}`,
+}
+
+const publicationDomMap: Partial<Record<keyof Publication, FieldTargetFactory>> = {
+  title: (index) => `pub-title-${index}`,
+}
+
+const evaluationDomMap: Partial<Record<keyof Evaluation, FieldTargetFactory>> = {
+  type: (index) => `eval-type-${index}`,
+}
+
 export interface FocusFieldRequest {
   sectionId: string
   domFieldId: string | null   // null = expand item only, no specific field to focus
@@ -23,17 +69,12 @@ export interface FocusFieldRequest {
 export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   // ── Project fields ──────────────────────────────────────────────────────────
   if (field.startsWith('project')) {
-    const domMap: Record<string, string> = {
-      'project.title':        'project-title',
-      'project.description':  'project-description',
-      'project.projectStage': 'project-stage',
-      'project.version':      'project-version',
-    }
+    const projectField = field.slice('project.'.length) as keyof CanvasData['project']
     return {
       sectionId:  'project',
       itemType:   'project',
       itemIndex:  null,
-      domFieldId: domMap[field] ?? 'project-title',
+      domFieldId: projectDomMap[projectField] ?? 'project-title',
     }
   }
 
@@ -51,12 +92,7 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
     if (subField === 'dataAccess' || subField.startsWith('dataAccess.')) {
       return { sectionId: 'data-access', itemType: null, itemIndex: null, domFieldId: null }
     }
-    const domMap: Record<string, string> = {
-      'title':          `req-title-${index}`,
-      'unitOfWork':     `req-unit-${index}`,
-      'unitCategory':   `req-unit-category-${index}`,
-      'volumePerMonth': `req-volume-${index}`,
-    }
+    const targetFactory = requirementDomMap[subField as keyof Requirement]
     // Benefit-related subFields (benefits, benefits[].*, benefits[n].*, netTimeSaved)
     // all target the "Edit Benefits" button
     const isBenefitField = subField === 'benefits' ||
@@ -66,7 +102,7 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
       sectionId:  'user-expectations',
       itemType:   'requirement',
       itemIndex:  index,
-      domFieldId: domMap[subField] ?? (isBenefitField ? `req-benefits-edit-${index}` : null),
+      domFieldId: targetFactory?.(index) ?? (isBenefitField ? `req-benefits-edit-${index}` : null),
     }
   }
 
@@ -75,15 +111,12 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   if (datasetMatch) {
     const index = parseInt(datasetMatch[1], 10)
     const subField = datasetMatch[2] ?? ''
-    const domMap: Record<string, string> = {
-      'title':        `dataset-title-${index}`,
-      'accessRights': `dataset-access-${index}`,
-    }
+    const targetFactory = datasetDomMap[subField as keyof Dataset]
     return {
       sectionId:  'data-access',
       itemType:   'dataset',
       itemIndex:  index,
-      domFieldId: domMap[subField] ?? null,
+      domFieldId: targetFactory?.(index) ?? null,
     }
   }
 
@@ -92,15 +125,12 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   if (delivMatch) {
     const index = parseInt(delivMatch[1], 10)
     const subField = delivMatch[2] ?? ''
-    const domMap: Record<string, string> = {
-      'title': `deliverable-title-${index}`,
-      'type':  `deliverable-type-${index}`,
-    }
+    const targetFactory = deliverableDomMap[subField as keyof Deliverable]
     return {
       sectionId:  'outcomes',
       itemType:   'deliverable',
       itemIndex:  index,
-      domFieldId: domMap[subField] ?? null,
+      domFieldId: targetFactory?.(index) ?? null,
     }
   }
 
@@ -109,14 +139,12 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   if (pubMatch) {
     const index = parseInt(pubMatch[1], 10)
     const subField = pubMatch[2] ?? ''
-    const domMap: Record<string, string> = {
-      'title': `pub-title-${index}`,
-    }
+    const targetFactory = publicationDomMap[subField as keyof Publication]
     return {
       sectionId:  'outcomes',
       itemType:   'publication',
       itemIndex:  index,
-      domFieldId: domMap[subField] ?? null,
+      domFieldId: targetFactory?.(index) ?? null,
     }
   }
 
@@ -125,14 +153,12 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   if (evalMatch) {
     const index = parseInt(evalMatch[1], 10)
     const subField = evalMatch[2] ?? ''
-    const domMap: Record<string, string> = {
-      'type': `eval-type-${index}`,
-    }
+    const targetFactory = evaluationDomMap[subField as keyof Evaluation]
     return {
       sectionId:  'outcomes',
       itemType:   'evaluation',
       itemIndex:  index,
-      domFieldId: domMap[subField] ?? null,
+      domFieldId: targetFactory?.(index) ?? null,
     }
   }
 

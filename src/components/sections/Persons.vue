@@ -191,7 +191,7 @@ function createDefaultPerson(): Person {
 
 // Get role label from ID
 function getRoleLabel(roleId: string): string {
-  const role = (functionRolesData as any).roles?.find((r: any) => r.id === roleId)
+  const role = functionRolesData.roles.find((candidate) => candidate.id === roleId)
   return role?.label || roleId
 }
 

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { generateAgentInstructions } from './agent-instructions'
+import { generateAgentInstructions } from '@/utils/agent-instructions'
 import type { CanvasData } from '@/types/canvas'
 
 function canvasWithLinks(): CanvasData {

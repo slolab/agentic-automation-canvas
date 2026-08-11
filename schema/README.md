@@ -52,93 +52,37 @@ This schema profile aligns with:
 - W3C standards (DCAT, PROV-O)
 - Schema.org vocabularies
 
+
 ## Versioning
 
-The schema follows semantic versioning. Changes to the schema structure will be versioned independently of the web application.
+AAC data contracts are versioned independently from the web application, the RO-Crate specification, and each canvas's `project.version`.
 
-## Schema Version 0.12.0
+- `manifest.json` identifies the current AAC schema and RO-Crate profile.
+- `versions/<version>/` contains immutable released contracts.
+- `canvas-schema.json` and `rocrate-profile.json` are generated aliases for the current release.
+- Exported crates declare an exact `aac:schemaVersion` and versioned AAC profile.
+- The application fully supports and exports only the selected current schema. Non-current or unversioned crates use one version-independent best-effort import path with visible diagnostics; historical artifacts remain published references, not runtime compatibility promises.
 
-### Person Identity and Role Model
+## Generated TypeScript Contract
 
-**Functional Roles (Required)**
-- Each Person must have at least one `functionRoles` entry from a controlled vocabulary
-- Functional roles are standardized terms (e.g., "project-lead", "developer", "researcher") defined in `vocabularies/function-roles.json`
-- These roles enable role aggregation and cross-project analysis
+The current AAC TypeScript model is generated from the versioned JSON Schema. Do not edit `src/types/canvas.ts` manually.
 
-**Local Title (Optional)**
-- `localTitle` is a free-text description of a person's position or title within their organization
-- Examples: "Senior Research Scientist", "Head of IT", "Principal Investigator"
+```bash
+npm run schema:generate  # refresh generated aliases, types, and version constants
+npm run schema:check     # fail without modifying files when generated artifacts drift
+npm run typecheck        # check TypeScript and Vue templates against generated types
+```
 
-**Person Identity Enforcement**
-- All persons are managed in a centralized `persons` array
-- When assigning people to stakeholders or agents, you must reference existing Person IDs
-- No free-text person creation is allowed - this ensures correct role aggregation
-- Each Person must have a unique ID and at least one functional role
+Runtime validation uses the same current JSON Schema. TypeScript types provide compile-time enforcement but do not replace runtime validation.
 
-### Project-Level Required Fields
+## Current Schema: 0.17.0
 
-**Creator (Required)**
-- The `creator` field is required and must contain at least one Person ID
-- References persons from the centralized `persons` array
-- Used to establish project ownership and attribution
+Version `0.17.0` reconciles the published schema with the current canvas model:
 
-**Rough estimate (project-level)**
-- `roughEstimateValue` and `roughEstimateUnit` provide an optional manual project-level benefit estimate for getting started (before task-level benefits are defined)
-- The schema does not store aggregate benefit values; the single source of truth is per-requirement benefits
-- The web app may compute or display aggregated values (e.g. time saved per month) for UI purposes only
+- Person supports optional `functionRoles` and `localTitle`.
+- Project supports optional `creator` Person references and `license` URI.
+- Governance milestones use objects with required `description` and optional `kpi`.
+- AAC structural objects reject undeclared properties; evaluation `metrics` remains an intentionally open dictionary.
+- All schema-defined fields, identifiers, and references must survive current RO-Crate export/import round trips.
 
-**Developer feasibility**
-- Developer feasibility is embedded directly in the RO-Crate root dataset (`aac:developerFeasibility`), not in a separate file
-
-**Display groups (app-only)**
-- Grouping benefits for display (e.g. by metric) is application state only, stored in `benefit-display.json` in the crate when present
-- Display groups are not part of the canvas schema; they allow the UI to show combined values (e.g. time saved per month) in the collapsed view and dashboard
-
-### Benefits and Oversight Model
-
-**Time Benefits:**
-- Time benefits include baseline and expected values (in requirement's `timeUnit`: minutes or hours)
-- Human oversight is stored at benefit level:
-  - `oversightMinutesPerUnit`: For benefits with `aggregationBasis: "perUnit"` (oversight per unit, always in minutes)
-  - `oversightMinutesPerMonth`: For benefits with `aggregationBasis: "perMonth"` (oversight per month, always in minutes)
-- Net time savings = (baseline - expected) - oversight (calculated, not stored)
-- Oversight is always measured in minutes regardless of the benefit's time unit
-
-**Benefit Types:**
-- `time`: Time savings (with optional oversight)
-- `quality`: Quality improvements
-- `risk`: Risk reductions
-- `enablement`: New capabilities enabled
-- `cost`: Cost savings
-
-### Governance Stage Gating
-
-**Stage Emission Rules:**
-- Governance stages are only exported as `prov:Activity` entities if:
-  - Stage has a `name` (non-empty)
-  - Stage has at least one `agent`
-- Empty or incomplete stages are skipped during RO-Crate export
-- This ensures only meaningful governance activities are included
-
-### Validation Rules Summary
-
-**Person:**
-- `functionRoles.length >= 1` (required)
-- `localTitle` optional (free text)
-- Unique `id` required
-
-**Project:**
-- `creator.length >= 1` (required, Person IDs)
-- `projectStage` required
-- `title` and `description` required
-
-**Requirement:**
-- `title` required (min length: 1)
-- `benefits` required (array, at least one benefit)
-- `volumePerMonth >= 1` (if applicable)
-- `timeUnit` optional (enum: "minutes" | "hours") - standardizes all time values for the requirement
-- `stakeholders` optional (array of Person IDs, per-task)
-
-**References:**
-- All Person `@id` references must exist in Persons registry
-- No duplicate Person nodes for same identity
+The schema requires `project.title` and `project.description`. Person roles, project creator, project stage, and dataset access rights remain optional in this reconciliation release.
