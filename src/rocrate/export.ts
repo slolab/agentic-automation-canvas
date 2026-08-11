@@ -8,6 +8,7 @@ import {
   hasCustomBenefitDisplay,
   type BenefitDisplayState,
 } from '@/types/benefitDisplay'
+import { isBenefitOfType } from '@/utils/benefits'
 import { todayIsoDate } from '@/utils/date'
 import {
   AAC_RO_CRATE_PROFILE_ID,
@@ -246,6 +247,12 @@ function isValidDate(dateStr: string | undefined): boolean {
 
 export interface GenerateROCrateOptions {
   benefitDisplay?: BenefitDisplayState
+  /**
+   * Export an explicitly marked draft that may not conform to the current AAC
+   * schema. Partial crates omit the AAC profile claim and remain importable on
+   * a best-effort basis. Normal exports continue to require full conformance.
+   */
+  allowPartial?: boolean
 }
 
 interface ExportContext {
@@ -268,7 +275,7 @@ interface ExportContext {
  * Establish the core crate entities and shared identity maps. Subsequent
  * section writers append to this context in document order.
  */
-function createExportContext(data: CanvasData): ExportContext {
+function createExportContext(data: CanvasData, partial = false): ExportContext {
   const graph: ROCrateEntity[] = []
   const idAllocator = new CrateIdAllocator([
     'ro-crate-metadata.json',
@@ -297,8 +304,12 @@ function createExportContext(data: CanvasData): ExportContext {
     name: data.project.title || 'Agentic Automation Project',
     description: data.project.description,
     datePublished: todayIsoDate(),
-    conformsTo: { '@id': AAC_RO_CRATE_PROFILE_ID },
     'aac:schemaVersion': AAC_SCHEMA_VERSION,
+  }
+  if (partial) {
+    rootDataset['aac:partialCanvas'] = true
+  } else {
+    rootDataset.conformsTo = { '@id': AAC_RO_CRATE_PROFILE_ID }
   }
 
   if (data.project.license) {
@@ -324,6 +335,12 @@ function createExportContext(data: CanvasData): ExportContext {
 
   if (data.project.objective) {
     projectEntity['schema:abstract'] = data.project.objective
+  }
+  if (data.project.problemFrequency) {
+    projectEntity['aac:problemFrequency'] = data.project.problemFrequency
+  }
+  if (data.project.problemExamples && data.project.problemExamples.length > 0) {
+    projectEntity['aac:problemExamples'] = data.project.problemExamples
   }
   if (data.project.projectStage) {
     projectEntity['aac:projectStage'] = data.project.projectStage
@@ -461,7 +478,7 @@ function addUserExpectations(context: ExportContext): void {
       stepEntity['aac:targetPopulation'] = req.targetPopulation
     }
 
-    const timeBenefit = req.benefits?.find((benefit) => benefit.benefitType === 'time')
+    const timeBenefit = req.benefits?.find((benefit) => isBenefitOfType(benefit, 'time'))
     if (timeBenefit?.oversightMinutesPerUnit !== undefined) {
       stepEntity['aac:humanOversightMinutesPerUnit'] = timeBenefit.oversightMinutesPerUnit
     }
@@ -914,9 +931,9 @@ function buildCrateDocument(context: ExportContext): ROCrateJSONLD {
  * Generate RO-Crate JSON-LD from canvas data
  */
 export function generateROCrate(data: CanvasData, options?: GenerateROCrateOptions): ROCrateJSONLD {
-  assertCurrentCanvas(data)
+  if (!options?.allowPartial) assertCurrentCanvas(data)
 
-  const context = createExportContext(data)
+  const context = createExportContext(data, options?.allowPartial)
   addUserExpectations(context)
   addStakeholders(context)
   addGovernance(context)

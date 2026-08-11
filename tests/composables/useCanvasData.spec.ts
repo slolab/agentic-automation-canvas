@@ -191,4 +191,67 @@ describe('useCanvasData imports', () => {
     expect(state.canvasData.value.userExpectations?.requirements).toHaveLength(1)
     expect(state.lastDiagnostics.value).toEqual([])
   })
+
+  it('keeps display-group references attached to classified benefits after lightweight edits', async () => {
+    const { useCanvasData } = await import('@/composables/useCanvasData')
+    const state = useCanvasData()
+    const firstClassified = {
+      benefitType: 'quality' as const,
+      metricId: 'accuracy',
+      metricLabel: 'Accuracy',
+      direction: 'increaseIsBetter' as const,
+      valueMeaning: 'absolute' as const,
+      benefitUnit: '%',
+      baseline: { type: 'numeric' as const, value: 70 },
+      expected: { type: 'numeric' as const, value: 90 },
+    }
+    const secondClassified = {
+      ...firstClassified,
+      metricId: 'consistency',
+      metricLabel: 'Consistency',
+    }
+    state.canvasData.value = {
+      project: { title: 'Benefit refs', description: 'Keeps references stable.' },
+      userExpectations: {
+        requirements: [{
+          id: 'req-1',
+          title: 'req-1',
+          benefits: [
+            { benefitType: 'unclassified', description: 'Draft benefit' },
+            firstClassified,
+            { benefitType: 'unclassified', metricLabel: 'Cases per month' },
+            secondClassified,
+          ],
+        }],
+      },
+    }
+    state.benefitDisplay.value = {
+      displayGroups: [
+        {
+          id: 1,
+          benefitType: 'quality',
+          metricId: 'accuracy',
+          benefitRefs: [{ requirementId: 'req-1', benefitIndex: 1 }],
+        },
+        {
+          id: 2,
+          benefitType: 'quality',
+          metricId: 'consistency',
+          benefitRefs: [{ requirementId: 'req-1', benefitIndex: 3 }],
+        },
+      ],
+    }
+
+    state.replacePrimaryUnclassifiedBenefits('description', [])
+
+    expect(state.canvasData.value.userExpectations?.requirements?.[0].benefits).toEqual([
+      firstClassified,
+      { benefitType: 'unclassified', metricLabel: 'Cases per month' },
+      secondClassified,
+    ])
+    expect(state.benefitDisplay.value.displayGroups.map((group) => group.benefitRefs[0])).toEqual([
+      { requirementId: 'req-1', benefitIndex: 0 },
+      { requirementId: 'req-1', benefitIndex: 2 },
+    ])
+  })
 })

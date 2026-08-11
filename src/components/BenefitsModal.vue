@@ -61,6 +61,18 @@
 
           <!-- Content -->
           <div class="px-6 py-4 overflow-y-auto max-h-[60vh]">
+            <div
+              v-if="unclassifiedBenefits.length > 0"
+              class="mb-4 rounded-md border border-gray-200 bg-gray-50 p-3 text-sm text-gray-700"
+            >
+              <p class="font-medium">{{ unclassifiedBenefits.length }} unclassified benefit{{ unclassifiedBenefits.length === 1 ? '' : 's' }}</p>
+              <p class="mt-1 text-xs text-gray-500">These simplified entries are preserved when you edit detailed benefits.</p>
+              <ul class="mt-2 space-y-1 text-xs">
+                <li v-for="(benefit, index) in unclassifiedBenefits" :key="index">
+                  • {{ benefit.description || benefit.metricLabel }}
+                </li>
+              </ul>
+            </div>
             <!-- Time Benefits -->
             <div v-show="activeTab === 'time'">
               <TimeBenefitForm
@@ -125,8 +137,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, h, onUnmounted } from 'vue'
-import type { Benefit } from '@/types/canvas'
+import { computed, ref, watch, h, onUnmounted } from 'vue'
+import type { Benefit, ClassifiedBenefit } from '@/types/canvas'
+import { isBenefitOfType, type ClassifiedBenefitType } from '@/utils/benefits'
 import TimeBenefitForm from './benefits/TimeBenefitForm.vue'
 import QualityBenefitForm from './benefits/QualityBenefitForm.vue'
 import RiskBenefitForm from './benefits/RiskBenefitForm.vue'
@@ -147,6 +160,7 @@ const emit = defineEmits<{
 
 // Local copy of benefits for editing
 const localBenefits = ref<Benefit[]>([])
+const unclassifiedBenefits = computed(() => localBenefits.value.filter(b => b.benefitType === 'unclassified'))
 
 // Active tab
 const activeTab = ref<'time' | 'quality' | 'risk' | 'enablement' | 'cost'>('time')
@@ -227,17 +241,17 @@ onUnmounted(() => {
 })
 
 // Get benefits of a specific type
-function getTypedBenefits(type: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'): Benefit[] {
-  return localBenefits.value.filter(b => b.benefitType === type)
+function getTypedBenefits(type: ClassifiedBenefitType): ClassifiedBenefit[] {
+  return localBenefits.value.filter(b => isBenefitOfType(b, type))
 }
 
 // Get count of benefits for a type
-function getBenefitCount(type: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'): number {
+function getBenefitCount(type: ClassifiedBenefitType): number {
   return localBenefits.value.filter(b => b.benefitType === type).length
 }
 
 // Update benefits of a specific type
-function updateTypedBenefits(type: 'time' | 'quality' | 'risk' | 'enablement' | 'cost', benefits: Benefit[]) {
+function updateTypedBenefits(type: ClassifiedBenefitType, benefits: ClassifiedBenefit[]) {
   // Remove all benefits of this type and add the new ones
   const otherBenefits = localBenefits.value.filter(b => b.benefitType !== type)
   localBenefits.value = [...otherBenefits, ...benefits]

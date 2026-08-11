@@ -179,7 +179,7 @@
           <select
             :value="benefit.confidenceUser || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceUser: (($event.target as HTMLSelectElement).value || undefined) as Benefit['confidenceUser'] })"
+            @change="updateBenefit(index, { confidenceUser: (($event.target as HTMLSelectElement).value || undefined) as ClassifiedBenefit['confidenceUser'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -192,7 +192,7 @@
           <select
             :value="benefit.confidenceDev || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceDev: (($event.target as HTMLSelectElement).value || undefined) as Benefit['confidenceDev'] })"
+            @change="updateBenefit(index, { confidenceDev: (($event.target as HTMLSelectElement).value || undefined) as ClassifiedBenefit['confidenceDev'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -219,21 +219,21 @@
 
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue'
-import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
+import type { ClassifiedBenefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 import { parseTimeUnit, type TimeUnit } from '@/utils/timeUnitConversion'
 import InfoTooltip from '../InfoTooltip.vue'
 
 interface Props {
-  benefits: Benefit[]
+  benefits: ClassifiedBenefit[]
   requirementTimeUnit?: 'minutes' | 'hours'
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update': [benefits: Benefit[]]
+  'update': [benefits: ClassifiedBenefit[]]
 }>()
 
-const localBenefits = ref<Benefit[]>([])
+const localBenefits = ref<ClassifiedBenefit[]>([])
 
 watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
@@ -261,7 +261,7 @@ const standardizedTimeUnit = computed((): TimeUnit => {
 // Get time unit for a specific benefit (for display)
 // All time benefits should use the same unit, so return the standardized unit
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-function getTimeUnitForBenefit(_benefit: Benefit): TimeUnit {
+function getTimeUnitForBenefit(_benefit: ClassifiedBenefit): TimeUnit {
   // Always return the standardized unit to ensure consistency
   return standardizedTimeUnit.value
 }
@@ -280,7 +280,7 @@ function handleUnitChange(_index: number, unit: TimeUnit) {
 // Handle aggregation basis change - clear opposite oversight field
 function handleAggregationBasisChange(index: number, aggregationBasis: string) {
   const basis = aggregationBasis as 'perUnit' | 'perMonth' | 'oneOff'
-  const updates: Partial<Benefit> = { aggregationBasis: basis }
+  const updates: Partial<ClassifiedBenefit> = { aggregationBasis: basis }
   
   // Clear oversight fields when switching aggregation basis
   if (basis === 'perUnit') {
@@ -317,7 +317,7 @@ function getMetricDefaults(metricId: string): { direction: BenefitDirection; val
   return { direction: defaults.direction, valueMeaning: defaults.valueMeaning }
 }
 
-function createDefaultBenefit(): Benefit {
+function createDefaultBenefit(): ClassifiedBenefit {
   const defaults = getMetricDefaults('processingTime')
   return {
     benefitType: 'time',
@@ -352,7 +352,7 @@ function removeBenefit(index: number) {
   emitUpdate()
 }
 
-function updateBenefit(index: number, updates: Partial<Benefit>) {
+function updateBenefit(index: number, updates: Partial<ClassifiedBenefit>) {
   localBenefits.value = localBenefits.value.map((b, i) => 
     i === index ? { ...b, ...updates } : b
   )

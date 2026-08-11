@@ -55,6 +55,116 @@ describe('versioned AAC schema contract', () => {
     expect(projectProperties).toHaveProperty('license')
   })
 
+  it('defines the simplified-canvas fields and their controlled vocabularies', () => {
+    const projectProperties = property(AAC_CURRENT_SCHEMA, 'properties', 'project', 'properties')
+    expect(projectProperties).toMatchObject({
+      problemFrequency: {
+        enum: ['daily', 'weekly', 'monthly', 'few-times-per-year', 'less-than-yearly'],
+      },
+      problemExamples: {
+        type: 'array',
+        items: { type: 'string', minLength: 1 },
+      },
+    })
+
+    const technologyApproachProperties = property(
+      AAC_CURRENT_SCHEMA,
+      'properties',
+      'userExpectations',
+      'properties',
+      'requirements',
+      'items',
+      'properties',
+      'feasibility',
+      'properties',
+      'technologyApproach',
+      'properties',
+    )
+    expect(technologyApproachProperties).toMatchObject({
+      approaches: {
+        type: 'array',
+        uniqueItems: true,
+        items: {
+          enum: [
+            'agentic-user-support',
+            'unstructured-content-processing',
+            'code-development',
+            'computer-use',
+            'live-event-monitoring',
+            'intelligent-search',
+            'agentic-research-support',
+            'data-metadata-curation',
+            'analysis-pipeline-orchestration',
+            'experiment-protocol-design',
+            'simulation-parameter-optimization',
+            'laboratory-workflow-coordination',
+            'other',
+          ],
+        },
+      },
+      customApproaches: {
+        type: 'array',
+        uniqueItems: true,
+        items: { type: 'string', minLength: 1 },
+      },
+    })
+
+    const feasibilityProperties = property(
+      AAC_CURRENT_SCHEMA,
+      'properties',
+      'developerFeasibility',
+      'properties',
+    )
+    expect(feasibilityProperties).toMatchObject({
+      solutionsToResearch: { type: 'string' },
+      constraintFlags: {
+        type: 'array',
+        uniqueItems: true,
+        items: {
+          enum: [
+            'large-data',
+            'cluster-compute',
+            'large-gpu',
+            'personal-data',
+            'valuable-ip',
+            'external-system-integration',
+            'restricted-processing-environment',
+            'real-time',
+            'regulated-or-high-impact',
+            'procurement-or-licensing',
+          ],
+        },
+      },
+      buildTeamStatus: { enum: ['none', 'possible', 'committed'] },
+      maintenanceOwnerStatus: { enum: ['none', 'possible', 'committed'] },
+    })
+  })
+
+  it('defines classified and unclassified benefit branches', () => {
+    const benefit = property(AAC_CURRENT_SCHEMA, '$defs', 'Benefit')
+    expect(benefit.oneOf).toEqual([
+      { $ref: '#/$defs/ClassifiedBenefit' },
+      { $ref: '#/$defs/UnclassifiedBenefit' },
+    ])
+
+    const classifiedBenefit = property(AAC_CURRENT_SCHEMA, '$defs', 'ClassifiedBenefit')
+    expect(classifiedBenefit.properties).toMatchObject({
+      description: { type: 'string', minLength: 1 },
+    })
+
+    const unclassifiedBenefit = property(AAC_CURRENT_SCHEMA, '$defs', 'UnclassifiedBenefit')
+    expect(unclassifiedBenefit).toMatchObject({
+      required: ['benefitType'],
+      minProperties: 2,
+      additionalProperties: false,
+      properties: {
+        benefitType: { const: 'unclassified' },
+        description: { type: 'string', minLength: 1 },
+        metricLabel: { type: 'string', minLength: 1 },
+      },
+    })
+  })
+
   it('describes milestones with the current object shape', () => {
     const milestoneItems = property(
       AAC_CURRENT_SCHEMA,

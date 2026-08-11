@@ -183,6 +183,7 @@ describe('tolerant current-model RO-Crate import', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const crate = structuredClone(nonCurrentCrate)
     Object.assign(crate['@graph'][2], {
+      'aac:problemFrequency': 'constantly',
       'aac:primaryValueDriver': 'sustainability',
       'aac:roughEstimateValue': 'ten',
       hasPlan: { '@id': '#plan' },
@@ -214,6 +215,7 @@ describe('tolerant current-model RO-Crate import', () => {
     expect(result.canvasData.project.title).toBe('Recoverable legacy project')
     expect(result.diagnostics).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({ path: '/project/problemFrequency' }),
         expect.objectContaining({ path: '/project/primaryValueDriver' }),
         expect.objectContaining({ path: '/project/roughEstimateValue' }),
         expect.objectContaining({ path: '/userExpectations/requirements/0/priority' }),

@@ -32,7 +32,11 @@ export const exampleData: CanvasData = {
   ],
   project: {
     title: 'Automated Document Processing System',
-    description: 'A system that automatically processes, categorizes, and routes incoming documents to reduce manual handling time and improve accuracy. The system uses AI to extract key information, classify document types, and route them to appropriate team members.',
+    description: 'Operations staff manually inspect, categorize, and route every incoming document. Diverse formats and sensitive content make the work slow, error-prone, and difficult to prioritize consistently.',
+    problemFrequency: 'daily',
+    problemExamples: [
+      'Yesterday an urgent contract amendment was routed to the wrong team after its category was copied incorrectly, delaying review by one business day.',
+    ],
     objective: 'Reduce document processing time by 60% and eliminate manual data entry errors',
     projectStage: 'Development',
     startDate: '2024-01-15',
@@ -40,7 +44,8 @@ export const exampleData: CanvasData = {
     domain: ['Business Process Automation', 'Document Management'],
     keywords: ['automation', 'document processing', 'AI', 'workflow'],
     projectId: 'https://example.org/projects/doc-processing-2024',
-    headlineValue: 'Saves time through automated document processing',
+    leadOrganization: 'Operations Department',
+    headlineValue: 'Document volume is growing while the operations team cannot add more manual review capacity.',
     primaryValueDriver: 'time',
     roughEstimateValue: 40,
     roughEstimateUnit: 'hours/month',
@@ -87,6 +92,8 @@ export const exampleData: CanvasData = {
           modelCardUri: 'https://platform.openai.com/docs/models/gpt-4o',
           technologyApproach: {
             architecture: 'agents',
+            approaches: ['agentic-user-support', 'unstructured-content-processing', 'computer-use', 'other'],
+            customApproaches: ['Human-in-the-loop exception routing'],
             agenticDetails: {
               framework: ['ReAct', 'MCP'],
               tools: ['document_parser', 'schema_validator', 'external_api', 'database_query'],
@@ -177,6 +184,14 @@ export const exampleData: CanvasData = {
             confidenceUser: 'medium',
             confidenceDev: 'medium',
             assumptions: 'Experienced staff already have low compliance incident rates. Automation provides incremental improvement through consistent policy enforcement.',
+          },
+          {
+            benefitType: 'unclassified',
+            description: 'Urgent documents reach the responsible team sooner',
+          },
+          {
+            benefitType: 'unclassified',
+            metricLabel: 'Median time from document receipt to correct assignment',
           },
         ],
       },
@@ -552,6 +567,15 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
     technicalRisk: 'medium',
     effortEstimate: { value: 20, unit: 'weeks' },
     feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats. Different tasks require different approaches - extraction needs extensive agentic capabilities, while categorization can be deterministic.',
+    solutionsToResearch: 'Evaluate existing document-management products and managed extraction services before building custom orchestration.',
+    constraintFlags: [
+      'personal-data',
+      'valuable-ip',
+      'external-system-integration',
+      'restricted-processing-environment',
+    ],
+    buildTeamStatus: 'committed',
+    maintenanceOwnerStatus: 'possible',
   },
   governance: {
     stages: [

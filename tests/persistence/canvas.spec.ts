@@ -198,6 +198,30 @@ describe('canvas storage boundary', () => {
     expect(readPersistedCanvas()).toBeUndefined()
   })
 
+  it('leaves an experimental v2 browser draft untouched and surfaces a notice', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const legacyDraft = JSON.stringify({
+      format: 'aac-v2',
+      projectTitle: 'Legacy draft',
+      answers: { recent_case: 'Do not discard this answer.' },
+    })
+    localStorage.setItem('aac-v2-canvas-draft', legacyDraft)
+
+    expect(readPersistedCanvas()).toEqual({
+      diagnostics: [expect.objectContaining({
+        source: 'persistence',
+        code: 'persistence.legacyV2DraftUnsupported',
+        path: '/aac-v2-canvas-draft',
+      })],
+    })
+    expect(localStorage.getItem('aac-v2-canvas-draft')).toBe(legacyDraft)
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining('[persistence.legacyV2DraftUnsupported]'),
+      expect.objectContaining({ code: 'persistence.legacyV2DraftUnsupported' }),
+    )
+    warn.mockRestore()
+  })
+
   it('round-trips a canvas through save and read', () => {
     savePersistedCanvas(canvas)
 

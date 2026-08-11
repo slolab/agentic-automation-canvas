@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://w3id.org/aac/schema/rocrate-profile.json",
-  "title": "AAC RO-Crate Profile 0.17.0",
-  "description": "Structural profile for RO-Crates exported from AAC schema 0.17.0.",
+  "title": "AAC RO-Crate Profile 0.17.1",
+  "description": "Structural profile for RO-Crates exported from AAC schema 0.17.1.",
   "type": "object",
   "required": [
     "@context",
@@ -108,13 +108,13 @@
                 "format": "date"
               },
               "aac:schemaVersion": {
-                "const": "0.17.0"
+                "const": "0.17.1"
               },
               "conformsTo": {
                 "type": "object",
                 "properties": {
                   "@id": {
-                    "const": "https://w3id.org/aac/profile/0.17.0"
+                    "const": "https://w3id.org/aac/profile/0.17.1"
                   }
                 },
                 "required": [
@@ -136,5 +136,5 @@
     }
   },
   "additionalProperties": false,
-  "$comment": "Current AAC RO-Crate profile alias for 0.17.0; exact profile: https://w3id.org/aac/profile/0.17.0"
+  "$comment": "Current AAC RO-Crate profile alias for 0.17.1; exact profile: https://w3id.org/aac/profile/0.17.1"
 }

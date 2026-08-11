@@ -24,11 +24,11 @@ npm run typecheck        # check application and UI logic against generated type
 
 ## When Do You Need Validation?
 
-**If you use the web form**: Validation happens automatically! The web form validates your data as you fill it out and prevents download if there are validation errors. You don't need to validate separately.
+**If you use the web canvas**: Validation and simplified-prompt checks happen automatically. A normal export is validated strictly against the current schema. If required simplified prompts are unanswered, the canvas can also be exported explicitly as a partial draft after confirmation. Partial exports are marked as such and do not claim conformance to the current AAC RO-Crate profile.
 
 **Use the validator tool if you**:
 
-- Work with canvas JSON files directly (not through the web form)
+- Work with canvas JSON files directly (not through the web canvas)
 - Build integrations or tools that process canvas data
 - Want to validate examples or test data
 - Set up CI/CD pipelines to validate canvas files
@@ -73,8 +73,8 @@ This will:
 
 **Note:** The examples directory contains both:
 
-- **Canvas JSON files** (e.g., `minimal-canvas.json`, `complete-canvas.json`) - These are validated against the schema. This is the internal format used by the web form.
-- **RO-Crate files** (e.g., `minimal-example.json`, `complete-example.json`) - These are skipped by the validator. RO-Crate is the packaged format you download from the web form, which follows the RO-Crate specification and is validated separately.
+- **Canvas JSON files** (e.g., `minimal-canvas.json`, `complete-canvas.json`) - These are validated against the schema. This is the internal format used by the web canvas.
+- **RO-Crate files** (e.g., `minimal-example.json`, `complete-example.json`) - These are skipped by this canvas JSON validator. RO-Crate is the packaged download format and has a separate structural profile test in `tests/rocrate/profile.spec.ts`.
 
 #### Validate a Specific File
 
@@ -109,7 +109,7 @@ except jsonschema.ValidationError as e:
 **Note:**
 
 - Make sure you're validating canvas JSON files (like `minimal-canvas.json`), not RO-Crate files (like `minimal-example.json`). RO-Crate files have a different structure with `@context` and `@graph` properties.
-- If you downloaded an RO-Crate from the web form, you don't need to validate it separately—the web form already validated the data before export.
+- A normal RO-Crate export has already passed current-schema validation. An explicitly marked partial export has not: finish the unanswered prompts and create a normal export before treating it as AAC-profile-conformant.
 - Use canvas JSON validation when working with canvas data programmatically or validating examples.
 
 ### Integration with CI/CD
@@ -186,14 +186,30 @@ that alias and `npm run schema:check` guarantees that it matches the manifest se
 
 ### In the Web Form
 
-The web form validates current data automatically:
+The web canvas validates current data automatically:
 
-- **Real-time validation**: As you fill out the form, fields are validated
-- **Download protection**: The "Download RO-Crate" button is disabled if there are validation errors
-- **Pre-download check**: Before generating the RO-Crate, the form runs comprehensive validation and blocks export if critical errors are found
+- **Real-time validation**: As you work, fields are validated
+- **Download availability**: A project title is required before the "Download RO-Crate" button is enabled
+- **Simplified-prompt check**: If simplified prompts are unanswered, download opens a confirmation that offers either continued editing or an explicit partial export
+- **Pre-download check**: A normal export runs comprehensive current-schema validation and is blocked if validation errors are found
 - **Warnings**: Non-critical issues show warnings but allow export (with user confirmation)
 
-**Result**: If you successfully download an RO-Crate from the web form, it's already validated and conforms to the schema.
+**Result**: A normal export has passed current-schema validation and claims the current AAC RO-Crate profile. A partial export is a recoverable draft, not a conformant AAC profile artifact.
+
+#### Partial exports
+
+Partial export is an explicit escape hatch for saving or sharing work in progress. When a
+project has a title but simplified prompts remain unanswered, the user can confirm
+**Export anyway** in the unanswered-prompts dialog. A partial crate:
+
+- sets `aac:partialCanvas` to `true` on the root dataset
+- retains `aac:schemaVersion` so importers can interpret the AAC vocabulary version
+- omits the current AAC profile `conformsTo` claim
+- identifies itself as partial and non-conformant in its README
+
+Partial crates remain importable on a best-effort basis. They may be incomplete or invalid
+under the current canvas schema, so downstream systems must not infer AAC profile
+conformance from `aac:schemaVersion` alone.
 
 ### When Importing an Older or Malformed Crate
 
@@ -205,22 +221,22 @@ the canvas from opening: the tool displays whatever could be recovered. Historic
 versions have no lossless or version-specific compatibility guarantee.
 
 This tolerant behavior does not make the imported file valid under the current schema.
-Before a new crate can be exported, the recovered canvas must pass strict current-schema
-validation.
+Before a normal, profile-conformant crate can be exported, the recovered canvas must pass
+strict current-schema validation. It can instead be saved deliberately as another marked
+partial draft.
 
 ### Incomplete Drafts
 
-Reopening a saved canvas uses the same recovery path. Fields you have not filled in yet
-are left exactly as you left them and are never reported as import notices: adding a task
-and reloading the page before typing its title keeps the task. Those fields are still
-reported as validation errors in the form, and they still block download, until you
-complete them.
+Reopening a saved canvas uses the same recovery path. Incomplete fields that can be
+represented by the current model are retained and may be reported as unanswered or invalid
+in the form. They block a normal conformant export until you complete them, but they can be
+preserved in an explicitly confirmed partial export.
 
 ### With the Validator Tool
 
 Use the validator tool when:
 
-- You have canvas JSON files created outside the web form
+- You have canvas JSON files created outside the web canvas
 - You're building tools that process canvas data
 - You want to validate examples or test data
 - You need CI/CD validation
@@ -229,7 +245,7 @@ Use the validator tool when:
 
 If you encounter validation errors:
 
-1. **Using the web form**: Check the validation messages shown in the form. The form will highlight fields with errors.
+1. **Using the web canvas**: Check the validation messages shown in the application. Detailed views and partial-export checks surface fields that need attention.
 2. **Using the validator tool**: 
    - Check the [schema reference](reference/index.md) for field requirements
    - Review the [examples](examples/index.md) for usage patterns

@@ -41,10 +41,10 @@ The AAC schema follows [Semantic Versioning](https://semver.org/) (SemVer) indep
 
 - **MAJOR** version (X.0.0): Breaking changes that are incompatible with previous versions
 - **MINOR** version (0.X.0): Pre-release versions (beta/alpha), may include breaking changes
-- **PATCH** version (0.0.X): Bug fixes and documentation updates
+- **PATCH** version (0.0.X): Backward-compatible bug fixes and documentation updates; documented beta exceptions may add optional fields
 
 !!! warning "Beta Versions (0.x.x)"
-    Versions starting with `0.` (e.g., 0.17.0) are considered **beta releases**. During the beta phase:
+    Versions starting with `0.` (e.g., 0.17.1) are considered **beta releases**. During the beta phase:
 
     - Breaking changes may occur between minor versions (0.10 → 0.11)
     - Feedback and testing are encouraged
@@ -82,6 +82,11 @@ Patch version increments fix bugs and update documentation:
 - Example corrections
 
 **Compatibility**: Patch versions are fully backward compatible within the same minor version.
+
+!!! note "0.17.1 Beta Patch Exception"
+    Version 0.17.1 also adds optional simplified-canvas fields and an unclassified benefit
+    branch. This additive change is a documented beta exception to the normal patch policy.
+    It does not invalidate documents that conform to 0.17.0.
 
 ## Deprecation Policy
 
@@ -155,7 +160,7 @@ If the agentic system processes PHI or other sensitive personal data:
 
 ### Custom Fields
 
-AAC schema `0.17.0` rejects undeclared properties and does not preserve them during current-model recovery. Evaluation `metrics` is the sole intentionally open dictionary for metric-specific values. New interoperable fields require a new versioned AAC schema.
+AAC schema `0.17.1` rejects undeclared properties and does not preserve them during current-model recovery. Evaluation `metrics` is the sole intentionally open dictionary for metric-specific values. New interoperable fields require a new versioned AAC schema.
 
 ### Controlled Vocabularies
 

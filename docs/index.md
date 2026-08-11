@@ -2,7 +2,7 @@
 
 !!! warning "Beta Release"
     **Application release 0.16.0 (Beta)**: The application is currently in beta testing. <!-- x-release-please-version -->
-    Its current AAC data contract is independently versioned as schema **0.17.0**. Both may
+    Its current AAC data contract is independently versioned as schema **0.17.1**. Both may
     change before their stable 1.0.0 releases. Feedback and contributions are welcome!
 
 The **Agentic Automation Canvas (AAC)** is a framework for designing and documenting agentic automation solutions driven by generative AI. Agentic systems are designed to replace human judgment in a reliable way, requiring a control inversion where the system takes command of tasks while humans step back accordingly. The AAC provides a structured approach to capture project metadata, user expectations, feasibility considerations, governance requirements, and outcomes—all while generating machine-readable outputs that integrate with FAIR Digital Object ecosystems.
@@ -13,9 +13,9 @@ The canvas serves simultaneously as a framework for implementation, a checklist 
 
 1. **Write a canvas**: Use the [interactive web application](https://slolab.github.io/agentic-automation-canvas/) to fill out your agentic automation canvas, capturing project details, requirements, feasibility, governance, and outcomes.
 
-2. **Validate**: The web form validates your data automatically as you fill it out. If you're working with canvas JSON files directly (outside the web form), use the [validator](validator.md) to ensure compliance with the AAC specification.
+2. **Validate**: The web canvas validates your data automatically as you work. If you're working with canvas JSON files directly (outside the application), use the [validator](validator.md) to ensure compliance with the AAC specification.
 
-3. **Download**: Download your completed canvas as an RO-Crate package (ZIP file). The web form exports your data as a standards-compliant RO-Crate that can be shared, archived, and integrated with research infrastructure following FAIR principles. Each export includes an **AI-ready `AGENTS.md`** file that translates your canvas specification into structured instructions for AI coding agents, so you can use the canvas directly as a project brief for tools like GitHub Copilot or Cursor.
+3. **Download**: Download your completed canvas as an RO-Crate package (ZIP file). The application exports your data as a standards-compliant RO-Crate that can be shared, archived, and integrated with research infrastructure following FAIR principles. Each export includes an **AI-ready `AGENTS.md`** file that translates your canvas specification into structured instructions for AI coding agents, so you can use the canvas directly as a project brief for tools like GitHub Copilot or Cursor.
 
 ## Canonical Identifiers
 

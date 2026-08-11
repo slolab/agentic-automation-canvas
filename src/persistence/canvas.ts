@@ -12,6 +12,7 @@ import { isCurrentCanvas } from '@/schema/validation'
 import type { CanvasData } from '@/types/canvas'
 
 const CANVAS_STORAGE_KEY = 'agentic-automation-canvas-data'
+const LEGACY_V2_STORAGE_KEY = 'aac-v2-canvas-draft'
 
 export interface PersistedCanvasLoadResult {
   canvasData?: CanvasData
@@ -67,6 +68,17 @@ export function readPersistedCanvas(): PersistedCanvasLoadResult | undefined {
   let stored: string | null
   try {
     stored = localStorage.getItem(CANVAS_STORAGE_KEY)
+    if (stored === null && localStorage.getItem(LEGACY_V2_STORAGE_KEY) !== null) {
+      const diagnostic: Diagnostic = {
+        severity: 'warning',
+        source: 'persistence',
+        code: 'persistence.legacyV2DraftUnsupported',
+        path: `/${LEGACY_V2_STORAGE_KEY}`,
+        message: 'An experimental AAC v2 browser draft is still stored locally. Its prompt answers cannot be mapped losslessly, so the draft was left untouched.',
+      }
+      logDiagnostics([diagnostic])
+      return { diagnostics: [diagnostic] }
+    }
   } catch (error) {
     console.warn('Failed to load canvas data from storage:', error)
     return undefined

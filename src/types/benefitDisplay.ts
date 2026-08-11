@@ -4,7 +4,7 @@
  */
 
 import { isRecord } from '@/json'
-import type { Benefit } from '@/types/canvas'
+import type { ClassifiedBenefit } from '@/types/canvas'
 
 /** Slot-count bounds for the dashboard's benefit display groups. */
 export const MIN_DISPLAY_GROUPS = 1
@@ -18,7 +18,7 @@ export interface BenefitRef {
 
 export interface BenefitDisplayGroup {
   id: number
-  benefitType: Benefit['benefitType']
+  benefitType: ClassifiedBenefit['benefitType']
   metricId: string
   benefitRefs: BenefitRef[]
 }
@@ -48,7 +48,7 @@ const benefitTypes = {
   risk: true,
   enablement: true,
   cost: true,
-} as const satisfies Record<Benefit['benefitType'], true>
+} as const satisfies Record<ClassifiedBenefit['benefitType'], true>
 
 /** Runtime guard for the explicitly app-only presentation exception. */
 export function isBenefitDisplayState(value: unknown): value is BenefitDisplayState {

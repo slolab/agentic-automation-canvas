@@ -438,7 +438,7 @@
               <span :class="benefitTypeBadgeClass(benefit.benefitType)" class="px-2 py-1 rounded text-xs font-medium">
                 {{ benefit.benefitType.charAt(0).toUpperCase() + benefit.benefitType.slice(1) }}
               </span>
-              <span class="text-sm font-medium text-gray-900">{{ getMetricDisplayLabel(benefit.benefitType, benefit.metricId, benefit.metricLabel) || benefit.metricLabel }}</span>
+              <span class="text-sm font-medium text-gray-900">{{ getBenefitLabel(benefit) }}</span>
             </div>
             <div class="text-sm text-gray-600">
               {{ formatBenefitValueDisplay(benefit) }}
@@ -484,6 +484,7 @@ import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefit
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { parseTimeUnit } from '@/utils/timeUnitConversion'
 import { getMonthlyDeploymentCost, formatDeploymentCost } from '@/utils/deploymentCost'
+import { isBenefitOfType, isUnclassifiedBenefit } from '@/utils/benefits'
 
 interface Props {
   requirement: Requirement
@@ -573,6 +574,15 @@ const benefitTypes = computed(() => {
   return Array.from(types)
 })
 
+function getBenefitLabel(benefit: Benefit): string {
+  if (isUnclassifiedBenefit(benefit)) {
+    if (benefit.description?.trim()) return 'Expected benefit'
+    if (benefit.metricLabel?.trim()) return 'Success metric'
+    return 'Unclassified benefit'
+  }
+  return getMetricDisplayLabel(benefit.benefitType, benefit.metricId, benefit.metricLabel) || benefit.metricLabel
+}
+
 // Volume band helper: dynamic hint based on volume bands
 const volumeBandHelper = computed(() => {
   const v = props.requirement.volumePerMonth
@@ -584,14 +594,14 @@ const volumeBandHelper = computed(() => {
 
 // Get time benefit for calculations
 const timeBenefit = computed(() => {
-  return benefits.value.find(b => b.benefitType === 'time')
+  return benefits.value.find(b => isBenefitOfType(b, 'time'))
 })
 
 // Calculate maximum total time saved across all tasks for normalization (baseline − expected) × volume
 const maxTotalTimeSaved = computed(() => {
   if (allRequirements.value.length === 0) return 0
   return Math.max(...allRequirements.value.map(req => {
-    const timeBen = (req.benefits || []).find(b => b.benefitType === 'time')
+    const timeBen = (req.benefits || []).find(b => isBenefitOfType(b, 'time'))
     if (!timeBen) return 0
     const savedPerUnit = getTimeSavedPerUnit(timeBen, req)
     const volume = req.volumePerMonth || 0
@@ -707,7 +717,7 @@ function openBenefitsModal() {
 // Save benefits from modal
 function saveBenefits(newBenefits: Benefit[]) {
   // Determine time unit from time benefits
-  const timeBenefits = newBenefits.filter(b => b.benefitType === 'time')
+  const timeBenefits = newBenefits.filter(b => isBenefitOfType(b, 'time'))
   let timeUnit: 'minutes' | 'hours' | undefined = props.requirement.timeUnit
   
   if (timeBenefits.length > 0) {

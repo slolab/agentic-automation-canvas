@@ -1,6 +1,6 @@
 /**
  * Shared logic for generating a one-page canvas summary (BMC-style).
- * Used by both the web app CanvasSummary component and RO-Crate HTML preview.
+ * Used by both the web app SimplifiedCanvas component and RO-Crate HTML preview.
  */
 
 import type { CanvasData, Requirement } from '@/types/canvas'

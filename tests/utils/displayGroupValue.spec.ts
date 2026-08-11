@@ -139,6 +139,20 @@ describe('formatDisplayGroupValue', () => {
     expect(formatDisplayGroupValue(group, reqs)).toBe('50 min saved/month')
   })
 
+  it('ignores an unclassified benefit referenced by a classified display group', () => {
+    const reqs: Requirement[] = [
+      req('r1', 10, [{ benefitType: 'unclassified', description: 'Save time' }]),
+    ]
+    const group: BenefitDisplayGroup = {
+      id: 0,
+      benefitType: 'time',
+      metricId: 'processingTime',
+      benefitRefs: [{ requirementId: 'r1', benefitIndex: 0 }],
+    }
+
+    expect(formatDisplayGroupValue(group, reqs)).toBe('—')
+  })
+
   it('resolves requirement by id or fallback req-{i}', () => {
     const reqNoId: Requirement = { id: 'req-0', title: '', benefits: [timeBenefit(10, 3)], volumePerMonth: 10 }
     const reqs: Requirement[] = [{ ...reqNoId }]

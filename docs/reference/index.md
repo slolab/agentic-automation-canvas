@@ -19,9 +19,9 @@ This section provides detailed reference documentation for all types and propert
 | `version` | string | No | Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/). | Pattern: `^\d+\.\d+\.\d+(-[\w\-]+)?(\+[\w\-]+)?$` | AAC |
 | `versionDate` | string | No | Date when the version was downloaded or created (ISO date format) | Format: `date` | AAC |
 
-## Benefit
+## ClassifiedBenefit
 
-A benefit metric for a requirement
+A quantified and classified benefit metric for a requirement
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
@@ -32,6 +32,7 @@ A benefit metric for a requirement
 | `benefitUnit` | string | Yes | Unit for the benefit value (e.g., 'minutes', '%', 'incidents/month') |  | AAC |
 | `confidenceDev` | string | No | Developer's confidence in the benefit estimate | Enum: `low`, `medium`, `high` | AAC |
 | `confidenceUser` | string | No | User's confidence in the benefit estimate | Enum: `low`, `medium`, `high` | AAC |
+| `description` | string | No | Original free-form benefit description, retained when a simplified-canvas benefit is classified | Min length: 1 | Schema.org |
 | `direction` | string | Yes | Indicates whether higher values, lower values, hitting a target, or boolean true is the desired outcome | Enum: `increaseIsBetter`, `decreaseIsBetter`, `targetIsBetter`, `boolIsBetter` | AAC |
 | `expected` | BenefitValue | Yes |  |  | AAC |
 | `metricId` | string | Yes | Identifier for the metric (controlled vocabulary or 'custom') |  | AAC |
@@ -55,6 +56,16 @@ A risk assessment for a requirement, paralleling benefit metrics
 | `riskCategory` | string | Yes | Category of risk | Enum: `technical`, `data`, `compliance`, `operational`, `ethical`, `adoption` | AAC |
 | `status` | string | Yes | Current status of the risk | Enum: `identified`, `mitigated`, `accepted`, `resolved` | AAC |
 | `title` | string | Yes | Short title for the risk | Min length: 1 | Schema.org |
+
+## UnclassifiedBenefit
+
+A free-form benefit or metric awaiting classification and quantification
+
+| Property | Type | Required | Description | Constraints | Ontology |
+|----------|------|----------|-------------|-------------|----------|
+| `benefitType` | string | Yes | Marks a lightweight simplified-canvas benefit | Constant: `unclassified` | AAC |
+| `description` | string | No | Free-form expected benefit | Min length: 1 | Schema.org |
+| `metricLabel` | string | No | Free-form success metric to quantify later | Min length: 1 | AAC |
 
 ## DataAccess
 
@@ -85,8 +96,12 @@ Project-level feasibility (simple, generic defaults that apply to all tasks unle
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
+| `buildTeamStatus` | string | No | Whether a person or team is available to build the capability | Enum: `none`, `possible`, `committed` | AAC |
+| `constraintFlags` | array of string | No | Lightweight project constraints that require deeper feasibility investigation | Item enum: `large-data`, `cluster-compute`, `large-gpu`, `personal-data`, `valuable-ip`, `external-system-integration`, `restricted-processing-environment`, `real-time`, `regulated-or-high-impact`, `procurement-or-licensing` | AAC |
 | `effortEstimate` | object | No | Overall effort estimate for the project |  | — |
 | `feasibilityNotes` | string | No | Project-level feasibility notes |  | AAC |
+| `maintenanceOwnerStatus` | string | No | Whether a person or team is available to maintain the capability after the first milestone | Enum: `none`, `possible`, `committed` | AAC |
+| `solutionsToResearch` | string | No | Tools, products, services, or other existing solutions that require research |  | AAC |
 | `technicalRisk` | string | No | Overall technical risk for the project | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `trlLevel` | object | No | Technology Readiness Level - project-level maturity assessment |  | — |
 
@@ -217,6 +232,8 @@ Technology Readiness Level - project-level maturity assessment
 | `license` | string | No | License URI for the canvas and its RO-Crate export | Format: `uri` | Schema.org |
 | `objective` | string | No |  |  | Schema.org |
 | `primaryValueDriver` | string | No |  | Enum: `time`, `quality`, `risk`, `enablement`, `cost` | AAC |
+| `problemExamples` | array of string | No | Concrete examples of the problem, beginning with the most recent real case |  | AAC |
+| `problemFrequency` | string | No | Approximate frequency with which the project problem occurs | Enum: `daily`, `weekly`, `monthly`, `few-times-per-year`, `less-than-yearly` | AAC |
 | `projectId` | string | No |  | Format: `uri` | Schema.org |
 | `projectStage` | string | No |  |  | FRAPO |
 | `roughEstimateUnit` | string | No | Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month') |  | AAC |
@@ -236,7 +253,7 @@ Technology Readiness Level - project-level maturity assessment
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `benefits` | array of [Benefit](#benefit) | Yes | Array of benefit metrics for this requirement |  | AAC |
+| `benefits` | array of one of [ClassifiedBenefit](#classifiedbenefit), [UnclassifiedBenefit](#unclassifiedbenefit) | Yes | Array of benefit metrics for this requirement |  | AAC |
 | `dataAccess` | object | No | Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab). |  | — |
 | `dependsOn` | array of string | No | IDs of requirements this task depends on |  | AAC |
 | `description` | string | No |  |  | Schema.org |
@@ -266,7 +283,7 @@ Task-level data access: which datasets this task uses and what the agent may do 
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `agentActions` | array of string | No | What the agent is allowed to do with this dataset |  | AAC |
+| `agentActions` | array of string | No | What the agent is allowed to do with this dataset | Item enum: `read`, `modify`, `process`, `generate` | AAC |
 | `datasetId` | string | Yes | Id of a dataset defined in dataAccess.datasets |  | AAC |
 | `notes` | string | No | Free-text notes on this task-dataset link |  | AAC |
 
@@ -285,7 +302,7 @@ Optional per-task feasibility (overrides project-level defaults)
 | `modelSelection` | string | No | Type of model to be used (if applicable). Set to 'none' if task is deterministic. | Enum: `open-source`, `frontier-model`, `fine-tuned`, `custom`, `other`, `none` | AAC |
 | `risks` | array of [Risk](#risk) | No | Per-task risk assessments paralleling benefits |  | AAC |
 | `technicalRisk` | string | No |  | Enum: `low`, `medium`, `high`, `critical` | AAC |
-| `technologyApproach` | object | No | Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs. |  | — |
+| `technologyApproach` | object | No | Potential agentic use cases and selected technology architecture for this task. Set architecture to 'none' if the task is deterministic and doesn't require LLMs. |  | — |
 | `tools` | array of string | No |  |  | AAC |
 
 ## UserExpectations Requirement Feasibility DeploymentCost
@@ -309,12 +326,14 @@ Estimated deployment/operational cost for running this automated task
 
 ## UserExpectations Requirement Feasibility TechnologyApproach
 
-Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs.
+Potential agentic use cases and selected technology architecture for this task. Set architecture to 'none' if the task is deterministic and doesn't require LLMs.
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `agenticDetails` | object | No |  |  | — |
+| `approaches` | array of string | No | Agentic use-case patterns selected as potential approaches | Item enum: `agentic-user-support`, `unstructured-content-processing`, `code-development`, `computer-use`, `live-event-monitoring`, `intelligent-search`, `agentic-research-support`, `data-metadata-curation`, `analysis-pipeline-orchestration`, `experiment-protocol-design`, `simulation-parameter-optimization`, `laboratory-workflow-coordination`, `other` | AAC |
 | `architecture` | string | No | Primary technology architecture. 'none' indicates deterministic task without LLM requirement. | Enum: `none`, `simple-prompting`, `rag`, `fine-tuning`, `agents`, `other` | AAC |
+| `customApproaches` | array of string | No | User-defined potential approaches entered when the controlled vocabulary is insufficient |  | AAC |
 | `fineTuningDetails` | object | No |  |  | — |
 | `ragDetails` | object | No |  |  | — |
 

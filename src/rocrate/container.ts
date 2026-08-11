@@ -1,4 +1,4 @@
-import JSZip from 'jszip'
+import type JSZip from 'jszip'
 import type { Diagnostic } from '@/diagnostics'
 import { logDiagnostics } from '@/diagnostics'
 import { isBenefitDisplayState, type BenefitDisplayState } from '@/types/benefitDisplay'
@@ -33,8 +33,18 @@ export class ROCrateImportError extends Error {
   }
 }
 
+const LEGACY_V2_DATA_FILE = 'aac-v2.json'
+
 function containerDiagnostic(code: string, path: string, message: string): Diagnostic {
   return { severity: 'error', source: 'ro-crate', code, path, message }
+}
+
+/** Browser file-picker and drop-zone hint; ZIP parsing remains authoritative. */
+export function isZipFile(file: Pick<File, 'name' | 'type'>): boolean {
+  const fileName = file.name.toLowerCase()
+  return fileName.endsWith('.zip')
+    || file.type === 'application/zip'
+    || file.type === 'application/x-zip-compressed'
 }
 
 /** Recover the structured findings an error already carries, or synthesize one. */
@@ -79,7 +89,20 @@ async function readBenefitDisplay(
 /** Read the ZIP container separately from graph parsing and current-model recovery. */
 export async function importROCrateFromZip(file: File): Promise<ImportROCrateResult> {
   try {
+    const { default: JSZip } = await import('jszip')
     const zip = await JSZip.loadAsync(file)
+    if (zip.file(LEGACY_V2_DATA_FILE)) {
+      throw new ROCrateImportError(
+        'This archive was created by the retired experimental AAC v2 canvas and cannot be imported without losing its prompt answers.',
+        [
+          containerDiagnostic(
+            'rocrate.legacyV2Unsupported',
+            `/${LEGACY_V2_DATA_FILE}`,
+            'Legacy AAC v2 prompt answers do not have a lossless mapping to the current canvas schema, so the archive was not imported.',
+          ),
+        ],
+      )
+    }
     const metadataFile = zip.file('ro-crate-metadata.json')
     if (!metadataFile) {
       throw new ROCrateImportError('ro-crate-metadata.json not found in ZIP file', [

@@ -31,12 +31,6 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html'),
-        v2: resolve(__dirname, 'v2/index.html'),
-      },
-    },
   },
   test: {
     globals: false,

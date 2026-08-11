@@ -1,7 +1,7 @@
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AAC_RO_CRATE_PROFILE_ID, AAC_SCHEMA_VERSION } from '@/schema/contract'
-import { ROCrateImportError, importROCrateFromZip } from '@/rocrate/container'
+import { ROCrateImportError, importROCrateFromZip, isZipFile } from '@/rocrate/container'
 
 afterEach(() => {
   vi.restoreAllMocks()
@@ -15,6 +15,12 @@ async function zipWith(files: Record<string, string>): Promise<File> {
 }
 
 describe('RO-Crate ZIP container boundary', () => {
+  it('recognizes ZIPs by extension or browser MIME type', () => {
+    expect(isZipFile({ name: 'canvas.ZIP', type: '' })).toBe(true)
+    expect(isZipFile({ name: 'canvas.bin', type: 'application/zip' })).toBe(true)
+    expect(isZipFile({ name: 'canvas.json', type: 'application/json' })).toBe(false)
+  })
+
   it('reports malformed optional display metadata without blocking the canvas', async () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const zip = new JSZip()
@@ -86,6 +92,43 @@ describe('RO-Crate ZIP container boundary', () => {
 
     await expect(importROCrateFromZip(file)).rejects.toMatchObject({
       diagnostics: [expect.objectContaining({ code: 'rocrate.metadataUnreadable' })],
+    })
+  })
+
+  it('rejects a legacy v2 archive instead of silently discarding its prompt answers', async () => {
+    const file = await zipWith({
+      'aac-v2.json': JSON.stringify({
+        format: 'aac-v2',
+        frameworkVersion: '2.0-draft.5',
+        projectTitle: 'Legacy discovery brief',
+        answers: { recent_case: 'A concrete answer that must not disappear.' },
+      }),
+      'ro-crate-metadata.json': JSON.stringify({
+        '@context': 'https://w3id.org/ro/crate/1.2/context',
+        '@graph': [
+          {
+            '@id': 'ro-crate-metadata.json',
+            '@type': 'CreativeWork',
+            about: { '@id': './' },
+          },
+          {
+            '@id': './',
+            '@type': 'Dataset',
+            name: 'Legacy discovery brief',
+            hasPart: { '@id': 'aac-v2.json' },
+          },
+        ],
+      }),
+    })
+
+    await expect(importROCrateFromZip(file)).rejects.toMatchObject({
+      diagnostics: [
+        expect.objectContaining({
+          severity: 'error',
+          code: 'rocrate.legacyV2Unsupported',
+          path: '/aac-v2.json',
+        }),
+      ],
     })
   })
 })

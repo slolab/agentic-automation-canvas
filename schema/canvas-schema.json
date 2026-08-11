@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://w3id.org/aac/schema/aac.schema.json",
   "title": "CanvasData",
-  "description": "Version 0.17.0 JSON Schema for Agentic Automation Canvas data.",
+  "description": "Version 0.17.1 JSON Schema for Agentic Automation Canvas data.",
   "type": "object",
   "required": [
     "project"
@@ -75,6 +75,25 @@
         "description": {
           "type": "string",
           "minLength": 1
+        },
+        "problemFrequency": {
+          "type": "string",
+          "enum": [
+            "daily",
+            "weekly",
+            "monthly",
+            "few-times-per-year",
+            "less-than-yearly"
+          ],
+          "description": "Approximate frequency with which the project problem occurs"
+        },
+        "problemExamples": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Concrete examples of the problem, beginning with the most recent real case"
         },
         "objective": {
           "type": "string"
@@ -368,7 +387,7 @@
                   },
                   "technologyApproach": {
                     "type": "object",
-                    "description": "Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs.",
+                    "description": "Potential agentic use cases and selected technology architecture for this task. Set architecture to 'none' if the task is deterministic and doesn't require LLMs.",
                     "properties": {
                       "architecture": {
                         "type": "string",
@@ -381,6 +400,38 @@
                           "other"
                         ],
                         "description": "Primary technology architecture. 'none' indicates deterministic task without LLM requirement."
+                      },
+                      "approaches": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "enum": [
+                            "agentic-user-support",
+                            "unstructured-content-processing",
+                            "code-development",
+                            "computer-use",
+                            "live-event-monitoring",
+                            "intelligent-search",
+                            "agentic-research-support",
+                            "data-metadata-curation",
+                            "analysis-pipeline-orchestration",
+                            "experiment-protocol-design",
+                            "simulation-parameter-optimization",
+                            "laboratory-workflow-coordination",
+                            "other"
+                          ]
+                        },
+                        "description": "Agentic use-case patterns selected as potential approaches"
+                      },
+                      "customApproaches": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": "User-defined potential approaches entered when the controlled vocabulary is insufficient"
                       },
                       "ragDetails": {
                         "type": "object",
@@ -565,6 +616,48 @@
         "feasibilityNotes": {
           "type": "string",
           "description": "Project-level feasibility notes"
+        },
+        "solutionsToResearch": {
+          "type": "string",
+          "description": "Tools, products, services, or other existing solutions that require research"
+        },
+        "constraintFlags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "enum": [
+              "large-data",
+              "cluster-compute",
+              "large-gpu",
+              "personal-data",
+              "valuable-ip",
+              "external-system-integration",
+              "restricted-processing-environment",
+              "real-time",
+              "regulated-or-high-impact",
+              "procurement-or-licensing"
+            ]
+          },
+          "description": "Lightweight project constraints that require deeper feasibility investigation"
+        },
+        "buildTeamStatus": {
+          "type": "string",
+          "enum": [
+            "none",
+            "possible",
+            "committed"
+          ],
+          "description": "Whether a person or team is available to build the capability"
+        },
+        "maintenanceOwnerStatus": {
+          "type": "string",
+          "enum": [
+            "none",
+            "possible",
+            "committed"
+          ],
+          "description": "Whether a person or team is available to maintain the capability after the first milestone"
         }
       },
       "title": "DeveloperFeasibility",
@@ -999,8 +1092,20 @@
       "title": "BenefitValue"
     },
     "Benefit": {
+      "description": "A classified benefit metric or an unclassified benefit captured by the simplified canvas",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ClassifiedBenefit"
+        },
+        {
+          "$ref": "#/$defs/UnclassifiedBenefit"
+        }
+      ],
+      "title": "Benefit"
+    },
+    "ClassifiedBenefit": {
       "type": "object",
-      "description": "A benefit metric for a requirement",
+      "description": "A quantified and classified benefit metric for a requirement",
       "properties": {
         "benefitType": {
           "type": "string",
@@ -1020,6 +1125,11 @@
         "metricLabel": {
           "type": "string",
           "description": "Human-readable label for the metric"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Original free-form benefit description, retained when a simplified-canvas benefit is classified"
         },
         "direction": {
           "type": "string",
@@ -1123,7 +1233,33 @@
           "target"
         ]
       },
-      "title": "Benefit",
+      "title": "ClassifiedBenefit",
+      "additionalProperties": false
+    },
+    "UnclassifiedBenefit": {
+      "type": "object",
+      "description": "A free-form benefit or metric awaiting classification and quantification",
+      "properties": {
+        "benefitType": {
+          "const": "unclassified",
+          "description": "Marks a lightweight simplified-canvas benefit"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free-form expected benefit"
+        },
+        "metricLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free-form success metric to quantify later"
+        }
+      },
+      "required": [
+        "benefitType"
+      ],
+      "minProperties": 2,
+      "title": "UnclassifiedBenefit",
       "additionalProperties": false
     },
     "Risk": {
@@ -1206,5 +1342,5 @@
     }
   },
   "additionalProperties": false,
-  "$comment": "Current AAC schema alias for 0.17.0; exact schema: https://w3id.org/aac/schema/0.17.0/aac.schema.json"
+  "$comment": "Current AAC schema alias for 0.17.1; exact schema: https://w3id.org/aac/schema/0.17.1/aac.schema.json"
 }

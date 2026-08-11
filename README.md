@@ -4,7 +4,7 @@
 
 > [!WARNING]
 > **Application release 0.16.0 (Beta)**: The application is currently in beta testing. <!-- x-release-please-version -->
-> Its current AAC data contract is independently versioned as schema **0.17.0**. Both may
+> Its current AAC data contract is independently versioned as schema **0.17.1**. Both may
 > change before their stable 1.0.0 releases. Feedback and contributions are welcome!
 
 Using agentic systems driven by generative AI is a promising approach to processing efficiency. However, developing these systems is challenging in several ways. By design, they are meant to replace human judgment, hopefully in a reliable way; this implies that there needs to be a control inversion, allowing the system to take command of the task, while the human has to step back accordingly.
@@ -25,7 +25,7 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 
 ## Features
 
-- **Interactive Form**: Modern, accessible Vue.js interface for capturing project metadata
+- **Visual Canvas**: A one-screen, two-dimensional project canvas backed by the same structured data as the detailed views
 - **Standards-Compliant**: Generates RO-Crate packages following W3C and Schema.org standards
 - **Comprehensive Coverage**: Captures project definition, user expectations, feasibility, governance, data access, and outcomes
 - **AI-Ready Export**: Every RO-Crate includes an `AGENTS.md` file that translates the canvas specification into structured instructions for AI coding agents (GitHub Copilot, Cursor, and other LLM-based assistants), bridging the gap between project design and implementation
@@ -35,10 +35,6 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 ## Quick Start
 
 Visit the [live application](https://aac.slolab.ai) to start filling out your canvas.
-
-An independent [AAC v2 field test](https://aac.slolab.ai/v2/) is also available for
-45-minute consulting conversations that establish the project foundation before an MVP
-is defined. It does not replace the current canvas or its schema.
 
 ## Development
 

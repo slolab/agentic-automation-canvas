@@ -20,6 +20,7 @@ import type {
   TaskDatasetLink,
 } from '@/types/canvas'
 import { isRecord } from '@/json'
+import { AAC_CURRENT_SCHEMA } from '@/schema/contract'
 import {
   readBoolean,
   readEntityReference,
@@ -96,6 +97,15 @@ const PRIMARY_VALUE_DRIVERS = {
   NonNullable<CanvasData['project']['primaryValueDriver']>,
   true
 >
+
+type ProblemFrequency = NonNullable<CanvasData['project']['problemFrequency']>
+
+const problemFrequencySchemaValues: readonly string[] =
+  AAC_CURRENT_SCHEMA.properties.project.properties.problemFrequency['enum']
+
+const PROBLEM_FREQUENCIES = Object.fromEntries(
+  problemFrequencySchemaValues.map((value) => [value, true]),
+) as Readonly<Record<ProblemFrequency, true>>
 
 const REQUIREMENT_PRIORITIES = {
   low: true,
@@ -263,12 +273,20 @@ function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection
     const fundingRef = readEntityReference(projectEntity['frapo:isFundedBy'])
     const grantEntity = fundingRef ? findEntity(graph, fundingRef['@id']) : undefined
     const primaryValueDriver = projectEntity['aac:primaryValueDriver']
+    const problemFrequency = projectEntity['aac:problemFrequency']
     const creatorRefs = readEntityReferences(projectEntity.creator)
 
     section.project = {
       title: readString(projectEntity.name) || undefined,
-      description: readString(projectEntity.description) || undefined,
+      // Keep an explicitly empty description. Partial exports use the empty
+      // string to represent an unanswered required prompt, and schema recovery
+      // knows how to preserve that in-progress value across a reopen.
+      description: readString(projectEntity.description),
       objective: readString(projectEntity['schema:abstract']) || readString(projectEntity.about) || undefined,
+      problemFrequency: isAllowedValue(problemFrequency, PROBLEM_FREQUENCIES)
+        ? problemFrequency
+        : undefined,
+      problemExamples: readStringArray(projectEntity['aac:problemExamples']),
       projectStage: readString(projectEntity['aac:projectStage']) || undefined,
       startDate: readString(projectEntity.startDate) || undefined,
       endDate: readString(projectEntity.endDate) || undefined,
@@ -291,6 +309,12 @@ function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection
         )
         : undefined,
     }
+    preserveIncompatibleValue(
+      section.project,
+      'problemFrequency',
+      problemFrequency,
+      isAllowedValue(problemFrequency, PROBLEM_FREQUENCIES),
+    )
     preserveIncompatibleValue(
       section.project,
       'primaryValueDriver',

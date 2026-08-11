@@ -7,6 +7,7 @@
       "p-plan": "http://purl.org/net/p-plan#",
       "dct": "http://purl.org/dc/terms/",
       "dcat": "http://www.w3.org/ns/dcat#",
+      "frapo": "http://purl.org/cerif/frapo/",
       "aac": "https://w3id.org/aac/schema/"
     }
   ],
@@ -22,78 +23,168 @@
       }
     },
     {
+      "@id": "https://creativecommons.org/licenses/by/4.0/",
+      "@type": "schema:CreativeWork",
+      "identifier": "https://creativecommons.org/licenses/by/4.0/"
+    },
+    {
       "@id": "./",
-      "@type": ["schema:Dataset", "dcat:Dataset"],
-      "name": "Complete Agentic Automation Canvas Example",
-      "description": "A complete example RO-Crate with all sections populated",
-      "datePublished": "2025-01-30",
-      "license": { "@id": "https://creativecommons.org/licenses/by/4.0/" },
+      "@type": [
+        "schema:Dataset",
+        "dcat:Dataset"
+      ],
+      "name": "Biomedical AI Automation Project",
+      "description": "An agentic automation system for processing biomedical data using AI to reduce manual effort and improve data quality.",
+      "datePublished": "2026-08-11",
+      "aac:schemaVersion": "0.17.1",
+      "conformsTo": {
+        "@id": "https://w3id.org/aac/profile/0.17.1"
+      },
+      "license": {
+        "@id": "https://creativecommons.org/licenses/by/4.0/"
+      },
       "about": {
         "@id": "#project"
       },
+      "aac:version": "0.1.0",
+      "aac:versionDate": "2025-01-30",
+      "aac:developerFeasibility": {
+        "trlLevel": {
+          "current": 4,
+          "target": 7
+        },
+        "technicalRisk": "medium",
+        "effortEstimate": {
+          "value": 28,
+          "unit": "weeks"
+        },
+        "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling.",
+        "solutionsToResearch": "Compare existing biomedical data-processing platforms before commissioning a custom system.",
+        "constraintFlags": [
+          "large-data",
+          "cluster-compute",
+          "personal-data",
+          "valuable-ip"
+        ],
+        "buildTeamStatus": "committed",
+        "maintenanceOwnerStatus": "possible"
+      },
       "hasPart": [
-        { "@id": "#dataset-0" },
-        { "@id": "#outcome-0" },
-        { "@id": "#stage-0" },
-        { "@id": "developer-feasibility.json" }
-      ],
-      "aac:version": "0.2.0",
-      "aac:versionDate": "2025-01-30"
+        {
+          "@id": "#stage-0"
+        },
+        {
+          "@id": "#dataset-0"
+        },
+        {
+          "@id": "#outcome-0"
+        },
+        {
+          "@id": "#pub-1"
+        },
+        {
+          "@id": "#eval-1"
+        },
+        {
+          "@id": "AGENTS.md"
+        }
+      ]
     },
     {
       "@id": "#project",
-      "@type": ["schema:Project", "schema:ResearchProject"],
+      "@type": [
+        "schema:Project",
+        "schema:ResearchProject"
+      ],
       "name": "Biomedical AI Automation Project",
       "description": "An agentic automation system for processing biomedical data using AI to reduce manual effort and improve data quality.",
       "schema:abstract": "Automate data processing workflows to reduce time spent on repetitive tasks.",
+      "aac:problemFrequency": "daily",
+      "aac:problemExamples": [
+        "The most recent dataset required two researchers to spend a full day correcting inconsistent source formats."
+      ],
       "aac:projectStage": "Development",
       "startDate": "2025-01-01",
       "endDate": "2025-12-31",
-      "keywords": ["AI", "biomedical", "automation", "data processing"],
-      "aac:domain": ["Biomedical", "AI"],
+      "aac:domain": [
+        "Biomedical",
+        "AI"
+      ],
+      "keywords": [
+        "AI",
+        "biomedical",
+        "automation",
+        "data processing"
+      ],
+      "aac:leadOrganization": "Biomedical Research Institute",
       "aac:headlineValue": "Saves time through automated data processing",
       "aac:primaryValueDriver": "time",
       "aac:roughEstimateValue": 10,
       "aac:roughEstimateUnit": "hours/month",
-      "aac:version": "0.2.0",
+      "aac:version": "0.1.0",
       "aac:versionDate": "2025-01-30",
-      "contributor": [
-        { "@id": "#person-0" },
-        { "@id": "#person-1" }
+      "creator": [
+        {
+          "@id": "#person-0"
+        },
+        {
+          "@id": "#person-1"
+        }
       ],
-      "hasPlan": { "@id": "#user-plan" }
+      "hasPlan": {
+        "@id": "#user-plan"
+      },
+      "contributor": [
+        {
+          "@id": "#person-0"
+        },
+        {
+          "@id": "#person-1"
+        }
+      ]
     },
     {
-      "@id": "#user-plan",
-      "@type": ["prov:Plan", "p-plan:Plan"],
-      "name": "User Expectations Plan",
-      "description": "User requirements and expectations for the automation",
-      "p-plan:hasStep": [
-        { "@id": "#requirement-0" }
-      ]
+      "@id": "https://platform.openai.com/docs/models/gpt-4o",
+      "@type": "schema:SoftwareApplication",
+      "schema:applicationCategory": "Machine Learning Model",
+      "schema:url": "https://platform.openai.com/docs/models/gpt-4o",
+      "name": "gpt-4o"
     },
     {
       "@id": "#requirement-0",
       "@type": "p-plan:Step",
-      "description": "As a researcher, I want automated data processing so that I can focus on analysis",
+      "aac:canvasId": "requirement-0",
       "name": "Automated data processing",
+      "description": "As a researcher, I want automated data processing so that I can focus on analysis",
+      "aac:title": "Automated data processing",
+      "aac:userStory": "Automated data processing",
       "priority": "high",
       "status": "in-progress",
       "aac:unitOfWork": "one data processing task",
-      "aac:unitCategory": "analysisRun",
+      "aac:unitCategory": "computation",
       "aac:volumePerMonth": 120,
+      "aac:timeUnit": "minutes",
+      "aac:targetPopulation": "biomedical researchers with data processing experience",
       "aac:humanOversightMinutesPerUnit": 2,
       "aac:benefits": [
         {
           "benefitType": "time",
           "metricId": "processingTime",
           "metricLabel": "Processing time",
+          "description": "Reduce the time researchers spend on repetitive data processing.",
           "direction": "decreaseIsBetter",
           "valueMeaning": "absolute",
           "aggregationBasis": "perUnit",
           "benefitUnit": "minutes",
-          "baseline": { "type": "numeric", "value": 10 },
-          "expected": { "type": "numeric", "value": 5 },
+          "baseline": {
+            "type": "numeric",
+            "value": 10
+          },
+          "expected": {
+            "type": "numeric",
+            "value": 5
+          },
+          "oversightMinutesPerUnit": 2,
           "confidenceUser": "high",
           "confidenceDev": "medium",
           "assumptions": "Assumes standard data formats and no major edge cases"
@@ -106,13 +197,60 @@
           "valueMeaning": "absolute",
           "aggregationBasis": "perUnit",
           "benefitUnit": "%",
-          "baseline": { "type": "numeric", "value": 15 },
-          "expected": { "type": "numeric", "value": 3 },
+          "baseline": {
+            "type": "numeric",
+            "value": 15
+          },
+          "expected": {
+            "type": "numeric",
+            "value": 3
+          },
           "confidenceUser": "medium",
           "confidenceDev": "medium"
+        },
+        {
+          "benefitType": "unclassified",
+          "description": "Researchers can spend more time interpreting results"
+        },
+        {
+          "benefitType": "unclassified",
+          "metricLabel": "Datasets completed without manual rework"
+        },
+        {
+          "benefitType": "unclassified",
+          "description": "Faster delivery of analysis-ready datasets",
+          "metricLabel": "Median time from raw data receipt to analysis readiness"
         }
       ],
       "aac:feasibility": {
+        "modelSelection": "frontier-model",
+        "modelName": "gpt-4o",
+        "modelCardUri": "https://platform.openai.com/docs/models/gpt-4o",
+        "technologyApproach": {
+          "architecture": "agents",
+          "approaches": [
+            "agentic-research-support",
+            "data-metadata-curation",
+            "analysis-pipeline-orchestration",
+            "computer-use",
+            "other"
+          ],
+          "customApproaches": [
+            "Domain-specific quality review"
+          ]
+        },
+        "risks": [
+          {
+            "id": "risk-1",
+            "riskCategory": "data",
+            "title": "Data quality degradation",
+            "description": "Input data quality may vary significantly, affecting processing accuracy",
+            "likelihood": "medium",
+            "impact": "high",
+            "mitigation": "Implement data validation pipeline and quality scoring before processing",
+            "status": "mitigated"
+          }
+        ],
         "deploymentCost": {
           "costPerUnit": 0.03,
           "aggregationBasis": "perUnit",
@@ -124,59 +262,43 @@
         "datasetLinks": [
           {
             "datasetId": "dataset-0",
-            "agentActions": ["read", "process"],
+            "agentActions": [
+              "read",
+              "process"
+            ],
             "notes": "Restricted dataset processed by a frontier model — data-processing agreement with the model provider required."
           }
         ]
       },
-      "prov:used": { "@id": "#dataset-0" }
-    },
-    {
-      "@id": "#stage-0",
-      "@type": "prov:Activity",
-      "name": "Development Stage",
-      "startedAtTime": "2025-02-01T00:00:00Z",
-      "endedAtTime": "2025-06-30T23:59:59Z",
-      "wasAssociatedWith": [
-        { "@id": "#person-0" },
-        { "@id": "#org-0" }
+      "aac:model": {
+        "@id": "https://platform.openai.com/docs/models/gpt-4o"
+      },
+      "prov:used": [
+        {
+          "@id": "#dataset-0"
+        },
+        {
+          "@id": "https://platform.openai.com/docs/models/gpt-4o"
+        }
       ],
-      "aac:complianceStandard": ["GDPR", "HIPAA"]
+      "aac:stakeholders": [
+        "person-0",
+        "person-1"
+      ]
     },
     {
-      "@id": "#person-0",
-      "@type": "schema:Person",
-      "name": "Jane Developer",
-      "schema:affiliation": "Research Institute",
-      "schema:identifier": "https://orcid.org/0000-0001-2345-6789"
-    },
-    {
-      "@id": "#person-1",
-      "@type": "schema:Person",
-      "name": "John Researcher",
-      "schema:affiliation": "University Lab"
-    },
-    {
-      "@id": "#role-0",
-      "@type": "schema:Role",
-      "schema:roleName": "Lead Developer",
-      "schema:member": { "@id": "#person-0" },
-      "aac:roleContext": "stakeholder"
-    },
-    {
-      "@id": "#role-1",
-      "@type": "schema:Role",
-      "schema:roleName": "Domain Expert",
-      "schema:member": { "@id": "#person-1" },
-      "aac:roleContext": "stakeholder"
-    },
-    {
-      "@id": "#role-2",
-      "@type": "schema:Role",
-      "schema:roleName": "Developer",
-      "schema:member": { "@id": "#person-0" },
-      "aac:roleContext": "stage-agent",
-      "aac:stageId": "#stage-0"
+      "@id": "#user-plan",
+      "@type": [
+        "prov:Plan",
+        "p-plan:Plan"
+      ],
+      "name": "User Expectations Plan",
+      "description": "User requirements and expectations for the automation",
+      "p-plan:hasStep": [
+        {
+          "@id": "#requirement-0"
+        }
+      ]
     },
     {
       "@id": "#org-0",
@@ -184,48 +306,190 @@
       "name": "Development Team"
     },
     {
-      "@id": "#agent-role-0",
-      "@type": "schema:Role",
-      "schema:roleName": "Development Partner",
-      "schema:member": { "@id": "#org-0" },
-      "aac:roleContext": "stage-agent",
-      "aac:stageId": "#stage-0"
+      "@id": "#milestone-0-0",
+      "@type": "schema:CreativeWork",
+      "name": "Core processing engine completed",
+      "description": "All core workflow tests pass",
+      "aac:milestoneType": "milestone"
+    },
+    {
+      "@id": "#milestone-0-1",
+      "@type": "schema:CreativeWork",
+      "name": "Integration testing passed",
+      "aac:milestoneType": "milestone"
+    },
+    {
+      "@id": "#stage-0",
+      "@type": "prov:Activity",
+      "name": "Development Stage",
+      "aac:canvasId": "stage-0",
+      "startedAtTime": "2025-02-01T00:00:00Z",
+      "endedAtTime": "2025-06-30T23:59:59Z",
+      "wasAssociatedWith": [
+        {
+          "@id": "#person-1"
+        },
+        {
+          "@id": "#org-0"
+        }
+      ],
+      "hasMilestone": [
+        {
+          "@id": "#milestone-0-0"
+        },
+        {
+          "@id": "#milestone-0-1"
+        }
+      ],
+      "aac:complianceStandard": [
+        "GDPR",
+        "HIPAA",
+        {
+          "framework": "NIST AI RMF",
+          "clauses": [
+            "GOVERN-1",
+            "MAP-1",
+            "MEASURE-1"
+          ],
+          "uri": "https://www.nist.gov/artificial-intelligence/ai-risk-management-framework"
+        }
+      ],
+      "aac:policyCardUri": "https://example.org/policy-cards/bio-ai-deployment.json"
     },
     {
       "@id": "#dataset-0",
       "@type": "dcat:Dataset",
-      "name": "Patient Dataset",
-      "description": "Anonymized patient data for processing",
-      "license": { "@id": "https://creativecommons.org/licenses/by/4.0/" },
-      "dct:accessRights": "restricted",
+      "name": "Biomedical Research Dataset",
+      "description": "Anonymized biomedical research data for processing",
+      "aac:canvasId": "dataset-0",
       "schema:encodingFormat": "CSV",
+      "license": {
+        "@id": "https://creativecommons.org/licenses/by/4.0/"
+      },
+      "dct:accessRights": "restricted",
+      "identifier": "https://example.org/datasets/bio-research-2025",
+      "dcat:landingPage": {
+        "@id": "https://huggingface.co/datasets/junma/CVPR-BiomedSegFM"
+      },
       "dct:conformsTo": [
-        { "@id": "http://purl.obolibrary.org/obo/DUO_0000006" }
+        {
+          "@id": "https://purl.org/ga4gh/duo.owl#DUO:0000006"
+        }
       ],
-      "aac:containsPersonalData": true
+      "aac:containsPersonalData": false,
+      "schema:publisher": "Biomedical Research Institute",
+      "aac:sensitivityLevel": "medium"
     },
     {
       "@id": "#outcome-0",
-      "@type": "schema:CreativeWork",
-      "name": "Final Report",
-      "description": "Summary report of automation implementation and results",
-      "datePublished": "2025-12-31",
+      "@type": "schema:SoftwareApplication",
+      "aac:outcomeType": "deliverable",
+      "aac:canvasId": "outcome-0",
+      "name": "Automated Data Processing System",
+      "description": "Complete automated data processing system",
+      "datePublished": "2025-06-30",
+      "identifier": "https://example.org/deliverables/auto-processing-system",
       "wasGeneratedBy": {
         "@id": "#stage-0"
       }
     },
     {
-      "@id": "developer-feasibility.json",
-      "@type": "schema:File",
-      "name": "Developer Feasibility Assessment",
-      "description": "Technical feasibility assessment including Technology Readiness Level (TRL), risk assessment, and technology choices",
-      "schema:encodingFormat": "application/json"
+      "@id": "#pub-1",
+      "@type": "schema:ScholarlyArticle",
+      "name": "Biomedical AI Automation: A Case Study",
+      "aac:canvasId": "pub-1",
+      "identifier": "https://doi.org/10.1234/example.2025.001",
+      "author": [
+        {
+          "@type": "schema:Person",
+          "name": "Dr. Jane Smith",
+          "@id": "#person-0"
+        },
+        {
+          "@type": "schema:Person",
+          "name": "Dr. John Doe",
+          "@id": "#person-1"
+        }
+      ],
+      "datePublished": "2025-07-15"
     },
     {
-      "@id": "https://creativecommons.org/licenses/by/4.0/",
+      "@id": "#eval-1",
       "@type": "schema:CreativeWork",
-      "name": "Creative Commons Attribution 4.0 International",
-      "identifier": "https://creativecommons.org/licenses/by/4.0/"
+      "name": "Performance Evaluation",
+      "description": "System achieved 90% accuracy and reduced processing time by 60%",
+      "aac:evaluationType": "Performance Evaluation",
+      "aac:canvasId": "eval-1",
+      "datePublished": "2025-06-20",
+      "aac:metrics": {
+        "accuracy": 0.9,
+        "timeReduction": 0.6
+      }
+    },
+    {
+      "@id": "AGENTS.md",
+      "@type": "schema:File",
+      "name": "Agent instructions",
+      "description": "AI coding agent instructions derived from the AAC canvas specification",
+      "schema:encodingFormat": "text/markdown"
+    },
+    {
+      "@id": "#person-0",
+      "@type": "schema:Person",
+      "name": "Dr. Jane Smith",
+      "aac:canvasId": "person-0",
+      "schema:affiliation": "Biomedical Research Institute",
+      "aac:functionRoles": [
+        "project-lead",
+        "domain-expert"
+      ],
+      "aac:localTitle": "Principal Investigator"
+    },
+    {
+      "@id": "#person-1",
+      "@type": "schema:Person",
+      "name": "Dr. John Doe",
+      "aac:canvasId": "person-1",
+      "schema:affiliation": "AI Research Lab",
+      "schema:identifier": "https://orcid.org/0000-0000-0000-0001"
+    },
+    {
+      "@id": "#role-0",
+      "@type": "schema:Role",
+      "schema:roleName": "Stakeholder",
+      "schema:member": {
+        "@id": "#person-0"
+      },
+      "aac:roleContext": "stakeholder"
+    },
+    {
+      "@id": "#role-1",
+      "@type": "schema:Role",
+      "schema:roleName": "Stakeholder",
+      "schema:member": {
+        "@id": "#person-1"
+      },
+      "aac:roleContext": "stakeholder"
+    },
+    {
+      "@id": "#role-2",
+      "@type": "schema:Role",
+      "schema:roleName": "Technical Lead",
+      "schema:member": {
+        "@id": "#person-1"
+      },
+      "aac:roleContext": "stage-agent",
+      "aac:stageId": "#stage-0"
+    },
+    {
+      "@id": "#agent-role-0",
+      "@type": "schema:Role",
+      "schema:roleName": "Developers",
+      "schema:member": {
+        "@id": "#org-0"
+      },
+      "aac:roleContext": "stage-agent",
+      "aac:stageId": "#stage-0"
     }
   ]
 }

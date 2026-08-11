@@ -61,4 +61,8 @@ describe('getTimeSavedPerUnit', () => {
     )
     expect(getTimeSavedPerUnit(benefit)).toBe(8)
   })
+
+  it('ignores unclassified benefits', () => {
+    expect(getTimeSavedPerUnit({ benefitType: 'unclassified', description: 'Save time' })).toBe(0)
+  })
 })

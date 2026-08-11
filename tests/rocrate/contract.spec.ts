@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { generateROCrate } from '@/rocrate/export'
+import { importROCrateDocument } from '@/rocrate/import'
 import {
   AAC_RO_CRATE_PROFILE_ID,
   AAC_SCHEMA_VERSION,
@@ -57,5 +58,25 @@ describe('RO-Crate contract identity', () => {
         ]),
       })
     }
+  })
+
+  it('marks an explicitly requested partial export without claiming AAC profile conformance', () => {
+    const titleOnly = {
+      project: { title: 'Early draft', description: '' },
+    } as CanvasData
+
+    const crate = generateROCrate(titleOnly, { allowPartial: true })
+    const root = crate['@graph'].find((entity) => entity['@id'] === './')
+
+    expect(root?.['aac:partialCanvas']).toBe(true)
+    expect(root?.['aac:schemaVersion']).toBe(AAC_SCHEMA_VERSION)
+    expect(root?.conformsTo).toBeUndefined()
+
+    const reopened = importROCrateDocument(crate)
+    expect(reopened.canvasData.project.title).toBe('Early draft')
+    expect(reopened.canvasData.project.description).toBe('')
+    expect(reopened.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'rocrate.profileMissing' }),
+    ]))
   })
 })

@@ -75,14 +75,14 @@ npm run typecheck        # check TypeScript and Vue templates against generated 
 
 Runtime validation uses the same current JSON Schema. TypeScript types provide compile-time enforcement but do not replace runtime validation.
 
-## Current Schema: 0.17.0
+## Current Schema: 0.17.1
 
-Version `0.17.0` reconciles the published schema with the current canvas model:
+Version `0.17.1` adds backward-compatible fields used by the simplified canvas while preserving the complete 0.17.0 model:
 
-- Person supports optional `functionRoles` and `localTitle`.
-- Project supports optional `creator` Person references and `license` URI.
-- Governance milestones use objects with required `description` and optional `kpi`.
-- AAC structural objects reject undeclared properties; evaluation `metrics` remains an intentionally open dictionary.
-- All schema-defined fields, identifiers, and references must survive current RO-Crate export/import round trips.
+- Project supports optional problem frequency and recent problem examples.
+- Requirements support a controlled list of solution approaches.
+- Developer feasibility supports solution-research notes, constraint flags, and build and maintenance team statuses.
+- Benefits may be classified by an existing benefit type or recorded as an unclassified free-text description and/or metric label.
+- All new fields are optional, so documents conforming to 0.17.0 remain valid against 0.17.1.
 
-The schema requires `project.title` and `project.description`. Person roles, project creator, project stage, and dataset access rights remain optional in this reconciliation release.
+This additive release is a documented beta patch exception to the normal policy that patch releases only fix defects and documentation. The schema remains in beta, and only the selected current schema is fully supported by the application.

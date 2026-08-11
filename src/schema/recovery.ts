@@ -158,10 +158,6 @@ function normalizeKnownCurrentShapes(
   })
 }
 
-function isCombinatorSchemaPath(path: string): boolean {
-  return /\/(?:oneOf|anyOf|allOf|if|then|else)(?:\/|$)/.test(path)
-}
-
 function groupAdditionalProperties(
   validation: CanvasValidationResult,
 ): Map<string, SchemaDiagnostic[]> {
@@ -187,26 +183,6 @@ function reportUndeclaredField(path: string, diagnostics: Diagnostic[]): void {
   )
 }
 
-/**
- * Additional-property findings outside schema combinators are unambiguous.
- * They can be removed together because every target is an object property,
- * never an array item whose index could shift.
- */
-function dropUnambiguousUndeclaredFields(
-  value: Record<string, unknown>,
-  validation: CanvasValidationResult,
-  diagnostics: Diagnostic[],
-): boolean {
-  let changed = false
-  groupAdditionalProperties(validation).forEach((findings, path) => {
-    if (findings.some((finding) => isCombinatorSchemaPath(finding.schemaPath))) return
-    if (!removeAtPath(value, path)) return
-    changed = true
-    reportUndeclaredField(path, diagnostics)
-  })
-  return changed
-}
-
 type ValidationScore = readonly [nonAdditionalErrors: number, totalErrors: number]
 
 function validationScore(validation: CanvasValidationResult): ValidationScore {
@@ -223,12 +199,19 @@ function compareScores(left: ValidationScore, right: ValidationScore): number {
 }
 
 /**
- * Ajv reports errors from every failing `oneOf`/`anyOf` branch. Consequently,
- * a field valid in the selected branch can appear as an additional property in
- * the other branches. Probe one deletion at a time and keep only a repair that
- * improves the complete validation result.
+ * Ajv reports errors from every failing `oneOf`/`anyOf` branch. This remains
+ * true when a branch is reached through `$ref`: the diagnostic's schema path
+ * points at the referenced definition and no longer contains `oneOf`/`anyOf`.
+ * Consequently, a field valid in the selected branch can look like an ordinary
+ * additional property in another branch.
+ *
+ * Probe every candidate deletion against the complete validation result and
+ * keep only the best repair. Removing the real extension improves the selected
+ * branch, whereas removing a required field such as a classified benefit's
+ * `baseline` or `expected` introduces a new non-additional error and is
+ * rejected by the score.
  */
-function dropBestCombinatorExtension(
+function dropBestUndeclaredField(
   value: Record<string, unknown>,
   validation: CanvasValidationResult,
   diagnostics: Diagnostic[],
@@ -238,11 +221,11 @@ function dropBestCombinatorExtension(
     | {
         path: string
         score: ValidationScore
+        findingCount: number
       }
     | undefined
 
   groupAdditionalProperties(validation).forEach((findings, path) => {
-    if (!findings.some((finding) => isCombinatorSchemaPath(finding.schemaPath))) return
     if (!hasAtPath(value, path)) return
 
     const candidate = structuredClone(value)
@@ -254,9 +237,15 @@ function dropBestCombinatorExtension(
       !best ||
       compareScores(score, best.score) < 0 ||
       (compareScores(score, best.score) === 0 &&
-        path.localeCompare(best.path, undefined, { numeric: true }) > 0)
+        (
+          findings.length > best.findingCount
+          || (
+            findings.length === best.findingCount
+            && path.localeCompare(best.path, undefined, { numeric: true }) > 0
+          )
+        ))
     ) {
-      best = { path, score }
+      best = { path, score, findingCount: findings.length }
     }
   })
 
@@ -325,8 +314,7 @@ function recoverInvalidFields(value: Record<string, unknown>, diagnostics: Diagn
     if (seenStates.has(state)) break
     seenStates.add(state)
 
-    if (dropUnambiguousUndeclaredFields(value, validation, diagnostics)) continue
-    if (dropBestCombinatorExtension(value, validation, diagnostics)) continue
+    if (dropBestUndeclaredField(value, validation, diagnostics)) continue
     if (dropInvalidValue(value, validation, diagnostics)) continue
     break
   }

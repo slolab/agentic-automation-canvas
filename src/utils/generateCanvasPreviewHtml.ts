@@ -1,6 +1,6 @@
 /**
  * Generate self-contained HTML preview of the canvas summary for RO-Crate export.
- * Matches the BMC-style layout from CanvasSummary.vue.
+ * Matches the BMC-style layout from SimplifiedCanvas.vue.
  */
 
 import type { CanvasData } from '@/types/canvas'

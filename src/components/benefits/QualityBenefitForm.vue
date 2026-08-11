@@ -74,7 +74,7 @@
           <select
             :value="benefit.aggregationBasis || 'perUnit'"
             class="form-input"
-            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as Benefit['aggregationBasis'] })"
+            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as ClassifiedBenefit['aggregationBasis'] })"
           >
             <option value="perUnit">Per Unit</option>
             <option value="perMonth">Per Month</option>
@@ -127,7 +127,7 @@
           <select
             :value="benefit.confidenceUser || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceUser: (($event.target as HTMLSelectElement).value || undefined) as Benefit['confidenceUser'] })"
+            @change="updateBenefit(index, { confidenceUser: (($event.target as HTMLSelectElement).value || undefined) as ClassifiedBenefit['confidenceUser'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -140,7 +140,7 @@
           <select
             :value="benefit.confidenceDev || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceDev: (($event.target as HTMLSelectElement).value || undefined) as Benefit['confidenceDev'] })"
+            @change="updateBenefit(index, { confidenceDev: (($event.target as HTMLSelectElement).value || undefined) as ClassifiedBenefit['confidenceDev'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -167,19 +167,19 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
+import type { ClassifiedBenefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 import InfoTooltip from '../InfoTooltip.vue'
 
 interface Props {
-  benefits: Benefit[]
+  benefits: ClassifiedBenefit[]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update': [benefits: Benefit[]]
+  'update': [benefits: ClassifiedBenefit[]]
 }>()
 
-const localBenefits = ref<Benefit[]>([])
+const localBenefits = ref<ClassifiedBenefit[]>([])
 
 watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
@@ -216,7 +216,7 @@ function getMetricDefaults(metricId: string): { direction: BenefitDirection; val
   return { direction: defaults.direction, valueMeaning: defaults.valueMeaning }
 }
 
-function createDefaultBenefit(): Benefit {
+function createDefaultBenefit(): ClassifiedBenefit {
   const defaults = getMetricDefaults('errorRate')
   return {
     benefitType: 'quality',
@@ -252,7 +252,7 @@ function removeBenefit(index: number) {
   emitUpdate()
 }
 
-function updateBenefit(index: number, updates: Partial<Benefit>) {
+function updateBenefit(index: number, updates: Partial<ClassifiedBenefit>) {
   localBenefits.value = localBenefits.value.map((b, i) => 
     i === index ? { ...b, ...updates } : b
   )

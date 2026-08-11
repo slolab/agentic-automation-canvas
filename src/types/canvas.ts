@@ -5,6 +5,13 @@
  */
 
 /**
+ * A classified benefit metric or an unclassified benefit captured by the simplified canvas
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "Benefit".
+ */
+export type Benefit = ClassifiedBenefit | UnclassifiedBenefit
+/**
  * Indicates whether higher values, lower values, hitting a target, or boolean true is the desired outcome
  */
 export type BenefitDirection = 'increaseIsBetter' | 'decreaseIsBetter' | 'targetIsBetter' | 'boolIsBetter'
@@ -46,7 +53,7 @@ export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical'
 export type RiskStatus = 'identified' | 'mitigated' | 'accepted' | 'resolved'
 
 /**
- * Version 0.17.0 JSON Schema for Agentic Automation Canvas data.
+ * Version 0.17.1 JSON Schema for Agentic Automation Canvas data.
  */
 export interface CanvasData {
   /**
@@ -94,6 +101,14 @@ export interface Person {
 export interface ProjectDefinition {
   title: string
   description: string
+  /**
+   * Approximate frequency with which the project problem occurs
+   */
+  problemFrequency?: 'daily' | 'weekly' | 'monthly' | 'few-times-per-year' | 'less-than-yearly'
+  /**
+   * Concrete examples of the problem, beginning with the most recent real case
+   */
+  problemExamples?: string[]
   objective?: string
   projectStage?: string
   startDate?: string
@@ -168,12 +183,12 @@ export interface Requirement {
   feasibility?: RequirementFeasibility
 }
 /**
- * A benefit metric for a requirement
+ * A quantified and classified benefit metric for a requirement
  *
  * This interface was referenced by `CanvasData`'s JSON-Schema
- * via the `definition` "Benefit".
+ * via the `definition` "ClassifiedBenefit".
  */
-export interface Benefit {
+export interface ClassifiedBenefit {
   /**
    * Type of benefit
    */
@@ -186,6 +201,10 @@ export interface Benefit {
    * Human-readable label for the metric
    */
   metricLabel: string
+  /**
+   * Original free-form benefit description, retained when a simplified-canvas benefit is classified
+   */
+  description?: string
   direction: BenefitDirection
   valueMeaning: ValueMeaning
   /**
@@ -222,6 +241,26 @@ export interface Benefit {
    * Key assumptions underlying the benefit estimate
    */
   assumptions?: string
+}
+/**
+ * A free-form benefit or metric awaiting classification and quantification
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "UnclassifiedBenefit".
+ */
+export interface UnclassifiedBenefit {
+  /**
+   * Marks a lightweight simplified-canvas benefit
+   */
+  benefitType: 'unclassified'
+  /**
+   * Free-form expected benefit
+   */
+  description?: string
+  /**
+   * Free-form success metric to quantify later
+   */
+  metricLabel?: string
 }
 /**
  * Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab).
@@ -271,13 +310,35 @@ export interface RequirementFeasibility {
    */
   modelCardUri?: string
   /**
-   * Technology architecture approach for this task. Set architecture to 'none' if task is deterministic and doesn't require LLMs.
+   * Potential agentic use cases and selected technology architecture for this task. Set architecture to 'none' if the task is deterministic and doesn't require LLMs.
    */
   technologyApproach?: {
     /**
      * Primary technology architecture. 'none' indicates deterministic task without LLM requirement.
      */
     architecture?: 'none' | 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
+    /**
+     * Agentic use-case patterns selected as potential approaches
+     */
+    approaches?: (
+      | 'agentic-user-support'
+      | 'unstructured-content-processing'
+      | 'code-development'
+      | 'computer-use'
+      | 'live-event-monitoring'
+      | 'intelligent-search'
+      | 'agentic-research-support'
+      | 'data-metadata-curation'
+      | 'analysis-pipeline-orchestration'
+      | 'experiment-protocol-design'
+      | 'simulation-parameter-optimization'
+      | 'laboratory-workflow-coordination'
+      | 'other'
+    )[]
+    /**
+     * User-defined potential approaches entered when the controlled vocabulary is insufficient
+     */
+    customApproaches?: string[]
     ragDetails?: {
       retrievalMethod?: string
       embeddingModel?: string
@@ -400,6 +461,33 @@ export interface DeveloperFeasibility {
    * Project-level feasibility notes
    */
   feasibilityNotes?: string
+  /**
+   * Tools, products, services, or other existing solutions that require research
+   */
+  solutionsToResearch?: string
+  /**
+   * Lightweight project constraints that require deeper feasibility investigation
+   */
+  constraintFlags?: (
+    | 'large-data'
+    | 'cluster-compute'
+    | 'large-gpu'
+    | 'personal-data'
+    | 'valuable-ip'
+    | 'external-system-integration'
+    | 'restricted-processing-environment'
+    | 'real-time'
+    | 'regulated-or-high-impact'
+    | 'procurement-or-licensing'
+  )[]
+  /**
+   * Whether a person or team is available to build the capability
+   */
+  buildTeamStatus?: 'none' | 'possible' | 'committed'
+  /**
+   * Whether a person or team is available to maintain the capability after the first milestone
+   */
+  maintenanceOwnerStatus?: 'none' | 'possible' | 'committed'
 }
 export interface GovernanceStaging {
   stages?: GovernanceStage[]

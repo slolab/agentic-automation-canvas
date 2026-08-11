@@ -6,6 +6,7 @@ import type { Requirement } from '@/types/canvas'
 import type { BenefitDisplayGroup } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 import { formatBenefitValueDisplay } from '@/data/benefitMetrics'
+import { isBenefitOfType, isClassifiedBenefit } from '@/utils/benefits'
 
 export function formatDisplayGroupValue(
   group: BenefitDisplayGroup,
@@ -18,7 +19,7 @@ export function formatDisplayGroupValue(
     for (const ref of refs) {
       const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
       const benefit = req?.benefits?.[ref.benefitIndex]
-      if (!benefit || !req) continue
+      if (!benefit || !req || !isBenefitOfType(benefit, 'time')) continue
       const savedPerUnit = getTimeSavedPerUnit(benefit, req)
       const volume = req?.volumePerMonth || 0
       totalMinutes += savedPerUnit * volume
@@ -26,7 +27,7 @@ export function formatDisplayGroupValue(
     if (totalMinutes <= 0) {
       const req = reqs.find((r, i) => (r.id || `req-${i}`) === refs[0].requirementId)
       const first = req?.benefits?.[refs[0].benefitIndex]
-      return first ? formatBenefitValueDisplay(first) : '—'
+      return first && isClassifiedBenefit(first) ? formatBenefitValueDisplay(first) : '—'
     }
     if (totalMinutes >= 60) {
       const hours = Math.round((totalMinutes / 60) * 10) / 10
@@ -39,7 +40,7 @@ export function formatDisplayGroupValue(
   for (const ref of refs) {
     const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
     const benefit = req?.benefits?.[ref.benefitIndex]
-    if (benefit) parts.push(formatBenefitValueDisplay(benefit))
+    if (benefit && isClassifiedBenefit(benefit)) parts.push(formatBenefitValueDisplay(benefit))
   }
   return parts.length ? parts.join(', ') : '—'
 }

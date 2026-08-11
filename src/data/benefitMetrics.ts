@@ -4,9 +4,10 @@
  * Semantics (direction, valueMeaning) inform how values are displayed (e.g. x% → y%).
  */
 
-import type { Benefit, BenefitValue } from '@/types/canvas'
+import type { Benefit, BenefitValue, ClassifiedBenefit } from '@/types/canvas'
+import { isUnclassifiedBenefit } from '@/utils/benefits'
 
-export type BenefitType = Benefit['benefitType']
+export type BenefitType = ClassifiedBenefit['benefitType']
 
 /** Display label for each metricId per benefit type. Custom metrics use metricLabel from the benefit. */
 export const METRIC_DISPLAY_LABELS: Record<BenefitType, Record<string, string>> = {
@@ -110,6 +111,10 @@ export function formatAggregateValueDisplay(value: number | string | boolean, un
  * For boolIsBetter shows "Available" / "Not available"; for absolute/delta shows "x unit → y unit" (e.g. "10% → 1%").
  */
 export function formatBenefitValueDisplay(benefit: Benefit): string {
+  if (isUnclassifiedBenefit(benefit)) {
+    return benefit.description?.trim() || benefit.metricLabel?.trim() || 'Needs classification'
+  }
+
   const unit = benefit.benefitUnit?.trim() || ''
 
   if (benefit.direction === 'boolIsBetter') {

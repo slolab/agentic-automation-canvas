@@ -61,4 +61,16 @@ describe('generateAgentInstructions — task data access', () => {
     expect(md).not.toContain('### Agent data access by task')
     expect(md).not.toContain('Do not let agents access datasets')
   })
+
+  it('renders unclassified benefits without assuming metric fields', () => {
+    const data = canvasWithLinks()
+    data.userExpectations!.requirements![0].benefits = [
+      { benefitType: 'unclassified', description: 'Reduce manual review time' },
+      { benefitType: 'unclassified', metricLabel: 'Minutes saved per case' },
+    ]
+
+    const md = generateAgentInstructions(data)
+    expect(md).toContain('- Unclassified benefit: Reduce manual review time')
+    expect(md).toContain('- Unclassified benefit: Minutes saved per case')
+  })
 })

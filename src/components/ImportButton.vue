@@ -4,15 +4,20 @@
       :key="inputKey"
       ref="fileInput"
       type="file"
+      accept=".zip,application/zip,application/x-zip-compressed"
       class="hidden"
       @change="handleFileSelect"
     />
     <button
       type="button"
       @click="openFileDialog"
-      class="flex shrink-0 items-center gap-2 px-4 py-2 rounded-md text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+      :class="[
+        'flex shrink-0 items-center justify-center gap-2 rounded-md bg-orange-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
+        headerActionsMode === 'full' && 'min-w-[14rem]',
+      ]"
       :disabled="isImporting"
       title="Import RO-Crate (ZIP)"
+      aria-label="Import RO-Crate (ZIP)"
     >
       <svg
         v-if="!isImporting"
@@ -48,13 +53,11 @@
           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
         />
       </svg>
-      <span v-show="headerActionsMode === 'full'" class="text-center leading-tight">
-        <span class="block">{{ isImporting ? 'Importing' : 'Import RO-Crate' }}</span>
-        <span class="block">{{ isImporting ? '…' : '(ZIP)' }}</span>
+      <span v-show="headerActionsMode === 'full'" class="whitespace-nowrap text-center">
+        {{ isImporting ? 'Importing…' : 'Import RO-Crate (ZIP)' }}
       </span>
-      <span v-show="headerActionsMode === 'short'" class="text-center leading-tight">
-        <span class="block">{{ isImporting ? 'Importing' : 'Import' }}</span>
-        <span class="block">{{ isImporting ? '…' : 'RO-Crate' }}</span>
+      <span v-show="headerActionsMode === 'short'" class="whitespace-nowrap text-center">
+        {{ isImporting ? 'Importing…' : 'Import RO-Crate' }}
       </span>
     </button>
   </div>
@@ -63,7 +66,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { HeaderActionsMode } from '@/composables/useHeaderActionsMode'
-import { ROCrateImportError, importROCrateFromZip } from '@/rocrate/container'
+import { ROCrateImportError, importROCrateFromZip, isZipFile } from '@/rocrate/container'
 import { formatDiagnostics } from '@/diagnostics'
 import { useCanvasData } from '@/composables/useCanvasData'
 
@@ -85,13 +88,8 @@ const handleFileSelect = async (event: Event) => {
 
   if (!file) return
 
-  // Validate file type in JavaScript (more reliable than accept attribute)
-  const fileName = file.name.toLowerCase()
-  const isValidZip = fileName.endsWith('.zip') || 
-                     file.type === 'application/zip' || 
-                     file.type === 'application/x-zip-compressed'
-  
-  if (!isValidZip) {
+  // The accept attribute is only a picker hint; validate dropped/selected files too.
+  if (!isZipFile(file)) {
     alert('Please select a ZIP file')
     // Reset input
     if (fileInput.value) {

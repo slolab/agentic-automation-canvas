@@ -1,7 +1,7 @@
 {
   "name": "agentic-automation-canvas",
   "version": "0.16.0",
-  "description": "Agentic Automation Canvas - Interactive form for capturing project metadata and generating RO-Crate packages",
+  "description": "A visual framework for shaping agentic automation projects and generating RO-Crate packages",
   "author": "Sebastian Lobentanzer, slolab",
   "license": "Apache-2.0",
   "type": "module",
@@ -26,11 +26,9 @@
     "ajv-formats": "^3.0.1",
     "jszip": "^3.10.1",
     "mermaid": "^10.9.5",
-    "vue": "^3.4.21",
-    "vue-draggable-next": "^2.3.0"
+    "vue": "^3.4.21"
   },
   "devDependencies": {
-    "@headlessui/vue": "^1.7.16",
     "@types/node": "^20.19.43",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vue/eslint-config-typescript": "^13.0.0",

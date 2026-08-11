@@ -21,9 +21,24 @@ import { recoverCanvasToCurrent } from '@/schema/recovery'
 import { validateCurrentCanvas } from '@/schema/validation'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
+import { isBenefitOfType } from '@/utils/benefits'
 import { collectDataAccessFlags } from '@/utils/dataAccessWarnings'
 import { todayIsoDate } from '@/utils/date'
 import type { FocusFieldRequest } from '@/utils/fieldNavigation'
+import {
+  patchFirstStageMilestone as patchFirstStageMilestoneData,
+  patchFirstStage as patchFirstStageData,
+  patchPrimaryRequirement as patchPrimaryRequirementData,
+  firstStageTeamNames,
+  replacePrimaryUnclassifiedBenefits as replacePrimaryUnclassifiedBenefitsData,
+  retainedClassifiedBenefitIndexes,
+  setFirstStageTeam,
+} from '@/utils/simplifiedCanvas'
+import type {
+  PrimaryRequirementPatch,
+  FirstStagePatch,
+  UnclassifiedBenefitField,
+} from '@/utils/simplifiedCanvas'
 
 // Initialize with default structure
 const canvasData = ref<CanvasData>({
@@ -48,7 +63,7 @@ const lastDiagnostics = ref<Diagnostic[]>([])
 // App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
 const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
 
-// App-only: when set, CanvasForm switches to this section (e.g. after Load Example)
+// App-only: when set, CanvasForm navigates to the requested detailed section or simplified canvas.
 const requestedSection = ref<string | null>(null)
 
 // App-only: when set, collapsible components expand and focus the specified field
@@ -175,6 +190,83 @@ export function useCanvasData() {
     hasChangedSinceImport.value = true
     canvasData.value.outcomes = mergeSection(canvasData.value.outcomes ?? {}, updates)
   }
+
+  const patchPrimaryRequirement = (updates: PrimaryRequirementPatch) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.userExpectations = patchPrimaryRequirementData(
+      canvasData.value.userExpectations,
+      updates,
+    )
+  }
+
+  const replacePrimaryUnclassifiedBenefits = (
+    field: UnclassifiedBenefitField,
+    values: readonly string[],
+  ) => {
+    hasChangedSinceImport.value = true
+    const previousPrimary = canvasData.value.userExpectations?.requirements?.[0]
+    const nextExpectations = replacePrimaryUnclassifiedBenefitsData(
+      canvasData.value.userExpectations,
+      field,
+      values,
+    )
+    const nextPrimary = nextExpectations.requirements?.[0]
+
+    if (previousPrimary && nextPrimary && previousPrimary.id === nextPrimary.id) {
+      const indexMap = retainedClassifiedBenefitIndexes(
+        previousPrimary.benefits,
+        nextPrimary.benefits,
+      )
+      let referencesChanged = false
+      const displayGroups = benefitDisplay.value.displayGroups.map((group) => ({
+        ...group,
+        benefitRefs: group.benefitRefs.map((reference) => {
+          if (reference.requirementId !== previousPrimary.id) return reference
+          const nextIndex = indexMap.get(reference.benefitIndex)
+          if (nextIndex === undefined || nextIndex === reference.benefitIndex) return reference
+          referencesChanged = true
+          return { ...reference, benefitIndex: nextIndex }
+        }),
+      }))
+      if (referencesChanged) {
+        benefitDisplay.value = { ...benefitDisplay.value, displayGroups }
+      }
+    }
+
+    canvasData.value.userExpectations = nextExpectations
+  }
+
+  const patchFirstStageMilestone = (updates: Partial<Milestone>) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.governance = patchFirstStageMilestoneData(
+      canvasData.value.governance,
+      updates,
+    )
+  }
+
+  const patchFirstStage = (updates: FirstStagePatch) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.governance = patchFirstStageData(
+      canvasData.value.governance,
+      updates,
+    )
+  }
+
+  const updateFirstStageTeam = (names: readonly string[]) => {
+    hasChangedSinceImport.value = true
+    const result = setFirstStageTeam(
+      canvasData.value.persons,
+      canvasData.value.governance,
+      names,
+    )
+    canvasData.value.persons = result.persons
+    canvasData.value.governance = result.governance
+  }
+
+  const simplifiedFirstStageTeamNames = computed(() => firstStageTeamNames(
+    canvasData.value.persons,
+    canvasData.value.governance,
+  ))
 
   const clearData = () => {
     // Set to empty structure - use undefined to trigger watchers properly
@@ -321,7 +413,7 @@ export function useCanvasData() {
         errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
       } else {
         // Check for time benefit and validate net savings (baseline − expected − oversight)
-        const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
+        const timeBenefit = req.benefits.find(b => isBenefitOfType(b, 'time'))
         if (timeBenefit) {
           // Validate net savings
           const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
@@ -406,7 +498,7 @@ export function useCanvasData() {
     }
   }
 
-  // Computed: form completion percentage (field-by-field)
+  // Computed: detailed-canvas completion percentage (field-by-field)
   const completionPercentage = computed(() => {
     let completed = 0
     let total = 0
@@ -697,6 +789,12 @@ export function useCanvasData() {
     updateGovernance,
     updateDataAccess,
     updateOutcomes,
+    patchPrimaryRequirement,
+    replacePrimaryUnclassifiedBenefits,
+    patchFirstStageMilestone,
+    patchFirstStage,
+    updateFirstStageTeam,
+    simplifiedFirstStageTeamNames,
     clearData,
     exportData,
     importData,

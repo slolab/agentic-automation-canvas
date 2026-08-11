@@ -54,16 +54,12 @@ npm run preview
 
 ## Environment Variables
 
-For local development with API integrations (future):
+The application is a static, client-side build and currently requires no runtime API,
+chat-service, or secret environment variables. Deployment configuration such as the
+GitHub Pages base path lives in the checked-in Vite configuration.
 
-Create a `.env.local` file:
-
-```
-VITE_API_ENDPOINT=http://localhost:11434/api/chat
-VITE_API_KEY=your-api-key
-```
-
-Note: Environment variables are not needed for MVP (bot uses contextual help).
+Do not put secrets in `VITE_*` variables: Vite embeds those values in browser-delivered
+JavaScript.
 
 ## Troubleshooting
 
