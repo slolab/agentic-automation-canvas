@@ -16,3 +16,14 @@ export function logDiagnostics(diagnostics: readonly Diagnostic[]): void {
     console.warn(`[${diagnostic.code}] ${diagnostic.path}: ${diagnostic.message}`, diagnostic)
   })
 }
+
+/** Render findings for a plain-text surface such as an alert dialog. */
+export function formatDiagnostics(diagnostics: readonly Diagnostic[]): string {
+  return diagnostics
+    .map((diagnostic) =>
+      diagnostic.path === '/'
+        ? `- ${diagnostic.message}`
+        : `- ${diagnostic.path}: ${diagnostic.message}`,
+    )
+    .join('\n')
+}

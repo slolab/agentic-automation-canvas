@@ -208,6 +208,14 @@ This tolerant behavior does not make the imported file valid under the current s
 Before a new crate can be exported, the recovered canvas must pass strict current-schema
 validation.
 
+### Incomplete Drafts
+
+Reopening a saved canvas uses the same recovery path. Fields you have not filled in yet
+are left exactly as you left them and are never reported as import notices: adding a task
+and reloading the page before typing its title keeps the task. Those fields are still
+reported as validation errors in the form, and they still block download, until you
+complete them.
+
 ### With the Validator Tool
 
 Use the validator tool when:

@@ -54,7 +54,6 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - AAC v2 field test: v2.md
   - Specification:
     - spec/index.md
     - spec/concepts.md

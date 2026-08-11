@@ -19,8 +19,8 @@ import type {
   Requirement,
   TaskDatasetLink,
 } from '@/types/canvas'
+import { isRecord } from '@/json'
 import {
-  isRecord,
   readBoolean,
   readEntityReference,
   readEntityReferences,
@@ -35,17 +35,32 @@ interface ParseContext {
   canvasIdByCrateId: ReadonlyMap<string, string>
 }
 
-type ProjectAndRootSection = Pick<CanvasData, 'project'>
+/**
+ * Text the schema requires is left `undefined` when the crate carries nothing
+ * readable, never flattened to `''`. Recovery relies on that distinction: an
+ * absent value is foreign data it reports and defaults or drops, whereas an
+ * empty string is a field the user has deliberately not filled in yet.
+ */
+type UnreadableAsAbsent<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>
+
+type ProjectCandidate = UnreadableAsAbsent<CanvasData['project'], 'title' | 'description'>
+
+type ProjectAndRootSection = { project: ProjectCandidate }
   & Partial<Pick<CanvasData, 'version' | 'versionDate'>>
   & { developerFeasibility?: Record<string, unknown> }
 
-type RequirementCandidate = Omit<Requirement, 'benefits' | 'feasibility'> & {
+type RequirementCandidate = UnreadableAsAbsent<
+  Omit<Requirement, 'benefits' | 'feasibility'>,
+  'title'
+> & {
   benefits: unknown[]
   feasibility?: Record<string, unknown>
 }
 
+type PersonCandidate = UnreadableAsAbsent<Person, 'name'>
+
 interface PeopleAndGovernanceSection {
-  persons?: CanvasData['persons']
+  persons?: PersonCandidate[]
   governance?: CanvasData['governance']
   milestoneIds: ReadonlySet<string>
 }
@@ -107,6 +122,19 @@ const REQUIREMENT_UNIT_CATEGORIES = {
   computation: true,
   other: true,
 } as const satisfies Record<NonNullable<Requirement['unitCategory']>, true>
+
+/**
+ * Canvas id for an entity. Crates written by this app carry `aac:canvasId`;
+ * otherwise the crate identifier is used, stripping only a leading `#` so an
+ * absolute URI keeps its own fragment.
+ */
+function crateIdToCanvasId(crateId: string): string {
+  return crateId.replace(/^#/, '')
+}
+
+function canvasIdFor(entity: ROCrateEntity): string {
+  return readString(entity['aac:canvasId']) ?? crateIdToCanvasId(entity['@id'])
+}
 
 function findEntity(graph: ROCrateEntity[], id: string): ROCrateEntity | undefined {
   return graph.find((entity) => entity['@id'] === id)
@@ -227,12 +255,7 @@ function createParseContext(rocrate: ROCrateJSONLD): ParseContext {
 
 function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection {
   const { canvasIdByCrateId, graph } = context
-  const section: ProjectAndRootSection = {
-    project: {
-      title: '',
-      description: '',
-    },
-  }
+  const section: ProjectAndRootSection = { project: {} }
 
   const projectEntity = findProjectEntity(graph)
   if (projectEntity) {
@@ -243,8 +266,8 @@ function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection
     const creatorRefs = readEntityReferences(projectEntity.creator)
 
     section.project = {
-      title: readString(projectEntity.name) || '',
-      description: readString(projectEntity.description) || '',
+      title: readString(projectEntity.name) || undefined,
+      description: readString(projectEntity.description) || undefined,
       objective: readString(projectEntity['schema:abstract']) || readString(projectEntity.about) || undefined,
       projectStage: readString(projectEntity['aac:projectStage']) || undefined,
       startDate: readString(projectEntity.startDate) || undefined,
@@ -264,7 +287,7 @@ function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection
       versionDate: readString(projectEntity['aac:versionDate']) || undefined,
       creator: creatorRefs.length > 0
         ? creatorRefs.map(
-          (creator) => canvasIdByCrateId.get(creator['@id']) ?? creator['@id'].replace(/^#/, ''),
+          (creator) => canvasIdByCrateId.get(creator['@id']) ?? crateIdToCanvasId(creator['@id']),
         )
         : undefined,
     }
@@ -344,8 +367,8 @@ function readRequirement(step: ROCrateEntity, context: ParseContext): Requiremen
   const stepName = readString(step.name) || ''
   const aacTitle = readString(step['aac:title'])
   const requirement: RequirementCandidate = {
-    id: readString(step['aac:canvasId']) ?? step['@id'].replace(/^#/, ''),
-    title: aacTitle || stepDescription || stepName || '',
+    id: canvasIdFor(step),
+    title: aacTitle || stepDescription || stepName || undefined,
     description: stepDescription || undefined,
     userStory: readString(step['aac:userStory'])
       ?? (stepName && stepName !== (aacTitle || stepDescription) ? stepName : undefined),
@@ -456,10 +479,10 @@ function readRequirementsSection(
   return requirements.length > 0 ? { requirements } : undefined
 }
 
-function readPersonEntity(personEntity: ROCrateEntity): Person {
+function readPersonEntity(personEntity: ROCrateEntity): PersonCandidate {
   return {
-    id: readString(personEntity['aac:canvasId']) ?? personEntity['@id'].replace('#', ''),
-    name: readString(personEntity.name) || '',
+    id: canvasIdFor(personEntity),
+    name: readString(personEntity.name) || undefined,
     affiliation: readString(personEntity['schema:affiliation']),
     orcid: readIdentifier(personEntity['schema:identifier']),
     functionRoles: readStringArray(personEntity['aac:functionRoles']),
@@ -495,14 +518,14 @@ function readLegacyAgentRoles(agent: ROCrateEntity): string[] {
 function readStageAgent(
   agent: ROCrateEntity,
   activity: ROCrateEntity,
-  persons: Person[],
+  persons: PersonCandidate[],
   rolesByPersonId: ReadonlyMap<string, RoleInfo[]>,
 ): Agent {
   const agentType = Array.isArray(agent['@type']) ? agent['@type'][0] : agent['@type']
   const normalizedType = agentType?.replace('schema:', '') || agentType
 
   if (normalizedType === 'Person') {
-    const personId = readString(agent['aac:canvasId']) ?? agent['@id'].replace('#', '')
+    const personId = canvasIdFor(agent)
     if (!persons.some((person) => person.id === personId)) {
       persons.push(readPersonEntity(agent))
     }
@@ -541,11 +564,11 @@ function readStageAgent(
 function readGovernanceStage(
   activity: ROCrateEntity,
   graph: ROCrateEntity[],
-  persons: Person[],
+  persons: PersonCandidate[],
   rolesByPersonId: ReadonlyMap<string, RoleInfo[]>,
 ): GovernanceStage {
   const stage: GovernanceStage = {
-    id: readString(activity['aac:canvasId']) ?? activity['@id'].replace('#', ''),
+    id: canvasIdFor(activity),
     name: readString(activity.name) || '',
   }
 
@@ -629,7 +652,7 @@ function readDatasetsSection(graph: ROCrateEntity[]): CanvasData['dataAccess'] |
       : dataset.containsPersonalData
 
     const canvasDataset: Dataset = {
-      id: readString(dataset['aac:canvasId']) ?? dataset['@id'].replace('#', ''),
+      id: canvasIdFor(dataset),
       title: readString(dataset.name) || '',
       description: readString(dataset.description) || undefined,
       format: readString(dataset['schema:encodingFormat']),
@@ -706,7 +729,7 @@ function readPublicationAuthors(entity: ROCrateEntity, graph: ROCrateEntity[]): 
       const authorRef = readEntityReference(author)
       const referencedPerson = authorRef ? findEntity(graph, authorRef['@id']) : undefined
       const personId = readString(referencedPerson?.['aac:canvasId'])
-        ?? authorRef?.['@id'].replace('#', '')
+        ?? (authorRef ? crateIdToCanvasId(authorRef['@id']) : undefined)
       const authorTypes = readStringArray(author['@type'])
       const authorType = authorTypes?.[0] ?? readString(author['@type'])
       const isOrganization = authorType === 'schema:Organization' || authorType === 'Organization'
@@ -729,7 +752,7 @@ function readCreativeWorkOutcomeSection(
     if (!title.trim()) return
 
     const outcome: Omit<Deliverable, 'type'> = {
-      id: readString(entity['aac:canvasId']) ?? entity['@id'].replace('#', ''),
+      id: canvasIdFor(entity),
       title,
       description: readString(entity.description) || undefined,
       date: readString(entity.datePublished) || undefined,
@@ -769,7 +792,7 @@ function readEvaluationSection(graph: ROCrateEntity[]): Evaluation[] | undefined
       entity['aac:evaluationType'] && entity['@id'] !== 'ro-crate-metadata.json',
     )
   const evaluations = [...oldEvaluations, ...currentEvaluations].map((evaluation): Evaluation => ({
-    id: readString(evaluation['aac:canvasId']) ?? evaluation['@id'].replace('#', ''),
+    id: canvasIdFor(evaluation),
     type: readString(evaluation['aac:evaluationType']) || readString(evaluation.name) || '',
     results: readString(evaluation.description) || undefined,
     date: readString(evaluation.datePublished) || undefined,

@@ -4,6 +4,7 @@ Compiles the current schema with Ajv and converts errors into stable structured 
 
 import Ajv, { type ErrorObject } from 'ajv'
 import addFormats from 'ajv-formats'
+import { appendPointer } from '@/json'
 import { AAC_CURRENT_SCHEMA, AAC_SCHEMA_VERSION } from '@/schema/contract'
 import type { CanvasData } from '@/types/canvas'
 import type { Diagnostic } from '@/diagnostics'
@@ -40,19 +41,17 @@ addFormats(ajv)
 
 const validate = ajv.compile<CanvasData>(AAC_CURRENT_SCHEMA)
 
+/**
+ * Point findings at the offending property rather than its parent, so callers
+ * can report, navigate to, and repair exactly the value Ajv rejected.
+ */
 function diagnosticPath(error: ErrorObject): string {
   const base = error.instancePath || ''
   if (error.keyword === 'additionalProperties') {
-    const property = String(error.params.additionalProperty)
-      .replace(/~/g, '~0')
-      .replace(/\//g, '~1')
-    return `${base}/${property}` || '/'
+    return appendPointer(base, String(error.params.additionalProperty))
   }
   if (error.keyword === 'required') {
-    const property = String(error.params.missingProperty)
-      .replace(/~/g, '~0')
-      .replace(/\//g, '~1')
-    return `${base}/${property}` || '/'
+    return appendPointer(base, String(error.params.missingProperty))
   }
   return base || '/'
 }

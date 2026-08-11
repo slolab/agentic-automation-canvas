@@ -1,11 +1,18 @@
 import JSZip from 'jszip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { AAC_RO_CRATE_PROFILE_ID, AAC_SCHEMA_VERSION } from '@/schema/contract'
-import { importROCrateFromZip } from '@/rocrate/container'
+import { ROCrateImportError, importROCrateFromZip } from '@/rocrate/container'
 
 afterEach(() => {
   vi.restoreAllMocks()
 })
+
+async function zipWith(files: Record<string, string>): Promise<File> {
+  const zip = new JSZip()
+  Object.entries(files).forEach(([name, content]) => zip.file(name, content))
+  const bytes = await zip.generateAsync({ type: 'uint8array' })
+  return bytes as unknown as File
+}
 
 describe('RO-Crate ZIP container boundary', () => {
   it('reports malformed optional display metadata without blocking the canvas', async () => {
@@ -46,5 +53,39 @@ describe('RO-Crate ZIP container boundary', () => {
         }),
       ]),
     )
+  })
+
+  it('fails with structured diagnostics when the crate has no metadata file', async () => {
+    const file = await zipWith({ 'readme.txt': 'no crate here' })
+
+    await expect(importROCrateFromZip(file)).rejects.toThrow(ROCrateImportError)
+    await expect(importROCrateFromZip(file)).rejects.toMatchObject({
+      diagnostics: [
+        expect.objectContaining({ severity: 'error', code: 'rocrate.metadataMissing' }),
+      ],
+    })
+  })
+
+  it('preserves graph-level diagnostics when the crate has no JSON-LD graph', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+    const file = await zipWith({ 'ro-crate-metadata.json': JSON.stringify({ notAGraph: true }) })
+
+    await expect(importROCrateFromZip(file)).rejects.toMatchObject({
+      diagnostics: [
+        expect.objectContaining({
+          severity: 'error',
+          code: 'rocrate.graphMissing',
+          path: '/@graph',
+        }),
+      ],
+    })
+  })
+
+  it('reports unreadable metadata JSON as a structured diagnostic', async () => {
+    const file = await zipWith({ 'ro-crate-metadata.json': '{not json' })
+
+    await expect(importROCrateFromZip(file)).rejects.toMatchObject({
+      diagnostics: [expect.objectContaining({ code: 'rocrate.metadataUnreadable' })],
+    })
   })
 })

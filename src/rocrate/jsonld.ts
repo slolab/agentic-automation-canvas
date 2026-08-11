@@ -1,4 +1,5 @@
 import type { Diagnostic } from '@/diagnostics'
+import { isRecord } from '@/json'
 import type { ROCrateEntity, ROCrateJSONLD } from '@/types/rocrate'
 
 export interface RecoveredROCrate {
@@ -16,14 +17,8 @@ export class ROCrateContainerError extends Error {
   }
 }
 
-export type UnknownRecord = Record<string, unknown>
-
 export interface EntityReference {
   '@id': string
-}
-
-export function isRecord(value: unknown): value is UnknownRecord {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
 }
 
 function finding(

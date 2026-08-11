@@ -55,3 +55,9 @@ jobs:
 
       - name: Validate examples
         run: uv run python tools/validate-examples.py
+
+      - name: Check generated schema reference
+        run: |
+          uv run python tools/generate-reference.py
+          git diff --exit-code -- docs/reference/index.md \
+            || (echo "docs/reference/index.md is stale; run tools/generate-reference.py and commit." && exit 1)

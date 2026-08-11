@@ -234,13 +234,22 @@ import { useHeaderActionsMode } from './composables/useHeaderActionsMode'
 import { exampleData, exampleBenefitDisplay } from './data/example-data'
 import { generateROCrate } from '@/rocrate/export'
 import { downloadROCrateZip } from './utils/download'
-import { importROCrateFromZip } from '@/rocrate/container'
+import { ROCrateImportError, importROCrateFromZip } from '@/rocrate/container'
+import { formatDiagnostics } from '@/diagnostics'
+import { CurrentCanvasValidationError } from '@/schema/validation'
 import CanvasForm from './components/CanvasForm.vue'
 import BotAssistant from './components/BotAssistant.vue'
 import ImportButton from './components/ImportButton.vue'
 import InfoOverlay from './components/InfoOverlay.vue'
 
-const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
+const {
+  canvasData,
+  benefitDisplay,
+  importFromROCrate,
+  clearData: clearCanvasData,
+  reportDiagnostics,
+  validateAll,
+} = useCanvasData()
 const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
 const headerActionsRef = ref<HTMLElement | null>(null)
 const headerActionsMode = useHeaderActionsMode(headerActionsRef)
@@ -316,9 +325,22 @@ const onDrop = async (e: DragEvent) => {
     importFromROCrate(result.canvasData, result.benefitDisplay, result.diagnostics)
     alert('RO-Crate imported successfully!')
   } catch (error) {
-    alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    console.error('Import error:', error)
+    reportImportFailure(error)
   }
+}
+
+/**
+ * Import failures carry the same structured findings as a successful import, so
+ * they are shown in the canvas notices banner rather than collapsed to a string.
+ */
+const reportImportFailure = (error: unknown) => {
+  if (error instanceof ROCrateImportError) {
+    reportDiagnostics(error.diagnostics)
+    alert(`Could not import this RO-Crate:\n\n${formatDiagnostics(error.diagnostics)}`)
+  } else {
+    alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+  }
+  console.error('Import error:', error)
 }
 
 const validation = computed(() => validateAll())
@@ -398,7 +420,14 @@ const downloadROCrate = async () => {
     
     await downloadROCrateZip(rocrate, projectName, canvasData.value, benefitDisplay.value)
   } catch (error) {
-    alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    if (error instanceof CurrentCanvasValidationError) {
+      alert(
+        `${error.message}. Please fix these fields before exporting:\n\n` +
+          formatDiagnostics(error.diagnostics),
+      )
+    } else {
+      alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
     console.error('RO-Crate generation error:', error)
   }
 }

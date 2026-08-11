@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest'
+import { isRecord } from '@/json'
 import { validateCurrentCanvas } from '@/schema/validation'
 import type { CanvasData } from '@/types/canvas'
 import { generateROCrate } from '@/rocrate/export'
@@ -6,10 +7,6 @@ import { importROCrateDocument } from '@/rocrate/import'
 import { AAC_CURRENT_SCHEMA } from '@/schema/contract'
 
 type JsonSchema = Record<string, unknown>
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
 
 function resolveSchema(node: JsonSchema): JsonSchema {
   const reference = node.$ref
@@ -357,6 +354,31 @@ describe('current AAC RO-Crate round trip', () => {
     expect(imported.canvasData.persons?.[0].id).toBe('Ada Lovelace')
     expect(imported.canvasData.project.creator).toEqual(['Ada Lovelace'])
     expect(imported.canvasData.userExpectations?.requirements?.[0].id).toBe('Task 1')
+  })
+
+  it('derives each exported deliverable id from its own canvas id', () => {
+    const crate = generateROCrate({
+      project: { title: 'Deliverable identity', description: 'An untitled draft is skipped.' },
+      outcomes: {
+        deliverables: [
+          { id: 'draft-not-titled-yet', title: '', type: 'Report' },
+          { id: 'real-report', title: 'Real report', type: 'Report' },
+        ],
+      },
+    })
+
+    const deliverables = crate['@graph'].filter(
+      (entity) => entity['aac:outcomeType'] === 'deliverable',
+    )
+    expect(deliverables).toHaveLength(1)
+    expect(deliverables[0]['@id']).toBe('#real-report')
+    expect(deliverables[0]['aac:canvasId']).toBe('real-report')
+
+    const root = crate['@graph'].find((entity) => entity['@id'] === './')
+    expect(root?.hasPart).toEqual(expect.arrayContaining([{ '@id': '#real-report' }]))
+    expect(root?.hasPart).not.toEqual(
+      expect.arrayContaining([{ '@id': '#draft-not-titled-yet' }]),
+    )
   })
 
   it('keeps JSON-LD entity identities unique when logical IDs repeat', () => {

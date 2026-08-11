@@ -3,8 +3,12 @@
  * Following RO-Crate 1.2 specification with Schema.org, DCAT, PROV-O, FRAPO mappings
  */
 
-import type { CanvasData } from '@/types/canvas'
-import type { BenefitDisplayState } from '@/types/benefitDisplay'
+import type { CanvasData, Deliverable } from '@/types/canvas'
+import {
+  hasCustomBenefitDisplay,
+  type BenefitDisplayState,
+} from '@/types/benefitDisplay'
+import { todayIsoDate } from '@/utils/date'
 import {
   AAC_RO_CRATE_PROFILE_ID,
   AAC_SCHEMA_VERSION,
@@ -78,6 +82,15 @@ function buildDatasetCrateIds(
   return { byIndex, byCanvasId }
 }
 
+/**
+ * Deliverables without a title are drafts the user has not filled in and are
+ * not exported. Allocation and emission must walk this same list, or every
+ * later deliverable would be published under a preceding sibling's identity.
+ */
+function exportedDeliverables(data: CanvasData): Deliverable[] {
+  return (data.outcomes?.deliverables ?? []).filter((deliverable) => deliverable.title?.trim())
+}
+
 interface ExportEntityIds {
   requirements: string[]
   datasets: DatasetCrateIds
@@ -99,7 +112,7 @@ function allocateEntityIds(
     stages: (data.governance?.stages ?? []).map((stage, index) =>
       allocator.forCanvasId(stage.id, 'stage', index),
     ),
-    deliverables: (data.outcomes?.deliverables ?? []).map((deliverable, index) =>
+    deliverables: exportedDeliverables(data).map((deliverable, index) =>
       allocator.forCanvasId(deliverable.id, 'outcome', index),
     ),
     publications: (data.outcomes?.publications ?? []).map((publication, index) =>
@@ -283,7 +296,7 @@ function createExportContext(data: CanvasData): ExportContext {
     '@type': ['schema:Dataset', 'dcat:Dataset'],
     name: data.project.title || 'Agentic Automation Project',
     description: data.project.description,
-    datePublished: new Date().toISOString().split('T')[0],
+    datePublished: todayIsoDate(),
     conformsTo: { '@id': AAC_RO_CRATE_PROFILE_ID },
     'aac:schemaVersion': AAC_SCHEMA_VERSION,
   }
@@ -353,7 +366,7 @@ function createExportContext(data: CanvasData): ExportContext {
 
   const version = data.project.version || data.version || '0.1.0'
   const versionDate =
-    data.project.versionDate || data.versionDate || new Date().toISOString().split('T')[0]
+    data.project.versionDate || data.versionDate || todayIsoDate()
   projectEntity['aac:version'] = version
   projectEntity['aac:versionDate'] = versionDate
   rootDataset['aac:version'] = version
@@ -732,8 +745,7 @@ function addDatasets(context: ExportContext): void {
 function addOutcomes(context: ExportContext): void {
   const { data, entityIds, graph, hasPart, personIdMap } = context
 
-  data.outcomes?.deliverables
-    ?.filter((deliverable) => deliverable.title && deliverable.title.trim())
+  exportedDeliverables(data)
     .forEach((deliverable, index) => {
       const outcomeId = entityIds.deliverables[index]
       hasPart.push({ '@id': outcomeId })
@@ -823,11 +835,7 @@ function addAuxiliaryFiles(context: ExportContext, options?: GenerateROCrateOpti
     rootDataset['aac:developerFeasibility'] = data.developerFeasibility
   }
 
-  const hasBenefitDisplay =
-    (options?.benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
-    (options?.benefitDisplay?.displayGroupCount != null &&
-      options.benefitDisplay.displayGroupCount !== 5)
-  if (hasBenefitDisplay) {
+  if (hasCustomBenefitDisplay(options?.benefitDisplay)) {
     const benefitDisplayFileId = 'benefit-display.json'
     hasPart.push({ '@id': benefitDisplayFileId })
     graph.push({

@@ -1194,7 +1194,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import ExternalLinkIcon from '../ExternalLinkIcon.vue'
@@ -1204,8 +1204,14 @@ import type { Requirement } from '@/types/canvas'
 import { markdownToHtml } from '@/utils/markdown'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { getMonthlyDeploymentCost, formatDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
-const { canvasData, updateDeveloperFeasibility, updateUserExpectations } = useCanvasData()
+const {
+  canvasData,
+  focusFieldRequest,
+  updateDeveloperFeasibility,
+  updateUserExpectations,
+} = useCanvasData()
 
 function updateRequirement(taskId: string, updatedRequirement: Requirement) {
   const requirements = canvasData.value.userExpectations?.requirements || []
@@ -1223,6 +1229,21 @@ const cardExpanded = ref({
   taskLevel: false,
   effortSummary: false,
 })
+
+// Project-level feasibility fields live in the collapsible "projectLevel" card.
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'feasibility') return
+    cardExpanded.value.projectLevel = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 

@@ -117,6 +117,66 @@ describe('fieldToNavTarget', () => {
     })
   })
 
+  // Persons
+  it('maps persons[0].name', () => {
+    expect(fieldToNavTarget('persons[0].name')).toEqual({
+      sectionId: 'persons', itemType: 'person', itemIndex: 0, domFieldId: 'person-name-0',
+    })
+  })
+  it('maps persons[2].localTitle', () => {
+    expect(fieldToNavTarget('persons[2].localTitle')).toEqual({
+      sectionId: 'persons', itemType: 'person', itemIndex: 2, domFieldId: 'person-local-title-2',
+    })
+  })
+  it('maps an unmapped person field to the person item', () => {
+    expect(fieldToNavTarget('persons[1].functionRoles')).toEqual({
+      sectionId: 'persons', itemType: 'person', itemIndex: 1, domFieldId: 'person-function-roles-1',
+    })
+  })
+
+  // Governance stages
+  it('maps governance.stages[0].name', () => {
+    expect(fieldToNavTarget('governance.stages[0].name')).toEqual({
+      sectionId: 'governance', itemType: 'stage', itemIndex: 0, domFieldId: 'stage-name-0',
+    })
+  })
+  it('maps governance.stages[1].policyCardUri', () => {
+    expect(fieldToNavTarget('governance.stages[1].policyCardUri')).toEqual({
+      sectionId: 'governance', itemType: 'stage', itemIndex: 1, domFieldId: 'stage-policy-card-uri-1',
+    })
+  })
+  it('maps a nested stage field to the stage item without a field target', () => {
+    expect(fieldToNavTarget('governance.stages[0].agents[1].type')).toEqual({
+      sectionId: 'governance', itemType: 'stage', itemIndex: 0, domFieldId: null,
+    })
+  })
+  it('maps governance.stages (list-level)', () => {
+    expect(fieldToNavTarget('governance.stages')).toEqual({
+      sectionId: 'governance', itemType: null, itemIndex: null, domFieldId: null,
+    })
+  })
+
+  // Project-level developer feasibility
+  it('maps developerFeasibility.technicalRisk', () => {
+    expect(fieldToNavTarget('developerFeasibility.technicalRisk')).toEqual({
+      sectionId: 'developer-feasibility', itemType: 'feasibility', itemIndex: null,
+      domFieldId: 'technical-risk',
+    })
+  })
+  it('maps developerFeasibility.trlLevel.current', () => {
+    expect(fieldToNavTarget('developerFeasibility.trlLevel.current')).toEqual({
+      sectionId: 'developer-feasibility', itemType: 'feasibility', itemIndex: null,
+      domFieldId: 'trl-current',
+    })
+  })
+
+  // Task-level feasibility is edited on the Feasibility & Risks tab, not Tasks
+  it('routes requirement feasibility fields to the feasibility section', () => {
+    expect(fieldToNavTarget('requirements[0].feasibility.risks[0].title')).toEqual({
+      sectionId: 'developer-feasibility', itemType: null, itemIndex: null, domFieldId: null,
+    })
+  })
+
   // Unknown field
   it('returns null for unrecognised field', () => {
     expect(fieldToNavTarget('unknown.field')).toBeNull()

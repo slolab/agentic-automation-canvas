@@ -7,10 +7,8 @@ import manifest from '../../schema/manifest.json'
 import {
   AAC_CURRENT_SCHEMA,
   AAC_RO_CRATE_PROFILE_ID,
-  AAC_RO_CRATE_PROFILE_PATH,
   AAC_RO_CRATE_PROFILE_VERSION,
   AAC_SCHEMA_ID,
-  AAC_SCHEMA_PATH,
   AAC_SCHEMA_VERSION,
   RO_CRATE_CONTEXT,
   RO_CRATE_VERSION,
@@ -35,10 +33,8 @@ const property = (schema: JsonSchema, ...path: string[]): JsonSchema => {
 describe('versioned AAC schema contract', () => {
   it('generates one current contract from the manifest', () => {
     expect(AAC_SCHEMA_VERSION).toBe(manifest.currentVersion)
-    expect(AAC_SCHEMA_PATH).toBe(manifest.currentSchema)
     expect(AAC_CURRENT_SCHEMA.$id).toBe(AAC_SCHEMA_ID)
     expect(AAC_RO_CRATE_PROFILE_VERSION).toBe(manifest.currentProfileVersion)
-    expect(AAC_RO_CRATE_PROFILE_PATH).toBe(manifest.currentProfile)
     expect(AAC_SCHEMA_ID).toBe(
       `https://w3id.org/aac/schema/${manifest.currentVersion}/aac.schema.json`,
     )

@@ -6,7 +6,10 @@
 import JSZip from 'jszip'
 import type { ROCrateJSONLD } from '@/types/rocrate'
 import type { CanvasData } from '@/types/canvas'
-import type { BenefitDisplayState } from '@/types/benefitDisplay'
+import {
+  hasCustomBenefitDisplay,
+  type BenefitDisplayState,
+} from '@/types/benefitDisplay'
 import { computeCanvasSummary } from './canvasSummary'
 import { generateCanvasPreviewHtml } from './generateCanvasPreviewHtml'
 import { generateAgentInstructions } from './agent-instructions'
@@ -96,10 +99,7 @@ export async function downloadROCrateZip(
   // Add ro-crate-metadata.json
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
 
-  const hasBenefitDisplay =
-    (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
-    (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
-  if (hasBenefitDisplay) {
+  if (hasCustomBenefitDisplay(benefitDisplay)) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
 
@@ -148,10 +148,7 @@ export async function buildROCrateZipBuffer(
   }
 
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
-  const hasBenefitDisplay =
-    (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
-    (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
-  if (hasBenefitDisplay) {
+  if (hasCustomBenefitDisplay(benefitDisplay)) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
   if (canvasData) {

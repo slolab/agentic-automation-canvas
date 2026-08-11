@@ -63,7 +63,8 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import type { HeaderActionsMode } from '@/composables/useHeaderActionsMode'
-import { importROCrateFromZip } from '@/rocrate/container'
+import { ROCrateImportError, importROCrateFromZip } from '@/rocrate/container'
+import { formatDiagnostics } from '@/diagnostics'
 import { useCanvasData } from '@/composables/useCanvasData'
 
 withDefaults(
@@ -73,7 +74,7 @@ withDefaults(
   { headerActionsMode: 'full' }
 )
 
-const { importFromROCrate } = useCanvasData()
+const { importFromROCrate, reportDiagnostics } = useCanvasData()
 const fileInput = ref<HTMLInputElement | null>(null)
 const isImporting = ref(false)
 const inputKey = ref(0)
@@ -107,7 +108,12 @@ const handleFileSelect = async (event: Event) => {
     // Don't switch tabs - stay on current tab
     alert('RO-Crate imported successfully!')
   } catch (error) {
-    alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    if (error instanceof ROCrateImportError) {
+      reportDiagnostics(error.diagnostics)
+      alert(`Could not import this RO-Crate:\n\n${formatDiagnostics(error.diagnostics)}`)
+    } else {
+      alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
     console.error('Import error:', error)
   } finally {
     isImporting.value = false

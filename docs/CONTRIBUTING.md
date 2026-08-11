@@ -158,6 +158,15 @@ non-current or unversioned crate uses the same current-model recovery path, repo
 structured warnings or errors, and loads whatever can be recovered instead of blocking
 the view. Historical contracts are published artifacts, not lossless import promises.
 
+Recovery returns data that conforms *structurally* to the current schema but is not
+necessarily valid against it. Required text the user has not filled in yet — an empty
+`title` or `name` on an item they just created — is preserved as an empty string and
+produces no finding, because an incomplete canvas is the normal state while editing.
+Dropping it would delete the enclosing task, person, or risk. Export re-validates
+strictly and reports those fields as errors. Keep this in mind when adding a
+`minLength` constraint: it must describe a value that is complete, not one that is
+merely present.
+
 ## Standards Compliance
 
 All changes must maintain compliance with:

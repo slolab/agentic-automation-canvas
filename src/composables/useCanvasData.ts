@@ -6,19 +6,24 @@ import { ref, computed, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
 import type { Diagnostic } from '@/diagnostics'
 import { logDiagnostics } from '@/diagnostics'
-import { loadPersistedCanvas } from '@/persistence/canvas'
+import { decodePointer } from '@/json'
+import {
+  clearPersistedBenefitDisplay,
+  readPersistedBenefitDisplay,
+  savePersistedBenefitDisplay,
+} from '@/persistence/benefitDisplay'
+import {
+  clearPersistedCanvas,
+  readPersistedCanvas,
+  savePersistedCanvas,
+} from '@/persistence/canvas'
 import { recoverCanvasToCurrent } from '@/schema/recovery'
 import { validateCurrentCanvas } from '@/schema/validation'
-import {
-  isBenefitDisplayState,
-  type BenefitDisplayState,
-} from '@/types/benefitDisplay'
+import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { collectDataAccessFlags } from '@/utils/dataAccessWarnings'
+import { todayIsoDate } from '@/utils/date'
 import type { FocusFieldRequest } from '@/utils/fieldNavigation'
-
-const STORAGE_KEY = 'agentic-automation-canvas-data'
-const BENEFIT_DISPLAY_STORAGE_KEY = 'agentic-automation-canvas-benefit-display'
 
 // Initialize with default structure
 const canvasData = ref<CanvasData>({
@@ -28,7 +33,7 @@ const canvasData = ref<CanvasData>({
     projectStage: '',
   },
   version: '0.1.0',
-  versionDate: new Date().toISOString().split('T')[0],
+  versionDate: todayIsoDate(),
 })
 
 // App-only: version at last import, for "increment version" reminder (not in schema)
@@ -62,10 +67,7 @@ interface ValidationError {
 }
 
 function schemaPathToField(path: string): string {
-  const segments = path
-    .split('/')
-    .slice(1)
-    .map((segment) => segment.replace(/~1/g, '/').replace(/~0/g, '~'))
+  const segments = decodePointer(path)
   if (segments.length === 0) return 'canvas'
 
   const fullPath = segments.reduce((field, segment) => {
@@ -90,70 +92,30 @@ function currentSchemaErrors(): ValidationError[] {
   }))
 }
 
-// Load from localStorage on init
 const loadFromStorage = () => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const result = loadPersistedCanvas(stored)
-      lastDiagnostics.value = result.diagnostics
-      if (result.canvasData) {
-        canvasData.value = result.canvasData
-        // Ensure version fields are initialized if missing
-        if (!canvasData.value.version && !canvasData.value.project.version) {
-          canvasData.value.version = '0.1.0'
-          canvasData.value.project.version = '0.1.0'
-        }
-        if (!canvasData.value.versionDate && !canvasData.value.project.versionDate) {
-          const today = new Date().toISOString().split('T')[0]
-          canvasData.value.versionDate = today
-          canvasData.value.project.versionDate = today
-        }
+  const result = readPersistedCanvas()
+  if (result) {
+    lastDiagnostics.value = result.diagnostics
+    if (result.canvasData) {
+      canvasData.value = result.canvasData
+      // Ensure version fields are initialized if missing
+      if (!canvasData.value.version && !canvasData.value.project.version) {
+        canvasData.value.version = '0.1.0'
+        canvasData.value.project.version = '0.1.0'
+      }
+      if (!canvasData.value.versionDate && !canvasData.value.project.versionDate) {
+        canvasData.value.versionDate = todayIsoDate()
+        canvasData.value.project.versionDate = todayIsoDate()
       }
     }
-  } catch (error) {
-    console.warn('Failed to load canvas data from storage:', error)
   }
-  try {
-    const stored = localStorage.getItem(BENEFIT_DISPLAY_STORAGE_KEY)
-    if (stored) {
-      const parsed: unknown = JSON.parse(stored)
-      if (isBenefitDisplayState(parsed)) {
-        benefitDisplay.value = {
-          displayGroups: parsed.displayGroups,
-          displayGroupCount: parsed.displayGroupCount,
-        }
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to load benefit display from storage:', error)
-  }
+
+  const storedBenefitDisplay = readPersistedBenefitDisplay()
+  if (storedBenefitDisplay) benefitDisplay.value = storedBenefitDisplay
 }
 
-// Save to localStorage whenever data changes
-watch(
-  canvasData,
-  (newData) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData))
-    } catch (error) {
-      console.warn('Failed to save canvas data to storage:', error)
-    }
-  },
-  { deep: true }
-)
-
-watch(
-  benefitDisplay,
-  (newData) => {
-    try {
-      localStorage.setItem(BENEFIT_DISPLAY_STORAGE_KEY, JSON.stringify(newData))
-    } catch (error) {
-      console.warn('Failed to save benefit display to storage:', error)
-    }
-  },
-  { deep: true }
-)
+watch(canvasData, savePersistedCanvas, { deep: true })
+watch(benefitDisplay, savePersistedBenefitDisplay, { deep: true })
 
 // Initialize
 loadFromStorage()
@@ -228,14 +190,14 @@ export function useCanvasData() {
       dataAccess: undefined,
       outcomes: undefined,
       version: '0.1.0',
-      versionDate: new Date().toISOString().split('T')[0],
+      versionDate: todayIsoDate(),
     }
     lastImportedVersion.value = null
     hasChangedSinceImport.value = false
     lastDiagnostics.value = []
     benefitDisplay.value = { displayGroups: [] }
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem(BENEFIT_DISPLAY_STORAGE_KEY)
+    clearPersistedCanvas()
+    clearPersistedBenefitDisplay()
   }
 
   const exportData = (): string => {
@@ -292,6 +254,11 @@ export function useCanvasData() {
 
   const clearDiagnostics = () => {
     lastDiagnostics.value = []
+  }
+
+  /** Surface findings from a boundary that failed before any data was loaded. */
+  const reportDiagnostics = (diagnostics: readonly Diagnostic[]) => {
+    lastDiagnostics.value = [...diagnostics]
   }
 
   // JSON Schema owns structural validation. These handwritten rules are
@@ -720,6 +687,7 @@ export function useCanvasData() {
     lastImportedVersion,
     lastDiagnostics,
     clearDiagnostics,
+    reportDiagnostics,
     benefitDisplay,
     markChangedSinceImport,
     updateProject,

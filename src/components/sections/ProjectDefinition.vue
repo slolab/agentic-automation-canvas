@@ -573,7 +573,7 @@
                 <div class="flex items-center gap-1">
                   <button
                     type="button"
-                    :disabled="(benefitDisplay.displayGroupCount ?? 5) <= MIN_DISPLAY_GROUPS"
+                    :disabled="(benefitDisplay.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT) <= MIN_DISPLAY_GROUPS"
                     @click="setDisplayGroupCount(-1)"
                     class="inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                     title="Decrease number of display groups"
@@ -583,7 +583,7 @@
                   <span class="text-xs text-gray-500 min-w-[4rem] text-center">{{ displayGroupSlotIds.length }} group{{ displayGroupSlotIds.length === 1 ? '' : 's' }}</span>
                   <button
                     type="button"
-                    :disabled="(benefitDisplay.displayGroupCount ?? 5) >= MAX_DISPLAY_GROUPS"
+                    :disabled="(benefitDisplay.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT) >= MAX_DISPLAY_GROUPS"
                     @click="setDisplayGroupCount(1)"
                     class="inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                     title="Increase number of display groups"
@@ -635,7 +635,13 @@ import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import ExternalLinkIcon from '../ExternalLinkIcon.vue'
 import type { ProjectDefinition, Requirement, Benefit } from '@/types/canvas'
-import type { BenefitDisplayGroup, BenefitRef } from '@/types/benefitDisplay'
+import {
+  DEFAULT_DISPLAY_GROUP_COUNT,
+  MAX_DISPLAY_GROUPS,
+  MIN_DISPLAY_GROUPS,
+  type BenefitDisplayGroup,
+  type BenefitRef,
+} from '@/types/benefitDisplay'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { applyFieldFocus } from '@/utils/fieldNavigation'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
@@ -757,10 +763,6 @@ function benefitTypeBadgeClass(type: string): string {
   }
   return classes[type] || 'bg-gray-100 text-gray-700'
 }
-
-const MIN_DISPLAY_GROUPS = 1
-const MAX_DISPLAY_GROUPS = 15
-const DEFAULT_DISPLAY_GROUP_COUNT = 5
 
 const displayGroupSlotIds = computed(() => {
   const count = benefitDisplay.value.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT

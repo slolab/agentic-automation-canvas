@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { nextTick } from 'vue'
 import type { Diagnostic } from '@/diagnostics'
 
 function memoryStorage(): Storage {
@@ -147,5 +148,47 @@ describe('useCanvasData imports', () => {
 
     expect(() => state.importData('{not json')).toThrow('Invalid JSON data')
     expect(state.canvasData.value).toEqual(before)
+  })
+
+  it('autosaves edits and drops the cleared canvas from storage', async () => {
+    const { useCanvasData } = await import('@/composables/useCanvasData')
+    const state = useCanvasData()
+
+    state.updateProject({ title: 'Autosaved project' })
+    state.benefitDisplay.value = { displayGroups: [], displayGroupCount: 3 }
+    await nextTick()
+
+    expect(localStorage.getItem('agentic-automation-canvas-data')).toContain('Autosaved project')
+    expect(localStorage.getItem('agentic-automation-canvas-benefit-display')).toContain('3')
+
+    state.clearData()
+    await nextTick()
+
+    // clearData removes both keys; the autosave watcher then persists the reset
+    // state, so what remains must be an empty canvas rather than the old one.
+    expect(state.canvasData.value.project.title).toBe('')
+    expect(localStorage.getItem('agentic-automation-canvas-data')).not.toContain(
+      'Autosaved project',
+    )
+    expect(localStorage.getItem('agentic-automation-canvas-benefit-display')).not.toContain('3')
+  })
+
+  it('reopens an autosaved draft whose new items are still blank', async () => {
+    vi.stubGlobal('localStorage', memoryStorage())
+    localStorage.setItem(
+      'agentic-automation-canvas-data',
+      JSON.stringify({
+        project: { title: '', description: '' },
+        persons: [{ id: 'person-0', name: '' }],
+        userExpectations: { requirements: [{ id: 'req-1', title: '', benefits: [] }] },
+      }),
+    )
+
+    const { useCanvasData } = await import('@/composables/useCanvasData')
+    const state = useCanvasData()
+
+    expect(state.canvasData.value.persons).toHaveLength(1)
+    expect(state.canvasData.value.userExpectations?.requirements).toHaveLength(1)
+    expect(state.lastDiagnostics.value).toEqual([])
   })
 })

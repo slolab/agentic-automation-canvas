@@ -263,6 +263,83 @@ describe('recoverCanvasToCurrent', () => {
     expect(validateCurrentCanvas(result.data).valid).toBe(true)
   })
 
+  it('keeps items whose required text the user has not filled in yet', () => {
+    const result = recoverCanvasToCurrent({
+      project: { title: '', description: '', projectStage: '' },
+      persons: [{ id: 'person-0', name: '', functionRoles: [] }],
+      userExpectations: {
+        requirements: [{ id: 'req-1', title: '', benefits: [], unitOfWork: '' }],
+      },
+    })
+
+    expect(result.data.project).toEqual({ title: '', description: '', projectStage: '' })
+    expect(result.data.persons).toEqual([{ id: 'person-0', name: '', functionRoles: [] }])
+    expect(result.data.userExpectations?.requirements).toEqual([
+      { id: 'req-1', title: '', benefits: [], unitOfWork: '' },
+    ])
+    expect(result.diagnostics).toEqual([])
+  })
+
+  it('keeps a nested risk whose title is still empty', () => {
+    const result = recoverCanvasToCurrent({
+      project: { title: 'Risk draft', description: 'A risk is being entered.' },
+      userExpectations: {
+        requirements: [
+          {
+            id: 'req-1',
+            title: 'Task',
+            benefits: [],
+            feasibility: {
+              risks: [
+                {
+                  id: 'risk-1',
+                  riskCategory: 'technical',
+                  title: '',
+                  likelihood: 'low',
+                  impact: 'low',
+                  status: 'identified',
+                },
+              ],
+            },
+          },
+        ],
+      },
+    })
+
+    expect(result.data.userExpectations?.requirements?.[0].feasibility?.risks).toEqual([
+      {
+        id: 'risk-1',
+        riskCategory: 'technical',
+        title: '',
+        likelihood: 'low',
+        impact: 'low',
+        status: 'identified',
+      },
+    ])
+    expect(result.diagnostics).toEqual([])
+  })
+
+  it('still defaults required text that is missing or not a string', () => {
+    const result = recoverCanvasToCurrent({ project: { title: 42 } })
+
+    expect(result.data.project.title).toBe('Untitled imported project')
+    expect(result.data.project.description).toBe('No project description could be recovered.')
+  })
+
+  it('keeps empty required text while dropping genuinely invalid siblings', () => {
+    const result = recoverCanvasToCurrent({
+      project: { title: '', description: '', undeclaredExtension: true },
+      persons: [{ id: 'person-0', name: '' }, { name: 'Missing an id' }],
+    })
+
+    expect(result.data.project).toEqual({ title: '', description: '' })
+    expect(result.data.persons).toEqual([{ id: 'person-0', name: '' }])
+    expect(result.diagnostics.map((diagnostic) => diagnostic.path)).toEqual([
+      '/project/undeclaredExtension',
+      '/persons/1',
+    ])
+  })
+
   it('treats a slash pointer as an empty root property rather than the document root', () => {
     const result = recoverCanvasToCurrent({
       project: { title: 'Pointer recovery', description: 'Does not throw.' },

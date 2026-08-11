@@ -1,12 +1,11 @@
 import JSZip from 'jszip'
 import type { Diagnostic } from '@/diagnostics'
 import { logDiagnostics } from '@/diagnostics'
-import {
-  isBenefitDisplayState,
-  type BenefitDisplayState,
-} from '@/types/benefitDisplay'
+import { isBenefitDisplayState, type BenefitDisplayState } from '@/types/benefitDisplay'
 import type { CanvasData } from '@/types/canvas'
 import { importROCrateDocument } from '@/rocrate/import'
+import { ROCrateContainerError } from '@/rocrate/jsonld'
+import { CurrentCanvasValidationError } from '@/schema/validation'
 
 export interface ImportROCrateResult {
   canvasData: CanvasData
@@ -19,46 +18,94 @@ export interface ImportROCrateResult {
   diagnostics: Diagnostic[]
 }
 
+/**
+ * Raised when a crate cannot be opened at all. It carries the same structured
+ * diagnostics as a successful import so callers can display one kind of finding
+ * rather than a message string for failures and diagnostics for everything else.
+ */
+export class ROCrateImportError extends Error {
+  readonly diagnostics: Diagnostic[]
+
+  constructor(message: string, diagnostics: Diagnostic[]) {
+    super(message)
+    this.name = 'ROCrateImportError'
+    this.diagnostics = diagnostics
+  }
+}
+
+function containerDiagnostic(code: string, path: string, message: string): Diagnostic {
+  return { severity: 'error', source: 'ro-crate', code, path, message }
+}
+
+/** Recover the structured findings an error already carries, or synthesize one. */
+function importFailure(error: unknown): ROCrateImportError {
+  if (error instanceof ROCrateImportError) return error
+  if (error instanceof ROCrateContainerError || error instanceof CurrentCanvasValidationError) {
+    return new ROCrateImportError(error.message, error.diagnostics)
+  }
+  const message = error instanceof Error ? error.message : 'Unknown error'
+  return new ROCrateImportError(message, [
+    containerDiagnostic('rocrate.importFailed', '/', message),
+  ])
+}
+
+async function readBenefitDisplay(
+  zip: JSZip,
+  diagnostics: Diagnostic[],
+): Promise<BenefitDisplayState | undefined> {
+  const file = zip.file('benefit-display.json')
+  if (!file) return undefined
+
+  try {
+    const parsed: unknown = JSON.parse(await file.async('string'))
+    if (!isBenefitDisplayState(parsed)) {
+      throw new Error('benefit-display.json does not match the expected display-state shape.')
+    }
+    return { displayGroups: parsed.displayGroups, displayGroupCount: parsed.displayGroupCount }
+  } catch (error) {
+    const diagnostic: Diagnostic = {
+      severity: 'warning',
+      source: 'ro-crate',
+      code: 'rocrate.benefitDisplayInvalid',
+      path: '/benefit-display.json',
+      message: error instanceof Error ? error.message : 'Failed to parse benefit-display.json.',
+    }
+    diagnostics.push(diagnostic)
+    logDiagnostics([diagnostic])
+    return undefined
+  }
+}
+
 /** Read the ZIP container separately from graph parsing and current-model recovery. */
 export async function importROCrateFromZip(file: File): Promise<ImportROCrateResult> {
   try {
     const zip = await JSZip.loadAsync(file)
     const metadataFile = zip.file('ro-crate-metadata.json')
-
     if (!metadataFile) {
-      throw new Error('ro-crate-metadata.json not found in ZIP file')
+      throw new ROCrateImportError('ro-crate-metadata.json not found in ZIP file', [
+        containerDiagnostic(
+          'rocrate.metadataMissing',
+          '/ro-crate-metadata.json',
+          'The archive contains no ro-crate-metadata.json.',
+        ),
+      ])
     }
 
     const metadataContent = await metadataFile.async('string')
-    const imported = importROCrateDocument(JSON.parse(metadataContent) as unknown)
-    const diagnostics = [...imported.diagnostics]
-
-    let benefitDisplay: BenefitDisplayState | undefined
-    const benefitDisplayFile = zip.file('benefit-display.json')
-    if (benefitDisplayFile) {
-      try {
-        const content = await benefitDisplayFile.async('string')
-        const parsed: unknown = JSON.parse(content)
-        if (!isBenefitDisplayState(parsed)) {
-          throw new Error('benefit-display.json does not match the expected display-state shape.')
-        }
-        benefitDisplay = {
-          displayGroups: parsed.displayGroups,
-          displayGroupCount: parsed.displayGroupCount,
-        }
-      } catch (error) {
-        const diagnostic: Diagnostic = {
-          severity: 'warning',
-          code: 'rocrate.benefitDisplayInvalid',
-          path: '/benefit-display.json',
-          message:
-            error instanceof Error ? error.message : 'Failed to parse benefit-display.json.',
-          source: 'ro-crate',
-        }
-        diagnostics.push(diagnostic)
-        logDiagnostics([diagnostic])
-      }
+    let metadata: unknown
+    try {
+      metadata = JSON.parse(metadataContent)
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : 'ro-crate-metadata.json is not valid JSON.'
+      throw new ROCrateImportError(message, [
+        containerDiagnostic('rocrate.metadataUnreadable', '/ro-crate-metadata.json', message),
+      ])
     }
+
+    const imported = importROCrateDocument(metadata)
+    const diagnostics = [...imported.diagnostics]
+    const benefitDisplay = await readBenefitDisplay(zip, diagnostics)
 
     return {
       canvasData: imported.canvasData,
@@ -68,9 +115,8 @@ export async function importROCrateFromZip(file: File): Promise<ImportROCrateRes
       diagnostics,
     }
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Failed to import RO-Crate: ${error.message}`)
-    }
-    throw new Error('Failed to import RO-Crate: Unknown error')
+    const failure = importFailure(error)
+    logDiagnostics(failure.diagnostics)
+    throw failure
   }
 }

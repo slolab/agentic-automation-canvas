@@ -7,7 +7,10 @@ import type {
   CanvasData,
   Dataset,
   Deliverable,
+  DeveloperFeasibility,
   Evaluation,
+  GovernanceStage,
+  Person,
   Publication,
   Requirement,
 } from '@/types/canvas'
@@ -49,10 +52,50 @@ const evaluationDomMap: Partial<Record<keyof Evaluation, FieldTargetFactory>> = 
   type: (index) => `eval-type-${index}`,
 }
 
+const personDomMap: Partial<Record<keyof Person, FieldTargetFactory>> = {
+  id: (index) => `person-id-${index}`,
+  name: (index) => `person-name-${index}`,
+  affiliation: (index) => `person-affiliation-${index}`,
+  orcid: (index) => `person-orcid-${index}`,
+  functionRoles: (index) => `person-function-roles-${index}`,
+  localTitle: (index) => `person-local-title-${index}`,
+}
+
+const stageDomMap: Partial<Record<keyof GovernanceStage, FieldTargetFactory>> = {
+  name: (index) => `stage-name-${index}`,
+  startDate: (index) => `stage-start-${index}`,
+  endDate: (index) => `stage-end-${index}`,
+  policyCardUri: (index) => `stage-policy-card-uri-${index}`,
+}
+
+// Project-level feasibility is a single form, so its targets are not indexed.
+const developerFeasibilityDomMap: Partial<Record<keyof DeveloperFeasibility, string>> = {
+  technicalRisk: 'technical-risk',
+  effortEstimate: 'effort-estimate-value',
+  feasibilityNotes: 'feasibility-notes',
+}
+
+const trlLevelDomMap: Partial<
+  Record<keyof NonNullable<DeveloperFeasibility['trlLevel']>, string>
+> = {
+  current: 'trl-current',
+  target: 'trl-target',
+}
+
 export interface FocusFieldRequest {
   sectionId: string
   domFieldId: string | null   // null = expand item only, no specific field to focus
-  itemType: 'project' | 'requirement' | 'dataset' | 'deliverable' | 'publication' | 'evaluation' | null
+  itemType:
+    | 'project'
+    | 'person'
+    | 'requirement'
+    | 'feasibility'
+    | 'stage'
+    | 'dataset'
+    | 'deliverable'
+    | 'publication'
+    | 'evaluation'
+    | null
   itemIndex: number | null
 }
 
@@ -83,6 +126,53 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
     return { sectionId: 'user-expectations', itemType: null, itemIndex: null, domFieldId: null }
   }
 
+  // ── persons[n].subField ─────────────────────────────────────────────────────
+  const personMatch = field.match(/^persons\[(\d+)\](?:\.(.+))?$/)
+  if (personMatch) {
+    const index = parseInt(personMatch[1], 10)
+    const subField = personMatch[2] ?? ''
+    return {
+      sectionId:  'persons',
+      itemType:   'person',
+      itemIndex:  index,
+      domFieldId: personDomMap[subField as keyof Person]?.(index) ?? null,
+    }
+  }
+
+  // ── governance.stages[n].subField ───────────────────────────────────────────
+  if (field === 'governance' || field === 'governance.stages') {
+    return { sectionId: 'governance', itemType: null, itemIndex: null, domFieldId: null }
+  }
+  const stageMatch = field.match(/^governance\.stages\[(\d+)\](?:\.(.+))?$/)
+  if (stageMatch) {
+    const index = parseInt(stageMatch[1], 10)
+    const subField = stageMatch[2] ?? ''
+    return {
+      sectionId:  'governance',
+      itemType:   'stage',
+      itemIndex:  index,
+      domFieldId: stageDomMap[subField as keyof GovernanceStage]?.(index) ?? null,
+    }
+  }
+
+  // ── developerFeasibility.subField (project-level, single form) ──────────────
+  if (field === 'developerFeasibility' || field.startsWith('developerFeasibility.')) {
+    const subField = field.slice('developerFeasibility.'.length)
+    const trlField = subField.startsWith('trlLevel.')
+      ? trlLevelDomMap[
+        subField.slice('trlLevel.'.length) as keyof NonNullable<DeveloperFeasibility['trlLevel']>
+      ]
+      : undefined
+    return {
+      sectionId:  'developer-feasibility',
+      itemType:   'feasibility',
+      itemIndex:  null,
+      domFieldId: trlField
+        ?? developerFeasibilityDomMap[subField as keyof DeveloperFeasibility]
+        ?? null,
+    }
+  }
+
   // ── requirements[n].subField ────────────────────────────────────────────────
   const reqMatch = field.match(/^requirements\[(\d+)\](?:\.(.+))?$/)
   if (reqMatch) {
@@ -91,6 +181,13 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
     // Task-level data access is edited from the Data Access tab, not Tasks & Benefits
     if (subField === 'dataAccess' || subField.startsWith('dataAccess.')) {
       return { sectionId: 'data-access', itemType: null, itemIndex: null, domFieldId: null }
+    }
+    // Task-level feasibility and risks live on the Feasibility & Risks tab, whose
+    // field ids are keyed by requirement id rather than index.
+    if (subField === 'feasibility' || subField.startsWith('feasibility.')) {
+      return {
+        sectionId: 'developer-feasibility', itemType: null, itemIndex: null, domFieldId: null,
+      }
     }
     const targetFactory = requirementDomMap[subField as keyof Requirement]
     // Benefit-related subFields (benefits, benefits[].*, benefits[n].*, netTimeSaved)

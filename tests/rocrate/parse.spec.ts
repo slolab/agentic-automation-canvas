@@ -451,6 +451,38 @@ describe('mapROCrateToCanvasCandidate', () => {
     })
   })
 
+  it('derives canvas ids from absolute entity URIs without mangling their fragments', () => {
+    const canvasData = parseCurrent({
+      '@context': 'https://w3id.org/ro/crate/1.2/context',
+      '@graph': [
+        {
+          '@id': './',
+          '@type': ['schema:Dataset', 'dcat:Dataset'],
+          about: { '@id': '#project' },
+        },
+        {
+          '@id': '#project',
+          '@type': ['schema:Project', 'schema:ResearchProject'],
+          name: 'External identifiers',
+          description: 'Entities identified by absolute URIs.',
+        },
+        {
+          '@id': 'https://example.org/people#alice',
+          '@type': 'schema:Person',
+          name: 'Alice',
+        },
+        {
+          '@id': 'https://example.org/data#input',
+          '@type': 'dcat:Dataset',
+          name: 'Input dataset',
+        },
+      ],
+    })
+
+    expect(canvasData.persons?.[0].id).toBe('https://example.org/people#alice')
+    expect(canvasData.dataAccess?.datasets?.[0].id).toBe('https://example.org/data#input')
+  })
+
   it('recovers fundingGrant from a FRAPO Grant entity (export→import roundtrip)', () => {
     const crate = generateROCrate({
       project: {

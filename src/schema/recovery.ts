@@ -1,5 +1,14 @@
 import type { Diagnostic } from '@/diagnostics'
 import {
+  decodePointer,
+  hasAtPath,
+  isRecord,
+  parentPointer,
+  readAtPath,
+  removeAtPath,
+  writeAtPath,
+} from '@/json'
+import {
   assertCurrentCanvas,
   validateCurrentCanvas,
   type CanvasValidationResult,
@@ -15,10 +24,6 @@ export interface CanvasRecoveryResult {
 
 const DEFAULT_PROJECT_TITLE = 'Untitled imported project'
 const DEFAULT_PROJECT_DESCRIPTION = 'No project description could be recovered.'
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
 
 function recoveryDiagnostic(code: string, path: string, message: string): Diagnostic {
   return {
@@ -41,75 +46,54 @@ function pushUnique(diagnostics: Diagnostic[], diagnostic: Diagnostic): void {
   if (!duplicate) diagnostics.push(diagnostic)
 }
 
-function decodePointer(path: string): string[] {
-  if (path === '') return []
-  return path
-    .split('/')
-    .slice(1)
-    .map((part) => part.replace(/~1/g, '/').replace(/~0/g, '~'))
+/**
+ * Stand-in for required text the user has not entered yet. Every `minLength: 1`
+ * field in the schema is a bare string with no `maxLength`, `pattern`, or
+ * `format`, so any non-empty value satisfies the constraint without tripping
+ * another keyword. The token is namespaced so it cannot plausibly collide with
+ * text a user typed, and it is only interpreted when a substitution happened.
+ */
+const INCOMPLETE_TEXT_PLACEHOLDER = 'aac:incomplete-value'
+
+/**
+ * An empty string where the schema demands `minLength: 1` means the field has
+ * not been filled in yet — the normal state of a canvas being edited. Without
+ * this substitution, recovery would drop the empty value, then see the required
+ * property missing and delete the whole enclosing item, destroying a task,
+ * person, or risk the user had just created.
+ *
+ * Substituting a placeholder can only remove `minLength` findings, never
+ * introduce one, so a single validation pass finds every candidate.
+ */
+function stashIncompleteText(value: Record<string, unknown>): boolean {
+  const pointers = validateCurrentCanvas(value)
+    .diagnostics
+    .filter((diagnostic) => diagnostic.keyword === 'minLength' && diagnostic.params.limit === 1)
+    .map((diagnostic) => diagnostic.path)
+    .filter((path) => readAtPath(value, path) === '')
+
+  pointers.forEach((path) => writeAtPath(value, path, INCOMPLETE_TEXT_PLACEHOLDER))
+  return pointers.length > 0
 }
 
-function encodePointer(parts: readonly string[]): string {
-  if (parts.length === 0) return ''
-  return `/${parts
-    .map((part) => part.replace(/~/g, '~0').replace(/\//g, '~1'))
-    .join('/')}`
-}
-
-function parentPointer(path: string): string {
-  return encodePointer(decodePointer(path).slice(0, -1))
-}
-
-function hasAtPath(root: unknown, path: string): boolean {
-  const parts = decodePointer(path)
-  if (parts.length === 0) return true
-  let current: unknown = root
-
-  for (const part of parts) {
-    if (Array.isArray(current)) {
-      if (!/^\d+$/.test(part)) return false
-      const index = Number(part)
-      if (index < 0 || index >= current.length) return false
-      current = current[index]
-    } else if (isRecord(current)) {
-      if (!Object.prototype.hasOwnProperty.call(current, part)) return false
-      current = current[part]
-    } else {
-      return false
-    }
+/**
+ * Put the empty strings back. This walks the recovered document instead of
+ * replaying the stashed pointers because recovery may splice array items and
+ * shift the indices those pointers referred to.
+ */
+function restoreIncompleteText(value: unknown): void {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      if (item === INCOMPLETE_TEXT_PLACEHOLDER) value[index] = ''
+      else restoreIncompleteText(item)
+    })
+    return
   }
-  return true
-}
-
-function removeAtPath(root: unknown, path: string): boolean {
-  const parts = decodePointer(path)
-  if (parts.length === 0) return false
-  let parent: unknown = root
-
-  for (const part of parts.slice(0, -1)) {
-    if (Array.isArray(parent)) {
-      if (!/^\d+$/.test(part)) return false
-      parent = parent[Number(part)]
-    } else if (isRecord(parent)) {
-      parent = parent[part]
-    } else {
-      return false
-    }
-  }
-
-  const key = parts.at(-1)!
-  if (Array.isArray(parent)) {
-    if (!/^\d+$/.test(key)) return false
-    const index = Number(key)
-    if (!Number.isInteger(index) || index < 0 || index >= parent.length) return false
-    parent.splice(index, 1)
-    return true
-  }
-  if (isRecord(parent) && Object.prototype.hasOwnProperty.call(parent, key)) {
-    delete parent[key]
-    return true
-  }
-  return false
+  if (!isRecord(value)) return
+  Object.entries(value).forEach(([key, item]) => {
+    if (item === INCOMPLETE_TEXT_PLACEHOLDER) value[key] = ''
+    else restoreIncompleteText(item)
+  })
 }
 
 function ensureRequiredProject(value: Record<string, unknown>, diagnostics: Diagnostic[]): void {
@@ -376,15 +360,22 @@ function recoverInvalidFields(value: Record<string, unknown>, diagnostics: Diagn
  *
  * This is deliberately version-agnostic: every non-current source follows the
  * same current-schema validation and best-effort recovery path.
+ *
+ * The result conforms structurally to the current schema, which is what earns
+ * the `CanvasData` type. It is not necessarily *valid* against it: required text
+ * the user has not filled in is returned as an empty string so an in-progress
+ * canvas survives a reload. Export re-validates strictly and rejects those.
  */
 export function recoverCanvasToCurrent(input: unknown): CanvasRecoveryResult {
   const diagnostics: Diagnostic[] = []
   const cloned = isRecord(input) ? structuredClone(input) : {}
 
+  const hasIncompleteText = stashIncompleteText(cloned)
   ensureRequiredProject(cloned, diagnostics)
   normalizeKnownCurrentShapes(cloned, diagnostics)
   recoverInvalidFields(cloned, diagnostics)
   assertCurrentCanvas(cloned)
+  if (hasIncompleteText) restoreIncompleteText(cloned)
 
   return { data: cloned, diagnostics }
 }

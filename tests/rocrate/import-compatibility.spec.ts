@@ -123,6 +123,62 @@ describe('tolerant current-model RO-Crate import', () => {
     )
   })
 
+  it('reports unreadable required text instead of opening a silently empty canvas', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+    const result = importROCrateDocument({
+      '@context': 'https://w3id.org/ro/crate/1.2/context',
+      '@graph': [
+        { '@id': './', '@type': ['schema:Dataset'], about: { '@id': '#project' } },
+        { '@id': '#project', '@type': ['schema:Project'] },
+      ],
+    })
+
+    expect(result.canvasData.project.title).toBe('Untitled imported project')
+    expect(result.canvasData.project.description).toBe(
+      'No project description could be recovered.',
+    )
+    expect(result.diagnostics).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'recovery.requiredValueDefaulted',
+          path: '/project/title',
+        }),
+        expect.objectContaining({
+          code: 'recovery.requiredValueDefaulted',
+          path: '/project/description',
+        }),
+      ]),
+    )
+  })
+
+  it('drops a task and a person the crate gives no readable identity, with findings', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined)
+
+    const result = importROCrateDocument({
+      '@context': 'https://w3id.org/ro/crate/1.2/context',
+      '@graph': [
+        { '@id': './', '@type': ['schema:Dataset'], about: { '@id': '#project' } },
+        {
+          '@id': '#project',
+          '@type': ['schema:Project'],
+          name: 'Nameless members',
+          description: 'The crate omits a task title and a person name.',
+          hasPlan: { '@id': '#plan' },
+        },
+        { '@id': '#plan', '@type': 'p-plan:Plan', 'p-plan:hasStep': [{ '@id': '#task' }] },
+        { '@id': '#task', '@type': 'p-plan:Step', 'aac:benefits': [] },
+        { '@id': '#someone', '@type': 'schema:Person' },
+      ],
+    })
+
+    expect(result.canvasData.userExpectations?.requirements ?? []).toEqual([])
+    expect(result.canvasData.persons ?? []).toEqual([])
+    expect(
+      result.diagnostics.filter((diagnostic) => diagnostic.code === 'recovery.invalidFieldDropped'),
+    ).not.toEqual([])
+  })
+
   it('reports incompatible values for known mapped fields instead of silently omitting them', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => undefined)
     const crate = structuredClone(nonCurrentCrate)

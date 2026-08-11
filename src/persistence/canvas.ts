@@ -1,3 +1,9 @@
+/**
+ * The canvas persistence boundary: it owns the storage key and both directions
+ * of the local draft, so no caller has to reason about serialization or about
+ * recovering data written by an older application build.
+ */
+
 import type { Diagnostic } from '@/diagnostics'
 import { logDiagnostics } from '@/diagnostics'
 import { recoverCanvasToCurrent } from '@/schema/recovery'
@@ -5,25 +11,11 @@ import { AAC_SCHEMA_VERSION } from '@/schema/contract'
 import { isCurrentCanvas } from '@/schema/validation'
 import type { CanvasData } from '@/types/canvas'
 
+const CANVAS_STORAGE_KEY = 'agentic-automation-canvas-data'
+
 export interface PersistedCanvasLoadResult {
   canvasData?: CanvasData
   diagnostics: Diagnostic[]
-}
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return Boolean(value) && typeof value === 'object' && !Array.isArray(value)
-}
-
-/**
- * Empty project fields are a normal state while editing a new canvas. They are
- * still reported by JSON Schema, but reopening a draft must not replace what the
- * user entered with recovery placeholders.
- */
-function preserveEmptyDraftFields(input: unknown, recovered: CanvasData): void {
-  if (!isRecord(input) || !isRecord(input.project)) return
-
-  if (input.project.title === '') recovered.project.title = ''
-  if (input.project.description === '') recovered.project.description = ''
 }
 
 function invalidJsonDiagnostic(error: unknown): Diagnostic {
@@ -38,10 +30,12 @@ function invalidJsonDiagnostic(error: unknown): Diagnostic {
 }
 
 /**
- * Parse and validate the current application's persisted canvas payload.
+ * Parse and validate a persisted canvas payload.
  *
- * Invalid optional fragments are recovered best-effort against the current
- * schema so findings never block the user from viewing readable data.
+ * Invalid fragments are recovered best-effort against the current schema so
+ * findings never block the user from viewing readable data. Required text the
+ * user has not filled in yet is preserved as-is by recovery and produces no
+ * findings — an incomplete draft is the normal state of a canvas being edited.
  */
 export function loadPersistedCanvas(serialized: string): PersistedCanvasLoadResult {
   let parsed: unknown
@@ -58,11 +52,45 @@ export function loadPersistedCanvas(serialized: string): PersistedCanvasLoadResu
   }
 
   const recovered = recoverCanvasToCurrent(parsed)
-  preserveEmptyDraftFields(parsed, recovered.data)
   logDiagnostics(recovered.diagnostics)
 
-  return {
-    canvasData: recovered.data,
-    diagnostics: recovered.diagnostics,
+  return { canvasData: recovered.data, diagnostics: recovered.diagnostics }
+}
+
+/**
+ * Read the stored draft, or `undefined` when nothing usable is stored.
+ *
+ * Web Storage itself can throw (private browsing, disabled cookies). That must
+ * degrade to "no saved canvas" rather than prevent the app from starting.
+ */
+export function readPersistedCanvas(): PersistedCanvasLoadResult | undefined {
+  let stored: string | null
+  try {
+    stored = localStorage.getItem(CANVAS_STORAGE_KEY)
+  } catch (error) {
+    console.warn('Failed to load canvas data from storage:', error)
+    return undefined
+  }
+  if (stored === null) return undefined
+  return loadPersistedCanvas(stored)
+}
+
+/**
+ * Store the draft. Storage failures (quota, private browsing) are reported and
+ * swallowed: losing an autosave must never interrupt editing.
+ */
+export function savePersistedCanvas(data: CanvasData): void {
+  try {
+    localStorage.setItem(CANVAS_STORAGE_KEY, JSON.stringify(data))
+  } catch (error) {
+    console.warn('Failed to save canvas data to storage:', error)
+  }
+}
+
+export function clearPersistedCanvas(): void {
+  try {
+    localStorage.removeItem(CANVAS_STORAGE_KEY)
+  } catch (error) {
+    console.warn('Failed to clear canvas data from storage:', error)
   }
 }
