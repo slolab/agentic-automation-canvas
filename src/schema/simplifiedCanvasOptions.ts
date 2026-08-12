@@ -1,6 +1,7 @@
 import { AAC_CURRENT_SCHEMA } from '@/schema/contract'
 import type {
   DeveloperFeasibility,
+  GovernanceStaging,
   ProjectDefinition,
   RequirementFeasibility,
 } from '@/types/canvas'
@@ -13,13 +14,17 @@ export type TechnologyArchitecture = NonNullable<
   NonNullable<RequirementFeasibility['technologyApproach']>['architecture']
 >
 export type ConstraintFlag = NonNullable<DeveloperFeasibility['constraintFlags']>[number]
-export type TeamStatus = NonNullable<DeveloperFeasibility['buildTeamStatus']>
+export type TeamStatus = NonNullable<GovernanceStaging['buildTeamStatus']>
 
 function schemaEnum<T extends string>(value: unknown, field: string): readonly T[] {
   if (!Array.isArray(value) || !value.every((item) => typeof item === 'string')) {
     throw new Error(`Current AAC schema value at ${field} is not a string enum`)
   }
   return Object.freeze([...value]) as readonly T[]
+}
+
+function typedKeys<T extends object>(value: T): (keyof T & string)[] {
+  return Object.keys(value) as (keyof T & string)[]
 }
 
 const problemFrequencyLabels: Record<ProblemFrequency, string> = {
@@ -30,7 +35,7 @@ const problemFrequencyLabels: Record<ProblemFrequency, string> = {
   'less-than-yearly': 'Less than once per year',
 }
 
-const technicalApproachLabels: Record<TechnicalApproach, string> = {
+const technicalApproachLabels = {
   'agentic-user-support': 'Agentic User Support',
   'unstructured-content-processing': 'Process large volumes of unstructured documents or logs',
   'code-development': 'Write, Test, and Debug Code',
@@ -55,7 +60,7 @@ const technologyArchitectureLabels: Record<TechnologyArchitecture, string> = {
   other: 'Other',
 }
 
-const constraintLabels: Record<ConstraintFlag, string> = {
+const constraintLabels = {
   'large-data': 'My data is large (more than 100 GB)',
   'cluster-compute': 'High CPU load or cluster execution is required',
   'large-gpu': 'A GPU with more than 8 GB VRAM is required',
@@ -66,6 +71,7 @@ const constraintLabels: Record<ConstraintFlag, string> = {
   'real-time': 'The solution has strict real-time or latency requirements',
   'regulated-or-high-impact': 'Outputs affect regulated, safety-critical, or high-impact decisions',
   'procurement-or-licensing': 'Procurement, licensing, or provider approval may block delivery',
+  other: 'Other',
 }
 
 const teamStatusLabels: Record<TeamStatus, string> = {
@@ -81,31 +87,27 @@ const requirementProperties =
   AAC_CURRENT_SCHEMA.properties.userExpectations.properties.requirements.items.properties
 const technologyApproachProperties =
   requirementProperties.feasibility.properties.technologyApproach.properties
-const developerProperties = AAC_CURRENT_SCHEMA.properties.developerFeasibility.properties
+const governanceProperties = AAC_CURRENT_SCHEMA.properties.governance.properties
 
 const problemFrequencyValues = schemaEnum<ProblemFrequency>(
   AAC_CURRENT_SCHEMA.properties.project.properties.problemFrequency['enum'],
   'project.problemFrequency',
 )
-const technicalApproachValues = schemaEnum<TechnicalApproach>(
-  technologyApproachProperties.approaches.items['enum'],
-  'userExpectations.requirements[].feasibility.technologyApproach.approaches[]',
-)
+// These are presentation suggestions, not schema vocabularies. The canonical
+// fields accept any non-empty string so custom values remain first-class data.
+const technicalApproachValues = Object.freeze(typedKeys(technicalApproachLabels))
+const constraintValues = Object.freeze(typedKeys(constraintLabels))
 const technologyArchitectureValues = schemaEnum<TechnologyArchitecture>(
   technologyApproachProperties.architecture['enum'],
   'userExpectations.requirements[].feasibility.technologyApproach.architecture',
 )
-const constraintValues = schemaEnum<ConstraintFlag>(
-  developerProperties.constraintFlags.items['enum'],
-  'developerFeasibility.constraintFlags[]',
-)
 const buildTeamStatusValues = schemaEnum<TeamStatus>(
-  developerProperties.buildTeamStatus['enum'],
-  'developerFeasibility.buildTeamStatus',
+  governanceProperties.buildTeamStatus['enum'],
+  'governance.buildTeamStatus',
 )
 const maintenanceTeamStatusValues = schemaEnum<TeamStatus>(
-  developerProperties.maintenanceOwnerStatus['enum'],
-  'developerFeasibility.maintenanceOwnerStatus',
+  governanceProperties.maintenanceOwnerStatus['enum'],
+  'governance.maintenanceOwnerStatus',
 )
 
 if (buildTeamStatusValues.join('\u0000') !== maintenanceTeamStatusValues.join('\u0000')) {
@@ -131,6 +133,8 @@ export const constraintOptions = constraintValues.map((value) => ({
   value,
   label: constraintLabels[value],
 }))
+
+export const suggestedConstraintValues: readonly string[] = Object.freeze([...constraintValues])
 
 export const teamStatusOptions = buildTeamStatusValues.map((value) => ({
   value,

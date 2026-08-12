@@ -65,7 +65,9 @@
           "cluster-compute",
           "personal-data",
           "valuable-ip"
-        ],
+      ]
+      },
+      "aac:governanceReadiness": {
         "buildTeamStatus": "committed",
         "maintenanceOwnerStatus": "possible"
       },

@@ -318,23 +318,9 @@ export interface RequirementFeasibility {
      */
     architecture?: 'none' | 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
     /**
-     * Agentic use-case patterns selected as potential approaches
+     * Free-text agentic use-case patterns selected as potential approaches
      */
-    approaches?: (
-      | 'agentic-user-support'
-      | 'unstructured-content-processing'
-      | 'code-development'
-      | 'computer-use'
-      | 'live-event-monitoring'
-      | 'intelligent-search'
-      | 'agentic-research-support'
-      | 'data-metadata-curation'
-      | 'analysis-pipeline-orchestration'
-      | 'experiment-protocol-design'
-      | 'simulation-parameter-optimization'
-      | 'laboratory-workflow-coordination'
-      | 'other'
-    )[]
+    approaches?: string[]
     /**
      * User-defined potential approaches entered when the controlled vocabulary is insufficient
      */
@@ -466,30 +452,19 @@ export interface DeveloperFeasibility {
    */
   solutionsToResearch?: string
   /**
-   * Lightweight project constraints that require deeper feasibility investigation
+   * Free-text project constraints that require deeper feasibility investigation
    */
-  constraintFlags?: (
-    | 'large-data'
-    | 'cluster-compute'
-    | 'large-gpu'
-    | 'personal-data'
-    | 'valuable-ip'
-    | 'external-system-integration'
-    | 'restricted-processing-environment'
-    | 'real-time'
-    | 'regulated-or-high-impact'
-    | 'procurement-or-licensing'
-  )[]
+  constraintFlags?: string[]
+}
+export interface GovernanceStaging {
   /**
    * Whether a person or team is available to build the capability
    */
   buildTeamStatus?: 'none' | 'possible' | 'committed'
   /**
-   * Whether a person or team is available to maintain the capability after the first milestone
+   * Whether a person or team is available to maintain the capability long-term
    */
   maintenanceOwnerStatus?: 'none' | 'possible' | 'committed'
-}
-export interface GovernanceStaging {
   stages?: GovernanceStage[]
 }
 export interface GovernanceStage {

@@ -96,11 +96,9 @@ Project-level feasibility (simple, generic defaults that apply to all tasks unle
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
-| `buildTeamStatus` | string | No | Whether a person or team is available to build the capability | Enum: `none`, `possible`, `committed` | AAC |
-| `constraintFlags` | array of string | No | Lightweight project constraints that require deeper feasibility investigation | Item enum: `large-data`, `cluster-compute`, `large-gpu`, `personal-data`, `valuable-ip`, `external-system-integration`, `restricted-processing-environment`, `real-time`, `regulated-or-high-impact`, `procurement-or-licensing` | AAC |
+| `constraintFlags` | array of string | No | Free-text project constraints that require deeper feasibility investigation |  | AAC |
 | `effortEstimate` | object | No | Overall effort estimate for the project |  | — |
 | `feasibilityNotes` | string | No | Project-level feasibility notes |  | AAC |
-| `maintenanceOwnerStatus` | string | No | Whether a person or team is available to maintain the capability after the first milestone | Enum: `none`, `possible`, `committed` | AAC |
 | `solutionsToResearch` | string | No | Tools, products, services, or other existing solutions that require research |  | AAC |
 | `technicalRisk` | string | No | Overall technical risk for the project | Enum: `low`, `medium`, `high`, `critical` | AAC |
 | `trlLevel` | object | No | Technology Readiness Level - project-level maturity assessment |  | — |
@@ -127,6 +125,8 @@ Technology Readiness Level - project-level maturity assessment
 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
+| `buildTeamStatus` | string | No | Whether a person or team is available to build the capability | Enum: `none`, `possible`, `committed` | AAC |
+| `maintenanceOwnerStatus` | string | No | Whether a person or team is available to maintain the capability long-term | Enum: `none`, `possible`, `committed` | AAC |
 | `stages` | array of object | No |  |  | — |
 
 ## Governance Stage
@@ -331,7 +331,7 @@ Potential agentic use cases and selected technology architecture for this task. 
 | Property | Type | Required | Description | Constraints | Ontology |
 |----------|------|----------|-------------|-------------|----------|
 | `agenticDetails` | object | No |  |  | — |
-| `approaches` | array of string | No | Agentic use-case patterns selected as potential approaches | Item enum: `agentic-user-support`, `unstructured-content-processing`, `code-development`, `computer-use`, `live-event-monitoring`, `intelligent-search`, `agentic-research-support`, `data-metadata-curation`, `analysis-pipeline-orchestration`, `experiment-protocol-design`, `simulation-parameter-optimization`, `laboratory-workflow-coordination`, `other` | AAC |
+| `approaches` | array of string | No | Free-text agentic use-case patterns selected as potential approaches |  | AAC |
 | `architecture` | string | No | Primary technology architecture. 'none' indicates deterministic task without LLM requirement. | Enum: `none`, `simple-prompting`, `rag`, `fine-tuning`, `agents`, `other` | AAC |
 | `customApproaches` | array of string | No | User-defined potential approaches entered when the controlled vocabulary is insufficient |  | AAC |
 | `fineTuningDetails` | object | No |  |  | — |

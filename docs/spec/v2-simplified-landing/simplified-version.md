@@ -48,6 +48,10 @@ Besides scripted unit tests, always test in-browser with the following viewer se
 
 The simplified canvas is a single-screen, two-dimensional view over the canonical AAC schema, arranged as three regions across the top and two across the bottom. It does not store a separate answer per question. A row that maps to several schema properties represents one structured input group backed by those properties.
 
+All multiline text fields show three rows before their content scrolls. In the Problem region, “Who experiences this problem?” and “How often do you experience this problem?” are stacked vertically rather than sharing a row.
+
+Checkbox lists may offer recommended values without turning those suggestions into schema vocabularies. Both potential approaches and constraint flags remain arrays of non-empty free-text strings in the canonical schema. Selecting `Other` enables custom tag entry. Clearing `Other` preserves existing custom tags but disables and grays the tag list until `Other` is selected again.
+
 Two schema-required parent objects are managed automatically. The simplified canvas reuses the first requirement and governance stage when they exist. When no requirement exists, it creates one whose generated `id` is duplicated into `title` and whose `benefits` starts empty. When no governance stage exists, it creates a generated stage named `Planning`. These technical parent values are not presented as user-authored content.
 
 ## Canvas Header
@@ -66,7 +70,7 @@ This section establishes the problem before discussing a change or solution. It 
 |---|---|---|---|
 | Problem description | Long free text | `project.description` | Reused |
 | Who experiences this problem? | Short free text | `userExpectations.requirements[].targetPopulation` | Reused |
-| How often do you experience this need? | Select: daily, weekly, monthly, a few times per year, or less than once per year | `project.problemFrequency` | New — `volumePerMonth` cannot represent these ranges without inventing precision and currently rejects values below one |
+| How often do you experience this problem? | Select: daily, weekly, monthly, a few times per year, or less than once per year | `project.problemFrequency` | New — `volumePerMonth` cannot represent these ranges without inventing precision and currently rejects values below one |
 | Examples of the problem | Repeatable long free text; the simplified canvas initially requests one item | `project.problemExamples[]` | New — proposed for schema `0.17.1` |
 
 ## 2. Change and Value
@@ -87,8 +91,8 @@ This section records prior attempts, potential agentic use-case patterns, and to
 | Field in the simplified canvas | Type | Schema mapping | Status |
 |---|---|---|---|
 | What has already been tried, and what happened? | Long free text | `developerFeasibility.feasibilityNotes` | Reused |
-| Potential Approaches | Multi-select: agentic user support; unstructured document or log processing; code development; computer use; live-event monitoring; intelligent search; research support; data and metadata curation; analysis-pipeline orchestration; experiment or protocol design; simulation or parameter optimization; laboratory workflow coordination; or other | `userExpectations.requirements[].feasibility.technologyApproach.approaches[]` | New — the existing `architecture` field remains available separately for later technical design |
-| Other Potential Approaches | Tag-entry free text, shown when `Other` is selected | `userExpectations.requirements[].feasibility.technologyApproach.customApproaches[]` | New — custom items extend the controlled vocabulary without overloading tool or architecture fields |
+| Potential Approaches | Multi-select suggestions: agentic user support; unstructured document or log processing; code development; computer use; live-event monitoring; intelligent search; research support; data and metadata curation; analysis-pipeline orchestration; experiment or protocol design; simulation or parameter optimization; laboratory workflow coordination; or other | `userExpectations.requirements[].feasibility.technologyApproach.approaches[]` | New — `approaches[]` is free text, not a schema enum; the existing `architecture` field remains available separately for later technical design |
+| Other Potential Approaches | Tag-entry free text, enabled when `Other` is selected and retained in a disabled gray state when it is deselected | `userExpectations.requirements[].feasibility.technologyApproach.customApproaches[]` | New — custom items remain editable without overloading tool or architecture fields |
 | Tools or existing solutions (to research) | Long free text | `developerFeasibility.solutionsToResearch` | New — preserves open-ended research notes without forcing them into a structured tool list |
 
 ## 4. Development Reality
@@ -107,10 +111,9 @@ This section uses a lightweight checklist to identify constraints that require d
 | The solution has strict real-time or latency requirements | Checkbox | `developerFeasibility.constraintFlags[] = "real-time"` | New |
 | The output affects regulated, safety-critical, or high-impact decisions | Checkbox | `developerFeasibility.constraintFlags[] = "regulated-or-high-impact"` | New |
 | Procurement, licensing, or external-provider approval may block delivery | Checkbox | `developerFeasibility.constraintFlags[] = "procurement-or-licensing"` | New |
-| Is a person or team available to build it? | Select: no, possible but uncommitted, or committed | `developerFeasibility.buildTeamStatus` | New |
-| Is a person or team available to maintain it after the first milestone? | Select: no, possible but uncommitted, or committed | `developerFeasibility.maintenanceOwnerStatus` | New |
-| Who is involved? | Tag-entry names | `persons[].name`, referenced by person agents on the first `governance.stages[]` item | Reused — removing a chip removes the stage link, not the shared Person entity |
-| Lead organization or team | Short text | `project.leadOrganization` | Reused |
+| Other constraints | Checkbox plus tag-entry free text; custom tags are retained in a disabled gray state when `Other` is deselected | `developerFeasibility.constraintFlags[]` | New — `constraintFlags[]` is free text, not a schema enum; checkbox values are UI suggestions |
+| Is a person or team available to build it? | Select: no, possible but uncommitted, or committed | `governance.buildTeamStatus` | New |
+| Is a person or team available to maintain it long-term? | Select: no, possible but uncommitted, or committed | `governance.maintenanceOwnerStatus` | New |
 
 ## 5. First Milestone
 
@@ -118,8 +121,8 @@ This section replaces the separate MVP concept with one bounded, testable milest
 
 | Field in the simplified canvas | Type | Schema mapping | Status |
 |---|---|---|---|
-| What is the first milestone? | Two-line free text | `governance.stages[0].milestones[0].description` | Reused — the first stage is reused or created as `Planning` |
-| How will we know the milestone is complete? | Two-line free text | `governance.stages[0].milestones[0].kpi` | Reused — the first stage is reused or created as `Planning` |
+| What is the first milestone? | Three-line free text | `governance.stages[0].milestones[0].description` | Reused — the first stage is reused or created as `Planning` |
+| How will we know the milestone is complete? | Three-line free text | `governance.stages[0].milestones[0].kpi` | Reused — the first stage is reused or created as `Planning` |
 | When can this stage begin? | Date | `governance.stages[0].startDate` | Reused |
 | Target date for this stage | Date | `governance.stages[0].endDate` | Reused |
 

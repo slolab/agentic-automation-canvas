@@ -161,11 +161,11 @@
       "cluster-compute",
       "personal-data",
       "valuable-ip"
-    ],
-    "buildTeamStatus": "committed",
-    "maintenanceOwnerStatus": "possible"
+    ]
   },
   "governance": {
+    "buildTeamStatus": "committed",
+    "maintenanceOwnerStatus": "possible",
     "stages": [
       {
         "id": "stage-0",

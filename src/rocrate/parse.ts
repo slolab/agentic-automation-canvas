@@ -49,6 +49,7 @@ type ProjectCandidate = UnreadableAsAbsent<CanvasData['project'], 'title' | 'des
 type ProjectAndRootSection = { project: ProjectCandidate }
   & Partial<Pick<CanvasData, 'version' | 'versionDate'>>
   & { developerFeasibility?: Record<string, unknown> }
+  & { governanceReadiness?: Record<string, unknown> }
 
 type RequirementCandidate = UnreadableAsAbsent<
   Omit<Requirement, 'benefits' | 'feasibility'>,
@@ -343,6 +344,9 @@ function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection
       section.developerFeasibility = normalizeEffortEstimate(
         rootDataset['aac:developerFeasibility'],
       )
+    }
+    if (isRecord(rootDataset['aac:governanceReadiness'])) {
+      section.governanceReadiness = rootDataset['aac:governanceReadiness']
     }
   }
 
@@ -850,10 +854,16 @@ export function mapROCrateToCanvasCandidate(rocrate: ROCrateJSONLD): unknown {
   const dataAccess = readDatasetsSection(context.graph)
   const outcomes = readOutcomesSection(context.graph, peopleAndGovernance.milestoneIds)
 
-  const candidate: Record<string, unknown> = { ...projectAndRoot }
+  const { governanceReadiness, ...rootSections } = projectAndRoot
+  const candidate: Record<string, unknown> = { ...rootSections }
   if (peopleAndGovernance.persons) candidate.persons = peopleAndGovernance.persons
   if (userExpectations) candidate.userExpectations = userExpectations
-  if (peopleAndGovernance.governance) candidate.governance = peopleAndGovernance.governance
+  if (peopleAndGovernance.governance || governanceReadiness) {
+    candidate.governance = {
+      ...governanceReadiness,
+      ...peopleAndGovernance.governance,
+    }
+  }
   if (dataAccess) candidate.dataAccess = dataAccess
   if (outcomes) candidate.outcomes = outcomes
   return candidate

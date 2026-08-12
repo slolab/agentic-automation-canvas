@@ -268,10 +268,10 @@ const completeCanvas = (): CanvasData => ({
       'regulated-or-high-impact',
       'procurement-or-licensing',
     ],
-    buildTeamStatus: 'committed',
-    maintenanceOwnerStatus: 'possible',
   },
   governance: {
+    buildTeamStatus: 'committed',
+    maintenanceOwnerStatus: 'possible',
     stages: [
       {
         id: 'stage-review',

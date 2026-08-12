@@ -3,6 +3,25 @@ import { recoverCanvasToCurrent } from '@/schema/recovery'
 import { validateCurrentCanvas } from '@/schema/validation'
 
 describe('recoverCanvasToCurrent', () => {
+  it('moves legacy team-readiness fields into governance', () => {
+    const result = recoverCanvasToCurrent({
+      project: { title: 'Legacy readiness', description: 'Preserve ownership answers.' },
+      developerFeasibility: {
+        buildTeamStatus: 'committed',
+        maintenanceOwnerStatus: 'possible',
+      },
+    })
+
+    expect(result.data.developerFeasibility).toEqual({})
+    expect(result.data.governance).toMatchObject({
+      buildTeamStatus: 'committed',
+      maintenanceOwnerStatus: 'possible',
+    })
+    expect(result.diagnostics).toEqual(expect.arrayContaining([
+      expect.objectContaining({ code: 'recovery.governanceReadinessMoved' }),
+    ]))
+  })
+
   it('recovers readable values from an arbitrary non-current shape without a version adapter', () => {
     const input = {
       unknownRoot: 'drop me',

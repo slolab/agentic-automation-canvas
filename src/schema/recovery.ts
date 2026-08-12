@@ -138,6 +138,26 @@ function normalizeKnownCurrentShapes(
   value: Record<string, unknown>,
   diagnostics: Diagnostic[],
 ): void {
+  const developerFeasibility = value.developerFeasibility
+  if (isRecord(developerFeasibility)) {
+    const readinessFields = ['buildTeamStatus', 'maintenanceOwnerStatus'] as const
+    readinessFields.forEach((field) => {
+      if (!(field in developerFeasibility)) return
+      const governance = isRecord(value.governance) ? value.governance : {}
+      if (!(field in governance)) governance[field] = developerFeasibility[field]
+      delete developerFeasibility[field]
+      value.governance = governance
+      pushUnique(
+        diagnostics,
+        recoveryDiagnostic(
+          'recovery.governanceReadinessMoved',
+          `/governance/${field}`,
+          `Legacy developerFeasibility.${field} was moved to governance.${field}.`,
+        ),
+      )
+    })
+  }
+
   const governance = value.governance
   if (!isRecord(governance) || !Array.isArray(governance.stages)) return
 

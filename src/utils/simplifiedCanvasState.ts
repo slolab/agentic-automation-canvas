@@ -12,7 +12,7 @@ const simplifiedPromptDefinitions = {
   'project-title': { label: 'Project title', section: 'Project', domId: 'simplified-project-title' },
   'problem-description': { label: 'Problem description', section: 'Problem', domId: 'problem-description' },
   'problem-audience': { label: 'Who experiences this problem', section: 'Problem', domId: 'problem-audience' },
-  'problem-frequency': { label: 'How often the need is experienced', section: 'Problem', domId: 'problem-frequency' },
+  'problem-frequency': { label: 'How often the problem is experienced', section: 'Problem', domId: 'problem-frequency' },
   'problem-example': { label: 'Most recent concrete case', section: 'Problem', domId: 'problem-example-0' },
   'desired-change': { label: 'What should happen differently', section: 'Change and Value', domId: 'desired-change' },
   'why-now': { label: 'Why this is important right now', section: 'Change and Value', domId: 'why-now' },
@@ -23,8 +23,6 @@ const simplifiedPromptDefinitions = {
   'solutions-research': { label: 'Tools or existing solutions (to research)', section: 'Solutions', domId: 'solutions-research' },
   'build-team-status': { label: 'Whether a team can build it', section: 'Development Reality', domId: 'build-team-status' },
   'maintenance-status': { label: 'Whether somebody can maintain it', section: 'Development Reality', domId: 'maintenance-status' },
-  'first-stage-team': { label: 'Who is involved', section: 'Development Reality', domId: 'first-stage-team' },
-  'lead-organization': { label: 'Lead organization or team', section: 'Development Reality', domId: 'lead-organization' },
   'first-milestone': { label: 'First milestone', section: 'First Milestone', domId: 'first-milestone' },
   'milestone-kpi': { label: 'Milestone completion evidence', section: 'First Milestone', domId: 'milestone-kpi' },
 } as const satisfies Record<
@@ -61,12 +59,11 @@ export function missingSimplifiedPrompts(data: CanvasData): MissingSimplifiedPro
   const requirement = data.userExpectations?.requirements?.[0]
   const benefits = requirement?.benefits ?? []
   const developer = data.developerFeasibility
+  const governance = data.governance
   const firstStage = data.governance?.stages?.[0]
   const firstMilestone = firstStage?.milestones?.[0]
   const potentialApproaches = requirement?.feasibility?.technologyApproach?.approaches ?? []
   const customApproaches = requirement?.feasibility?.technologyApproach?.customApproaches ?? []
-  const teamIsExpected = [developer?.buildTeamStatus, developer?.maintenanceOwnerStatus]
-    .some((status) => status === 'possible' || status === 'committed')
 
   const complete: Record<SimplifiedPromptId, boolean> = {
     'project-title': hasText(data.project.title),
@@ -82,11 +79,8 @@ export function missingSimplifiedPrompts(data: CanvasData): MissingSimplifiedPro
     'solution-approaches': potentialApproaches.length > 0
       && (!potentialApproaches.includes('other') || customApproaches.some(hasText)),
     'solutions-research': hasText(developer?.solutionsToResearch),
-    'build-team-status': hasText(developer?.buildTeamStatus),
-    'maintenance-status': hasText(developer?.maintenanceOwnerStatus),
-    'first-stage-team': !teamIsExpected
-      || (firstStage?.agents?.some((agent) => agent.type === 'person' && hasText(agent.personId)) ?? false),
-    'lead-organization': !teamIsExpected || hasText(data.project.leadOrganization),
+    'build-team-status': hasText(governance?.buildTeamStatus),
+    'maintenance-status': hasText(governance?.maintenanceOwnerStatus),
     'first-milestone': hasText(firstMilestone?.description),
     'milestone-kpi': hasText(firstMilestone?.kpi),
   }
@@ -145,7 +139,6 @@ export function hasDetailedCanvasContent(data: CanvasData): boolean {
     'description',
     'objective',
     'headlineValue',
-    'leadOrganization',
     'problemFrequency',
     'problemExamples',
     'projectStage',
@@ -158,8 +151,6 @@ export function hasDetailedCanvasContent(data: CanvasData): boolean {
     'feasibilityNotes',
     'solutionsToResearch',
     'constraintFlags',
-    'buildTeamStatus',
-    'maintenanceOwnerStatus',
   ])) return true
   if (hasMeaningfulValue(data.dataAccess) || hasMeaningfulValue(data.outcomes)) return true
 
@@ -191,6 +182,12 @@ export function hasDetailedCanvasContent(data: CanvasData): boolean {
     if (hasExtraKeys(stage.milestones?.[0], ['description', 'kpi'])) return true
     if ((stage.agents ?? []).some((agent) => agent.type !== 'person' || hasExtraKeys(agent, ['type', 'personId']))) return true
   }
+
+  if (hasExtraKeys(data.governance, [
+    'buildTeamStatus',
+    'maintenanceOwnerStatus',
+    'stages',
+  ])) return true
 
   const linkedPersonIds = new Set(
     (stage?.agents ?? [])

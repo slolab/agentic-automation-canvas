@@ -206,6 +206,8 @@ describe('validateCurrentCanvas', () => {
           'personal-data',
           'restricted-processing-environment',
         ],
+      },
+      governance: {
         buildTeamStatus: 'possible',
         maintenanceOwnerStatus: 'committed',
       },
@@ -241,7 +243,7 @@ describe('validateCurrentCanvas', () => {
     )
   })
 
-  it('rejects values outside the simplified-canvas controlled vocabularies', () => {
+  it('accepts free-text approaches and constraints but rejects controlled-field values', () => {
     const result = validateCurrentCanvas({
       project: {
         title: 'Invalid simplified values',
@@ -262,6 +264,8 @@ describe('validateCurrentCanvas', () => {
       },
       developerFeasibility: {
         constraintFlags: ['unbounded-compute'],
+      },
+      governance: {
         buildTeamStatus: 'maybe',
         maintenanceOwnerStatus: 'unknown',
       },
@@ -273,21 +277,19 @@ describe('validateCurrentCanvas', () => {
         expect.objectContaining({ code: 'schema.enum', path: '/project/problemFrequency' }),
         expect.objectContaining({
           code: 'schema.enum',
-          path: '/userExpectations/requirements/0/feasibility/technologyApproach/approaches/0',
+          path: '/governance/buildTeamStatus',
         }),
         expect.objectContaining({
           code: 'schema.enum',
-          path: '/developerFeasibility/constraintFlags/0',
-        }),
-        expect.objectContaining({
-          code: 'schema.enum',
-          path: '/developerFeasibility/buildTeamStatus',
-        }),
-        expect.objectContaining({
-          code: 'schema.enum',
-          path: '/developerFeasibility/maintenanceOwnerStatus',
+          path: '/governance/maintenanceOwnerStatus',
         }),
       ]),
+    )
+    expect(result.diagnostics.map((diagnostic) => diagnostic.path)).not.toContain(
+      '/userExpectations/requirements/0/feasibility/technologyApproach/approaches/0',
+    )
+    expect(result.diagnostics.map((diagnostic) => diagnostic.path)).not.toContain(
+      '/developerFeasibility/constraintFlags/0',
     )
   })
 })

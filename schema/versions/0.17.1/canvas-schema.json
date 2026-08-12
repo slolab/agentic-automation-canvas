@@ -406,23 +406,9 @@
                         "uniqueItems": true,
                         "items": {
                           "type": "string",
-                          "enum": [
-                            "agentic-user-support",
-                            "unstructured-content-processing",
-                            "code-development",
-                            "computer-use",
-                            "live-event-monitoring",
-                            "intelligent-search",
-                            "agentic-research-support",
-                            "data-metadata-curation",
-                            "analysis-pipeline-orchestration",
-                            "experiment-protocol-design",
-                            "simulation-parameter-optimization",
-                            "laboratory-workflow-coordination",
-                            "other"
-                          ]
+                          "minLength": 1
                         },
-                        "description": "Agentic use-case patterns selected as potential approaches"
+                        "description": "Free-text agentic use-case patterns selected as potential approaches"
                       },
                       "customApproaches": {
                         "type": "array",
@@ -626,21 +612,17 @@
           "uniqueItems": true,
           "items": {
             "type": "string",
-            "enum": [
-              "large-data",
-              "cluster-compute",
-              "large-gpu",
-              "personal-data",
-              "valuable-ip",
-              "external-system-integration",
-              "restricted-processing-environment",
-              "real-time",
-              "regulated-or-high-impact",
-              "procurement-or-licensing"
-            ]
+            "minLength": 1
           },
-          "description": "Lightweight project constraints that require deeper feasibility investigation"
-        },
+          "description": "Free-text project constraints that require deeper feasibility investigation"
+        }
+      },
+      "title": "DeveloperFeasibility",
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
         "buildTeamStatus": {
           "type": "string",
           "enum": [
@@ -657,15 +639,8 @@
             "possible",
             "committed"
           ],
-          "description": "Whether a person or team is available to maintain the capability after the first milestone"
-        }
-      },
-      "title": "DeveloperFeasibility",
-      "additionalProperties": false
-    },
-    "governance": {
-      "type": "object",
-      "properties": {
+          "description": "Whether a person or team is available to maintain the capability long-term"
+        },
         "stages": {
           "type": "array",
           "items": {

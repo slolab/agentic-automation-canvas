@@ -574,10 +574,10 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
       'external-system-integration',
       'restricted-processing-environment',
     ],
-    buildTeamStatus: 'committed',
-    maintenanceOwnerStatus: 'possible',
   },
   governance: {
+    buildTeamStatus: 'committed',
+    maintenanceOwnerStatus: 'possible',
     stages: [
       {
         id: 'stage-1',

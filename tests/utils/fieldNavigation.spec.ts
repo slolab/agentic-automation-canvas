@@ -24,6 +24,17 @@ describe('fieldToNavTarget', () => {
     expect(result?.domFieldId).toBe('project-title')
   })
 
+  it('maps governance readiness to its detailed feasibility controls', () => {
+    expect(fieldToNavTarget('governance.buildTeamStatus')).toEqual({
+      sectionId: 'developer-feasibility',
+      itemType: 'feasibility',
+      itemIndex: null,
+      domFieldId: 'build-team-status-detailed',
+    })
+    expect(fieldToNavTarget('governance.maintenanceOwnerStatus')?.domFieldId)
+      .toBe('maintenance-owner-status-detailed')
+  })
+
   // Requirements — list-level
   it('maps userExpectations.requirements (list-level)', () => {
     expect(fieldToNavTarget('userExpectations.requirements')).toEqual({

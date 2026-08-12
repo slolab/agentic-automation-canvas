@@ -55,7 +55,7 @@ describe('versioned AAC schema contract', () => {
     expect(projectProperties).toHaveProperty('license')
   })
 
-  it('defines the simplified-canvas fields and their controlled vocabularies', () => {
+  it('defines the simplified-canvas fields and keeps open text lists unconstrained', () => {
     const projectProperties = property(AAC_CURRENT_SCHEMA, 'properties', 'project', 'properties')
     expect(projectProperties).toMatchObject({
       problemFrequency: {
@@ -84,23 +84,7 @@ describe('versioned AAC schema contract', () => {
       approaches: {
         type: 'array',
         uniqueItems: true,
-        items: {
-          enum: [
-            'agentic-user-support',
-            'unstructured-content-processing',
-            'code-development',
-            'computer-use',
-            'live-event-monitoring',
-            'intelligent-search',
-            'agentic-research-support',
-            'data-metadata-curation',
-            'analysis-pipeline-orchestration',
-            'experiment-protocol-design',
-            'simulation-parameter-optimization',
-            'laboratory-workflow-coordination',
-            'other',
-          ],
-        },
+        items: { type: 'string', minLength: 1 },
       },
       customApproaches: {
         type: 'array',
@@ -120,21 +104,12 @@ describe('versioned AAC schema contract', () => {
       constraintFlags: {
         type: 'array',
         uniqueItems: true,
-        items: {
-          enum: [
-            'large-data',
-            'cluster-compute',
-            'large-gpu',
-            'personal-data',
-            'valuable-ip',
-            'external-system-integration',
-            'restricted-processing-environment',
-            'real-time',
-            'regulated-or-high-impact',
-            'procurement-or-licensing',
-          ],
-        },
+        items: { type: 'string', minLength: 1 },
       },
+    })
+
+    const governanceProperties = property(AAC_CURRENT_SCHEMA, 'properties', 'governance', 'properties')
+    expect(governanceProperties).toMatchObject({
       buildTeamStatus: { enum: ['none', 'possible', 'committed'] },
       maintenanceOwnerStatus: { enum: ['none', 'possible', 'committed'] },
     })

@@ -851,6 +851,12 @@ function addAuxiliaryFiles(context: ExportContext, options?: GenerateROCrateOpti
   if (data.developerFeasibility && Object.keys(data.developerFeasibility).length > 0) {
     rootDataset['aac:developerFeasibility'] = data.developerFeasibility
   }
+  if (data.governance?.buildTeamStatus || data.governance?.maintenanceOwnerStatus) {
+    rootDataset['aac:governanceReadiness'] = {
+      buildTeamStatus: data.governance.buildTeamStatus,
+      maintenanceOwnerStatus: data.governance.maintenanceOwnerStatus,
+    }
+  }
 
   if (hasCustomBenefitDisplay(options?.benefitDisplay)) {
     const benefitDisplayFileId = 'benefit-display.json'

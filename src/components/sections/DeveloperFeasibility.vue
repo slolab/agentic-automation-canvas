@@ -58,12 +58,12 @@
               <span v-if="localData.constraintFlags?.length" class="flex items-center gap-1">
                 {{ localData.constraintFlags.length }} constraint{{ localData.constraintFlags.length === 1 ? '' : 's' }} flagged
               </span>
-              <span v-if="localData.buildTeamStatus || localData.maintenanceOwnerStatus" class="flex items-center gap-1">
+              <span v-if="canvasData.governance?.buildTeamStatus || canvasData.governance?.maintenanceOwnerStatus" class="flex items-center gap-1">
                 Team readiness recorded
               </span>
             </div>
             <div
-              v-if="!trlSummary && !localData.technicalRisk && !localData.effortEstimate?.value && !localData.constraintFlags?.length && !localData.buildTeamStatus && !localData.maintenanceOwnerStatus"
+              v-if="!trlSummary && !localData.technicalRisk && !localData.effortEstimate?.value && !localData.constraintFlags?.length && !canvasData.governance?.buildTeamStatus && !canvasData.governance?.maintenanceOwnerStatus"
               class="text-xs text-gray-400 italic"
             >
               No project-level feasibility information added yet
@@ -236,11 +236,25 @@
           </div>
         </fieldset>
 
+        <div v-if="selectedProjectConstraints.includes('other') || customProjectConstraints.length > 0">
+          <label for="other-project-constraints" class="form-label">Other Constraints</label>
+          <TagEntryInput
+            id="other-project-constraints"
+            v-model="customProjectConstraints"
+            placeholder="Type a constraint and press Enter"
+            item-label="constraints"
+            :disabled="!selectedProjectConstraints.includes('other')"
+          />
+          <p v-if="!selectedProjectConstraints.includes('other')" class="mt-1 text-xs text-gray-500">
+            Select Other to edit these saved constraints.
+          </p>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <FormField id="build-team-status-detailed" label="Team Available to Build?">
             <select
               id="build-team-status-detailed"
-              :value="localData.buildTeamStatus ?? ''"
+              :value="canvasData.governance?.buildTeamStatus ?? ''"
               class="form-input"
               @change="updateProjectTeamStatus('buildTeamStatus', $event)"
             >
@@ -248,10 +262,10 @@
               <option v-for="option in teamStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </FormField>
-          <FormField id="maintenance-owner-status-detailed" label="Owner Available to Maintain?">
+          <FormField id="maintenance-owner-status-detailed" label="Owner Available to Maintain Long-Term?">
             <select
               id="maintenance-owner-status-detailed"
-              :value="localData.maintenanceOwnerStatus ?? ''"
+              :value="canvasData.governance?.maintenanceOwnerStatus ?? ''"
               class="form-input"
               @change="updateProjectTeamStatus('maintenanceOwnerStatus', $event)"
             >
@@ -542,22 +556,11 @@
                       <input
                         type="checkbox"
                         :checked="requirement.feasibility?.technologyApproach?.approaches?.includes(option.value) ?? false"
-                        :disabled="option.value === 'other' && isTaskOtherApproachLocked(requirement)"
-                        :aria-describedby="option.value === 'other' && isTaskOtherApproachLocked(requirement)
-                          ? `task-${requirement.id}-other-approach-lock-help`
-                          : undefined"
                         @change="toggleTaskApproach(requirement.id, option.value, $event)"
                       />
                       <span>{{ option.label }}</span>
                     </label>
                   </div>
-                  <p
-                    v-if="isTaskOtherApproachLocked(requirement)"
-                    :id="`task-${requirement.id}-other-approach-lock-help`"
-                    class="mt-2 text-xs text-gray-600"
-                  >
-                    Remove the custom approach items below before unchecking Other.
-                  </p>
                 </fieldset>
 
                 <div
@@ -573,8 +576,15 @@
                     :model-value="requirement.feasibility?.technologyApproach?.customApproaches ?? []"
                     placeholder="Type an approach and press Enter"
                     item-label="approaches"
+                    :disabled="!requirement.feasibility?.technologyApproach?.approaches?.includes('other')"
                     @update:model-value="updateTaskCustomApproaches(requirement.id, $event)"
                   />
+                  <p
+                    v-if="!requirement.feasibility?.technologyApproach?.approaches?.includes('other')"
+                    class="mt-1 text-xs text-gray-500"
+                  >
+                    Select Other to edit these saved approaches.
+                  </p>
                 </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -1318,6 +1328,7 @@ import {
   approachOptions,
   architectureOptions,
   constraintOptions,
+  suggestedConstraintValues,
   teamStatusOptions,
   type ConstraintFlag,
   type TeamStatus,
@@ -1329,6 +1340,7 @@ const {
   canvasData,
   focusFieldRequest,
   updateDeveloperFeasibility,
+  updateGovernance,
   updateUserExpectations,
 } = useCanvasData()
 
@@ -1629,8 +1641,6 @@ const initLocalData = (): DeveloperFeasibility => {
     feasibilityNotes: feasibility?.feasibilityNotes,
     solutionsToResearch: feasibility?.solutionsToResearch,
     constraintFlags: feasibility?.constraintFlags ? [...feasibility.constraintFlags] : undefined,
-    buildTeamStatus: feasibility?.buildTeamStatus,
-    maintenanceOwnerStatus: feasibility?.maintenanceOwnerStatus,
   }
 }
 
@@ -1710,8 +1720,6 @@ watch(
           feasibilityNotes: newFeasibility.feasibilityNotes,
           solutionsToResearch: newFeasibility.solutionsToResearch,
           constraintFlags: newFeasibility.constraintFlags ? [...newFeasibility.constraintFlags] : undefined,
-          buildTeamStatus: newFeasibility.buildTeamStatus,
-          maintenanceOwnerStatus: newFeasibility.maintenanceOwnerStatus,
         }
         if (!localData.value.trlLevel) {
           localData.value.trlLevel = {}
@@ -1776,20 +1784,32 @@ const update = () => {
 
 function toggleProjectConstraint(value: ConstraintFlag, event: Event) {
   const checked = (event.target as HTMLInputElement).checked
-  const current = localData.value.constraintFlags ?? []
+  const current = selectedProjectConstraints.value
   localData.value.constraintFlags = checked
-    ? [...new Set([...current, value])]
-    : current.filter((candidate) => candidate !== value)
+    ? [...new Set([...current, value]), ...customProjectConstraints.value]
+    : [...current.filter((candidate) => candidate !== value), ...customProjectConstraints.value]
   update()
 }
+
+const selectedProjectConstraints = computed(() =>
+  (localData.value.constraintFlags ?? []).filter((value) => suggestedConstraintValues.includes(value)),
+)
+
+const customProjectConstraints = computed<string[]>({
+  get: () => (localData.value.constraintFlags ?? [])
+    .filter((value) => !suggestedConstraintValues.includes(value)),
+  set: (values) => {
+    localData.value.constraintFlags = [...selectedProjectConstraints.value, ...values]
+    update()
+  },
+})
 
 function updateProjectTeamStatus(
   field: 'buildTeamStatus' | 'maintenanceOwnerStatus',
   event: Event,
 ) {
   const value = (event.target as HTMLSelectElement).value as TeamStatus | ''
-  localData.value[field] = value || undefined
-  update()
+  updateGovernance({ [field]: value || undefined })
 }
 
 // Effort estimate helpers
@@ -2010,11 +2030,6 @@ function toggleTaskApproach(taskId: string, value: TechnicalApproach, event: Eve
       ? technologyApproach
       : undefined,
   })
-}
-
-function isTaskOtherApproachLocked(requirement: Requirement): boolean {
-  return (requirement.feasibility?.technologyApproach?.approaches?.includes('other') ?? false)
-    && (requirement.feasibility?.technologyApproach?.customApproaches?.length ?? 0) > 0
 }
 
 function updateTaskCustomApproaches(taskId: string, values: string[]) {

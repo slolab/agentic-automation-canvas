@@ -4,23 +4,26 @@
       :class="[
         'flex flex-wrap items-center bg-white transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100',
         invalid && 'border-red-500 bg-red-50 ring-1 ring-red-300',
+        disabled && 'cursor-not-allowed bg-gray-100 opacity-60 focus-within:border-gray-300 focus-within:ring-0',
         compact
           ? 'min-h-8 gap-1 border-0 border-b border-gray-300 px-1 py-0.5'
           : 'min-h-[2.625rem] gap-2 rounded-md border border-gray-300 px-2 py-1.5 shadow-sm hover:border-gray-400',
       ]"
-      @click="inputElement?.focus()"
+      @click="!disabled && inputElement?.focus()"
     >
       <span
         v-for="(value, index) in modelValue"
         :key="`${value}-${index}`"
         :class="[
           'inline-flex max-w-full items-center gap-1 rounded bg-primary-100 font-medium text-primary-900',
+          disabled && 'bg-gray-200 text-gray-500',
           compact ? 'px-1.5 py-0.5 text-xs' : 'px-2 py-1 text-sm',
         ]"
       >
         <span class="truncate">{{ value }}</span>
         <button
           type="button"
+          :disabled="disabled"
           class="rounded p-0.5 text-primary-700 hover:bg-primary-200 hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
           :aria-label="`Remove ${value}`"
           @click.stop="removeValue(index)"
@@ -36,6 +39,7 @@
         ref="inputElement"
         v-model="draft"
         type="text"
+        :disabled="disabled"
         :class="[
           'flex-1 border-0 bg-transparent px-1 text-gray-900 placeholder-gray-400 outline-none',
           compact ? 'min-w-[8rem] py-0.5 text-xs' : 'min-w-[12rem] py-1 text-sm',
@@ -48,7 +52,7 @@
       />
 
       <button
-        v-if="draft.trim()"
+        v-if="draft.trim() && !disabled"
         type="button"
         class="rounded-md bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-primary-500"
         @click.stop="addDraft"
@@ -71,6 +75,7 @@ interface Props {
   describedBy?: string
   compact?: boolean
   invalid?: boolean
+  disabled?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -78,6 +83,7 @@ const props = withDefaults(defineProps<Props>(), {
   describedBy: undefined,
   compact: false,
   invalid: false,
+  disabled: false,
 })
 
 const emit = defineEmits<{

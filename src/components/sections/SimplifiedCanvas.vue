@@ -38,12 +38,12 @@
           </div>
         </div>
 
-        <div class="grid gap-x-3 gap-y-2 2xl:grid-cols-2">
-          <div :class="['2xl:col-span-2', missingFieldClass('problem-description')]">
+        <div class="grid gap-y-2">
+          <div :class="missingFieldClass('problem-description')">
             <label for="problem-description" class="canvas-label">Problem description</label>
             <textarea
               id="problem-description"
-              rows="2"
+              rows="3"
               class="canvas-input canvas-textarea"
               placeholder="What frictions/problem do you want to solve, and what are the consequences?"
               :value="canvasData.project.description"
@@ -68,7 +68,7 @@
           </div>
 
           <div :class="missingFieldClass('problem-frequency')">
-            <label for="problem-frequency" class="canvas-label">How often do you experience this need?</label>
+            <label for="problem-frequency" class="canvas-label">How often do you experience this problem?</label>
             <select
               id="problem-frequency"
               class="canvas-input canvas-select"
@@ -84,7 +84,7 @@
             </select>
           </div>
 
-          <div :class="['2xl:col-span-2', missingFieldClass('problem-example')]">
+          <div :class="missingFieldClass('problem-example')">
             <div class="flex flex-wrap items-end justify-between gap-2">
               <div>
                 <label for="problem-example-0" class="canvas-label">Most recent concrete case</label>
@@ -101,7 +101,7 @@
               <div v-for="(example, index) in problemExampleRows" :key="index" class="flex items-start gap-2">
                 <textarea
                   :id="`problem-example-${index}`"
-                  rows="2"
+                  rows="3"
                   class="canvas-input canvas-textarea"
                   :aria-label="`Problem example ${index + 1}`"
                   :placeholder="index === 0 ? 'Describe what happened in the most recent case' : 'Describe another concrete case'"
@@ -146,7 +146,7 @@
             <label for="desired-change" class="canvas-label">What should happen differently?</label>
             <textarea
               id="desired-change"
-              rows="2"
+              rows="3"
               class="canvas-input canvas-textarea"
               placeholder="Describe the changed outcome or way of working"
               :value="canvasData.project.objective ?? ''"
@@ -160,7 +160,7 @@
             <label for="why-now" class="canvas-label">Why is this important right now?</label>
             <textarea
               id="why-now"
-              rows="2"
+              rows="3"
               class="canvas-input canvas-textarea"
               placeholder="What makes this worth addressing now?"
               :value="canvasData.project.headlineValue ?? ''"
@@ -219,7 +219,7 @@
             <label for="previous-attempts" class="canvas-label">What has been tried, and what happened?</label>
             <textarea
               id="previous-attempts"
-              rows="2"
+              rows="3"
               class="canvas-input canvas-textarea"
               placeholder="Include manual workarounds, tools, pilots, and what was learned"
               :value="canvasData.developerFeasibility?.feasibilityNotes ?? ''"
@@ -242,22 +242,11 @@
                   type="checkbox"
                   class="form-checkbox-small"
                   :checked="selectedApproaches.includes(option.value)"
-                  :disabled="option.value === 'other' && otherApproachLocked"
-                  :aria-describedby="option.value === 'other' && otherApproachLocked
-                    ? 'other-approaches-lock-help'
-                    : undefined"
                   @change="toggleApproach(option.value, $event)"
                 />
                 <span>{{ option.label }}</span>
               </label>
             </div>
-            <p
-              v-if="otherApproachLocked"
-              id="other-approaches-lock-help"
-              class="mt-1 text-[0.65rem] leading-4 text-gray-600"
-            >
-              Remove the custom approach items below before unchecking Other.
-            </p>
           </fieldset>
 
           <div v-if="selectedApproaches.includes('other') || customApproaches.length > 0">
@@ -269,15 +258,19 @@
               item-label="approaches"
               :described-by="isMissing('solution-approaches') ? 'simplified-missing-help' : undefined"
               :invalid="isMissing('solution-approaches')"
+              :disabled="!selectedApproaches.includes('other')"
               compact
             />
+            <p v-if="!selectedApproaches.includes('other')" class="mt-1 text-[0.65rem] leading-4 text-gray-500">
+              Select Other to edit these saved approaches.
+            </p>
           </div>
 
           <div :class="missingFieldClass('solutions-research')">
             <label for="solutions-research" class="canvas-label">Tools or existing solutions (to research)</label>
             <textarea
               id="solutions-research"
-              rows="1"
+              rows="3"
               class="canvas-input canvas-textarea"
               placeholder="Products, services, internal tools, or comparable solutions to investigate"
               :value="canvasData.developerFeasibility?.solutionsToResearch ?? ''"
@@ -318,13 +311,28 @@
           </div>
         </fieldset>
 
-        <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1 2xl:grid-cols-4">
+        <div v-if="selectedConstraints.includes('other') || customConstraints.length > 0" class="mt-2">
+          <label for="custom-constraints" class="canvas-label">Other constraints</label>
+          <TagEntryInput
+            id="custom-constraints"
+            v-model="customConstraints"
+            placeholder="Type a constraint and press Enter"
+            item-label="constraints"
+            :disabled="!selectedConstraints.includes('other')"
+            compact
+          />
+          <p v-if="!selectedConstraints.includes('other')" class="mt-1 text-[0.65rem] leading-4 text-gray-500">
+            Select Other to edit these saved constraints.
+          </p>
+        </div>
+
+        <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
           <div :class="missingFieldClass('build-team-status')">
             <label for="build-team-status" class="canvas-label">Team available to build?</label>
             <select
               id="build-team-status"
               class="canvas-input canvas-select"
-              :value="canvasData.developerFeasibility?.buildTeamStatus ?? ''"
+              :value="canvasData.governance?.buildTeamStatus ?? ''"
               :aria-invalid="isMissing('build-team-status') || undefined"
               :aria-describedby="isMissing('build-team-status') ? 'simplified-missing-help' : undefined"
               @change="updateTeamStatus('buildTeamStatus', $event)"
@@ -334,11 +342,11 @@
             </select>
           </div>
           <div :class="missingFieldClass('maintenance-status')">
-            <label for="maintenance-status" class="canvas-label">Owner available to maintain?</label>
+            <label for="maintenance-status" class="canvas-label">Owner available to maintain long-term?</label>
             <select
               id="maintenance-status"
               class="canvas-input canvas-select"
-              :value="canvasData.developerFeasibility?.maintenanceOwnerStatus ?? ''"
+              :value="canvasData.governance?.maintenanceOwnerStatus ?? ''"
               :aria-invalid="isMissing('maintenance-status') || undefined"
               :aria-describedby="isMissing('maintenance-status') ? 'simplified-missing-help' : undefined"
               @change="updateTeamStatus('maintenanceOwnerStatus', $event)"
@@ -346,32 +354,6 @@
               <option value="">Not answered</option>
               <option v-for="option in teamStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
-          </div>
-          <div :class="missingFieldClass('first-stage-team')">
-            <label for="first-stage-team" class="canvas-label">Who is involved?</label>
-            <TagEntryInput
-              id="first-stage-team"
-              v-model="firstStageTeam"
-              placeholder="Type a name and press Enter"
-              item-label="people"
-              :described-by="fieldDescription('first-stage-team', 'first-stage-team-help')"
-              :invalid="isMissing('first-stage-team')"
-              compact
-            />
-            <p id="first-stage-team-help" class="sr-only">Names are stored as shared Person records and linked to the first governance stage.</p>
-          </div>
-          <div :class="missingFieldClass('lead-organization')">
-            <label for="lead-organization" class="canvas-label">Lead organization or team</label>
-            <input
-              id="lead-organization"
-              type="text"
-              class="canvas-input"
-              placeholder="Which organization or team leads the work?"
-              :value="canvasData.project.leadOrganization ?? ''"
-              :aria-invalid="isMissing('lead-organization') || undefined"
-              :aria-describedby="isMissing('lead-organization') ? 'simplified-missing-help' : undefined"
-              @input="updateProjectText('leadOrganization', $event)"
-            />
           </div>
         </div>
       </section>
@@ -395,7 +377,7 @@
             <label for="first-milestone" class="canvas-label">What is the first milestone?</label>
             <textarea
               id="first-milestone"
-              rows="2"
+              rows="3"
               class="canvas-input canvas-textarea canvas-milestone-input"
               placeholder="Describe one bounded result, not the whole project"
               :value="firstMilestone?.description ?? ''"
@@ -408,7 +390,7 @@
             <label for="milestone-kpi" class="canvas-label">How will we know it is complete?</label>
             <textarea
               id="milestone-kpi"
-              rows="2"
+              rows="3"
               class="canvas-input canvas-textarea canvas-milestone-input"
               placeholder="State an observable completion criterion"
               :value="firstMilestone?.kpi ?? ''"
@@ -461,6 +443,7 @@ import {
   approachOptions,
   constraintOptions,
   frequencyOptions,
+  suggestedConstraintValues,
   teamStatusOptions,
   type ConstraintFlag,
   type ProblemFrequency,
@@ -468,7 +451,7 @@ import {
   type TechnicalApproach,
 } from '@/schema/simplifiedCanvasOptions'
 
-type ProjectTextField = 'description' | 'objective' | 'headlineValue' | 'leadOrganization'
+type ProjectTextField = 'description' | 'objective' | 'headlineValue'
 type DeveloperTextField = 'feasibilityNotes' | 'solutionsToResearch'
 type TeamStatusField =
   | 'buildTeamStatus'
@@ -482,12 +465,11 @@ const {
   canvasData,
   updateProject,
   updateDeveloperFeasibility,
+  updateGovernance,
   patchPrimaryRequirement,
   replacePrimaryUnclassifiedBenefits,
   patchFirstStageMilestone,
   patchFirstStage,
-  updateFirstStageTeam,
-  simplifiedFirstStageTeamNames,
 } = useCanvasData()
 const { openGuidance } = useGuidance()
 
@@ -542,17 +524,17 @@ const customApproaches = computed<string[]>({
   }),
 })
 
-const otherApproachLocked = computed(() => (
-  selectedApproaches.value.includes('other') && customApproaches.value.length > 0
-))
-
 const selectedConstraints = computed(
-  () => canvasData.value.developerFeasibility?.constraintFlags ?? [],
+  () => (canvasData.value.developerFeasibility?.constraintFlags ?? [])
+    .filter((value) => suggestedConstraintValues.includes(value)),
 )
 
-const firstStageTeam = computed<string[]>({
-  get: () => [...simplifiedFirstStageTeamNames.value],
-  set: (names) => updateFirstStageTeam(names),
+const customConstraints = computed<string[]>({
+  get: () => (canvasData.value.developerFeasibility?.constraintFlags ?? [])
+    .filter((value) => !suggestedConstraintValues.includes(value)),
+  set: (values) => updateDeveloperFeasibility({
+    constraintFlags: [...selectedConstraints.value, ...values],
+  }),
 })
 
 const firstStage = computed(
@@ -658,12 +640,12 @@ function toggleConstraint(value: ConstraintFlag, event: Event) {
   const constraintFlags = checked
     ? [...new Set([...selectedConstraints.value, value])]
     : selectedConstraints.value.filter((candidate) => candidate !== value)
-  updateDeveloperFeasibility({ constraintFlags })
+  updateDeveloperFeasibility({ constraintFlags: [...constraintFlags, ...customConstraints.value] })
 }
 
 function updateTeamStatus(field: TeamStatusField, event: Event) {
   const value = eventValue(event) as TeamStatus | ''
-  updateDeveloperFeasibility({ [field]: value || undefined })
+  updateGovernance({ [field]: value || undefined })
 }
 
 function updateMilestoneText(field: 'description' | 'kpi', event: Event) {

@@ -68,6 +68,13 @@ const stageDomMap: Partial<Record<keyof GovernanceStage, FieldTargetFactory>> = 
   policyCardUri: (index) => `stage-policy-card-uri-${index}`,
 }
 
+const governanceDomMap: Partial<
+  Record<keyof NonNullable<CanvasData['governance']>, string>
+> = {
+  buildTeamStatus: 'build-team-status-detailed',
+  maintenanceOwnerStatus: 'maintenance-owner-status-detailed',
+}
+
 // Project-level feasibility is a single form, so its targets are not indexed.
 const developerFeasibilityDomMap: Partial<Record<keyof DeveloperFeasibility, string>> = {
   technicalRisk: 'technical-risk',
@@ -142,6 +149,20 @@ export function fieldToNavTarget(field: string): FocusFieldRequest | null {
   // ── governance.stages[n].subField ───────────────────────────────────────────
   if (field === 'governance' || field === 'governance.stages') {
     return { sectionId: 'governance', itemType: null, itemIndex: null, domFieldId: null }
+  }
+  if (field.startsWith('governance.')) {
+    const subField = field.slice('governance.'.length)
+    const domFieldId = governanceDomMap[
+      subField as keyof NonNullable<CanvasData['governance']>
+    ]
+    if (domFieldId) {
+      return {
+        sectionId: 'developer-feasibility',
+        itemType: 'feasibility',
+        itemIndex: null,
+        domFieldId,
+      }
+    }
   }
   const stageMatch = field.match(/^governance\.stages\[(\d+)\](?:\.(.+))?$/)
   if (stageMatch) {

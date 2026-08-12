@@ -34,14 +34,13 @@ export const validSimplifiedRequirement = {
 export const validSimplifiedFeasibility = {
   solutionsToResearch: 'Compare existing products',
   constraintFlags: ['large-data', 'personal-data'],
-  buildTeamStatus: 'possible',
-  maintenanceOwnerStatus: 'committed',
 } satisfies DeveloperFeasibility
 
 export const validCanvas = {
   project: validProject,
   userExpectations: { requirements: [validSimplifiedRequirement] },
   developerFeasibility: validSimplifiedFeasibility,
+  governance: { buildTeamStatus: 'possible', maintenanceOwnerStatus: 'committed' },
 } satisfies CanvasData
 
 export const invalidProject = {
