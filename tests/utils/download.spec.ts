@@ -61,3 +61,25 @@ describe.each([
     })
   })
 })
+
+it('packages an empty canvas as a partial draft', async () => {
+  const emptyCanvas: CanvasData = {
+    project: { title: '', description: '' },
+  }
+  const crate = generateROCrate(emptyCanvas, { allowPartial: true })
+  const buffer = await buildROCrateZipBuffer(
+    crate,
+    'agentic-automation-project',
+    emptyCanvas
+  )
+  const zip = await JSZip.loadAsync(buffer)
+
+  expect(zip.file('ro-crate-metadata.json')).not.toBeNull()
+  expect(zip.file('ro-crate-preview.html')).not.toBeNull()
+  expect(zip.file('AGENTS.md')).not.toBeNull()
+  expect(zip.file('README.md')).not.toBeNull()
+
+  const readme = await zip.file('README.md')?.async('string')
+  expect(readme).toContain('Partial canvas')
+  expect(readme).toContain('AAC profile conformance is not claimed')
+})

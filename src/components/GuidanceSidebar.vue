@@ -35,15 +35,29 @@
 
         <div class="flex-1 overflow-y-auto px-6 py-6">
           <p class="text-base leading-7 text-gray-700">{{ guidance.intro }}</p>
+          <p v-if="guidance.followup" class="mt-4 text-sm leading-6 text-gray-700">
+            {{ guidance.followup }}
+          </p>
+          <h3 v-if="guidance.pointsHeading" class="mt-6 font-semibold text-gray-950">
+            {{ guidance.pointsHeading }}
+          </h3>
           <ul class="mt-5 space-y-3">
             <li v-for="point in guidance.points" :key="point" class="flex items-start gap-3 text-sm leading-6 text-gray-700">
               <span class="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary-600" aria-hidden="true" />
               <span>{{ point }}</span>
             </li>
           </ul>
-          <p v-if="activeTopic === 'aac'" class="mt-8 border-t border-gray-200 pt-4 text-xs text-gray-500">
-            Application version {{ appVersion }}
-          </p>
+          <div v-if="activeTopic === 'aac'" class="mt-8 border-t border-gray-200 pt-5 text-sm text-gray-600">
+            <h3 class="font-semibold text-gray-950">Learn more</h3>
+            <p class="mt-2">
+              <a :href="`${baseUrl}docs/`" target="_blank" rel="noopener noreferrer" class="text-primary-700 underline hover:text-primary-900">Documentation</a>
+              ·
+              <a href="https://slolab.github.io/aac-manuscript/" target="_blank" rel="noopener noreferrer" class="text-primary-700 underline hover:text-primary-900">Manuscript</a>
+              ·
+              <a href="https://arxiv.org/abs/2602.15090" target="_blank" rel="noopener noreferrer" class="text-primary-700 underline hover:text-primary-900">arXiv</a>
+            </p>
+            <p class="mt-4 text-xs text-gray-500">Application version {{ appVersion }}</p>
+          </div>
         </div>
       </aside>
     </div>
@@ -57,18 +71,23 @@ import { useGuidance, type GuidanceTopic } from '@/composables/useGuidance'
 interface GuidanceContent {
   title: string
   intro: string
+  followup?: string
+  pointsHeading?: string
   points: string[]
 }
 
 const guidanceByTopic: Record<GuidanceTopic, GuidanceContent> = {
   aac: {
-    title: 'Agentic Automation Canvas',
-    intro: 'AAC helps a team turn a real operational need into a shared, reviewable project artifact before committing to a technical solution.',
+    title: 'About Agentic Automation Canvas',
+    intro: 'The Agentic Automation Canvas helps teams design, govern, and document automation that uses AI to replace or augment human judgment. It connects user expectations and measurable benefits with the developer assessment of whether those benefits can be delivered responsibly.',
+    followup: 'AAC is primarily a communication tool and living project document. Users and developers should complete it together so disagreements, risks, and unjustified automation ideas surface before significant resources are committed.',
+    pointsHeading: 'Why use it?',
     points: [
-      'Start in the simplified canvas and work from the problem toward one bounded first milestone.',
-      'Use the detailed canvas when the project needs richer feasibility, governance, data-access, or evaluation information.',
-      'Both views edit the same canonical canvas, so you can move between them without copying or losing data.',
-      'Export an RO-Crate when you want to review, share, or continue the project elsewhere.',
+      'Guide decisions prospectively, while the project can still change, instead of documenting choices only after development.',
+      'Capture expected value, feasibility, governance, data access, milestones, and evaluation in one structured checklist.',
+      'Start with the Simplified view, then use Advanced when the project needs richer technical or governance detail. Both edit the same canvas.',
+      'Export a machine-readable RO-Crate with a human preview and AGENTS.md instructions. Even an incomplete canvas can be exported as an explicitly marked partial draft.',
+      'Keep work private by default: the application runs in the browser and does not send canvas data to a server.',
     ],
   },
   problem: {
@@ -104,7 +123,7 @@ const guidanceByTopic: Record<GuidanceTopic, GuidanceContent> = {
     points: [
       'Flag data volume, compute, privacy, security, integration, latency, regulation, and procurement constraints that need investigation.',
       'Check whether a team can build the work and whether somebody can maintain it.',
-      'Name the people and organization that can own the next stage when they are known.',
+      'Use the Advanced view to record detailed ownership, stage agents, and governance evidence when they are known.',
     ],
   },
   'first-milestone': {
@@ -123,6 +142,7 @@ const guidance = computed(() => guidanceByTopic[activeTopic.value])
 const panel = ref<HTMLElement | null>(null)
 const closeButton = ref<HTMLButtonElement | null>(null)
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
+const baseUrl = import.meta.env.BASE_URL || '/'
 
 watch(isOpen, async (open) => {
   if (!open) return

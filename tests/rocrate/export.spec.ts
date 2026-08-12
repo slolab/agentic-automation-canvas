@@ -11,6 +11,22 @@ const minimalCanvasData: CanvasData = {
 }
 
 describe('generateROCrate', () => {
+  it('exports an empty canvas as an explicitly marked partial draft', () => {
+    const out = generateROCrate(
+      { project: { title: '', description: '' } },
+      { allowPartial: true },
+    )
+    const root = out['@graph'].find((entity) => entity['@id'] === './')
+    const project = out['@graph'].find((entity) => entity['@id'] === '#project')
+
+    expect(root).toMatchObject({
+      name: 'Agentic Automation Project',
+      'aac:partialCanvas': true,
+    })
+    expect(root).not.toHaveProperty('conformsTo')
+    expect(project).toMatchObject({ name: '', description: '' })
+  })
+
   it('returns @graph that exists and is an array', () => {
     const out = generateROCrate(minimalCanvasData)
     expect(out['@graph']).toBeDefined()

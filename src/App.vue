@@ -11,83 +11,58 @@
       <div class="mx-auto flex min-h-14 max-w-[1800px] items-center gap-4 px-4 py-2 sm:px-6 lg:px-8">
         <div class="flex min-w-0 items-center gap-2.5">
           <img :src="`${baseUrl}logo.svg`" alt="" class="h-9 w-9 shrink-0" />
-          <div class="min-w-0">
-            <div class="flex items-center gap-1.5">
-              <h1 class="truncate text-lg font-bold leading-tight text-gray-950 sm:text-xl">Agentic Automation Canvas</h1>
-              <button
-                type="button"
-                class="shrink-0 rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600"
-                aria-label="Open general information about Agentic Automation Canvas"
-                @click="openGeneralGuidance"
-              >
-                <InfoIcon />
-              </button>
-            </div>
-            <p class="mt-0.5 truncate text-xs text-gray-500">
-              <a
-                href="https://github.com/slolab/agentic-automation-canvas"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="font-medium text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
-              >View on GitHub</a>,
-              Read the paper:
-              <a
-                href="https://slolab.github.io/aac-manuscript/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="italic text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
-              >online</a>
-              /
-              <a
-                href="https://arxiv.org/abs/2602.15090"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="italic text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
-              >arXiv</a>
-            </p>
+          <div class="flex min-w-0 items-center gap-1.5">
+            <h1 class="truncate text-lg font-bold leading-tight text-gray-950 sm:text-xl">Agentic Automation Canvas</h1>
+            <button
+              type="button"
+              class="shrink-0 rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600"
+              aria-label="Open general information about Agentic Automation Canvas"
+              title="About the Agentic Automation Canvas"
+              @click="openGeneralGuidance"
+            >
+              <InfoIcon />
+            </button>
           </div>
         </div>
 
         <div ref="headerActionsRef" class="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2">
-          <button
-            type="button"
-            role="switch"
-            :aria-checked="canvasView === 'detailed'"
-            class="inline-flex shrink-0 items-center gap-2 rounded-md px-2.5 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-primary-600"
-            :aria-label="canvasView === 'simplified' && hasDetailedContent
-              ? 'Detailed Canvas. Additional detailed content is present.'
-              : 'Detailed Canvas'"
-            @click="toggleCanvasView"
+          <div
+            class="inline-flex shrink-0 rounded-lg border border-gray-300 bg-gray-100 p-1 shadow-inner"
+            role="group"
+            aria-label="Canvas view"
           >
-            <span>Detailed Canvas</span>
-            <span
-              v-if="canvasView === 'simplified' && hasDetailedContent"
-              class="h-2 w-2 rounded-full bg-indigo-600 ring-2 ring-indigo-100"
-              title="Additional detailed content is present"
-              aria-hidden="true"
-            />
-            <span v-if="canvasView === 'simplified' && hasDetailedContent" class="sr-only">
-              Additional detailed content is present
-            </span>
-            <span
+            <button
+              type="button"
+              :aria-pressed="canvasView === 'simplified'"
               :class="[
-                'relative inline-flex h-5 w-9 shrink-0 rounded-full transition-colors',
-                canvasView === 'detailed' ? 'bg-primary-600' : 'bg-gray-300',
+                'rounded-md px-2.5 py-1.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-1',
+                canvasView === 'simplified'
+                  ? 'bg-white text-primary-800 shadow-sm'
+                  : 'text-gray-600 hover:bg-white/60 hover:text-gray-950',
               ]"
-              aria-hidden="true"
+              @click="setCanvasView('simplified')"
             >
-              <span
-                :class="[
-                  'absolute top-0.5 h-4 w-4 rounded-full bg-white shadow transition-transform',
-                  canvasView === 'detailed' ? 'translate-x-[1.125rem]' : 'translate-x-0.5',
-                ]"
-              />
-            </span>
-          </button>
+              Simplified
+            </button>
+            <button
+              type="button"
+              :aria-pressed="canvasView === 'detailed'"
+              :class="[
+                'relative rounded-md px-2.5 py-1.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-1',
+                canvasView === 'detailed'
+                  ? 'bg-white text-primary-800 shadow-sm'
+                  : 'text-gray-600 hover:bg-white/60 hover:text-gray-950',
+              ]"
+              @click="setCanvasView('detailed')"
+            >
+              Advanced
+            </button>
+          </div>
+
           <template v-if="!hasMeaningfulContent">
             <button
               type="button"
-              :class="['header-action', showLoadExampleHint && 'load-example-hint-pulse']"
+              class="header-action"
               aria-label="Show an example canvas"
               @click="loadExample"
             >
@@ -110,28 +85,21 @@
               </svg>
               <span v-show="headerActionsMode !== 'icon'">Clear Canvas</span>
             </button>
-            <button
-              type="button"
-              :class="[
-                'btn-primary flex shrink-0 items-center gap-2',
-                !canDownload && 'cursor-not-allowed opacity-45',
-              ]"
-              aria-label="Download RO-Crate"
-              :aria-disabled="!canDownload"
-              :aria-describedby="!canDownload ? 'download-title-requirement' : undefined"
-              :title="canDownload ? 'Download this canvas as an RO-Crate' : 'Add a project title to enable download'"
-              @click="requestDownloadROCrate"
-            >
-              <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4" />
-              </svg>
-              <span v-show="headerActionsMode === 'full'">Download RO-Crate</span>
-              <span v-show="headerActionsMode === 'short'">Download</span>
-            </button>
-            <span v-if="!canDownload" id="download-title-requirement" class="sr-only">
-              Add a project title to enable download.
-            </span>
           </template>
+          <button
+            v-if="hasMeaningfulContent"
+            type="button"
+            class="btn-primary flex shrink-0 items-center gap-2"
+            aria-label="Download RO-Crate"
+            title="Download this canvas as an RO-Crate. Incomplete canvases can be exported as partial drafts."
+            @click="requestDownloadROCrate"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4" />
+            </svg>
+            <span v-show="headerActionsMode === 'full'">Download RO-Crate</span>
+            <span v-show="headerActionsMode === 'short'">Download</span>
+          </button>
         </div>
       </div>
     </header>
@@ -147,6 +115,58 @@
         :highlight-missing="highlightMissing"
       />
     </main>
+
+    <footer class="mt-8 border-t border-gray-200 bg-gray-50">
+      <div class="mx-auto flex max-w-[1800px] flex-wrap items-center gap-x-6 gap-y-4 px-4 py-5 text-sm text-gray-600 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
+          <span class="font-semibold text-gray-800">Agentic Automation Canvas</span>
+          <span
+            class="inline-flex items-center rounded-full border border-primary-200 bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800"
+            title="Application version"
+          >
+            v{{ appVersion }}
+          </span>
+          <a
+            href="https://github.com/slolab/agentic-automation-canvas"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-medium text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
+          >GitHub</a>
+          <a
+            :href="`${baseUrl}docs/`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-medium text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
+          >Documentation</a>
+          <span class="text-xs text-gray-500">
+            Read the paper:
+            <a
+              href="https://slolab.github.io/aac-manuscript/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary-700 underline hover:text-primary-900"
+            >HTML</a>
+            ·
+            <a
+              href="https://arxiv.org/abs/2602.15090"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary-700 underline hover:text-primary-900"
+            >arXiv</a>
+          </span>
+        </div>
+        <a
+          href="https://slolab.ai"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex shrink-0 items-center gap-2 rounded-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
+          title="Visit slolab"
+        >
+          <img :src="`${baseUrl}slolab.png`" alt="slolab" class="h-8 w-auto" />
+          <span class="whitespace-nowrap text-xs leading-tight text-gray-500">made by<br />slolab</span>
+        </a>
+      </div>
+    </footer>
 
     <GuidanceSidebar />
 
@@ -209,7 +229,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import CanvasForm from './components/CanvasForm.vue'
 import GuidanceSidebar from './components/GuidanceSidebar.vue'
 import ImportButton from './components/ImportButton.vue'
@@ -225,7 +245,6 @@ import { formatDiagnostics } from '@/diagnostics'
 import { CurrentCanvasValidationError } from '@/schema/validation'
 import { hasCustomBenefitDisplay } from '@/types/benefitDisplay'
 import {
-  hasDetailedCanvasContent,
   hasMeaningfulCanvasContent,
   missingSimplifiedPrompts,
   simplifiedPromptDomId,
@@ -250,23 +269,14 @@ const canvasView = ref<'simplified' | 'detailed'>('simplified')
 const hasMeaningfulContent = computed(() =>
   hasMeaningfulCanvasContent(canvasData.value) || hasCustomBenefitDisplay(benefitDisplay.value),
 )
-const hasDetailedContent = computed(() =>
-  hasDetailedCanvasContent(canvasData.value) || hasCustomBenefitDisplay(benefitDisplay.value),
-)
-const canDownload = computed(() => canvasData.value.project.title.trim().length > 0)
+const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
 
-const LOAD_EXAMPLE_HINT_KEY = 'aac-load-example-hint-seen'
-const showLoadExampleHint = ref(false)
 const highlightMissing = ref(false)
 const showPartialDialog = ref(false)
 const pendingMissingPrompts = ref<MissingSimplifiedPrompt[]>([])
 const partialDialogPanel = ref<HTMLElement | null>(null)
 const continueEditingButton = ref<HTMLButtonElement | null>(null)
 let downloadTrigger: HTMLElement | null = null
-
-onMounted(() => {
-  showLoadExampleHint.value = !localStorage.getItem(LOAD_EXAMPLE_HINT_KEY)
-})
 
 watch(dataVersion, () => {
   highlightMissing.value = false
@@ -276,13 +286,11 @@ function openGeneralGuidance(event: MouseEvent) {
   openGuidance('aac', event.currentTarget as HTMLElement)
 }
 
-function toggleCanvasView() {
-  canvasView.value = canvasView.value === 'simplified' ? 'detailed' : 'simplified'
+function setCanvasView(view: 'simplified' | 'detailed') {
+  canvasView.value = view
 }
 
 function loadExample() {
-  localStorage.setItem(LOAD_EXAMPLE_HINT_KEY, '1')
-  showLoadExampleHint.value = false
   highlightMissing.value = false
   importFromROCrate(exampleData, exampleBenefitDisplay)
   canvasView.value = 'simplified'
@@ -348,7 +356,6 @@ function clearData() {
 }
 
 async function requestDownloadROCrate(event: MouseEvent) {
-  if (!canvasData.value.project.title.trim()) return
   downloadTrigger = event.currentTarget as HTMLElement
   const missing = missingSimplifiedPrompts(canvasData.value)
   if (missing.length === 0) {
@@ -420,7 +427,7 @@ async function performDownload(allowPartial: boolean) {
     return
   }
 
-  if (validationResult.warnings.length > 0) {
+  if (!allowPartial && validationResult.warnings.length > 0) {
     const warningMessages = validationResult.warnings.map((warning) => `- ${warning.field}: ${warning.message}`).join('\n')
     if (!confirm(`The following warnings were found:\n\n${warningMessages}\n\nDo you want to proceed with export?`)) return
   }
@@ -437,7 +444,7 @@ async function performDownload(allowPartial: boolean) {
       }
     })
   })
-  if (additionalWarnings.length > 0 && !confirm(`Additional validation warnings:\n\n${additionalWarnings.join('\n')}\n\nDo you want to proceed with export?`)) return
+  if (!allowPartial && additionalWarnings.length > 0 && !confirm(`Additional validation warnings:\n\n${additionalWarnings.join('\n')}\n\nDo you want to proceed with export?`)) return
 
   try {
     const rocrate = generateROCrate(canvasData.value, {
@@ -449,6 +456,8 @@ async function performDownload(allowPartial: boolean) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'agentic-automation-project'
     await downloadROCrateZip(rocrate, projectName, canvasData.value, benefitDisplay.value)
+    highlightMissing.value = false
+    pendingMissingPrompts.value = []
   } catch (error) {
     if (error instanceof CurrentCanvasValidationError) {
       alert(`${error.message}. Please fix these fields before exporting:\n\n${formatDiagnostics(error.diagnostics)}`)
@@ -465,12 +474,4 @@ async function performDownload(allowPartial: boolean) {
   @apply inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-950 focus:outline-none focus:ring-2 focus:ring-primary-600;
 }
 
-.load-example-hint-pulse {
-  animation: load-example-pulse 1.5s ease-in-out infinite;
-}
-
-@keyframes load-example-pulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgb(14 165 233 / 0.5); }
-  50% { box-shadow: 0 0 0 8px rgb(14 165 233 / 0); }
-}
 </style>
