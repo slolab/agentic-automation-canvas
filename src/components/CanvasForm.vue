@@ -37,8 +37,34 @@
     />
 
     <template v-else>
-      <div class="detailed-tabs-full-bleed border-y border-gray-200">
-        <div class="flex w-full items-center">
+      <!-- One floating card holds the section tabs and the active section, so both
+           share the same width on every tab. -->
+      <div class="rounded-lg bg-white shadow-lg">
+        <div class="rounded-t-lg border-b border-gray-200 px-6 py-4">
+          <div class="mb-2 flex items-center justify-between">
+            <span class="text-sm font-medium text-gray-700">Canvas completion</span>
+            <span class="text-sm font-medium" :class="getCompletionTextColor()">
+              {{ completionPercentage.percentage }}%
+              <span v-if="!completionPercentage.isValid" class="text-xs">(validation errors)</span>
+            </span>
+          </div>
+          <div
+            class="h-2 w-full rounded-full bg-gray-200"
+            role="progressbar"
+            aria-label="Canvas completion"
+            :aria-valuenow="completionPercentage.percentage"
+            aria-valuemin="0"
+            aria-valuemax="100"
+          >
+            <div
+              class="h-2 rounded-full transition-all duration-300"
+              :class="getCompletionBarColor()"
+              :style="{ width: `${completionPercentage.percentage}%` }"
+            />
+          </div>
+        </div>
+
+        <div class="flex w-full items-center border-b border-gray-200 bg-gray-50 px-6">
           <nav
             class="min-w-0 flex-1 overflow-x-auto"
             role="tablist"
@@ -68,73 +94,69 @@
               </button>
             </div>
           </nav>
-          <p class="shrink-0 px-4 text-sm text-gray-600">
-            Canvas completion
-            <strong :class="getCompletionTextColor()">{{ completionPercentage.percentage }}%</strong>
-            <span v-if="!completionPercentage.isValid" class="sr-only"> with validation errors</span>
-          </p>
         </div>
-      </div>
 
-      <div
-        :id="`detailed-panel-${activeSection}`"
-        class="py-6"
-        role="tabpanel"
-        :aria-labelledby="`detailed-tab-${activeSection}`"
-        tabindex="0"
-      >
-        <ProjectDefinition v-if="activeSection === 'project'" :key="'project'" />
-        <Persons v-if="activeSection === 'persons'" :key="'persons'" />
-        <UserExpectations
-          v-if="activeSection === 'user-expectations'"
-          :key="`user-expectations-${dataVersion}`"
-        />
-        <DeveloperFeasibility v-if="activeSection === 'developer-feasibility'" :key="'developer-feasibility'" />
-        <GovernanceStaging v-if="activeSection === 'governance'" :key="'governance'" />
-        <DataAccessSensitivity v-if="activeSection === 'data-access'" :key="'data-access'" />
-        <OutcomesEvaluation v-if="activeSection === 'outcomes'" :key="'outcomes'" />
-        <Dashboard v-if="activeSection === 'dashboard'" :key="'dashboard'" />
-      </div>
-
-      <div
-        v-if="errorsWithTargets.length > 0 || warningsWithTargets.length > 0"
-        class="border-t border-gray-200 py-5"
-      >
-        <div v-if="errorsWithTargets.length > 0" class="mb-4">
-          <h3 class="mb-2 text-sm font-semibold text-red-700">Validation Errors</h3>
-          <ul class="space-y-0.5">
-            <li v-for="(item, index) in errorsWithTargets" :key="index">
-              <button
-                v-if="item.target"
-                type="button"
-                class="group flex w-full items-start gap-2 rounded px-1 py-0.5 text-left hover:bg-red-50"
-                @click="navigateToError(item.error.field)"
-              >
-                <span class="text-red-400" aria-hidden="true">›</span>
-                <span class="flex-1 text-sm text-red-600">{{ item.error.message }}</span>
-                <span class="shrink-0 text-xs text-red-500">{{ sectionLabel(item.target.sectionId) }} ↗</span>
-              </button>
-              <span v-else class="flex items-start gap-2 px-1 py-0.5 text-sm text-red-600">• {{ item.error.message }}</span>
-            </li>
-          </ul>
+        <div
+          :id="`detailed-panel-${activeSection}`"
+          class="p-6"
+          role="tabpanel"
+          :aria-labelledby="`detailed-tab-${activeSection}`"
+          tabindex="0"
+        >
+          <CanvasSummary v-if="activeSection === 'canvas-summary'" :key="'canvas-summary'" />
+          <ProjectDefinition v-if="activeSection === 'project'" :key="'project'" />
+          <Persons v-if="activeSection === 'persons'" :key="'persons'" />
+          <UserExpectations
+            v-if="activeSection === 'user-expectations'"
+            :key="`user-expectations-${dataVersion}`"
+          />
+          <DeveloperFeasibility v-if="activeSection === 'developer-feasibility'" :key="'developer-feasibility'" />
+          <GovernanceStaging v-if="activeSection === 'governance'" :key="'governance'" />
+          <DataAccessSensitivity v-if="activeSection === 'data-access'" :key="'data-access'" />
+          <OutcomesEvaluation v-if="activeSection === 'outcomes'" :key="'outcomes'" />
+          <Dashboard v-if="activeSection === 'dashboard'" :key="'dashboard'" />
         </div>
-        <div v-if="warningsWithTargets.length > 0">
-          <h3 class="mb-2 text-sm font-semibold text-yellow-700">Warnings</h3>
-          <ul class="space-y-0.5">
-            <li v-for="(item, index) in warningsWithTargets" :key="index">
-              <button
-                v-if="item.target"
-                type="button"
-                class="group flex w-full items-start gap-2 rounded px-1 py-0.5 text-left hover:bg-yellow-50"
-                @click="navigateToError(item.error.field)"
-              >
-                <span class="text-yellow-500" aria-hidden="true">›</span>
-                <span class="flex-1 text-sm text-yellow-700">{{ item.error.message }}</span>
-                <span class="shrink-0 text-xs text-yellow-600">{{ sectionLabel(item.target.sectionId) }} ↗</span>
-              </button>
-              <span v-else class="flex items-start gap-2 px-1 py-0.5 text-sm text-yellow-700">• {{ item.error.message }}</span>
-            </li>
-          </ul>
+
+        <div
+          v-if="errorsWithTargets.length > 0 || warningsWithTargets.length > 0"
+          class="rounded-b-lg border-t border-gray-200 bg-gray-50 px-6 py-4"
+        >
+          <div v-if="errorsWithTargets.length > 0" class="mb-4">
+            <h3 class="mb-2 text-sm font-semibold text-red-700">Validation Errors</h3>
+            <ul class="space-y-0.5">
+              <li v-for="(item, index) in errorsWithTargets" :key="index">
+                <button
+                  v-if="item.target"
+                  type="button"
+                  class="group flex w-full items-start gap-2 rounded px-1 py-0.5 text-left hover:bg-red-100"
+                  @click="navigateToError(item.error.field)"
+                >
+                  <span class="text-red-400" aria-hidden="true">›</span>
+                  <span class="flex-1 text-sm text-red-600">{{ item.error.message }}</span>
+                  <span class="shrink-0 text-xs text-red-500">{{ sectionLabel(item.target.sectionId) }} ↗</span>
+                </button>
+                <span v-else class="flex items-start gap-2 px-1 py-0.5 text-sm text-red-600">• {{ item.error.message }}</span>
+              </li>
+            </ul>
+          </div>
+          <div v-if="warningsWithTargets.length > 0">
+            <h3 class="mb-2 text-sm font-semibold text-yellow-700">Warnings</h3>
+            <ul class="space-y-0.5">
+              <li v-for="(item, index) in warningsWithTargets" :key="index">
+                <button
+                  v-if="item.target"
+                  type="button"
+                  class="group flex w-full items-start gap-2 rounded px-1 py-0.5 text-left hover:bg-yellow-100"
+                  @click="navigateToError(item.error.field)"
+                >
+                  <span class="text-yellow-500" aria-hidden="true">›</span>
+                  <span class="flex-1 text-sm text-yellow-700">{{ item.error.message }}</span>
+                  <span class="shrink-0 text-xs text-yellow-600">{{ sectionLabel(item.target.sectionId) }} ↗</span>
+                </button>
+                <span v-else class="flex items-start gap-2 px-1 py-0.5 text-sm text-yellow-700">• {{ item.error.message }}</span>
+              </li>
+            </ul>
+          </div>
         </div>
       </div>
     </template>
@@ -156,6 +178,7 @@ import { fieldToNavTarget, sectionLabel } from '@/utils/fieldNavigation'
 // Detailed sections are intentionally lazy. The simplified landing page should
 // not download the advanced editors (or Dashboard's diagram engine) until the
 // user opts into the detailed canvas.
+const CanvasSummary = defineAsyncComponent(() => import('./sections/CanvasSummary.vue'))
 const ProjectDefinition = defineAsyncComponent(() => import('./sections/ProjectDefinition.vue'))
 const Persons = defineAsyncComponent(() => import('./sections/Persons.vue'))
 const UserExpectations = defineAsyncComponent(() => import('./sections/UserExpectations.vue'))
@@ -187,6 +210,7 @@ const {
 } = useCanvasData()
 
 const sections = [
+  { id: 'canvas-summary', label: 'Canvas Summary' },
   { id: 'project', label: 'Project' },
   { id: 'persons', label: 'Persons' },
   { id: 'user-expectations', label: 'Tasks & Benefits' },
@@ -203,7 +227,7 @@ const viewMode = computed<'simplified' | 'detailed'>({
   get: () => props.viewMode,
   set: (value) => emit('update:viewMode', value),
 })
-const activeSection = ref<DetailedSectionId>('project')
+const activeSection = ref<DetailedSectionId>('canvas-summary')
 const tabRefs = ref<HTMLButtonElement[]>([])
 
 watch(requestedSection, (section) => {
@@ -244,6 +268,13 @@ function getCompletionTextColor(): string {
   return 'text-gray-700'
 }
 
+function getCompletionBarColor(): string {
+  if (completionPercentage.value.hasErrors) return 'bg-red-500'
+  if (completionPercentage.value.hasWarnings) return 'bg-yellow-500'
+  if (completionPercentage.value.isValid) return 'bg-green-500'
+  return 'bg-primary-600'
+}
+
 function setTabRef(element: Element | ComponentPublicInstance | null, index: number) {
   if (element instanceof HTMLButtonElement) tabRefs.value[index] = element
 }
@@ -271,10 +302,3 @@ function handleTabKeydown(event: KeyboardEvent) {
   }
 }
 </script>
-
-<style scoped>
-.detailed-tabs-full-bleed {
-  width: 100vw;
-  margin-left: calc((100% - 100vw) / 2);
-}
-</style>

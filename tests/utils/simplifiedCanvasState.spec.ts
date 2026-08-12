@@ -85,6 +85,28 @@ describe('detailed-content indicator', () => {
     data.project.keywords = ['triage']
     expect(hasDetailedCanvasContent(data)).toBe(true)
   })
+
+  it('stays off for the dataset a simplified data constraint creates', () => {
+    const data = emptyCanvas()
+    data.developerFeasibility = { constraintFlags: ['large-data', 'personal-data'] }
+    data.dataAccess = { datasets: [{ id: 'dataset-1', title: '', containsPersonalData: true }] }
+    expect(hasDetailedCanvasContent(data)).toBe(false)
+
+    data.dataAccess.datasets![0].title = 'Referral letters'
+    expect(hasDetailedCanvasContent(data)).toBe(true)
+  })
+
+  it('turns on for dataset detail only the full canvas can capture', () => {
+    const data = emptyCanvas()
+    data.dataAccess = { datasets: [{ id: 'dataset-1', title: '', accessRights: 'restricted' }] }
+    expect(hasDetailedCanvasContent(data)).toBe(true)
+
+    data.dataAccess = { datasets: [
+      { id: 'dataset-1', title: '' },
+      { id: 'dataset-2', title: '' },
+    ] }
+    expect(hasDetailedCanvasContent(data)).toBe(true)
+  })
 })
 
 it('requires a custom item when Other is the selected potential approach', () => {

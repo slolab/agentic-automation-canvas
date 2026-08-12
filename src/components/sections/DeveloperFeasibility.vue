@@ -1339,6 +1339,7 @@ import {
 const {
   canvasData,
   focusFieldRequest,
+  applyDatasetConstraints,
   updateDeveloperFeasibility,
   updateGovernance,
   updateUserExpectations,
@@ -1785,10 +1786,12 @@ const update = () => {
 function toggleProjectConstraint(value: ConstraintFlag, event: Event) {
   const checked = (event.target as HTMLInputElement).checked
   const current = selectedProjectConstraints.value
-  localData.value.constraintFlags = checked
-    ? [...new Set([...current, value]), ...customProjectConstraints.value]
-    : [...current.filter((candidate) => candidate !== value), ...customProjectConstraints.value]
+  const suggested = checked
+    ? [...new Set([...current, value])]
+    : current.filter((candidate) => candidate !== value)
+  localData.value.constraintFlags = [...suggested, ...customProjectConstraints.value]
   update()
+  applyDatasetConstraints(suggested)
 }
 
 const selectedProjectConstraints = computed(() =>

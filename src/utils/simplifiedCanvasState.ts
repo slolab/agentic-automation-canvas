@@ -152,7 +152,17 @@ export function hasDetailedCanvasContent(data: CanvasData): boolean {
     'solutionsToResearch',
     'constraintFlags',
   ])) return true
-  if (hasMeaningfulValue(data.dataAccess) || hasMeaningfulValue(data.outcomes)) return true
+  // A dataset created by a simplified data constraint carries no detailed content
+  // of its own: only its generated id and the personal-data answer are set.
+  if (hasExtraKeys(data.dataAccess, ['datasets'])) return true
+  const datasets = data.dataAccess?.datasets ?? []
+  if (datasets.length > 1) return true
+  const dataset = datasets[0]
+  if (dataset && (
+    hasText(dataset.title)
+    || hasExtraKeys(dataset, ['id', 'title', 'containsPersonalData'])
+  )) return true
+  if (hasMeaningfulValue(data.outcomes)) return true
 
   const requirements = data.userExpectations?.requirements ?? []
   if (requirements.length > 1) return true

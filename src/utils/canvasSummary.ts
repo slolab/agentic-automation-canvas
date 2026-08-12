@@ -4,11 +4,18 @@
  */
 
 import type { CanvasData, Requirement } from '@/types/canvas'
+import {
+  approachLabel,
+  constraintShortLabel,
+  frequencyLabel,
+  teamStatusLabel,
+} from '@/schema/simplifiedCanvasOptions'
 import { getTimeSavedPerUnit, getOversightMinutes } from './timeBenefits'
 import { aggregateDeploymentCosts } from './deploymentCost'
 
 const MAX_DESC_LEN = 300
 const MAX_FEASIBILITY_NOTES_LEN = 300
+const MAX_MILESTONE_LEN = 160
 const MAX_TASK_TITLES = 5
 
 function truncate(text: string | undefined, maxLen: number): string {
@@ -25,6 +32,8 @@ export interface ProjectBlock {
   headlineValue: string
   primaryValueDriver: string
   domain: string[]
+  /** Labelled `project.problemFrequency`, empty when unanswered */
+  problemFrequency: string
 }
 
 export interface TaskSummary {
@@ -36,7 +45,12 @@ export interface UserExpectationsBlock {
   taskCount: number
   tasks: TaskSummary[]
   totalTimeSavedHoursPerMonth: number
+  /** Classified benefits only, so the type chips keep their quantified meaning */
   benefitTypeCounts: Record<string, number>
+  /** Unclassified benefits carrying a free-form expected benefit */
+  expectedBenefitCount: number
+  /** Unclassified benefits carrying a free-form success metric */
+  successMetricCount: number
 }
 
 export interface DeveloperFeasibilityBlock {
@@ -50,6 +64,10 @@ export interface DeveloperFeasibilityBlock {
   tasksWithDedicatedFeasibility: string[]
   /** Total deployment cost per month by currency (e.g. { USD: 150, EUR: 80 }) */
   deploymentCostTotalsPerMonth: Record<string, number>
+  /** Labelled `developerFeasibility.constraintFlags`; custom values verbatim */
+  constraints: string[]
+  /** Labelled potential approaches from the first task, custom entries included */
+  approaches: string[]
 }
 
 export interface DeliverableSummary {
@@ -84,12 +102,20 @@ export interface GovernanceBlock {
     agentCount: number
     milestoneCount: number
   }>
+  /** Labelled `governance.buildTeamStatus`, empty when unanswered */
+  buildTeamStatus: string
+  /** Labelled `governance.maintenanceOwnerStatus`, empty when unanswered */
+  maintenanceOwnerStatus: string
+  /** First milestone of the first stage */
+  firstMilestone: { description: string; kpi: string } | null
 }
 
 export interface DataAccessBlock {
   datasetCount: number
   accessRightsSummary: Record<string, number>
   sensitivitySummary: string[]
+  /** Datasets explicitly answered as containing personal data */
+  personalDataCount: number
 }
 
 export interface CanvasSummaryData {
@@ -171,6 +197,7 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
       ? project.primaryValueDriver.charAt(0).toUpperCase() + project.primaryValueDriver.slice(1)
       : '',
     domain: project.domain ?? [],
+    problemFrequency: project.problemFrequency ? frequencyLabel(project.problemFrequency) : '',
   }
 
   // User expectations block
@@ -185,8 +212,15 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     return total + netTimeSaved
   }, 0)
   const benefitTypeCounts: Record<string, number> = {}
+  let expectedBenefitCount = 0
+  let successMetricCount = 0
   requirements.forEach((req) => {
     (req.benefits || []).forEach((b) => {
+      if (b.benefitType === 'unclassified') {
+        if (b.description?.trim()) expectedBenefitCount += 1
+        if (b.metricLabel?.trim()) successMetricCount += 1
+        return
+      }
       benefitTypeCounts[b.benefitType] = (benefitTypeCounts[b.benefitType] || 0) + 1
     })
   })
@@ -199,10 +233,13 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     tasks,
     totalTimeSavedHoursPerMonth: Math.round((totalMinutesSavedPerMonth / 60) * 10) / 10,
     benefitTypeCounts,
+    expectedBenefitCount,
+    successMetricCount,
   }
 
   // Developer feasibility block
   const feas = data.developerFeasibility
+  const primaryApproach = requirements[0]?.feasibility?.technologyApproach
   const trlCurrent = feas?.trlLevel?.current ?? null
   const trlTarget = feas?.trlLevel?.target ?? null
   const technicalRisk = feas?.technicalRisk ?? null
@@ -257,9 +294,17 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     feasibilityNotes: truncate(feas?.feasibilityNotes, MAX_FEASIBILITY_NOTES_LEN),
     tasksWithDedicatedFeasibility,
     deploymentCostTotalsPerMonth,
+    constraints: (feas?.constraintFlags ?? [])
+      .filter((flag) => flag !== 'other')
+      .map(constraintShortLabel),
+    approaches: [
+      ...(primaryApproach?.approaches ?? []).filter((approach) => approach !== 'other').map(approachLabel),
+      ...(primaryApproach?.customApproaches ?? []),
+    ],
   }
 
   // Governance block
+  const firstMilestone = governanceStages[0]?.milestones?.[0]
   const governanceBlock: GovernanceBlock = {
     stages: governanceStages.map((s) => ({
       name: s.name || 'Unnamed stage',
@@ -268,6 +313,18 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
       agentCount: s.agents?.length ?? 0,
       milestoneCount: s.milestones?.length ?? 0,
     })),
+    buildTeamStatus: data.governance?.buildTeamStatus
+      ? teamStatusLabel(data.governance.buildTeamStatus)
+      : '',
+    maintenanceOwnerStatus: data.governance?.maintenanceOwnerStatus
+      ? teamStatusLabel(data.governance.maintenanceOwnerStatus)
+      : '',
+    firstMilestone: firstMilestone && (firstMilestone.description?.trim() || firstMilestone.kpi?.trim())
+      ? {
+        description: truncate(firstMilestone.description, MAX_MILESTONE_LEN),
+        kpi: truncate(firstMilestone.kpi, MAX_MILESTONE_LEN),
+      }
+      : null,
   }
 
   // Data access block
@@ -284,6 +341,7 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     datasetCount: datasets.length,
     accessRightsSummary,
     sensitivitySummary,
+    personalDataCount: datasets.filter((d) => d.containsPersonalData === true).length,
   }
 
   // Outcomes block

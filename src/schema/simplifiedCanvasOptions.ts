@@ -74,6 +74,22 @@ const constraintLabels = {
   other: 'Other',
 }
 
+// Short forms for the one-page canvas summary, where the full checkbox sentences
+// would not fit. Keyed to the same record so a renamed constraint fails to compile.
+const constraintShortLabels: Record<keyof typeof constraintLabels, string> = {
+  'large-data': 'Large data',
+  'cluster-compute': 'Cluster compute',
+  'large-gpu': 'Large GPU',
+  'personal-data': 'Personal data',
+  'valuable-ip': 'Valuable IP',
+  'external-system-integration': 'External systems',
+  'restricted-processing-environment': 'Restricted processing',
+  'real-time': 'Real-time',
+  'regulated-or-high-impact': 'Regulated or high-impact',
+  'procurement-or-licensing': 'Procurement or licensing',
+  other: 'Other',
+}
+
 const teamStatusLabels: Record<TeamStatus, string> = {
   none: 'No',
   possible: 'Possible, but not committed',
@@ -140,3 +156,25 @@ export const teamStatusOptions = buildTeamStatusValues.map((value) => ({
   value,
   label: teamStatusLabels[value],
 }))
+
+// Read-only views label stored values. Constraints and approaches accept free
+// text, so an unknown value is a custom entry and is shown exactly as authored.
+function labelOf<T extends Record<string, string>>(labels: T, value: string): string {
+  return labels[value] ?? value
+}
+
+export function frequencyLabel(value: string): string {
+  return labelOf(problemFrequencyLabels, value)
+}
+
+export function approachLabel(value: string): string {
+  return labelOf(technicalApproachLabels, value)
+}
+
+export function constraintShortLabel(value: string): string {
+  return labelOf(constraintShortLabels, value)
+}
+
+export function teamStatusLabel(value: string): string {
+  return labelOf(teamStatusLabels, value)
+}

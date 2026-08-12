@@ -7,12 +7,14 @@ that invalidates them must fail here rather than in the browser.
 import { describe, expect, it } from 'vitest'
 import { exampleData } from '@/data/example-data'
 import { devAllBenefitsCanvas } from '@/data/dev-all-benefits-canvas'
+import { simplifiedOnlyCanvas } from '@/data/simplified-only-canvas'
 import { generateROCrate } from '@/rocrate/export'
 import { validateCurrentCanvas } from '@/schema/validation'
 
 const bundled = {
   'example-data': exampleData,
   'dev-all-benefits-canvas': devAllBenefitsCanvas,
+  'simplified-only-canvas': simplifiedOnlyCanvas,
 }
 
 describe.each(Object.entries(bundled))('%s', (_name, canvas) => {

@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import { reactive } from 'vue'
-import type { Benefit, GovernanceStaging, UserExpectations } from '@/types/canvas'
+import type { Benefit, DataAccessSensitivity, GovernanceStaging, UserExpectations } from '@/types/canvas'
 import {
+  applyDatasetConstraints,
   patchFirstStageMilestone,
   patchFirstStage,
   patchPrimaryRequirement,
@@ -283,5 +284,58 @@ describe('simplified canvas canonical mappings', () => {
       governance,
       { description: 'Validated pilot' },
     )).not.toThrow()
+  })
+})
+
+describe('dataset constraints', () => {
+  it('creates the dataset a data constraint implies', () => {
+    const result = applyDatasetConstraints(undefined, ['large-data'], idFactory)
+
+    expect(result?.datasets).toEqual([{ id: 'dataset-generated', title: '' }])
+  })
+
+  it('records personal data on the dataset without creating a second one', () => {
+    const first = applyDatasetConstraints(undefined, ['large-data'], idFactory)
+    const second = applyDatasetConstraints(first, ['large-data', 'personal-data'], idFactory)
+
+    expect(second?.datasets).toEqual([{
+      id: 'dataset-generated',
+      title: '',
+      containsPersonalData: true,
+    }])
+  })
+
+  it('clears the personal-data answer on deselect but keeps the dataset and its detail', () => {
+    const current: DataAccessSensitivity = {
+      datasets: [
+        { id: 'dataset-1', title: 'Referral letters', accessRights: 'restricted', containsPersonalData: true },
+        { id: 'dataset-2', title: 'Reference corpus', containsPersonalData: true },
+      ],
+    }
+
+    const result = applyDatasetConstraints(current, ['large-data'], idFactory)
+
+    expect(result?.datasets).toEqual([
+      { id: 'dataset-1', title: 'Referral letters', accessRights: 'restricted' },
+      { id: 'dataset-2', title: 'Reference corpus', containsPersonalData: true },
+    ])
+  })
+
+  it('leaves data access untouched when no data constraint is selected', () => {
+    expect(applyDatasetConstraints(undefined, ['real-time'], idFactory)).toBeUndefined()
+
+    const current: DataAccessSensitivity = { datasets: [{ id: 'dataset-1', title: 'Letters' }] }
+    expect(applyDatasetConstraints(current, [], idFactory)).toBe(current)
+  })
+
+  it('keeps an explicit no-personal-data answer given in the detailed view', () => {
+    const current: DataAccessSensitivity = {
+      datasets: [{ id: 'dataset-1', title: 'Letters', containsPersonalData: false }],
+    }
+
+    expect(applyDatasetConstraints(current, ['large-data'], idFactory)).toBe(current)
+    expect(applyDatasetConstraints(current, ['personal-data'], idFactory)?.datasets).toEqual([
+      { id: 'dataset-1', title: 'Letters', containsPersonalData: true },
+    ])
   })
 })

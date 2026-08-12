@@ -466,6 +466,7 @@ const {
   updateProject,
   updateDeveloperFeasibility,
   updateGovernance,
+  applyDatasetConstraints,
   patchPrimaryRequirement,
   replacePrimaryUnclassifiedBenefits,
   patchFirstStageMilestone,
@@ -641,6 +642,7 @@ function toggleConstraint(value: ConstraintFlag, event: Event) {
     ? [...new Set([...selectedConstraints.value, value])]
     : selectedConstraints.value.filter((candidate) => candidate !== value)
   updateDeveloperFeasibility({ constraintFlags: [...constraintFlags, ...customConstraints.value] })
+  applyDatasetConstraints(constraintFlags)
 }
 
 function updateTeamStatus(field: TeamStatusField, event: Event) {

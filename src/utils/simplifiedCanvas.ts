@@ -1,5 +1,7 @@
 import type {
   Benefit,
+  DataAccessSensitivity,
+  Dataset,
   GovernanceStage,
   GovernanceStaging,
   Milestone,
@@ -9,7 +11,9 @@ import type {
 } from '@/types/canvas'
 
 export type CanvasIdFactory = (prefix: string) => string
-export type PrimaryRequirementPatch = Partial<Omit<Requirement, 'id' | 'title'>>
+// `title` is patchable but never generated: the simplified canvas does not ask
+// for a task title, while the canvas summary essentials strip does.
+export type PrimaryRequirementPatch = Partial<Omit<Requirement, 'id'>>
 export type UnclassifiedBenefitField = 'description' | 'metricLabel'
 export type FirstStagePatch = Partial<Pick<GovernanceStage, 'startDate' | 'endDate'>>
 
@@ -121,6 +125,79 @@ export function replacePrimaryUnclassifiedBenefits(
     { benefits },
     createId,
   )
+}
+
+/** Ensure the schema parent for a simplified dataset answer exists. */
+export function ensureFirstDataset(
+  current: DataAccessSensitivity | undefined,
+  createId: CanvasIdFactory = createCanvasId,
+): { dataAccess: DataAccessSensitivity; datasetIndex: number } {
+  const datasets = [...(current?.datasets ?? [])]
+  if (datasets.length === 0) {
+    datasets.push({ id: createId('dataset'), title: '' })
+  }
+
+  return {
+    dataAccess: { ...(current ?? {}), datasets },
+    datasetIndex: 0,
+  }
+}
+
+/** Patch dataset zero while preserving every later dataset. */
+export function patchFirstDataset(
+  current: DataAccessSensitivity | undefined,
+  updates: Partial<Dataset>,
+  createId: CanvasIdFactory = createCanvasId,
+): DataAccessSensitivity {
+  const { dataAccess, datasetIndex } = ensureFirstDataset(current, createId)
+  const datasets = dataAccess.datasets!
+  datasets[datasetIndex] = { ...datasets[datasetIndex], ...updates }
+  return { ...dataAccess, datasets }
+}
+
+/**
+ * Constraint flags that describe the project data rather than its delivery. The
+ * detailed model expresses them on a dataset, so selecting one has to bring the
+ * dataset record into existence.
+ */
+export const datasetConstraintFlags = ['large-data', 'personal-data'] as const
+
+/**
+ * Create the dataset a data constraint implies and keep its personal-data answer
+ * in sync. Deselecting a flag only clears that answer: the dataset itself, its
+ * other fields, and every later dataset stay untouched because the user may have
+ * described them in the detailed view.
+ *
+ * Pass the suggested flags of the toggled checkbox set; custom free-text
+ * constraints never imply a dataset.
+ */
+export function applyDatasetConstraints(
+  current: DataAccessSensitivity | undefined,
+  flags: readonly string[],
+  createId: CanvasIdFactory = createCanvasId,
+): DataAccessSensitivity | undefined {
+  const needsDataset = datasetConstraintFlags.some((flag) => flags.includes(flag))
+  const personalData = flags.includes('personal-data')
+  const existingDatasets = current?.datasets ?? []
+
+  if (!needsDataset && existingDatasets.length === 0) return current
+
+  if (personalData) {
+    return patchFirstDataset(current, { containsPersonalData: true }, createId)
+  }
+
+  if (existingDatasets.length === 0) {
+    return ensureFirstDataset(current, createId).dataAccess
+  }
+
+  // Only the answer this checkbox writes is cleared; an explicit "no personal
+  // data" given in the detailed view is the user's own statement and stays.
+  if (existingDatasets[0].containsPersonalData !== true) return current
+
+  const datasets = [...existingDatasets]
+  const { containsPersonalData: _cleared, ...rest } = datasets[0]
+  datasets[0] = rest
+  return { ...current, datasets }
 }
 
 function primaryStageIndex(stages: readonly GovernanceStage[]): number {

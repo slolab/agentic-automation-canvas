@@ -3,7 +3,7 @@
  */
 
 import { ref, computed, toRaw, watch } from 'vue'
-import type { CanvasData, Milestone } from '@/types/canvas'
+import type { CanvasData, Dataset, Milestone } from '@/types/canvas'
 import type { Diagnostic } from '@/diagnostics'
 import { logDiagnostics } from '@/diagnostics'
 import { decodePointer } from '@/json'
@@ -26,6 +26,8 @@ import { collectDataAccessFlags } from '@/utils/dataAccessWarnings'
 import { todayIsoDate } from '@/utils/date'
 import type { FocusFieldRequest } from '@/utils/fieldNavigation'
 import {
+  applyDatasetConstraints as applyDatasetConstraintsData,
+  patchFirstDataset as patchFirstDatasetData,
   patchFirstStageMilestone as patchFirstStageMilestoneData,
   patchFirstStage as patchFirstStageData,
   patchPrimaryRequirement as patchPrimaryRequirementData,
@@ -268,6 +270,27 @@ export function useCanvasData() {
       canvasData.value.governance,
       updates,
     )
+  }
+
+  const patchFirstDataset = (updates: Partial<Dataset>) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.dataAccess = patchFirstDatasetData(
+      canvasData.value.dataAccess,
+      updates,
+    )
+  }
+
+  /**
+   * Keep the dataset implied by the data constraints in step with the checkboxes.
+   * Called from the constraint toggles rather than from updateDeveloperFeasibility,
+   * so a dataset the user deleted in Data Access is not resurrected by an
+   * unrelated feasibility edit.
+   */
+  const applyDatasetConstraints = (flags: readonly string[]) => {
+    const next = applyDatasetConstraintsData(canvasData.value.dataAccess, flags)
+    if (next === canvasData.value.dataAccess) return
+    hasChangedSinceImport.value = true
+    canvasData.value.dataAccess = next
   }
 
   const patchFirstStage = (updates: FirstStagePatch) => {
@@ -817,6 +840,8 @@ export function useCanvasData() {
     updateOutcomes,
     patchPrimaryRequirement,
     replacePrimaryUnclassifiedBenefits,
+    patchFirstDataset,
+    applyDatasetConstraints,
     patchFirstStageMilestone,
     patchFirstStage,
     updateFirstStageTeam,

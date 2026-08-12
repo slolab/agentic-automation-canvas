@@ -1,7 +1,7 @@
 <template>
   <div
     id="app"
-    class="flex min-h-screen flex-col overflow-x-clip bg-white"
+    class="flex min-h-screen flex-col overflow-x-clip bg-gray-50"
     @dragenter.prevent="onDragEnter"
     @dragover.prevent
     @dragleave="onDragLeave"
@@ -104,16 +104,26 @@
       </div>
     </header>
 
+    <!-- The detailed canvas sits on a floating card over the grey page ground, as
+         in the pre-simplified app. The simplified canvas keeps the wide, plain
+         white landing page. -->
     <main
       :class="[
-        'mx-auto w-full max-w-[1800px] flex-1 px-4 pb-0 sm:px-6 lg:px-8',
-        canvasView === 'detailed' ? 'pt-0' : 'pt-4',
+        'w-full flex-1',
+        canvasView === 'detailed' ? 'bg-gray-50 py-8' : 'bg-white pb-0 pt-4',
       ]"
     >
-      <CanvasForm
-        v-model:view-mode="canvasView"
-        :highlight-missing="highlightMissing"
-      />
+      <div
+        :class="[
+          'mx-auto w-full px-4 sm:px-6 lg:px-8',
+          canvasView === 'detailed' ? 'max-w-7xl' : 'max-w-[1800px]',
+        ]"
+      >
+        <CanvasForm
+          v-model:view-mode="canvasView"
+          :highlight-missing="highlightMissing"
+        />
+      </div>
     </main>
 
     <footer class="mt-8 border-t border-gray-200 bg-gray-50">
@@ -372,8 +382,11 @@ async function requestDownloadROCrate(event: MouseEvent) {
   continueEditingButton.value?.focus()
 }
 
+// Dismissing the warning to keep editing also drops the highlights: they belong
+// to the export attempt, not to the editing session it interrupted.
 function closePartialDialog() {
   showPartialDialog.value = false
+  highlightMissing.value = false
   const target = downloadTrigger
   window.setTimeout(() => target?.focus(), 0)
 }
@@ -381,6 +394,7 @@ function closePartialDialog() {
 async function continueEditing() {
   const first = pendingMissingPrompts.value[0]
   showPartialDialog.value = false
+  highlightMissing.value = false
   canvasView.value = 'simplified'
   requestSection('simplified-canvas')
   await nextTick()
