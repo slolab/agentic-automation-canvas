@@ -1700,7 +1700,9 @@ watch(
   (newFeasibility) => {
     if (!isLocalUpdate) {
       if (newFeasibility && Object.keys(newFeasibility).length > 0) {
-        const migratedEffort = migrateEffortEstimate(newFeasibility.effortEstimate)
+        const storedEffort = newFeasibility.effortEstimate as unknown
+        const needsEffortMigration = typeof storedEffort === 'string'
+        const migratedEffort = migrateEffortEstimate(storedEffort)
         localData.value = {
           trlLevel: newFeasibility.trlLevel || {},
           technicalRisk: newFeasibility.technicalRisk,
@@ -1715,7 +1717,7 @@ watch(
           localData.value.trlLevel = {}
         }
         // If migration happened, update the canvas data
-        if (migratedEffort !== newFeasibility.effortEstimate) {
+        if (needsEffortMigration) {
           isLocalUpdate = true
           updateDeveloperFeasibility(localData.value)
           setTimeout(() => {

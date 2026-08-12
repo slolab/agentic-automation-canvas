@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { nextTick } from 'vue'
+import { nextTick, reactive } from 'vue'
 import type { Diagnostic } from '@/diagnostics'
 
 function memoryStorage(): Storage {
@@ -171,6 +171,32 @@ describe('useCanvasData imports', () => {
       'Autosaved project',
     )
     expect(localStorage.getItem('agentic-automation-canvas-benefit-display')).not.toContain('3')
+  })
+
+  it('accepts reactive section updates without retaining Vue proxies', async () => {
+    const { useCanvasData } = await import('@/composables/useCanvasData')
+    const state = useCanvasData()
+    const feasibility = reactive({
+      trlLevel: { current: 3, target: 5 },
+      feasibilityNotes: undefined,
+    })
+    const persons = reactive([{
+      id: 'person-0',
+      name: 'Ada Lovelace',
+      functionRoles: ['developer'],
+    }])
+
+    expect(() => state.updateDeveloperFeasibility(feasibility)).not.toThrow()
+    expect(() => state.updatePersons(persons)).not.toThrow()
+
+    feasibility.trlLevel.current = 4
+    persons[0].name = 'Changed after update'
+
+    expect(state.canvasData.value.developerFeasibility).toEqual({
+      trlLevel: { current: 3, target: 5 },
+      feasibilityNotes: undefined,
+    })
+    expect(state.canvasData.value.persons?.[0].name).toBe('Ada Lovelace')
   })
 
   it('reopens an autosaved draft whose new items are still blank', async () => {

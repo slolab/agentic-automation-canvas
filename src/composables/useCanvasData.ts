@@ -2,7 +2,7 @@
  * Composable for managing canvas form data state
  */
 
-import { ref, computed, watch } from 'vue'
+import { ref, computed, toRaw, watch } from 'vue'
 import type { CanvasData, Milestone } from '@/types/canvas'
 import type { Diagnostic } from '@/diagnostics'
 import { logDiagnostics } from '@/diagnostics'
@@ -135,8 +135,34 @@ watch(benefitDisplay, savePersistedBenefitDisplay, { deep: true })
 // Initialize
 loadFromStorage()
 
+function unwrapReactiveData(value: unknown, seen = new WeakMap<object, unknown>()): unknown {
+  if (value === null || typeof value !== 'object') return value
+
+  const raw = toRaw(value)
+  const existing = seen.get(raw)
+  if (existing !== undefined) return existing
+
+  if (Array.isArray(raw)) {
+    const unwrapped: unknown[] = []
+    seen.set(raw, unwrapped)
+    raw.forEach((item) => unwrapped.push(unwrapReactiveData(item, seen)))
+    return unwrapped
+  }
+
+  const unwrapped: Record<string, unknown> = {}
+  seen.set(raw, unwrapped)
+  Object.entries(raw).forEach(([key, item]) => {
+    unwrapped[key] = unwrapReactiveData(item, seen)
+  })
+  return unwrapped
+}
+
+function cloneCanvasData<T>(value: T): T {
+  return structuredClone(unwrapReactiveData(value)) as T
+}
+
 function mergeSection<T extends object>(current: T, updates: Partial<T>): T {
-  return Object.assign({}, current, structuredClone(updates))
+  return Object.assign({}, current, cloneCanvasData(updates))
 }
 
 export function useCanvasData() {
@@ -181,7 +207,7 @@ export function useCanvasData() {
 
   const updatePersons = (persons: CanvasData['persons']) => {
     hasChangedSinceImport.value = true
-    canvasData.value.persons = persons ? structuredClone(persons) : undefined
+    canvasData.value.persons = persons ? cloneCanvasData(persons) : undefined
   }
 
   const updateOutcomes = (
@@ -317,7 +343,7 @@ export function useCanvasData() {
     diagnostics: readonly Diagnostic[] = [],
   ) => {
     // Deep copy the data to ensure reactivity works properly
-    const newData = structuredClone(data)
+    const newData = cloneCanvasData(data)
     // Clear existing data first to ensure watchers trigger
     canvasData.value = {
       project: {
