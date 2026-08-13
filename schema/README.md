@@ -80,8 +80,8 @@ Runtime validation uses the same current JSON Schema. TypeScript types provide c
 Version `0.17.1` adds backward-compatible fields used by the simplified canvas while preserving the complete 0.17.0 model:
 
 - Project supports optional problem frequency and recent problem examples.
-- Requirements support a controlled list of solution approaches.
-- Developer feasibility supports solution-research notes, constraint flags, and build and maintenance team statuses.
+- Requirement feasibility supports potential solution approaches (`userExpectations.requirements[].feasibility.technologyApproach.approaches` and `customApproaches`), both free-text arrays rather than schema enums.
+- Developer feasibility supports solution-research notes and constraint flags; governance records build- and maintenance-team status (`governance.buildTeamStatus`, `governance.maintenanceOwnerStatus`).
 - Benefits may be classified by an existing benefit type or recorded as an unclassified free-text description and/or metric label.
 - All new fields are optional, so documents conforming to 0.17.0 remain valid against 0.17.1.
 

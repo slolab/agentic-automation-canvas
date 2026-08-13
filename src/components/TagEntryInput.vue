@@ -3,7 +3,6 @@
     <div
       :class="[
         'flex flex-wrap items-center bg-white transition focus-within:border-primary-500 focus-within:ring-2 focus-within:ring-primary-100',
-        invalid && 'border-red-500 bg-red-50 ring-1 ring-red-300',
         disabled && 'cursor-not-allowed bg-gray-100 opacity-60 focus-within:border-gray-300 focus-within:ring-0',
         compact
           ? 'min-h-8 gap-1 border-0 border-b border-gray-300 px-1 py-0.5'
@@ -46,9 +45,9 @@
         ]"
         :placeholder="modelValue.length === 0 ? placeholder : 'Add another…'"
         :aria-describedby="describedBy"
-        :aria-invalid="invalid || undefined"
         @keydown.enter.prevent="addDraft"
         @keydown.backspace="removeLastWhenEmpty"
+        @blur="addDraft"
       />
 
       <button
@@ -74,7 +73,6 @@ interface Props {
   itemLabel?: string
   describedBy?: string
   compact?: boolean
-  invalid?: boolean
   disabled?: boolean
 }
 
@@ -82,7 +80,6 @@ const props = withDefaults(defineProps<Props>(), {
   itemLabel: 'items',
   describedBy: undefined,
   compact: false,
-  invalid: false,
   disabled: false,
 })
 

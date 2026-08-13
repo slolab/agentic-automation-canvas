@@ -40,3 +40,7 @@ mkdocs.yml.tmp
 PR_DESCRIPTION.md
 PR_MESSAGE.md
 PR_SUMMARY.md
+
+# Python bytecode from the tools/ scripts
+__pycache__/
+*.pyc

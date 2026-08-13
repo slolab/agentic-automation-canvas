@@ -5,7 +5,6 @@ import type {
   GovernanceStage,
   GovernanceStaging,
   Milestone,
-  Person,
   Requirement,
   UserExpectations,
 } from '@/types/canvas'
@@ -23,6 +22,19 @@ export const createCanvasId: CanvasIdFactory = (prefix) => {
   fallbackIdSequence += 1
   const randomPart = Math.random().toString(36).slice(2, 8)
   return `${prefix}-${Date.now()}-${fallbackIdSequence}-${randomPart}`
+}
+
+/**
+ * The task title the user actually authored, or an empty string. The simplified
+ * canvas does not ask for a task title, so the requirement it creates carries
+ * `title === id` (see `patchPrimaryRequirement`). That generated identifier is a
+ * technical parent value and must never be presented as user content.
+ */
+export function authoredRequirementTitle(
+  requirement: Pick<Requirement, 'id' | 'title'>,
+): string {
+  const title = requirement.title?.trim() ?? ''
+  return title && title !== requirement.id ? title : ''
 }
 
 /**
@@ -157,46 +169,76 @@ export function patchFirstDataset(
 
 /**
  * Constraint flags that describe the project data rather than its delivery. The
- * detailed model expresses them on a dataset, so selecting one has to bring the
+ * detailed model expresses them on a dataset, so checking one has to bring the
  * dataset record into existence.
  */
-export const datasetConstraintFlags = ['large-data', 'personal-data'] as const
+const datasetConstraintFlags = ['large-data', 'personal-data'] as const
+
+export interface ConstraintToggle {
+  /** The checkbox the user just clicked */
+  flag: string
+  checked: boolean
+  /** The full suggested-flag set after the click */
+  flags: readonly string[]
+}
+
+/** True when dataset 0 holds nothing the user authored. */
+function isGeneratedDataset(dataset: Dataset | undefined): boolean {
+  if (!dataset) return false
+  const { id: _id, title, ...rest } = dataset
+  return (title ?? '') === '' && Object.keys(rest).length === 0
+}
 
 /**
- * Create the dataset a data constraint implies and keep its personal-data answer
- * in sync. Deselecting a flag only clears that answer: the dataset itself, its
- * other fields, and every later dataset stay untouched because the user may have
- * described them in the detailed view.
+ * Bring the dataset a data constraint implies into existence, and keep its
+ * personal-data answer in step with that one checkbox.
  *
- * Pass the suggested flags of the toggled checkbox set; custom free-text
- * constraints never imply a dataset.
+ * This is deliberately driven by the click rather than by the resulting flag
+ * set: "personal-data was just unchecked" and "another checkbox changed while
+ * personal-data is off" produce the same flag set but must not produce the same
+ * data. Reading only the set would erase a `containsPersonalData` the user
+ * entered in the detailed view, and re-create a dataset they deleted there, on
+ * every unrelated constraint edit.
+ *
+ * Custom free-text constraints never imply a dataset. Later datasets and every
+ * other field are never touched.
  */
-export function applyDatasetConstraints(
+export function applyDatasetConstraintToggle(
   current: DataAccessSensitivity | undefined,
-  flags: readonly string[],
+  toggle: ConstraintToggle,
   createId: CanvasIdFactory = createCanvasId,
 ): DataAccessSensitivity | undefined {
-  const needsDataset = datasetConstraintFlags.some((flag) => flags.includes(flag))
-  const personalData = flags.includes('personal-data')
+  if (!datasetConstraintFlags.some((flag) => flag === toggle.flag)) return current
+
+  if (toggle.checked) {
+    if (toggle.flag === 'personal-data') {
+      return patchFirstDataset(current, { containsPersonalData: true }, createId)
+    }
+    // Nothing to record beyond the dataset's existence, so an existing one is
+    // returned untouched rather than rebuilt.
+    return (current?.datasets?.length ?? 0) > 0
+      ? current
+      : ensureFirstDataset(current, createId).dataAccess
+  }
+
+  if (toggle.flag !== 'personal-data') return current
+
   const existingDatasets = current?.datasets ?? []
-
-  if (!needsDataset && existingDatasets.length === 0) return current
-
-  if (personalData) {
-    return patchFirstDataset(current, { containsPersonalData: true }, createId)
-  }
-
-  if (existingDatasets.length === 0) {
-    return ensureFirstDataset(current, createId).dataAccess
-  }
-
-  // Only the answer this checkbox writes is cleared; an explicit "no personal
-  // data" given in the detailed view is the user's own statement and stays.
-  if (existingDatasets[0].containsPersonalData !== true) return current
+  // An explicit "no personal data" given in the detailed view is the user's own
+  // statement, so only the answer this checkbox wrote is cleared.
+  if (existingDatasets[0]?.containsPersonalData !== true) return current
 
   const datasets = [...existingDatasets]
   const { containsPersonalData: _cleared, ...rest } = datasets[0]
   datasets[0] = rest
+
+  // Unchecking the only reason the dataset existed leaves nothing behind.
+  const stillNeeded = datasetConstraintFlags.some((flag) => toggle.flags.includes(flag))
+  if (!stillNeeded && datasets.length === 1 && isGeneratedDataset(datasets[0])) {
+    const { datasets: _datasets, ...withoutDatasets } = current ?? {}
+    return Object.keys(withoutDatasets).length > 0 ? withoutDatasets : undefined
+  }
+
   return { ...current, datasets }
 }
 
@@ -254,73 +296,4 @@ export function patchFirstStage(
   const stages = governance.stages!
   stages[stageIndex] = { ...stages[stageIndex], ...updates }
   return { ...governance, stages }
-}
-
-/**
- * Treat person agents on the first stage as the simplified team list. Existing
- * Person entities are reused, new ones are created, and removing a chip only
- * removes the first-stage link so references elsewhere remain intact.
- */
-export function setFirstStageTeam(
-  currentPersons: readonly Person[] | undefined,
-  currentGovernance: GovernanceStaging | undefined,
-  names: readonly string[],
-  createId: CanvasIdFactory = createCanvasId,
-): { persons: Person[]; governance: GovernanceStaging | undefined } {
-  const normalizedNames = names
-    .map((name) => name.trim())
-    .filter((name, index, all) => (
-      name.length > 0
-      && all.findIndex((candidate) => candidate.toLocaleLowerCase() === name.toLocaleLowerCase()) === index
-    ))
-
-  const persons: Person[] = (currentPersons ?? []).map((person) => ({ ...person }))
-  if (normalizedNames.length === 0 && primaryStageIndex(currentGovernance?.stages ?? []) === -1) {
-    return { persons, governance: currentGovernance }
-  }
-
-  const ensured = ensureFirstStage(currentGovernance, createId)
-  const stages = ensured.governance.stages!
-  const stage = stages[ensured.stageIndex]
-  const existingAgents = stage.agents ?? []
-  const nonPersonAgents = existingAgents.filter((agent) => agent.type !== 'person')
-
-  const personAgents = normalizedNames.map((name) => {
-    let person = persons.find(
-      (candidate) => candidate.name.trim().toLocaleLowerCase() === name.toLocaleLowerCase(),
-    )
-    if (!person) {
-      person = { id: createId('person'), name }
-      persons.push(person)
-    }
-
-    const existingAgent = existingAgents.find(
-      (agent) => agent.type === 'person' && agent.personId === person!.id,
-    )
-    return existingAgent ?? { type: 'person' as const, personId: person.id }
-  })
-
-  stages[ensured.stageIndex] = {
-    ...stage,
-    agents: [...nonPersonAgents, ...personAgents],
-  }
-
-  return {
-    persons,
-    governance: { ...ensured.governance, stages },
-  }
-}
-
-export function firstStageTeamNames(
-  persons: readonly Person[] | undefined,
-  governance: GovernanceStaging | undefined,
-): string[] {
-  const stages = governance?.stages ?? []
-  const index = primaryStageIndex(stages)
-  if (index === -1) return []
-
-  return (stages[index].agents ?? [])
-    .filter((agent) => agent.type === 'person' && agent.personId)
-    .map((agent) => persons?.find((person) => person.id === agent.personId)?.name.trim() ?? '')
-    .filter((name) => name.length > 0)
 }

@@ -10,6 +10,7 @@ import {
   frequencyLabel,
   teamStatusLabel,
 } from '@/schema/simplifiedCanvasOptions'
+import { authoredRequirementTitle } from './simplifiedCanvas'
 import { getTimeSavedPerUnit, getOversightMinutes } from './timeBenefits'
 import { aggregateDeploymentCosts } from './deploymentCost'
 
@@ -37,8 +38,11 @@ export interface ProjectBlock {
 }
 
 export interface TaskSummary {
+  /** Empty when the task carries only its generated identifier as a title */
   title: string
   userStory?: string
+  /** `requirements[].targetPopulation` — who experiences the problem */
+  targetPopulation?: string
 }
 
 export interface UserExpectationsBlock {
@@ -175,6 +179,10 @@ function hasDedicatedFeasibility(req: Requirement): boolean {
   if (f.modelName?.trim()) return true
   const arch = f.technologyApproach?.architecture
   if (arch && arch !== 'none') return true
+  // Potential approaches are the one task-level feasibility answer the
+  // simplified canvas collects, and the same block prints them.
+  if ((f.technologyApproach?.approaches?.length ?? 0) > 0) return true
+  if ((f.technologyApproach?.customApproaches?.length ?? 0) > 0) return true
   return false
 }
 
@@ -225,8 +233,9 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
     })
   })
   const tasks: TaskSummary[] = requirements.slice(0, MAX_TASK_TITLES).map((r) => ({
-    title: r.title || 'Untitled task',
+    title: authoredRequirementTitle(r),
     userStory: r.userStory?.trim() || undefined,
+    targetPopulation: r.targetPopulation?.trim() || undefined,
   }))
   const userExpectationsBlock: UserExpectationsBlock = {
     taskCount: requirements.length,
@@ -277,7 +286,7 @@ export function computeCanvasSummary(data: CanvasData): CanvasSummaryData {
 
   const tasksWithDedicatedFeasibility = requirements
     .filter((r) => hasDedicatedFeasibility(r))
-    .map((r) => r.title || 'Untitled task')
+    .map((r) => authoredRequirementTitle(r))
 
   const deploymentCostTotals = aggregateDeploymentCosts(requirements)
   const deploymentCostTotalsPerMonth: Record<string, number> = {}

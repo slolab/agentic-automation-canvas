@@ -199,7 +199,8 @@
                   class="border-l-2 border-gray-300 pl-2 py-0.5"
                   :class="{ 'canvas-fw-print-only': showTasksStrip && i === 0 }"
                 >
-                  <p class="font-medium text-gray-900">{{ t.title }}</p>
+                  <p v-if="t.title" class="font-medium text-gray-900">{{ t.title }}</p>
+                  <p v-if="t.targetPopulation" class="text-xs">For: {{ t.targetPopulation }}</p>
                   <p v-if="t.userStory" class="text-xs italic mt-0.5 user-story-text">
                     <template v-if="parseUserStory(t.userStory)">
                       <span

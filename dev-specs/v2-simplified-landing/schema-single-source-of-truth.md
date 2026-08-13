@@ -44,3 +44,19 @@ Schema fidelity and recoverable user data > automated drift prevention > maintai
 - Historical files may rely on undocumented shapes created by earlier application models. The importer recovers only unambiguous current-model values and reports what it cannot safely retain; a dedicated version adapter is justified only by a concrete fixture that cannot be handled generically.
 - Some presentation behavior may not be expressible through generated types alone. The builder first exhausts generated, strongly typed representations; escalate before introducing a handwritten UI configuration that duplicates AAC field structure.
 - Some RO-Crate statements may not map losslessly to AAC fields. The builder preserves unambiguous supported values and diagnostics; escalate before discarding or inventing ambiguous AAC meaning.
+
+## Implementation notes (deviations from this spec)
+
+Recorded 2026-08-12, after the branch review.
+
+- **Criterion 5 — residual handwritten enum restatements.** Option lists in the detailed
+  section components (`DatasetItem.vue`, `RequirementItem.vue`, `ProjectDefinition.vue`,
+  `DeveloperFeasibility.vue`) still restate schema enum values as literal `<option value>`
+  strings that nothing type-checks; these predate this change. The label maps in
+  `src/schema/simplifiedCanvasOptions.ts` are the documented exception and *are* keyed to
+  generated types, so a renamed schema value fails to compile there. Related: those
+  placeholder options write `''`, which is not a member of the enums, so each write site
+  now clears the empty value before it reaches the model.
+- **Criterion 6 — the autosave write path is not validated.** Schema validation runs when a
+  persisted draft is read and at both RO-Crate boundaries. `savePersistedCanvas` stores the
+  in-progress draft unvalidated, because an incomplete canvas is the normal editing state.

@@ -63,7 +63,7 @@
             <button
               type="button"
               class="header-action"
-              aria-label="Show an example canvas"
+              aria-label="Show Example canvas"
               @click="loadExample"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -77,7 +77,7 @@
             <button
               type="button"
               class="header-action"
-              aria-label="Clear all canvas data"
+              aria-label="Clear Canvas"
               @click="clearData"
             >
               <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -119,10 +119,7 @@
           canvasView === 'detailed' ? 'max-w-7xl' : 'max-w-[1800px]',
         ]"
       >
-        <CanvasForm
-          v-model:view-mode="canvasView"
-          :highlight-missing="highlightMissing"
-        />
+        <CanvasForm v-model:view-mode="canvasView" />
       </div>
     </main>
 
@@ -239,7 +236,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, ref, watch } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import CanvasForm from './components/CanvasForm.vue'
 import GuidanceSidebar from './components/GuidanceSidebar.vue'
 import ImportButton from './components/ImportButton.vue'
@@ -269,7 +266,6 @@ const {
   reportDiagnostics,
   validateAll,
   requestSection,
-  dataVersion,
 } = useCanvasData()
 const { openGuidance } = useGuidance()
 const headerActionsRef = ref<HTMLElement | null>(null)
@@ -281,16 +277,11 @@ const hasMeaningfulContent = computed(() =>
 )
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
 
-const highlightMissing = ref(false)
 const showPartialDialog = ref(false)
 const pendingMissingPrompts = ref<MissingSimplifiedPrompt[]>([])
 const partialDialogPanel = ref<HTMLElement | null>(null)
 const continueEditingButton = ref<HTMLButtonElement | null>(null)
 let downloadTrigger: HTMLElement | null = null
-
-watch(dataVersion, () => {
-  highlightMissing.value = false
-})
 
 function openGeneralGuidance(event: MouseEvent) {
   openGuidance('aac', event.currentTarget as HTMLElement)
@@ -301,7 +292,6 @@ function setCanvasView(view: 'simplified' | 'detailed') {
 }
 
 function loadExample() {
-  highlightMissing.value = false
   importFromROCrate(exampleData, exampleBenefitDisplay)
   canvasView.value = 'simplified'
   requestSection('simplified-canvas')
@@ -339,7 +329,6 @@ async function onDrop(event: DragEvent) {
 
   try {
     const result = await importROCrateFromZip(file)
-    highlightMissing.value = false
     importFromROCrate(result.canvasData, result.benefitDisplay, result.diagnostics)
     alert('RO-Crate imported successfully!')
   } catch (error) {
@@ -359,7 +348,6 @@ function reportImportFailure(error: unknown) {
 
 function clearData() {
   if (!confirm('Are you sure you want to clear all canvas data? This cannot be undone.')) return
-  highlightMissing.value = false
   clearCanvasData()
   canvasView.value = 'simplified'
   requestSection('simplified-canvas')
@@ -373,7 +361,6 @@ async function requestDownloadROCrate(event: MouseEvent) {
     return
   }
 
-  highlightMissing.value = true
   pendingMissingPrompts.value = missing
   canvasView.value = 'simplified'
   requestSection('simplified-canvas')
@@ -382,11 +369,8 @@ async function requestDownloadROCrate(event: MouseEvent) {
   continueEditingButton.value?.focus()
 }
 
-// Dismissing the warning to keep editing also drops the highlights: they belong
-// to the export attempt, not to the editing session it interrupted.
 function closePartialDialog() {
   showPartialDialog.value = false
-  highlightMissing.value = false
   const target = downloadTrigger
   window.setTimeout(() => target?.focus(), 0)
 }
@@ -394,14 +378,18 @@ function closePartialDialog() {
 async function continueEditing() {
   const first = pendingMissingPrompts.value[0]
   showPartialDialog.value = false
-  highlightMissing.value = false
   canvasView.value = 'simplified'
   requestSection('simplified-canvas')
   await nextTick()
   if (first) {
     const field = document.getElementById(simplifiedPromptDomId(first.id))
     field?.scrollIntoView({ behavior: 'smooth', block: 'center' })
-    field?.focus()
+    // Some prompts are groups: 'solution-approaches' is a <fieldset>, which is
+    // not focusable, so focus its first control instead of dropping to <body>.
+    const focusable = field?.matches('input, select, textarea, button')
+      ? field
+      : field?.querySelector<HTMLElement>('input, select, textarea, button')
+    focusable?.focus()
   }
 }
 
@@ -470,7 +458,6 @@ async function performDownload(allowPartial: boolean) {
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'agentic-automation-project'
     await downloadROCrateZip(rocrate, projectName, canvasData.value, benefitDisplay.value)
-    highlightMissing.value = false
     pendingMissingPrompts.value = []
   } catch (error) {
     if (error instanceof CurrentCanvasValidationError) {

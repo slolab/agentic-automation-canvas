@@ -86,7 +86,7 @@ Persons are referenced by ID throughout the canvas (as stakeholders, agents, cre
 
 ## Benefit Metrics
 
-**Benefit metrics** quantify the expected improvements from the agentic automation system. Benefits are categorized into five types:
+**Benefit metrics** quantify the expected improvements from the agentic automation system. Classified benefits are categorized into five types:
 
 - **Time**: Reduction in time spent on tasks
 - **Quality**: Improvement in output quality or error rates

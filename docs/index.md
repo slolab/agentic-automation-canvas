@@ -11,7 +11,7 @@ The canvas serves simultaneously as a framework for implementation, a checklist 
 
 ## Quickstart
 
-1. **Write a canvas**: Use the [interactive web application](https://slolab.github.io/agentic-automation-canvas/) to fill out your agentic automation canvas, capturing project details, requirements, feasibility, governance, and outcomes.
+1. **Write a canvas**: Use the [interactive web application](https://aac.slolab.ai) to fill out your agentic automation canvas, capturing project details, requirements, feasibility, governance, and outcomes. The application opens on a **simplified canvas** — one screen of risk-critical questions aimed at deciding whether to build at all — and an **Advanced** view exposes every detailed section. Both views edit the same project, so you can switch at any time.
 
 2. **Validate**: The web canvas validates your data automatically as you work. If you're working with canvas JSON files directly (outside the application), use the [validator](validator.md) to ensure compliance with the AAC specification.
 

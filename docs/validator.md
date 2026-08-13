@@ -118,7 +118,7 @@ The validator is designed to be used in CI/CD pipelines. Example GitHub Actions 
 
 ```yaml
 - name: Validate examples
-  run: python tools/validate-examples.py
+  run: uv run python tools/validate-examples.py
 ```
 
 The script exits with code 1 if validation fails, causing the CI build to fail.
@@ -131,7 +131,6 @@ The validator checks:
 2. **Required Fields**: All mandatory fields are present
 3. **Type Checking**: Field types match schema definitions
 4. **Constraints**: Enum values, patterns, min/max constraints are satisfied
-5. **References**: Referenced entities exist (e.g., Person IDs in stakeholders)
 
 ## Common Validation Errors
 
@@ -159,10 +158,14 @@ Error: '123' is not of type 'number'
 
 **Solution**: Ensure field types match the schema (string vs number vs boolean vs object).
 
-### Invalid Reference
+### Unresolved Person reference
+
+The JSON Schema does not express cross-references, so the command-line validator
+does not check them. The web application reports them as warnings before an
+export instead:
 
 ```
-Error: Person ID 'person-999' referenced in stakeholder but not found in persons array
+Warning: Stakeholder references unknown person: person-999
 ```
 
 **Solution**: Ensure all referenced Person IDs exist in the `persons` array.
@@ -189,7 +192,7 @@ that alias and `npm run schema:check` guarantees that it matches the manifest se
 The web canvas validates current data automatically:
 
 - **Real-time validation**: As you work, fields are validated
-- **Download availability**: A project title is required before the "Download RO-Crate" button is enabled
+- **Download availability**: The "Download RO-Crate" button appears as soon as the canvas holds any content, and stays available when the project title is blank — the export then falls back to a safe file name and is marked partial
 - **Simplified-prompt check**: If simplified prompts are unanswered, download opens a confirmation that offers either continued editing or an explicit partial export
 - **Pre-download check**: A normal export runs comprehensive current-schema validation and is blocked if validation errors are found
 - **Warnings**: Non-critical issues show warnings but allow export (with user confirmation)
@@ -198,8 +201,8 @@ The web canvas validates current data automatically:
 
 #### Partial exports
 
-Partial export is an explicit escape hatch for saving or sharing work in progress. When a
-project has a title but simplified prompts remain unanswered, the user can confirm
+Partial export is an explicit escape hatch for saving or sharing work in progress. When any
+simplified prompt remains unanswered — including the project title — the user can confirm
 **Export anyway** in the unanswered-prompts dialog. A partial crate:
 
 - sets `aac:partialCanvas` to `true` on the root dataset

@@ -33,7 +33,7 @@ The deployment is configured in `.github/workflows/deploy.yml`:
 
 - **Build**: Runs `npm ci` and `npm run build`
 - **Output**: `dist/` directory
-- **Base path**: `/agentic-automation-canvas/` (configured in `vite.config.ts`)
+- **Base path**: relative (`base: './'` in `vite.config.ts`), so one build works at the custom-domain root and under a repository subpath
 
 ### Custom Domain
 
@@ -77,6 +77,6 @@ JavaScript.
 
 ### Assets Not Loading
 
-- Check `vite.config.ts` base path matches repository name
+- Check that `vite.config.ts` still uses the relative `base: './'`
 - Ensure all assets are in `public/` directory
 - Check browser console for 404 errors

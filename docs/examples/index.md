@@ -47,7 +47,7 @@ Each example page provides download links for both formats so you can:
 All examples are validated against the schema in CI. You can validate them locally using the [validator](../validator.md):
 
 ```bash
-python tools/validate-examples.py
+uv run python tools/validate-examples.py
 ```
 
 ### Integration

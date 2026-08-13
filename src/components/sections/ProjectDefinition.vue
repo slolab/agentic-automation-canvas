@@ -1306,6 +1306,12 @@ const update = async () => {
   isLocalUpdate = true
   // Update project with version fields
   const updateData: Partial<ProjectDefinition> = { ...localData.value }
+  // The "select …" placeholder options carry value="", which is not a member of
+  // these schema enums; keeping it would fail current-schema validation and
+  // block the export. An unselected enum is absent, not empty.
+  // (`as unknown` because the runtime value the select writes is outside the type.)
+  if ((updateData.problemFrequency as unknown) === '') delete updateData.problemFrequency
+  if ((updateData.primaryValueDriver as unknown) === '') delete updateData.primaryValueDriver
   updateProject(updateData)
   
   // Also update root-level version fields for consistency

@@ -374,6 +374,47 @@ describe('current AAC RO-Crate round trip', () => {
     expect(validateCurrentCanvas(imported.canvasData).diagnostics).toEqual([])
   })
 
+  it('reopens a partial draft without deleting its unfinished records', () => {
+    // A partial export represents an unanswered required prompt as an empty
+    // string. Recovery is built to carry that across a reopen, but only if the
+    // parser hands it the empty string instead of `undefined`; otherwise the
+    // required property looks missing and the enclosing person or task is
+    // dropped, and the blank project title is replaced by a placeholder.
+    const source: CanvasData = {
+      persons: [{ id: 'person-1', name: '' }],
+      project: { title: '', description: '' },
+      userExpectations: {
+        requirements: [{
+          id: 'requirement-1',
+          title: '',
+          targetPopulation: 'Referral coordinators',
+          benefits: [{ benefitType: 'unclassified', description: 'Less waiting' }],
+        }],
+      },
+      dataAccess: { datasets: [{ id: 'dataset-1', title: '', containsPersonalData: true }] },
+    }
+
+    const imported = importROCrateDocument(generateROCrate(source, { allowPartial: true }))
+
+    expect(imported.canvasData.project.title).toBe('')
+    expect(imported.canvasData.persons).toEqual([{ id: 'person-1', name: '' }])
+    const requirement = imported.canvasData.userExpectations?.requirements?.[0]
+    expect(requirement?.title).toBe('')
+    expect(requirement?.targetPopulation).toBe('Referral coordinators')
+    expect(requirement?.benefits).toEqual([
+      { benefitType: 'unclassified', description: 'Less waiting' },
+    ])
+    expect(imported.canvasData.dataAccess?.datasets).toEqual([
+      { id: 'dataset-1', title: '', containsPersonalData: true },
+    ])
+    expect(imported.diagnostics.map((diagnostic) => diagnostic.code)).not.toContain(
+      'recovery.invalidFieldDropped',
+    )
+    expect(imported.diagnostics.map((diagnostic) => diagnostic.code)).not.toContain(
+      'recovery.requiredValueDefaulted',
+    )
+  })
+
   it('preserves schema-valid logical IDs when crate fragment fallbacks are required', () => {
     const source: CanvasData = {
       persons: [{ id: 'Ada Lovelace', name: 'Ada Lovelace' }],

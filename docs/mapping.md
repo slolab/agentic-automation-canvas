@@ -24,6 +24,8 @@ The current versioned AAC JSON Schema is the source of truth. Generated TypeScri
 | `project.leadOrganization` | `aac:leadOrganization` | Organization name |
 | `project.projectId` | `identifier` | URI/DOI |
 | `project.headlineValue` | `aac:headlineValue` | Free text |
+| `project.problemFrequency` | `aac:problemFrequency` | Enum: daily, weekly, monthly, few-times-per-year, less-than-yearly |
+| `project.problemExamples` | `aac:problemExamples` | Array of strings |
 | `project.roughEstimateValue` | `aac:roughEstimateValue` | Number (optional project-level estimate) |
 | `project.roughEstimateUnit` | `aac:roughEstimateUnit` | String (unit for rough estimate) |
 | `project.primaryValueDriver` | `aac:primaryValueDriver` | Enum: time, quality, risk, enablement, cost |
@@ -98,7 +100,7 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `benefitType` | `benefitType` | Required: time, quality, risk, enablement, cost |
+| `benefitType` | `benefitType` | Required: time, quality, risk, enablement, cost, or `unclassified` |
 | `metricId` | `metricId` | Required |
 | `metricLabel` | `metricLabel` | Required |
 | `direction` | `direction` | Required: increaseIsBetter, decreaseIsBetter, targetIsBetter, boolIsBetter |
@@ -218,6 +220,7 @@ The RO-Crate export uses the following namespace prefixes:
   "p-plan": "http://purl.org/net/p-plan#",
   "dct": "http://purl.org/dc/terms/",
   "dcat": "http://www.w3.org/ns/dcat#",
+  "frapo": "http://purl.org/cerif/frapo/",
   "aac": "https://w3id.org/aac/schema/"
 }
 ```

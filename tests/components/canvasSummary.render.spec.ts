@@ -66,6 +66,16 @@ describe('canvas summary rendering', () => {
     expect(html).toContain('personal or GDPR-sensitive data')
   })
 
+  it('never presents the generated requirement id as a task title', async () => {
+    const html = await renderSummary()
+    const requirementId = simplifiedOnlyCanvas.userExpectations!.requirements![0].id
+
+    expect(html).not.toContain(requirementId)
+    // The task still has to be identifiable: the simplified canvas answers who
+    // experiences the problem, and that is what the block shows instead.
+    expect(html).toContain('For: Clinical staff triaging incoming referrals')
+  })
+
   it('marks untouched dimensions as unspecified', async () => {
     const html = await renderSummary()
 

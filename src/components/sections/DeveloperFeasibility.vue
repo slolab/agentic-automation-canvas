@@ -1339,7 +1339,7 @@ import {
 const {
   canvasData,
   focusFieldRequest,
-  applyDatasetConstraints,
+  applyDatasetConstraintToggle,
   updateDeveloperFeasibility,
   updateGovernance,
   updateUserExpectations,
@@ -1777,6 +1777,9 @@ watch(
 
 const update = () => {
   isLocalUpdate = true
+  // value="" from the placeholder option is not a member of the schema enum, and
+  // would fail current-schema validation and block the export.
+  if ((localData.value.technicalRisk as unknown) === '') delete localData.value.technicalRisk
   updateDeveloperFeasibility(localData.value)
   setTimeout(() => {
     isLocalUpdate = false
@@ -1791,7 +1794,7 @@ function toggleProjectConstraint(value: ConstraintFlag, event: Event) {
     : current.filter((candidate) => candidate !== value)
   localData.value.constraintFlags = [...suggested, ...customProjectConstraints.value]
   update()
-  applyDatasetConstraints(suggested)
+  applyDatasetConstraintToggle({ flag: value, checked, flags: suggested })
 }
 
 const selectedProjectConstraints = computed(() =>

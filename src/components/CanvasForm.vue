@@ -30,11 +30,7 @@
       </button>
     </div>
 
-    <SimplifiedCanvas
-      v-if="viewMode === 'simplified'"
-      :key="'simplified-canvas'"
-      :highlight-missing="props.highlightMissing"
-    />
+    <SimplifiedCanvas v-if="viewMode === 'simplified'" :key="'simplified-canvas'" />
 
     <template v-else>
       <!-- One floating card holds the section tabs and the active section, so both
@@ -188,10 +184,8 @@ const DataAccessSensitivity = defineAsyncComponent(() => import('./sections/Data
 const OutcomesEvaluation = defineAsyncComponent(() => import('./sections/OutcomesEvaluation.vue'))
 const Dashboard = defineAsyncComponent(() => import('./sections/Dashboard.vue'))
 const props = withDefaults(defineProps<{
-  highlightMissing?: boolean
   viewMode?: 'simplified' | 'detailed'
 }>(), {
-  highlightMissing: false,
   viewMode: 'simplified',
 })
 

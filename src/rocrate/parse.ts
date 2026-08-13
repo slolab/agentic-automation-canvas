@@ -278,10 +278,14 @@ function readProjectAndRootSection(context: ParseContext): ProjectAndRootSection
     const creatorRefs = readEntityReferences(projectEntity.creator)
 
     section.project = {
-      title: readString(projectEntity.name) || undefined,
-      // Keep an explicitly empty description. Partial exports use the empty
+      // Keep explicitly empty required text. Partial exports use the empty
       // string to represent an unanswered required prompt, and schema recovery
-      // knows how to preserve that in-progress value across a reopen.
+      // knows how to preserve that in-progress value across a reopen. Coercing
+      // it to `undefined` would make recovery see a missing required property
+      // and replace the title with a placeholder. A crate that carries no
+      // `name` at all still yields `undefined`, which is the case recovery is
+      // meant to default.
+      title: readString(projectEntity.name),
       description: readString(projectEntity.description),
       objective: readString(projectEntity['schema:abstract']) || readString(projectEntity.about) || undefined,
       problemFrequency: isAllowedValue(problemFrequency, PROBLEM_FREQUENCIES)
@@ -396,7 +400,10 @@ function readRequirement(step: ROCrateEntity, context: ParseContext): Requiremen
   const aacTitle = readString(step['aac:title'])
   const requirement: RequirementCandidate = {
     id: canvasIdFor(step),
-    title: aacTitle || stepDescription || stepName || undefined,
+    // `aac:title` is always written by the exporter, so an empty one means the
+    // user has not named the task yet and must survive the reopen. Only its
+    // absence — a legacy or foreign crate — falls back to the other terms.
+    title: aacTitle ?? (stepDescription || stepName || undefined),
     description: stepDescription || undefined,
     userStory: readString(step['aac:userStory'])
       ?? (stepName && stepName !== (aacTitle || stepDescription) ? stepName : undefined),
@@ -510,7 +517,9 @@ function readRequirementsSection(
 function readPersonEntity(personEntity: ROCrateEntity): PersonCandidate {
   return {
     id: canvasIdFor(personEntity),
-    name: readString(personEntity.name) || undefined,
+    // Empty is a person the user has created but not named yet; see the note on
+    // required text in readProjectAndRootSection.
+    name: readString(personEntity.name),
     affiliation: readString(personEntity['schema:affiliation']),
     orcid: readIdentifier(personEntity['schema:identifier']),
     functionRoles: readStringArray(personEntity['aac:functionRoles']),

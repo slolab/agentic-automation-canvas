@@ -26,17 +26,16 @@ import { collectDataAccessFlags } from '@/utils/dataAccessWarnings'
 import { todayIsoDate } from '@/utils/date'
 import type { FocusFieldRequest } from '@/utils/fieldNavigation'
 import {
-  applyDatasetConstraints as applyDatasetConstraintsData,
+  applyDatasetConstraintToggle as applyDatasetConstraintToggleData,
   patchFirstDataset as patchFirstDatasetData,
   patchFirstStageMilestone as patchFirstStageMilestoneData,
   patchFirstStage as patchFirstStageData,
   patchPrimaryRequirement as patchPrimaryRequirementData,
-  firstStageTeamNames,
   replacePrimaryUnclassifiedBenefits as replacePrimaryUnclassifiedBenefitsData,
   retainedClassifiedBenefitIndexes,
-  setFirstStageTeam,
 } from '@/utils/simplifiedCanvas'
 import type {
+  ConstraintToggle,
   PrimaryRequirementPatch,
   FirstStagePatch,
   UnclassifiedBenefitField,
@@ -281,13 +280,13 @@ export function useCanvasData() {
   }
 
   /**
-   * Keep the dataset implied by the data constraints in step with the checkboxes.
-   * Called from the constraint toggles rather than from updateDeveloperFeasibility,
-   * so a dataset the user deleted in Data Access is not resurrected by an
-   * unrelated feasibility edit.
+   * Keep the dataset implied by the data constraints in step with the checkbox
+   * the user just clicked. Called from the constraint toggles rather than from
+   * updateDeveloperFeasibility, so a dataset the user deleted in Data Access is
+   * not resurrected by an unrelated feasibility edit.
    */
-  const applyDatasetConstraints = (flags: readonly string[]) => {
-    const next = applyDatasetConstraintsData(canvasData.value.dataAccess, flags)
+  const applyDatasetConstraintToggle = (toggle: ConstraintToggle) => {
+    const next = applyDatasetConstraintToggleData(canvasData.value.dataAccess, toggle)
     if (next === canvasData.value.dataAccess) return
     hasChangedSinceImport.value = true
     canvasData.value.dataAccess = next
@@ -300,22 +299,6 @@ export function useCanvasData() {
       updates,
     )
   }
-
-  const updateFirstStageTeam = (names: readonly string[]) => {
-    hasChangedSinceImport.value = true
-    const result = setFirstStageTeam(
-      canvasData.value.persons,
-      canvasData.value.governance,
-      names,
-    )
-    canvasData.value.persons = result.persons
-    canvasData.value.governance = result.governance
-  }
-
-  const simplifiedFirstStageTeamNames = computed(() => firstStageTeamNames(
-    canvasData.value.persons,
-    canvasData.value.governance,
-  ))
 
   const clearData = () => {
     // Set to empty structure - use undefined to trigger watchers properly
@@ -841,11 +824,9 @@ export function useCanvasData() {
     patchPrimaryRequirement,
     replacePrimaryUnclassifiedBenefits,
     patchFirstDataset,
-    applyDatasetConstraints,
+    applyDatasetConstraintToggle,
     patchFirstStageMilestone,
     patchFirstStage,
-    updateFirstStageTeam,
-    simplifiedFirstStageTeamNames,
     clearData,
     exportData,
     importData,

@@ -13,6 +13,7 @@
  */
 
 import type { CanvasData } from '@/types/canvas'
+import { authoredRequirementTitle } from '@/utils/simplifiedCanvas'
 
 export interface FrameworkProgress {
   /** Project title + one-line description */
@@ -45,10 +46,8 @@ export function computeFrameworkProgress(data: CanvasData): FrameworkProgress {
     || requirements.some((r) => (r.benefits ?? []).some(
       (b) => b.benefitType === 'unclassified' && filled(b.description),
     ))
-  // A simplified requirement carries `title === id`, which is a generated parent
-  // value rather than an authored task title.
   const tasks = requirements.some((r) => (
-    filled(r.targetPopulation) || (filled(r.title) && r.title !== r.id && filled(r.userStory))
+    filled(r.targetPopulation) || (Boolean(authoredRequirementTitle(r)) && filled(r.userStory))
   ))
   const feasibility = data.developerFeasibility?.technicalRisk !== undefined
     || filled(data.developerFeasibility?.feasibilityNotes)

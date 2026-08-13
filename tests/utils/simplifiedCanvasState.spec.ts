@@ -1,7 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { expect, it } from 'vitest'
 import type { CanvasData } from '@/types/canvas'
 import {
-  hasDetailedCanvasContent,
   hasMeaningfulCanvasContent,
   missingSimplifiedPrompts,
 } from '@/utils/simplifiedCanvasState'
@@ -49,65 +48,6 @@ it('tracks build and long-term maintenance ownership in governance', () => {
   expect(missing).not.toContain('maintenance-status')
 })
 
-describe('detailed-content indicator', () => {
-  it('stays off for data represented entirely by the simplified canvas', () => {
-    const data = emptyCanvas()
-    data.userExpectations = {
-      requirements: [{
-        id: 'req-1',
-        title: 'req-1',
-        targetPopulation: 'Operators',
-        benefits: [{ benefitType: 'unclassified', description: 'Less rework' }],
-        feasibility: {
-          technologyApproach: {
-            approaches: ['intelligent-search', 'other'],
-            customApproaches: ['Domain-specific evidence triage'],
-          },
-        },
-      }],
-    }
-    data.governance = {
-      stages: [{
-        id: 'stage-1',
-        name: 'Planning',
-        startDate: '2026-09-01',
-        endDate: '2026-09-30',
-        milestones: [{ description: 'Test it' }],
-      }],
-    }
-    expect(hasDetailedCanvasContent(data)).toBe(false)
-  })
-
-  it('turns on for content hidden from the simplified canvas', () => {
-    const data = emptyCanvas()
-    data.dataAccess = { datasets: [] }
-    expect(hasDetailedCanvasContent(data)).toBe(false)
-    data.project.keywords = ['triage']
-    expect(hasDetailedCanvasContent(data)).toBe(true)
-  })
-
-  it('stays off for the dataset a simplified data constraint creates', () => {
-    const data = emptyCanvas()
-    data.developerFeasibility = { constraintFlags: ['large-data', 'personal-data'] }
-    data.dataAccess = { datasets: [{ id: 'dataset-1', title: '', containsPersonalData: true }] }
-    expect(hasDetailedCanvasContent(data)).toBe(false)
-
-    data.dataAccess.datasets![0].title = 'Referral letters'
-    expect(hasDetailedCanvasContent(data)).toBe(true)
-  })
-
-  it('turns on for dataset detail only the full canvas can capture', () => {
-    const data = emptyCanvas()
-    data.dataAccess = { datasets: [{ id: 'dataset-1', title: '', accessRights: 'restricted' }] }
-    expect(hasDetailedCanvasContent(data)).toBe(true)
-
-    data.dataAccess = { datasets: [
-      { id: 'dataset-1', title: '' },
-      { id: 'dataset-2', title: '' },
-    ] }
-    expect(hasDetailedCanvasContent(data)).toBe(true)
-  })
-})
 
 it('requires a custom item when Other is the selected potential approach', () => {
   const data = emptyCanvas()

@@ -29,7 +29,7 @@ The filled-out canvas, once created and downloaded as an interoperable RO-Crate,
 - **Standards-Compliant**: Generates RO-Crate packages following W3C and Schema.org standards
 - **Comprehensive Coverage**: Captures project definition, user expectations, feasibility, governance, data access, and outcomes
 - **AI-Ready Export**: Every RO-Crate includes an `AGENTS.md` file that translates the canvas specification into structured instructions for AI coding agents (GitHub Copilot, Cursor, and other LLM-based assistants), bridging the gap between project design and implementation
-- **Bot Assistant**: Contextual help for filling out the canvas (MVP with placeholder)
+- **Contextual Guidance**: Short, per-section guidance in a sidebar, opened from the information icon beside the title or any canvas section
 - **Schema Profile**: Standalone schema definitions for validation and tooling
 
 ## Quick Start
@@ -93,9 +93,13 @@ Build a dev aid zip with every benefit metric represented once: `npm run build:d
 ├── src/                    # Vue.js application source
 │   ├── components/        # Vue components
 │   ├── composables/       # Vue composables
-│   ├── types/             # TypeScript interfaces
-│   ├── utils/             # Utility functions (RO-Crate generation)
+│   ├── rocrate/           # RO-Crate export, import, and container handling
+│   ├── schema/            # Generated schema contract, validation, recovery
+│   ├── persistence/       # Browser-storage boundaries
+│   ├── types/             # Schema-generated TypeScript model
+│   ├── utils/             # Utility functions
 │   └── styles/            # Global styles
+├── tests/                 # Centralized tests, mirroring the src domains
 ├── schema/                # Schema profile (standalone)
 │   ├── canvas-schema.json # JSON Schema for validation
 │   ├── rocrate-profile.json # RO-Crate profile definition

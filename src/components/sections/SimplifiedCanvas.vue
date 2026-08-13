@@ -1,7 +1,7 @@
 <template>
   <div class="canvas-shell">
     <header class="canvas-project-bar">
-      <div :class="['min-w-0 flex-1', missingFieldClass('project-title')]">
+      <div class="min-w-0 flex-1">
         <label id="project-title-label" for="simplified-project-title" class="canvas-project-label">
           Project title
         </label>
@@ -11,17 +11,10 @@
           class="canvas-project-input"
           placeholder="Untitled project"
           :value="canvasData.project.title"
-          :aria-invalid="isMissing('project-title') || undefined"
-          :aria-describedby="isMissing('project-title') ? 'simplified-missing-help' : undefined"
           @input="updateProjectTitle"
         />
       </div>
-      <div v-if="highlightMissing && missingPromptIds.size" class="canvas-omission-notice" role="alert">
-        <strong>{{ missingPromptIds.size }} unanswered prompt{{ missingPromptIds.size === 1 ? '' : 's' }}</strong>
-        <span>Complete the highlighted items, or export this canvas as partial.</span>
-      </div>
     </header>
-    <p id="simplified-missing-help" class="sr-only">This prompt is unanswered and will make the exported canvas partial.</p>
 
     <div class="canvas-board" aria-label="Simplified Agentic Automation Canvas">
       <section class="canvas-cell canvas-cell-problem" aria-labelledby="problem-heading">
@@ -39,7 +32,7 @@
         </div>
 
         <div class="grid gap-y-2">
-          <div :class="missingFieldClass('problem-description')">
+          <div>
             <label for="problem-description" class="canvas-label">Problem description</label>
             <textarea
               id="problem-description"
@@ -47,13 +40,11 @@
               class="canvas-input canvas-textarea"
               placeholder="What frictions/problem do you want to solve, and what are the consequences?"
               :value="canvasData.project.description"
-              :aria-invalid="isMissing('problem-description') || undefined"
-              :aria-describedby="isMissing('problem-description') ? 'simplified-missing-help' : undefined"
               @input="updateProjectText('description', $event)"
             />
           </div>
 
-          <div :class="missingFieldClass('problem-audience')">
+          <div>
             <label for="problem-audience" class="canvas-label">Who experiences this problem?</label>
             <input
               id="problem-audience"
@@ -61,20 +52,16 @@
               class="canvas-input"
               placeholder="For example: clinical staff triaging referrals"
               :value="primaryRequirement?.targetPopulation ?? ''"
-              :aria-invalid="isMissing('problem-audience') || undefined"
-              :aria-describedby="isMissing('problem-audience') ? 'simplified-missing-help' : undefined"
               @input="updateTargetPopulation"
             />
           </div>
 
-          <div :class="missingFieldClass('problem-frequency')">
+          <div>
             <label for="problem-frequency" class="canvas-label">How often do you experience this problem?</label>
             <select
               id="problem-frequency"
               class="canvas-input canvas-select"
               :value="canvasData.project.problemFrequency ?? ''"
-              :aria-invalid="isMissing('problem-frequency') || undefined"
-              :aria-describedby="isMissing('problem-frequency') ? 'simplified-missing-help' : undefined"
               @change="updateProblemFrequency"
             >
               <option value="">Select a rough frequency</option>
@@ -84,7 +71,7 @@
             </select>
           </div>
 
-          <div :class="missingFieldClass('problem-example')">
+          <div>
             <div class="flex flex-wrap items-end justify-between gap-2">
               <div>
                 <label for="problem-example-0" class="canvas-label">Most recent concrete case</label>
@@ -106,8 +93,6 @@
                   :aria-label="`Problem example ${index + 1}`"
                   :placeholder="index === 0 ? 'Describe what happened in the most recent case' : 'Describe another concrete case'"
                   :value="example"
-                  :aria-invalid="index === 0 && isMissing('problem-example') ? true : undefined"
-                  :aria-describedby="index === 0 && isMissing('problem-example') ? 'simplified-missing-help' : undefined"
                   @input="updateProblemExample(index, $event)"
                 />
                 <button
@@ -142,7 +127,7 @@
         </div>
 
         <div class="space-y-2">
-          <div :class="missingFieldClass('desired-change')">
+          <div>
             <label for="desired-change" class="canvas-label">What should happen differently?</label>
             <textarea
               id="desired-change"
@@ -150,13 +135,11 @@
               class="canvas-input canvas-textarea"
               placeholder="Describe the changed outcome or way of working"
               :value="canvasData.project.objective ?? ''"
-              :aria-invalid="isMissing('desired-change') || undefined"
-              :aria-describedby="isMissing('desired-change') ? 'simplified-missing-help' : undefined"
               @input="updateProjectText('objective', $event)"
             />
           </div>
 
-          <div :class="missingFieldClass('why-now')">
+          <div>
             <label for="why-now" class="canvas-label">Why is this important right now?</label>
             <textarea
               id="why-now"
@@ -164,35 +147,31 @@
               class="canvas-input canvas-textarea"
               placeholder="What makes this worth addressing now?"
               :value="canvasData.project.headlineValue ?? ''"
-              :aria-invalid="isMissing('why-now') || undefined"
-              :aria-describedby="isMissing('why-now') ? 'simplified-missing-help' : undefined"
               @input="updateProjectText('headlineValue', $event)"
             />
           </div>
 
-          <div :class="missingFieldClass('expected-benefits')">
+          <div>
             <label for="expected-benefits" class="canvas-label">Expected benefits</label>
             <TagEntryInput
               id="expected-benefits"
               v-model="benefitDescriptions"
               placeholder="Type a benefit and press Enter"
               item-label="benefits"
-              :described-by="fieldDescription('expected-benefits', 'expected-benefits-help')"
-              :invalid="isMissing('expected-benefits')"
+              described-by="expected-benefits-help"
               compact
             />
             <p id="expected-benefits-help" class="sr-only">Keep each item brief. You can classify and quantify it later.</p>
           </div>
 
-          <div :class="missingFieldClass('success-metrics')">
+          <div>
             <label for="success-metrics" class="canvas-label">How will you know it worked?</label>
             <TagEntryInput
               id="success-metrics"
               v-model="successMetrics"
               placeholder="Type a success measure and press Enter"
               item-label="metrics"
-              :described-by="fieldDescription('success-metrics', 'success-metrics-help')"
-              :invalid="isMissing('success-metrics')"
+              described-by="success-metrics-help"
               compact
             />
             <p id="success-metrics-help" class="sr-only">Name the evidence first; baseline, target, and unit can be added later.</p>
@@ -215,7 +194,7 @@
         </div>
 
         <div class="space-y-2">
-          <div :class="missingFieldClass('previous-attempts')">
+          <div>
             <label for="previous-attempts" class="canvas-label">What has been tried, and what happened?</label>
             <textarea
               id="previous-attempts"
@@ -223,18 +202,11 @@
               class="canvas-input canvas-textarea"
               placeholder="Include manual workarounds, tools, pilots, and what was learned"
               :value="canvasData.developerFeasibility?.feasibilityNotes ?? ''"
-              :aria-invalid="isMissing('previous-attempts') || undefined"
-              :aria-describedby="isMissing('previous-attempts') ? 'simplified-missing-help' : undefined"
               @input="updateDeveloperText('feasibilityNotes', $event)"
             />
           </div>
 
-          <fieldset
-            id="solution-approaches"
-            :class="missingFieldClass('solution-approaches')"
-            :aria-invalid="isMissing('solution-approaches') || undefined"
-            :aria-describedby="isMissing('solution-approaches') ? 'simplified-missing-help' : undefined"
-          >
+          <fieldset id="solution-approaches">
             <legend class="canvas-label">Potential Approaches</legend>
             <div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
               <label v-for="option in approachOptions" :key="option.value" class="canvas-check">
@@ -256,8 +228,6 @@
               v-model="customApproaches"
               placeholder="Type an approach and press Enter"
               item-label="approaches"
-              :described-by="isMissing('solution-approaches') ? 'simplified-missing-help' : undefined"
-              :invalid="isMissing('solution-approaches')"
               :disabled="!selectedApproaches.includes('other')"
               compact
             />
@@ -266,7 +236,7 @@
             </p>
           </div>
 
-          <div :class="missingFieldClass('solutions-research')">
+          <div>
             <label for="solutions-research" class="canvas-label">Tools or existing solutions (to research)</label>
             <textarea
               id="solutions-research"
@@ -274,8 +244,6 @@
               class="canvas-input canvas-textarea"
               placeholder="Products, services, internal tools, or comparable solutions to investigate"
               :value="canvasData.developerFeasibility?.solutionsToResearch ?? ''"
-              :aria-invalid="isMissing('solutions-research') || undefined"
-              :aria-describedby="isMissing('solutions-research') ? 'simplified-missing-help' : undefined"
               @input="updateDeveloperText('solutionsToResearch', $event)"
             />
           </div>
@@ -327,28 +295,24 @@
         </div>
 
         <div class="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
-          <div :class="missingFieldClass('build-team-status')">
+          <div>
             <label for="build-team-status" class="canvas-label">Team available to build?</label>
             <select
               id="build-team-status"
               class="canvas-input canvas-select"
               :value="canvasData.governance?.buildTeamStatus ?? ''"
-              :aria-invalid="isMissing('build-team-status') || undefined"
-              :aria-describedby="isMissing('build-team-status') ? 'simplified-missing-help' : undefined"
               @change="updateTeamStatus('buildTeamStatus', $event)"
             >
               <option value="">Not answered</option>
               <option v-for="option in teamStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
             </select>
           </div>
-          <div :class="missingFieldClass('maintenance-status')">
+          <div>
             <label for="maintenance-status" class="canvas-label">Owner available to maintain long-term?</label>
             <select
               id="maintenance-status"
               class="canvas-input canvas-select"
               :value="canvasData.governance?.maintenanceOwnerStatus ?? ''"
-              :aria-invalid="isMissing('maintenance-status') || undefined"
-              :aria-describedby="isMissing('maintenance-status') ? 'simplified-missing-help' : undefined"
               @change="updateTeamStatus('maintenanceOwnerStatus', $event)"
             >
               <option value="">Not answered</option>
@@ -373,7 +337,7 @@
         </div>
 
         <div class="grid gap-3">
-          <div :class="missingFieldClass('first-milestone')">
+          <div>
             <label for="first-milestone" class="canvas-label">What is the first milestone?</label>
             <textarea
               id="first-milestone"
@@ -381,12 +345,10 @@
               class="canvas-input canvas-textarea canvas-milestone-input"
               placeholder="Describe one bounded result, not the whole project"
               :value="firstMilestone?.description ?? ''"
-              :aria-invalid="isMissing('first-milestone') || undefined"
-              :aria-describedby="isMissing('first-milestone') ? 'simplified-missing-help' : undefined"
               @input="updateMilestoneText('description', $event)"
             />
           </div>
-          <div :class="missingFieldClass('milestone-kpi')">
+          <div>
             <label for="milestone-kpi" class="canvas-label">How will we know it is complete?</label>
             <textarea
               id="milestone-kpi"
@@ -394,8 +356,6 @@
               class="canvas-input canvas-textarea canvas-milestone-input"
               placeholder="State an observable completion criterion"
               :value="firstMilestone?.kpi ?? ''"
-              :aria-invalid="isMissing('milestone-kpi') || undefined"
-              :aria-describedby="isMissing('milestone-kpi') ? 'simplified-missing-help' : undefined"
               @input="updateMilestoneText('kpi', $event)"
             />
           </div>
@@ -436,10 +396,6 @@ import InfoIcon from '@/components/InfoIcon.vue'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { useGuidance, type GuidanceTopic } from '@/composables/useGuidance'
 import {
-  missingSimplifiedPrompts,
-  type SimplifiedPromptId,
-} from '@/utils/simplifiedCanvasState'
-import {
   approachOptions,
   constraintOptions,
   frequencyOptions,
@@ -457,40 +413,18 @@ type TeamStatusField =
   | 'buildTeamStatus'
   | 'maintenanceOwnerStatus'
 
-const props = withDefaults(defineProps<{ highlightMissing?: boolean }>(), {
-  highlightMissing: false,
-})
-
 const {
   canvasData,
   updateProject,
   updateDeveloperFeasibility,
   updateGovernance,
-  applyDatasetConstraints,
+  applyDatasetConstraintToggle,
   patchPrimaryRequirement,
   replacePrimaryUnclassifiedBenefits,
   patchFirstStageMilestone,
   patchFirstStage,
 } = useCanvasData()
 const { openGuidance } = useGuidance()
-
-const missingPromptIds = computed(() => new Set(
-  missingSimplifiedPrompts(canvasData.value).map((prompt) => prompt.id),
-))
-
-function isMissing(id: SimplifiedPromptId): boolean {
-  return props.highlightMissing && missingPromptIds.value.has(id)
-}
-
-function missingFieldClass(id: SimplifiedPromptId): string | undefined {
-  return isMissing(id) ? 'canvas-field-missing' : undefined
-}
-
-function fieldDescription(id: SimplifiedPromptId, regularDescription: string): string {
-  return isMissing(id)
-    ? `${regularDescription} simplified-missing-help`
-    : regularDescription
-}
 
 function openTopic(topic: GuidanceTopic, event: Event) {
   openGuidance(topic, event.currentTarget as HTMLElement)
@@ -642,7 +576,7 @@ function toggleConstraint(value: ConstraintFlag, event: Event) {
     ? [...new Set([...selectedConstraints.value, value])]
     : selectedConstraints.value.filter((candidate) => candidate !== value)
   updateDeveloperFeasibility({ constraintFlags: [...constraintFlags, ...customConstraints.value] })
-  applyDatasetConstraints(constraintFlags)
+  applyDatasetConstraintToggle({ flag: value, checked, flags: constraintFlags })
 }
 
 function updateTeamStatus(field: TeamStatusField, event: Event) {
@@ -674,14 +608,6 @@ function updateStageDate(field: 'startDate' | 'endDate', event: Event) {
 
 .canvas-project-input {
   @apply block w-full rounded-sm border-0 bg-transparent p-0 text-2xl font-bold tracking-tight text-gray-950 placeholder-gray-300 outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-2;
-}
-
-.canvas-omission-notice {
-  @apply flex max-w-xl shrink-0 flex-col text-right text-xs text-red-700;
-}
-
-.canvas-omission-notice strong {
-  @apply text-sm text-red-800;
 }
 
 .canvas-board {
@@ -736,15 +662,6 @@ function updateStageDate(field: 'startDate' | 'endDate', event: Event) {
 
 .canvas-label {
   @apply mb-0.5 block text-[0.65rem] font-bold uppercase leading-4 tracking-[0.04em] text-gray-700;
-}
-
-.canvas-field-missing {
-  @apply outline outline-2 outline-offset-2 outline-red-500;
-}
-
-.canvas-field-missing .canvas-label,
-.canvas-field-missing .canvas-input {
-  @apply text-red-900;
 }
 
 .canvas-input {

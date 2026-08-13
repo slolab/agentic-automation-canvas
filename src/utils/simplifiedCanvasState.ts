@@ -1,4 +1,5 @@
 import type { CanvasData } from '@/types/canvas'
+import { authoredRequirementTitle } from '@/utils/simplifiedCanvas'
 
 type SimplifiedSection =
   | 'Project'
@@ -106,7 +107,7 @@ export function hasMeaningfulCanvasContent(data: CanvasData): boolean {
   const userExpectations = data.userExpectations
   if (hasExtraKeys(userExpectations, ['requirements'])) return true
   if ((userExpectations?.requirements ?? []).some((requirement) => {
-    if (hasText(requirement.title) && requirement.title !== requirement.id) return true
+    if (authoredRequirementTitle(requirement)) return true
     return hasExtraKeys(requirement, ['id', 'title'])
   })) return true
 
@@ -127,86 +128,4 @@ function hasExtraKeys<T extends object>(
   if (!value) return false
   const allowed = new Set<string>(simplifiedKeys)
   return Object.entries(value).some(([key, entry]) => !allowed.has(key) && hasMeaningfulValue(entry))
-}
-
-/**
- * Reports canonical content that is not represented by the simplified canvas.
- * It powers a discoverability hint only; it never changes or filters project data.
- */
-export function hasDetailedCanvasContent(data: CanvasData): boolean {
-  if (hasExtraKeys(data.project, [
-    'title',
-    'description',
-    'objective',
-    'headlineValue',
-    'problemFrequency',
-    'problemExamples',
-    'projectStage',
-    'version',
-    'versionDate',
-  ])) return true
-  if (hasText(data.project.projectStage)) return true
-
-  if (hasExtraKeys(data.developerFeasibility, [
-    'feasibilityNotes',
-    'solutionsToResearch',
-    'constraintFlags',
-  ])) return true
-  // A dataset created by a simplified data constraint carries no detailed content
-  // of its own: only its generated id and the personal-data answer are set.
-  if (hasExtraKeys(data.dataAccess, ['datasets'])) return true
-  const datasets = data.dataAccess?.datasets ?? []
-  if (datasets.length > 1) return true
-  const dataset = datasets[0]
-  if (dataset && (
-    hasText(dataset.title)
-    || hasExtraKeys(dataset, ['id', 'title', 'containsPersonalData'])
-  )) return true
-  if (hasMeaningfulValue(data.outcomes)) return true
-
-  const requirements = data.userExpectations?.requirements ?? []
-  if (requirements.length > 1) return true
-  const requirement = requirements[0]
-  if (requirement) {
-    if (requirement.title !== requirement.id) return true
-    if (hasExtraKeys(requirement, ['id', 'title', 'targetPopulation', 'benefits', 'feasibility'])) return true
-    if ((requirement.benefits ?? []).some((benefit) => benefit.benefitType !== 'unclassified')) return true
-    if (hasExtraKeys(requirement.feasibility, ['technologyApproach'])) return true
-    if (hasExtraKeys(requirement.feasibility?.technologyApproach, ['approaches', 'customApproaches'])) return true
-  }
-
-  const stages = data.governance?.stages ?? []
-  if (stages.length > 1) return true
-  const stage = stages[0]
-  if (stage) {
-    if (stage.name !== 'Planning') return true
-    if (hasExtraKeys(stage, [
-      'id',
-      'name',
-      'startDate',
-      'endDate',
-      'agents',
-      'milestones',
-    ])) return true
-    if ((stage.milestones?.length ?? 0) > 1) return true
-    if (hasExtraKeys(stage.milestones?.[0], ['description', 'kpi'])) return true
-    if ((stage.agents ?? []).some((agent) => agent.type !== 'person' || hasExtraKeys(agent, ['type', 'personId']))) return true
-  }
-
-  if (hasExtraKeys(data.governance, [
-    'buildTeamStatus',
-    'maintenanceOwnerStatus',
-    'stages',
-  ])) return true
-
-  const linkedPersonIds = new Set(
-    (stage?.agents ?? [])
-      .filter((agent) => agent.type === 'person' && agent.personId)
-      .map((agent) => agent.personId!),
-  )
-  if ((data.persons ?? []).some((person) =>
-    !linkedPersonIds.has(person.id) || hasExtraKeys(person, ['id', 'name']),
-  )) return true
-
-  return false
 }

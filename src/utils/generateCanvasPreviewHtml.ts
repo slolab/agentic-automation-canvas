@@ -182,7 +182,8 @@ export function generateCanvasPreviewHtml(
       .map(
         (t) => `
         <div class="border-l-2 border-gray-300 pl-2 py-0.5">
-          <p class="font-medium text-gray-900">${escapeHtml(t.title)}</p>
+          ${t.title ? `<p class="font-medium text-gray-900">${escapeHtml(t.title)}</p>` : ''}
+          ${t.targetPopulation ? `<p class="text-xs">For: ${escapeHtml(t.targetPopulation)}</p>` : ''}
           ${t.userStory ? `<p class="text-xs italic mt-0.5 user-story-text">${renderUserStory(t.userStory)}</p>` : ''}
         </div>`
       )

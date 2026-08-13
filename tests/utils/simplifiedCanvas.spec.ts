@@ -2,14 +2,12 @@ import { describe, expect, it } from 'vitest'
 import { reactive } from 'vue'
 import type { Benefit, DataAccessSensitivity, GovernanceStaging, UserExpectations } from '@/types/canvas'
 import {
-  applyDatasetConstraints,
+  applyDatasetConstraintToggle,
   patchFirstStageMilestone,
   patchFirstStage,
   patchPrimaryRequirement,
-  firstStageTeamNames,
   replacePrimaryUnclassifiedBenefits,
   retainedClassifiedBenefitIndexes,
-  setFirstStageTeam,
 } from '@/utils/simplifiedCanvas'
 
 const idFactory = (prefix: string) => `${prefix}-generated`
@@ -233,40 +231,6 @@ describe('simplified canvas canonical mappings', () => {
     expect(result.stages?.[1]).toEqual(current.stages?.[1])
   })
 
-  it('reuses Person entities and removes only first-stage links when team chips change', () => {
-    const currentGovernance: GovernanceStaging = {
-      stages: [{
-        id: 'planning',
-        name: 'Planning',
-        agents: [
-          { type: 'organization', name: 'Research unit' },
-          { type: 'person', personId: 'person-1', role: 'Lead' },
-        ],
-      }],
-    }
-
-    const withTeam = setFirstStageTeam(
-      [{ id: 'person-1', name: 'Ada', affiliation: 'Lab' }],
-      currentGovernance,
-      ['Ada', 'Grace'],
-      idFactory,
-    )
-
-    expect(withTeam.persons).toEqual([
-      { id: 'person-1', name: 'Ada', affiliation: 'Lab' },
-      { id: 'person-generated', name: 'Grace' },
-    ])
-    expect(firstStageTeamNames(withTeam.persons, withTeam.governance)).toEqual(['Ada', 'Grace'])
-    expect(withTeam.governance?.stages?.[0].agents?.[0]).toEqual({
-      type: 'organization',
-      name: 'Research unit',
-    })
-
-    const removed = setFirstStageTeam(withTeam.persons, withTeam.governance, ['Grace'])
-    expect(removed.persons).toHaveLength(2)
-    expect(firstStageTeamNames(removed.persons, removed.governance)).toEqual(['Grace'])
-  })
-
   it('accepts Vue reactive records used by the live composable', () => {
     const expectations = reactive<UserExpectations>({
       requirements: [{ id: 'req-1', title: 'req-1', benefits: [classifiedBenefit] }],
@@ -288,15 +252,22 @@ describe('simplified canvas canonical mappings', () => {
 })
 
 describe('dataset constraints', () => {
+  const check = (flag: string, flags: readonly string[] = [flag]) => ({ flag, checked: true, flags })
+  const uncheck = (flag: string, flags: readonly string[] = []) => ({ flag, checked: false, flags })
+
   it('creates the dataset a data constraint implies', () => {
-    const result = applyDatasetConstraints(undefined, ['large-data'], idFactory)
+    const result = applyDatasetConstraintToggle(undefined, check('large-data'), idFactory)
 
     expect(result?.datasets).toEqual([{ id: 'dataset-generated', title: '' }])
   })
 
   it('records personal data on the dataset without creating a second one', () => {
-    const first = applyDatasetConstraints(undefined, ['large-data'], idFactory)
-    const second = applyDatasetConstraints(first, ['large-data', 'personal-data'], idFactory)
+    const first = applyDatasetConstraintToggle(undefined, check('large-data'), idFactory)
+    const second = applyDatasetConstraintToggle(
+      first,
+      check('personal-data', ['large-data', 'personal-data']),
+      idFactory,
+    )
 
     expect(second?.datasets).toEqual([{
       id: 'dataset-generated',
@@ -305,7 +276,7 @@ describe('dataset constraints', () => {
     }])
   })
 
-  it('clears the personal-data answer on deselect but keeps the dataset and its detail', () => {
+  it('clears the personal-data answer when that checkbox is unchecked', () => {
     const current: DataAccessSensitivity = {
       datasets: [
         { id: 'dataset-1', title: 'Referral letters', accessRights: 'restricted', containsPersonalData: true },
@@ -313,7 +284,7 @@ describe('dataset constraints', () => {
       ],
     }
 
-    const result = applyDatasetConstraints(current, ['large-data'], idFactory)
+    const result = applyDatasetConstraintToggle(current, uncheck('personal-data'), idFactory)
 
     expect(result?.datasets).toEqual([
       { id: 'dataset-1', title: 'Referral letters', accessRights: 'restricted' },
@@ -321,11 +292,63 @@ describe('dataset constraints', () => {
     ])
   })
 
-  it('leaves data access untouched when no data constraint is selected', () => {
-    expect(applyDatasetConstraints(undefined, ['real-time'], idFactory)).toBeUndefined()
+  it('removes the generated dataset when the last data constraint is unchecked', () => {
+    const created = applyDatasetConstraintToggle(undefined, check('personal-data'), idFactory)
+    expect(created?.datasets).toEqual([
+      { id: 'dataset-generated', title: '', containsPersonalData: true },
+    ])
+
+    expect(applyDatasetConstraintToggle(created, uncheck('personal-data'), idFactory)).toBeUndefined()
+  })
+
+  it('keeps the generated dataset while another data constraint is still selected', () => {
+    const created = applyDatasetConstraintToggle(undefined, check('personal-data'), idFactory)
+
+    const result = applyDatasetConstraintToggle(
+      created,
+      uncheck('personal-data', ['large-data']),
+      idFactory,
+    )
+
+    expect(result?.datasets).toEqual([{ id: 'dataset-generated', title: '' }])
+  })
+
+  it('leaves data access untouched for constraints that do not describe data', () => {
+    expect(applyDatasetConstraintToggle(undefined, check('real-time'), idFactory)).toBeUndefined()
 
     const current: DataAccessSensitivity = { datasets: [{ id: 'dataset-1', title: 'Letters' }] }
-    expect(applyDatasetConstraints(current, [], idFactory)).toBe(current)
+    expect(applyDatasetConstraintToggle(current, uncheck('real-time'), idFactory)).toBe(current)
+  })
+
+  it('never rewrites a detailed personal-data answer from an unrelated checkbox', () => {
+    // The user answered this in the Data Access section; toggling any other
+    // constraint must not touch it, in either direction.
+    const current: DataAccessSensitivity = {
+      datasets: [{ id: 'dataset-1', title: 'Referral letters', containsPersonalData: true }],
+    }
+
+    expect(applyDatasetConstraintToggle(current, check('cluster-compute', ['cluster-compute']), idFactory))
+      .toBe(current)
+    expect(applyDatasetConstraintToggle(current, uncheck('valuable-ip'), idFactory)).toBe(current)
+    expect(applyDatasetConstraintToggle(current, check('large-data', ['large-data']), idFactory))
+      .toBe(current)
+  })
+
+  it('does not resurrect a dataset the user deleted in the detailed view', () => {
+    // large-data stays checked, but the dataset it created has been deleted in
+    // Data Access. Unrelated constraint edits must not bring it back.
+    const current: DataAccessSensitivity = { datasets: [] }
+
+    expect(applyDatasetConstraintToggle(
+      current,
+      check('real-time', ['large-data', 'real-time']),
+      idFactory,
+    )).toBe(current)
+    expect(applyDatasetConstraintToggle(
+      current,
+      uncheck('large-data', ['real-time']),
+      idFactory,
+    )).toBe(current)
   })
 
   it('keeps an explicit no-personal-data answer given in the detailed view', () => {
@@ -333,8 +356,8 @@ describe('dataset constraints', () => {
       datasets: [{ id: 'dataset-1', title: 'Letters', containsPersonalData: false }],
     }
 
-    expect(applyDatasetConstraints(current, ['large-data'], idFactory)).toBe(current)
-    expect(applyDatasetConstraints(current, ['personal-data'], idFactory)?.datasets).toEqual([
+    expect(applyDatasetConstraintToggle(current, uncheck('personal-data'), idFactory)).toBe(current)
+    expect(applyDatasetConstraintToggle(current, check('personal-data'), idFactory)?.datasets).toEqual([
       { id: 'dataset-1', title: 'Letters', containsPersonalData: true },
     ])
   })

@@ -13,7 +13,6 @@ import { validateCurrentCanvas } from '@/schema/validation'
 import { computeCanvasSummary } from '@/utils/canvasSummary'
 import { computeFrameworkProgress } from '@/utils/frameworkProgress'
 import {
-  hasDetailedCanvasContent,
   hasMeaningfulCanvasContent,
   missingSimplifiedPrompts,
 } from '@/utils/simplifiedCanvasState'
@@ -26,10 +25,6 @@ describe('simplified-only canvas fixture', () => {
   it('answers every simplified prompt', () => {
     expect(missingSimplifiedPrompts(simplifiedOnlyCanvas)).toEqual([])
     expect(hasMeaningfulCanvasContent(simplifiedOnlyCanvas)).toBe(true)
-  })
-
-  it('holds nothing the simplified canvas cannot express', () => {
-    expect(hasDetailedCanvasContent(simplifiedOnlyCanvas)).toBe(false)
   })
 
   it('survives an RO-Crate round trip unchanged', () => {

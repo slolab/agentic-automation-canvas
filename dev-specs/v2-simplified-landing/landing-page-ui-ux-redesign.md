@@ -48,3 +48,32 @@ First-use clarity > preservation and discoverability of project data > accessibi
 - Blank and title-only exports are explicitly partial and do not claim current AAC profile conformance.
 - Final sidebar wording — builder may adapt the former `/v2` guidance within the required topics; escalate changes to its meaning.
 - Whether first-time users discover the Advanced view and guidance without prompting — evaluate after release; formal usability testing is not a release gate.
+
+## Implementation notes (deviations from this spec)
+
+Recorded 2026-08-12, after the branch review. The criteria above are the original
+request; these are the points where the shipped implementation differs.
+
+- **Criterion 4 — progress bar.** The Advanced view shows its completion percentage
+  *with* a coloured `role="progressbar"` bar in the section-card header. The Simplified
+  Canvas still shows no percentage and no bar, and the completion calculation is
+  unchanged. Criterion 4's "without a progress bar" no longer describes the Advanced view.
+- **Criterion 3 — placement of the detailed navigation.** The detailed-section tablist is
+  not directly beneath the header: it sits inside the floating section card that holds the
+  active section, below the completion block, reproducing the pre-v2 arrangement. Its first
+  tab is the restored Canvas Summary one-pager. The sticky header is identical in both
+  views; only the main region's width and background change.
+- **Criterion 5 — missing-prompt highlighting was removed.** Highlighting every unanswered
+  prompt was implemented and then withdrawn: it was cleared whenever the warning was
+  dismissed, so it was only ever visible behind the modal backdrop. The warning dialog now
+  carries the whole feature — it names every unanswered prompt and moves focus to the first
+  one — so there is no per-field marking left to clear after an export.
+- **Criterion 5 — a completed simplified canvas can still meet a native warning confirm.**
+  The pre-existing advisory warnings for detailed fields the simplified canvas never asks
+  about (unit of work, unit category, volume per month, dataset access rights) still go
+  through `window.confirm` on a normal export. The "Export anyway" path is single-step as
+  specified; the fully answered path is not.
+- **Criterion 7 — not verified.** No browser, viewport, keyboard-only or WCAG 2.1 AA audit
+  is recorded for this branch. Criteria 1, 2, 3, 4, 5 and 9 are met by code inspection
+  only. The guidance sidebar's focus handling and the partial dialog's focus trap were read,
+  not exercised.

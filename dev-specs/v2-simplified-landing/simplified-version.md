@@ -130,3 +130,38 @@ This section replaces the separate MVP concept with one bounded, testable milest
 
 - The first simplified requirement is created lazily as `{ id, title: id, benefits: [] }`. Later detailed requirements are never replaced.
 - The first governance stage is created lazily as `{ id, name: "Planning" }`. Existing first stages, later stages, and later milestones are preserved.
+
+## Implementation notes (deviations from this spec)
+
+Recorded 2026-08-12, after the branch review.
+
+- **§4 — data constraints create a dataset.** Checking `large-data` or `personal-data` also
+  creates `dataAccess.datasets[0]` as `{ id, title: '' }`, and `personal-data` writes
+  `containsPersonalData: true` on it. Unchecking `personal-data` clears that answer, and
+  removes the generated dataset when no data constraint is left and nothing else was
+  recorded on it. The spec only noted that "detailed datasets later use
+  `dataAccess.datasets[].containsPersonalData`". A partial export may therefore contain an
+  untitled dataset entity until the dataset is named in the detailed view. Only the
+  checkbox that was clicked writes: an unrelated constraint edit never touches a
+  personal-data answer given in the detailed view, and never re-creates a dataset deleted
+  there.
+- **Automatic Parent Records — three records, not two.** A first dataset joins the
+  requirement and the governance stage. The generated stage is
+  `{ id, name: 'Planning', milestones: [] }` and milestone zero is seeded with
+  `description: ''` when only the KPI is answered.
+- **§5 — stage dates are optional.** `governance.stages[0].startDate` and `endDate` are not
+  part of the sixteen-prompt set that drives the partial-export warning, so a canvas with no
+  dates still counts as fully answered.
+- **Mapping tables — label wording.** Shipped prompt labels are shortened forms of the
+  wording in the tables above (for example "Examples of the problem" ships as "Most recent
+  concrete case"), and the constraint-checkbox labels are shortened likewise. Schema
+  mappings and option vocabularies are exactly as specified.
+- **Criterion 5 — how omissions are surfaced.** Omissions are visible through the Advanced
+  view itself and the Canvas Summary's "N/6 essentials" counter. A dedicated
+  `hasDetailedCanvasContent` helper was written for a discoverability hint in the simplified
+  view, but the landing-page spec forbids a badge or dot for advanced-only content, so the
+  hint was never rendered and the helper has been removed.
+- **Criterion 7 — the minimal example.** The one minimal project viewable in both
+  representations ships as `src/data/simplified-only-canvas.ts`, published as
+  `schema/examples/simplified-canvas.json` and `tools/simplified-only.rocrate.zip`. It is
+  not the canvas the application's "Show Example" button loads; it has to be imported.
