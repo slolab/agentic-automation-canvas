@@ -36,7 +36,7 @@
       <!-- One floating card holds the section tabs and the active section, so both
            share the same width on every tab. -->
       <div class="rounded-lg bg-white shadow-lg">
-        <div class="rounded-t-lg bg-gray-50">
+        <div class="rounded-t-lg bg-white">
           <div class="flex w-full items-center px-6">
             <nav
               class="min-w-0 flex-1 overflow-x-auto"
