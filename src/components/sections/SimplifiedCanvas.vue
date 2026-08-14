@@ -237,7 +237,7 @@
           </div>
 
           <div>
-            <label for="solutions-research" class="canvas-label">Tools or existing solutions (to research)</label>
+            <label for="solutions-research" class="canvas-label">Tools or existing solutions (please research)</label>
             <textarea
               id="solutions-research"
               rows="3"

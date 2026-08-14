@@ -566,8 +566,8 @@ Counterintuitively, despite higher gross time savings (16 min vs. 8 min), the ne
     },
     technicalRisk: 'medium',
     effortEstimate: { value: 20, unit: 'weeks' },
-    feasibilityNotes: 'Core technologies are mature. Main challenge is handling edge cases and ensuring accuracy for diverse document formats. Different tasks require different approaches - extraction needs extensive agentic capabilities, while categorization can be deterministic.',
-    solutionsToResearch: 'Evaluate existing document-management products and managed extraction services before building custom orchestration.',
+    feasibilityNotes: '3 master students built a proof of concept in 2 weeks using LangGraph. Compared agentic approach with algorithmic. Mixed results, not yet production ready.',
+    solutionsToResearch: 'Found LangGraph. Also can use Claude/ChatGPT for this quite well at smaller scale.',
     constraintFlags: [
       'personal-data',
       'valuable-ip',

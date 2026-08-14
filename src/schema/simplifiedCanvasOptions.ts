@@ -38,7 +38,7 @@ const problemFrequencyLabels: Record<ProblemFrequency, string> = {
 const technicalApproachLabels = {
   'agentic-user-support': 'Agentic User Support',
   'code-development': 'Code Development and Debugging',
-  'computer-use': 'Computer Use',
+  'computer-use': 'Agentic Computer Use',
   'live-event-monitoring': 'Live Event Monitoring',
   'intelligent-search': 'Intelligent Search',
   'agentic-research-support': 'Agentic Research Support',
