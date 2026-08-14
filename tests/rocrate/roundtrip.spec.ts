@@ -194,7 +194,6 @@ const completeCanvas = (): CanvasData => ({
               'data-metadata-curation',
               'analysis-pipeline-orchestration',
               'experiment-protocol-design',
-              'simulation-parameter-optimization',
               'laboratory-workflow-coordination',
               'other',
             ],

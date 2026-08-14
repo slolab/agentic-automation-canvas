@@ -45,7 +45,6 @@ const technicalApproachLabels = {
   'data-metadata-curation': 'Data and Metadata Curation',
   'analysis-pipeline-orchestration': 'Analysis and Pipeline Orchestration',
   'experiment-protocol-design': 'Experiment and Protocol Design',
-  'simulation-parameter-optimization': 'Simulation and Parameter Optimization',
   'laboratory-workflow-coordination': 'Laboratory Workflow Coordination',
   'unstructured-content-processing': 'Unstructured Content Processing',
   other: 'Other',

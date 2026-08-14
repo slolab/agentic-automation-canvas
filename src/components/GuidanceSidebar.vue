@@ -47,6 +47,17 @@
               <span>{{ point }}</span>
             </li>
           </ul>
+          <template v-if="guidance.terms?.length">
+            <h3 class="mt-8 font-semibold text-gray-950">
+              {{ guidance.termsHeading ?? 'Key terms' }}
+            </h3>
+            <dl class="mt-4 space-y-4">
+              <div v-for="term in guidance.terms" :key="term.label">
+                <dt class="text-sm font-semibold text-gray-950">{{ term.label }}</dt>
+                <dd class="mt-1 text-sm leading-6 text-gray-700">{{ term.explanation }}</dd>
+              </div>
+            </dl>
+          </template>
           <div v-if="activeTopic === 'aac'" class="mt-8 border-t border-gray-200 pt-5 text-sm text-gray-600">
             <h3 class="font-semibold text-gray-950">Learn more</h3>
             <p class="mt-2">
@@ -67,6 +78,12 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, watch } from 'vue'
 import { useGuidance, type GuidanceTopic } from '@/composables/useGuidance'
+import { approachOptions } from '@/schema/simplifiedCanvasOptions'
+
+interface GuidanceTerm {
+  label: string
+  explanation: string
+}
 
 interface GuidanceContent {
   title: string
@@ -74,7 +91,43 @@ interface GuidanceContent {
   followup?: string
   pointsHeading?: string
   points: string[]
+  termsHeading?: string
+  terms?: GuidanceTerm[]
 }
+
+type ApproachValue = (typeof approachOptions)[number]['value']
+
+const approachExplanations: Record<ApproachValue, string> = {
+  'agentic-user-support':
+    'Support chatbot that answers user questions and looks up information. Good when there is a large volume of simple but diverse incoming requests.',
+  'code-development':
+    'AI that writes, reviews, or debugs code. Good when developers spend a lot of time on repetitive coding or troubleshooting.',
+  'computer-use':
+    'AI that clicks and types in software like a person. Good when you must use tools with no usable API—for example legacy hospital software.',
+  'live-event-monitoring':
+    'AI that watches ongoing events and alerts or acts when something matters. Typically used for experiment monitoring or cybersecurity.',
+  'intelligent-search':
+    'AI that finds and summarises relevant information across sources. Good when people dig through many documents or systems to answer one question.',
+  'agentic-research-support':
+    'AI that helps gather, track, and synthesise evidence for a research question. Good when literature review or evidence collection is slow and repetitive.',
+  'data-metadata-curation':
+    'AI that cleans, organises, or describes datasets. Good when data is messy, inconsistently labelled, or hard to reuse.',
+  'analysis-pipeline-orchestration':
+    'AI that runs and steers multi-step analysis workflows. Good when pipelines need many decisions, retries, or hand-offs between tools.',
+  'experiment-protocol-design':
+    'AI that proposes or refines experimental designs and protocols. Good when planning takes a lot of expert time. But AI is often weak and narrow-minded in niche domains.',
+  'laboratory-workflow-coordination':
+    'AI that sequences lab steps and coordinates samples, instruments, or people. Good when lab work has many interdependent hand-offs.',
+  'unstructured-content-processing':
+    'AI that extracts useful information from documents, emails, logs, or notes. Good when important facts are locked in free-form text.',
+  other:
+    'A pattern not listed above. Select Other and name it in the custom approaches field.',
+}
+
+const approachGuidanceTerms: GuidanceTerm[] = approachOptions.map((option) => ({
+  label: option.label,
+  explanation: approachExplanations[option.value],
+}))
 
 const guidanceByTopic: Record<GuidanceTopic, GuidanceContent> = {
   aac: {
@@ -113,9 +166,11 @@ const guidanceByTopic: Record<GuidanceTopic, GuidanceContent> = {
     intro: 'Identify where agentic behaviour may help without committing to a technical architecture.',
     points: [
       'Record prior attempts, workarounds, pilots, and what they taught you.',
-      'Select the agentic work patterns that match the real need, including scientific research and laboratory workflows.',
+      'Select one or more patterns below that fit the work; skip ones that do not apply.',
       'Research available tools and comparable solutions before deciding to build.',
     ],
+    termsHeading: 'What each potential approach means',
+    terms: approachGuidanceTerms,
   },
   'development-reality': {
     title: 'Development Reality',
