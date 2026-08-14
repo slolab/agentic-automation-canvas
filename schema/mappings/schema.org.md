@@ -16,6 +16,22 @@ This document describes how Agentic Automation Canvas fields map to Schema.org v
 | domain | `about` (with domain-specific Thing) | Thing | Research domain(s) |
 | keywords | `keywords` | Text | Keywords/tags |
 
+### AAC Simplified-Canvas Extensions
+
+The simplified-canvas fields below have no direct Schema.org equivalent. RO-Crate exports
+therefore retain them as AAC namespace properties alongside the standard Project metadata.
+
+| Canvas Field | RO-Crate Property | Type | Description |
+|-------------|-------------------|------|-------------|
+| problemFrequency | `aac:problemFrequency` | Text | Controlled qualitative frequency of problem cases |
+| problemExamples | `aac:problemExamples` | Text[] | Concrete recent examples of the problem |
+
+Requirement solution approaches and unclassified benefits are likewise AAC-specific
+structured data. They remain nested in `aac:feasibility` and `aac:benefits` on the relevant
+`p-plan:Step` entity. Developer constraints and team-readiness fields remain nested in the
+root dataset's `aac:developerFeasibility` value. None are asserted as equivalent Schema.org
+properties.
+
 ### ResearchProject Extension
 
 When the project is a research project, use `ResearchProject` type with additional properties:

@@ -1,0 +1,17 @@
+{
+  "currentVersion": "0.17.1",
+  "currentSchema": "versions/0.17.1/canvas-schema.json",
+  "currentProfileVersion": "0.17.1",
+  "currentProfile": "versions/0.17.1/rocrate-profile.json",
+  "roCrateVersion": "1.2",
+  "schemas": {
+    "0.16.0": "versions/0.16.0/canvas-schema.json",
+    "0.17.0": "versions/0.17.0/canvas-schema.json",
+    "0.17.1": "versions/0.17.1/canvas-schema.json"
+  },
+  "profiles": {
+    "0.16.0": "versions/0.16.0/rocrate-profile.json",
+    "0.17.0": "versions/0.17.0/rocrate-profile.json",
+    "0.17.1": "versions/0.17.1/rocrate-profile.json"
+  }
+}

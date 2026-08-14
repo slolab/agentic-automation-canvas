@@ -1,24 +1,114 @@
+/* eslint-disable */
 /**
- * TypeScript interfaces for Agentic Automation Canvas data model
- * Aligned with schema/canvas-schema.json
+ * Generated from schema/manifest.json and its current AAC JSON Schema.
+ * Do not edit by hand. Run `npm run schema:generate` after changing the schema.
  */
 
+/**
+ * A classified benefit metric or an unclassified benefit captured by the simplified canvas
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "Benefit".
+ */
+export type Benefit = ClassifiedBenefit | UnclassifiedBenefit
+/**
+ * Indicates whether higher values, lower values, hitting a target, or boolean true is the desired outcome
+ */
+export type BenefitDirection = 'increaseIsBetter' | 'decreaseIsBetter' | 'targetIsBetter' | 'boolIsBetter'
+/**
+ * Whether baseline/expected are absolute measured values or improvement deltas
+ */
+export type ValueMeaning = 'absolute' | 'delta'
+/**
+ * A benefit value: numeric, categorical, or binary
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "BenefitValue".
+ */
+export type BenefitValue =
+  | {
+      type: 'numeric'
+      value: number
+    }
+  | {
+      type: 'categorical'
+      category: 'low' | 'medium' | 'high'
+    }
+  | {
+      type: 'binary'
+      bool: boolean
+    }
+export type AgentDataAction = 'read' | 'modify' | 'process' | 'generate'
+/**
+ * Category of risk
+ */
+export type RiskCategory = 'technical' | 'data' | 'compliance' | 'operational' | 'ethical' | 'adoption'
+/**
+ * Probability of the risk occurring
+ */
+export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical'
+/**
+ * Current status of the risk
+ */
+export type RiskStatus = 'identified' | 'mitigated' | 'accepted' | 'resolved'
+
+/**
+ * Version 0.17.1 JSON Schema for Agentic Automation Canvas data.
+ */
 export interface CanvasData {
+  /**
+   * Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).
+   */
+  version?: string
+  /**
+   * Date when the version was downloaded or created (ISO date format)
+   */
+  versionDate?: string
+  /**
+   * Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents.
+   */
+  persons?: Person[]
   project: ProjectDefinition
-  persons?: Person[] // Centralized Person management
   userExpectations?: UserExpectations
   developerFeasibility?: DeveloperFeasibility
   governance?: GovernanceStaging
   dataAccess?: DataAccessSensitivity
   outcomes?: OutcomesEvaluation
-  // Version management
-  version?: string // Semantic version (e.g., "0.1.0")
-  versionDate?: string // ISO date string when version was downloaded/created
 }
-
+export interface Person {
+  /**
+   * Unique identifier for the Person (e.g., 'person-0', 'person-1')
+   */
+  id: string
+  name: string
+  /**
+   * Optional disambiguation field
+   */
+  affiliation?: string
+  /**
+   * Optional stable identifier (e.g., ORCID)
+   */
+  orcid?: string
+  /**
+   * Functional roles from the AAC controlled vocabulary
+   */
+  functionRoles?: string[]
+  /**
+   * Free-text position or title description
+   */
+  localTitle?: string
+}
 export interface ProjectDefinition {
   title: string
   description: string
+  /**
+   * Approximate frequency with which the project problem occurs
+   */
+  problemFrequency?: 'daily' | 'weekly' | 'monthly' | 'few-times-per-year' | 'less-than-yearly'
+  /**
+   * Concrete examples of the problem, beginning with the most recent real case
+   */
+  problemExamples?: string[]
   objective?: string
   projectStage?: string
   startDate?: string
@@ -28,81 +118,176 @@ export interface ProjectDefinition {
   fundingGrant?: string
   leadOrganization?: string
   projectId?: string
-  // Project-level value summary
   headlineValue?: string
   primaryValueDriver?: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
-  roughEstimateValue?: number // Optional manual estimate when getting started (before task-level benefits)
-  roughEstimateUnit?: string // Unit for rough estimate (e.g., "hours/month", "% error reduction")
-  creator?: string[] // Person IDs of project creators
-  // License for RO-Crate export (e.g. "https://creativecommons.org/licenses/by/4.0/")
+  /**
+   * Optional manual estimate of project-level benefit value when getting started (before task-level benefits)
+   */
+  roughEstimateValue?: number
+  /**
+   * Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month')
+   */
+  roughEstimateUnit?: string
+  /**
+   * Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).
+   */
+  version?: string
+  /**
+   * Date when the version was downloaded or created (ISO date format)
+   */
+  versionDate?: string
+  /**
+   * Person IDs of project creators
+   */
+  creator?: string[]
+  /**
+   * License URI for the canvas and its RO-Crate export
+   */
   license?: string
-  // Version management (stored at project level for ROcrate compatibility)
-  version?: string // Semantic version (e.g., "0.1.0")
-  versionDate?: string // ISO date string when version was downloaded/created
 }
-
 export interface UserExpectations {
   requirements?: Requirement[]
 }
-
-// Benefit value types - numeric, categorical, or binary
-export type BenefitValue =
-  | { type: 'numeric'; value: number }
-  | { type: 'categorical'; category: 'low' | 'medium' | 'high' }
-  | { type: 'binary'; bool: boolean }
-
-// Benefit interpretation direction
-export type BenefitDirection = 'increaseIsBetter' | 'decreaseIsBetter' | 'targetIsBetter' | 'boolIsBetter'
-
-// Value meaning for baseline/expected
-export type ValueMeaning = 'absolute' | 'delta'
-
-// Generalized benefit structure for all benefit types
-export interface Benefit {
-  benefitType: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
-  metricId: string // Controlled vocabulary + "custom"
-  metricLabel: string // Human-readable label
-  direction: BenefitDirection // Whether higher/lower/target/bool is better
-  valueMeaning: ValueMeaning // Whether values are absolute or deltas
-  target?: number // Target value when direction is 'targetIsBetter'
-  aggregationBasis?: 'perUnit' | 'perMonth' | 'oneOff' // Default: perUnit
-  benefitUnit: string // e.g., "minutes", "%", "incidents/month"
-  baseline: BenefitValue
-  expected: BenefitValue
-  /** Human oversight (for time benefits only). Always in minutes. Subtracted from gross time savings. Mutually exclusive: use oversightMinutesPerUnit for perUnit aggregation, oversightMinutesPerMonth for perMonth aggregation. */
-  oversightMinutesPerUnit?: number // Only used when aggregationBasis is 'perUnit'
-  oversightMinutesPerMonth?: number // Only used when aggregationBasis is 'perMonth'
-  confidenceUser?: 'low' | 'medium' | 'high'
-  confidenceDev?: 'low' | 'medium' | 'high'
-  assumptions?: string
-}
-
-export type RiskCategory = 'technical' | 'data' | 'compliance' | 'operational' | 'ethical' | 'adoption'
-export type RiskSeverity = 'low' | 'medium' | 'high' | 'critical'
-export type RiskStatus = 'identified' | 'mitigated' | 'accepted' | 'resolved'
-
-export interface Risk {
+export interface Requirement {
   id: string
-  riskCategory: RiskCategory
   title: string
   description?: string
-  likelihood: RiskSeverity
-  impact: RiskSeverity
-  mitigation?: string
-  status: RiskStatus
+  userStory?: string
+  priority?: 'low' | 'medium' | 'high' | 'critical'
+  status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
+  value?: string
+  unitOfWork?: string
+  unitCategory?: 'item' | 'interaction' | 'computation' | 'other'
+  volumePerMonth?: number
+  /**
+   * Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency.
+   */
+  timeUnit?: 'minutes' | 'hours'
+  /**
+   * Array of benefit metrics for this requirement
+   */
+  benefits: Benefit[]
+  /**
+   * IDs of requirements this task depends on
+   */
+  dependsOn?: string[]
+  /**
+   * Person IDs of stakeholders for this task
+   */
+  stakeholders?: string[]
+  /**
+   * The user population whose benefit estimates this task captures (e.g., 'junior researchers', 'clinical staff with 3+ years experience'). Specifying this makes heterogeneity explicit when different user groups are expected to benefit differently from the same type of task.
+   */
+  targetPopulation?: string
+  dataAccess?: RequirementDataAccess
+  feasibility?: RequirementFeasibility
 }
-
-/** Deployment cost estimate for running an automated task */
-export interface DeploymentCost {
-  costPerUnit?: number        // cost per interaction/unit of work
-  costPerMonth?: number       // flat monthly cost
-  aggregationBasis: 'perUnit' | 'perMonth'
-  /** Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP) */
-  currency: string
-  costNotes?: string
+/**
+ * A quantified and classified benefit metric for a requirement
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "ClassifiedBenefit".
+ */
+export interface ClassifiedBenefit {
+  /**
+   * Type of benefit
+   */
+  benefitType: 'time' | 'quality' | 'risk' | 'enablement' | 'cost'
+  /**
+   * Identifier for the metric (controlled vocabulary or 'custom')
+   */
+  metricId: string
+  /**
+   * Human-readable label for the metric
+   */
+  metricLabel: string
+  /**
+   * Original free-form benefit description, retained when a simplified-canvas benefit is classified
+   */
+  description?: string
+  direction: BenefitDirection
+  valueMeaning: ValueMeaning
+  /**
+   * Target value when direction is 'targetIsBetter'
+   */
+  target?: number
+  /**
+   * How the benefit value is aggregated
+   */
+  aggregationBasis?: 'perUnit' | 'perMonth' | 'oneOff'
+  /**
+   * Unit for the benefit value (e.g., 'minutes', '%', 'incidents/month')
+   */
+  benefitUnit: string
+  baseline: BenefitValue
+  expected: BenefitValue
+  /**
+   * Human oversight per unit in minutes. Only used when aggregationBasis is 'perUnit'. Mutually exclusive with oversightMinutesPerMonth. Subtracted from gross time benefit.
+   */
+  oversightMinutesPerUnit?: number
+  /**
+   * Human oversight per month in minutes. Only used when aggregationBasis is 'perMonth'. Mutually exclusive with oversightMinutesPerUnit. Subtracted from gross time benefit.
+   */
+  oversightMinutesPerMonth?: number
+  /**
+   * User's confidence in the benefit estimate
+   */
+  confidenceUser?: 'low' | 'medium' | 'high'
+  /**
+   * Developer's confidence in the benefit estimate
+   */
+  confidenceDev?: 'low' | 'medium' | 'high'
+  /**
+   * Key assumptions underlying the benefit estimate
+   */
+  assumptions?: string
 }
-
-/** Per-task feasibility (optional overrides for project-level feasibility) */
+/**
+ * A free-form benefit or metric awaiting classification and quantification
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "UnclassifiedBenefit".
+ */
+export interface UnclassifiedBenefit {
+  /**
+   * Marks a lightweight simplified-canvas benefit
+   */
+  benefitType: 'unclassified'
+  /**
+   * Free-form expected benefit
+   */
+  description?: string
+  /**
+   * Free-form success metric to quantify later
+   */
+  metricLabel?: string
+}
+/**
+ * Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab).
+ */
+export interface RequirementDataAccess {
+  /**
+   * Links to datasets this task uses, with agent permissions
+   */
+  datasetLinks?: TaskDatasetLink[]
+}
+export interface TaskDatasetLink {
+  /**
+   * Id of a dataset defined in dataAccess.datasets
+   */
+  datasetId: string
+  /**
+   * What the agent is allowed to do with this dataset
+   */
+  agentActions?: AgentDataAction[]
+  /**
+   * Free-text notes on this task-dataset link
+   */
+  notes?: string
+}
+/**
+ * Optional per-task feasibility (overrides project-level defaults)
+ */
 export interface RequirementFeasibility {
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
   effortEstimate?: {
@@ -112,121 +297,176 @@ export interface RequirementFeasibility {
   feasibilityNotes?: string
   algorithms?: string[]
   tools?: string[]
-  /** Model selection for this task (if different from project-level) */
+  /**
+   * Type of model to be used (if applicable). Set to 'none' if task is deterministic.
+   */
   modelSelection?: 'open-source' | 'frontier-model' | 'fine-tuned' | 'custom' | 'other' | 'none'
-  /** Specific model name/version for this task */
+  /**
+   * Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct')
+   */
   modelName?: string
-  /** URI pointing to the model's model card */
+  /**
+   * URI pointing to the model's model card
+   */
   modelCardUri?: string
-  /** Technology approach for this task. Set to 'none' if task is deterministic and doesn't require LLMs */
+  /**
+   * Potential agentic use cases and selected technology architecture for this task. Set architecture to 'none' if the task is deterministic and doesn't require LLMs.
+   */
   technologyApproach?: {
+    /**
+     * Primary technology architecture. 'none' indicates deterministic task without LLM requirement.
+     */
     architecture?: 'none' | 'simple-prompting' | 'rag' | 'fine-tuning' | 'agents' | 'other'
-    ragDetails?: { retrievalMethod?: string; embeddingModel?: string; chunkingStrategy?: string }
-    fineTuningDetails?: {
-      baseModel?: string // Base model that was fine-tuned
-      tuningApproach?: string // e.g., LoRA, QLoRA, full fine-tuning
-      dataset?: string // Dataset used for fine-tuning
+    /**
+     * Free-text agentic use-case patterns selected as potential approaches
+     */
+    approaches?: string[]
+    /**
+     * User-defined potential approaches entered when the controlled vocabulary is insufficient
+     */
+    customApproaches?: string[]
+    ragDetails?: {
+      retrievalMethod?: string
+      embeddingModel?: string
+      chunkingStrategy?: string
     }
-    agenticDetails?: { 
-      framework?: string[] // e.g., ReAct, MCP, Plan-and-Execute (single-item array, new entry replaces existing)
-      tools?: string[] // e.g., file_search, browser, custom tools
-      orchestration?: string[] // e.g., LangGraph (single-item array, new entry replaces existing)
+    fineTuningDetails?: {
+      /**
+       * Base model that was fine-tuned
+       */
+      baseModel?: string
+      /**
+       * Method used for fine-tuning (e.g., LoRA, QLoRA, full fine-tuning)
+       */
+      tuningApproach?: string
+      /**
+       * Dataset used for fine-tuning
+       */
+      dataset?: string
+    }
+    agenticDetails?: {
+      /**
+       * e.g. ReAct, MCP, Plan-and-Execute
+       */
+      framework?: string[]
+      /**
+       * MCP tools, custom tools
+       */
+      tools?: string[]
+      /**
+       * e.g. LangGraph
+       */
+      orchestration?: string[]
     }
   }
-  /** Per-task risk assessments paralleling benefits */
+  /**
+   * Per-task risk assessments paralleling benefits
+   */
   risks?: Risk[]
-  /** Estimated deployment/operational cost for running this task */
   deploymentCost?: DeploymentCost
 }
-
-/** What an agent may do with a dataset within a task */
-export type AgentDataAction = 'read' | 'modify' | 'process' | 'generate'
-
-/** Link between a task and one dataset it uses, with agent permissions */
-export interface TaskDatasetLink {
-  /** Dataset.id from dataAccess.datasets (single ground truth for datasets) */
-  datasetId: string
-  /** What the agent is allowed to do with this dataset */
-  agentActions?: AgentDataAction[]
-  notes?: string
-}
-
-/** Per-task data access: which datasets this task uses and what the agent may do with them */
-export interface RequirementDataAccess {
-  datasetLinks?: TaskDatasetLink[]
-}
-
-export interface Requirement {
+/**
+ * A risk assessment for a requirement, paralleling benefit metrics
+ *
+ * This interface was referenced by `CanvasData`'s JSON-Schema
+ * via the `definition` "Risk".
+ */
+export interface Risk {
+  /**
+   * Unique identifier for the risk
+   */
   id: string
+  riskCategory: RiskCategory
+  /**
+   * Short title for the risk
+   */
   title: string
+  /**
+   * Detailed description of the risk
+   */
   description?: string
-  userStory?: string
-  priority?: 'low' | 'medium' | 'high' | 'critical'
-  status?: 'planned' | 'in-progress' | 'completed' | 'cancelled'
-  value?: string
-  // Value model fields
-  unitOfWork?: string
-  unitCategory?: 'item' | 'interaction' | 'computation' | 'other'
-  volumePerMonth?: number
-  /** Time unit for this requirement's time benefits. Standardizes all time values. */
-  timeUnit?: 'minutes' | 'hours'
-  // Generalized benefits array - replaces legacy time/quality/risk fields
-  benefits: Benefit[]
-  /** IDs of requirements this task depends on (workflow order) */
-  dependsOn?: string[]
-  /** Person IDs of stakeholders for this task */
-  stakeholders?: string[]
-  /** User population whose benefit estimates this task captures (e.g., 'junior researchers', 'all clinical staff') */
-  targetPopulation?: string
-  /** Optional per-task feasibility (overrides or complements global DeveloperFeasibility) */
-  feasibility?: RequirementFeasibility
-  /** Optional per-task data access links (edited from the Data Access tab, like feasibility) */
-  dataAccess?: RequirementDataAccess
+  likelihood: RiskSeverity
+  /**
+   * Severity if the risk materialises
+   */
+  impact: 'low' | 'medium' | 'high' | 'critical'
+  /**
+   * Strategy to mitigate or address the risk
+   */
+  mitigation?: string
+  status: RiskStatus
 }
-
-export interface Person {
-  id: string // Unique identifier for the Person (e.g., 'person-0', 'person-1')
-  name: string
-  affiliation?: string // Optional disambiguation
-  orcid?: string // Optional stable identifier (e.g., ORCID)
-  functionRoles?: string[] // Functional roles from controlled vocabulary
-  localTitle?: string // Free-text position/title description
+/**
+ * Estimated deployment/operational cost for running this automated task
+ */
+export interface DeploymentCost {
+  /**
+   * Cost per interaction/unit of work
+   */
+  costPerUnit?: number
+  /**
+   * Flat monthly deployment cost
+   */
+  costPerMonth?: number
+  /**
+   * Whether cost is specified per interaction (multiplied by volume) or as a flat monthly figure
+   */
+  aggregationBasis: 'perUnit' | 'perMonth'
+  /**
+   * Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP)
+   */
+  currency: string
+  /**
+   * Assumptions or notes about the cost estimate
+   */
+  costNotes?: string
 }
-
-/** Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden) */
+/**
+ * Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden)
+ */
 export interface DeveloperFeasibility {
-  /** Technology Readiness Level - project-level maturity assessment */
+  /**
+   * Technology Readiness Level - project-level maturity assessment
+   */
   trlLevel?: {
     current?: number
     target?: number
   }
-  /** Overall technical risk for the project */
+  /**
+   * Overall technical risk for the project
+   */
   technicalRisk?: 'low' | 'medium' | 'high' | 'critical'
-  /** Overall effort estimate for the project */
+  /**
+   * Overall effort estimate for the project
+   */
   effortEstimate?: {
     value: number
     unit: 'weeks' | 'person-hours'
   }
-  /** Project-level feasibility notes */
+  /**
+   * Project-level feasibility notes
+   */
   feasibilityNotes?: string
+  /**
+   * Tools, products, services, or other existing solutions that require research
+   */
+  solutionsToResearch?: string
+  /**
+   * Free-text project constraints that require deeper feasibility investigation
+   */
+  constraintFlags?: string[]
 }
-
 export interface GovernanceStaging {
+  /**
+   * Whether a person or team is available to build the capability
+   */
+  buildTeamStatus?: 'none' | 'possible' | 'committed'
+  /**
+   * Whether a person or team is available to maintain the capability long-term
+   */
+  maintenanceOwnerStatus?: 'none' | 'possible' | 'committed'
   stages?: GovernanceStage[]
 }
-
-export interface Milestone {
-  description: string
-  kpi?: string
-}
-
-/** Structured compliance standard with framework reference and optional clause mapping */
-export interface ComplianceStandard {
-  framework: string
-  clauses?: string[]
-  uri?: string
-}
-
 export interface GovernanceStage {
   id: string
   name: string
@@ -234,25 +474,52 @@ export interface GovernanceStage {
   endDate?: string
   agents?: Agent[]
   milestones?: Milestone[]
+  /**
+   * Compliance standards as plain strings or structured framework references
+   */
   complianceStandards?: (string | ComplianceStandard)[]
-  /** URI pointing to a Policy Card governing this stage */
+  /**
+   * URI pointing to a Policy Card (machine-readable deployment governance artifact) governing this stage
+   */
   policyCardUri?: string
 }
-
 export interface Agent {
-  // For person-type agents: reference to Person entity
-  // For organization/software: name directly
-  personId?: string // Reference to Person entity ID (when type === 'person')
-  name?: string // Name for organization/software agents (when type !== 'person')
+  /**
+   * Reference to Person entity ID (required when type is 'person')
+   */
+  personId?: string
+  /**
+   * Name for organization/software agents (required when type is not 'person')
+   */
+  name?: string
   role?: string
   type: 'person' | 'organization' | 'software'
-  roleContext?: string // Optional role context for this agent role
+  /**
+   * Optional role context
+   */
+  roleContext?: string
 }
-
+export interface Milestone {
+  description: string
+  kpi?: string
+}
+export interface ComplianceStandard {
+  /**
+   * Name of the compliance framework (e.g., 'NIST AI RMF', 'ISO/IEC 42001', 'EU AI Act')
+   */
+  framework: string
+  /**
+   * Specific clauses or tokens (e.g., 'GOVERN-1', 'Article 72')
+   */
+  clauses?: string[]
+  /**
+   * URI to the framework or standard document
+   */
+  uri?: string
+}
 export interface DataAccessSensitivity {
   datasets?: Dataset[]
 }
-
 export interface Dataset {
   id: string
   title: string
@@ -262,19 +529,19 @@ export interface Dataset {
   accessRights?: 'open' | 'restricted' | 'confidential' | 'highly-restricted'
   duoTerms?: string[]
   pid?: string
-  /** URI pointing to a FAIR dataset sheet */
+  /**
+   * URI pointing to a FAIR dataset sheet
+   */
   datasetSheetUri?: string
   publisher?: string
   containsPersonalData?: boolean
   sensitivityLevel?: string
 }
-
 export interface OutcomesEvaluation {
   deliverables?: Deliverable[]
   publications?: Publication[]
   evaluations?: Evaluation[]
 }
-
 export interface Deliverable {
   id: string
   title: string
@@ -283,25 +550,33 @@ export interface Deliverable {
   date?: string
   pid?: string
 }
-
-export interface PublicationAuthor {
-  type: 'person' | 'organization'
-  personId?: string
-  name?: string
-}
-
 export interface Publication {
   id: string
   title: string
   doi?: string
+  /**
+   * Publication authors. Each author is either a reference to a Person entity or a free-text organization/consortium name.
+   */
   authors?: PublicationAuthor[]
   date?: string
 }
-
+export interface PublicationAuthor {
+  type: 'person' | 'organization'
+  /**
+   * Reference to Person entity ID (required when type is 'person')
+   */
+  personId?: string
+  /**
+   * Name for organization authors (required when type is 'organization')
+   */
+  name?: string
+}
 export interface Evaluation {
   id: string
   type: string
   date?: string
-  metrics?: Record<string, unknown>
+  metrics?: {
+    [k: string]: unknown
+  }
   results?: string
 }

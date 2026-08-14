@@ -15,10 +15,10 @@ A minimal valid AAC canvas demonstrating the required fields and basic structure
 A comprehensive example with all sections populated, including:
 
 - Full project definition with metadata
-- Multiple requirements with benefit metrics
+- A detailed requirement with multiple benefit metrics
 - Stakeholder definitions
 - Developer feasibility assessment
-- Governance stages with agents
+- A governance stage with agents
 - Data access information
 - Outcomes including deliverables, publications, and evaluations
 
@@ -30,11 +30,11 @@ A comprehensive example with all sections populated, including:
 
 The examples directory contains two formats representing the same data:
 
-- **Canvas JSON** (e.g., `minimal-canvas.json`): The internal data format that validates against the AAC schema. This is what the web form uses internally and what you'd use for programmatic validation.
+- **Canvas JSON** (e.g., `minimal-canvas.json`): The internal data format that validates against the AAC schema. This is what the web canvas uses internally and what you'd use for programmatic validation.
 
-- **RO-Crate JSON** (e.g., `minimal-example.json`): The packaged format you **download from the web form**. When you click "Download RO-Crate" in the web application, you get a ZIP file containing `ro-crate-metadata.json` in RO-Crate format, following the RO-Crate specification.
+- **RO-Crate JSON** (e.g., `minimal-example.json`): The packaged format you **download from the application**. When you click "Download RO-Crate," you get a ZIP file containing `ro-crate-metadata.json` in RO-Crate format, following the RO-Crate specification.
 
-**Important**: When you download from the web form, you get **RO-Crate format** (the packaged, standards-compliant format). Canvas JSON is the internal format used for validation and programmatic access.
+**Important**: When you download from the application, you get **RO-Crate format** (the packaged, standards-compliant format). Canvas JSON is the internal format used for validation and programmatic access.
 
 ### Download
 
@@ -47,7 +47,7 @@ Each example page provides download links for both formats so you can:
 All examples are validated against the schema in CI. You can validate them locally using the [validator](../validator.md):
 
 ```bash
-python tools/validate-examples.py
+uv run python tools/validate-examples.py
 ```
 
 ### Integration

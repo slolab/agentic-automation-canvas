@@ -124,7 +124,7 @@
             :id="`dataset-access-${index}`"
             :value="dataset.accessRights || ''"
             class="form-input"
-            @change="update({ ...dataset, accessRights: ($event.target as HTMLSelectElement).value as any })"
+            @change="update({ ...dataset, accessRights: (($event.target as HTMLSelectElement).value || undefined) as Dataset['accessRights'] })"
           >
             <option value="">Select access level</option>
             <option value="open">Open</option>

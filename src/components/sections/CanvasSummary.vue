@@ -1,6 +1,6 @@
 <template>
   <div class="space-y-6">
-    <div>
+    <div class="canvas-summary-column">
       <h2 class="section-header flex items-center gap-2">
         <span>Canvas Summary</span>
         <InfoTooltip
@@ -16,8 +16,7 @@
     <!-- Essentials guidance: start simple, go deeper when ready -->
     <div
       v-if="fwProgress.completeCount < 6"
-      class="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
-      style="max-width: 1100px"
+      class="canvas-summary-column flex flex-wrap items-center justify-between gap-3 rounded-lg border border-primary-200 bg-primary-50 px-4 py-3"
     >
       <p class="text-sm text-primary-900 m-0">
         <strong>Start simple:</strong> fill in the essentials below. Click a block title to open the full section when you're ready.
@@ -26,8 +25,7 @@
     </div>
     <div
       v-else
-      class="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-800"
-      style="max-width: 1100px"
+      class="canvas-summary-column flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-4 py-2.5 text-sm text-green-800"
     >
       <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
@@ -36,7 +34,7 @@
     </div>
 
     <!-- Classic BMC-style canvas: white bg, thin grey grid, minimal layout -->
-    <div class="canvas-bmc-wrapper bg-white border-4 border-black print:shadow-none" style="max-width: 1100px">
+    <div class="canvas-summary-column canvas-bmc-wrapper bg-white border-4 border-black print:shadow-none">
       <!-- Header -->
       <div class="canvas-bmc-header flex flex-wrap items-center justify-between gap-4 px-5 py-4 border-b-2 border-black">
         <h3 class="text-xl font-semibold text-gray-900">The Agentic Automation Canvas</h3>
@@ -106,6 +104,7 @@
               </div>
               <p v-else class="italic text-gray-400" :class="{ 'canvas-fw-print-only': showProjectStrip }">Not specified</p>
               <p v-if="summary.project.stage" class="text-xs uppercase">{{ summary.project.stage }}</p>
+              <p v-if="summary.project.problemFrequency" class="text-xs">Problem occurs: {{ summary.project.problemFrequency }}</p>
               <p v-if="summary.project.primaryValueDriver" class="text-xs">Primary value: {{ summary.project.primaryValueDriver }}</p>
               <div v-if="summary.project.domain.length" class="flex flex-wrap gap-1 text-xs">
                 <span v-for="d in summary.project.domain" :key="d" class="text-gray-600">{{ d }}</span>
@@ -127,7 +126,17 @@
                   <p v-if="stage.agentCount > 0 || stage.milestoneCount > 0" class="text-gray-500">{{ stage.agentCount }} agents, {{ stage.milestoneCount }} milestones</p>
                 </div>
               </template>
-              <p v-else class="italic text-gray-400">Not specified</p>
+              <template v-if="summary.governance.firstMilestone">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">First milestone</p>
+                <p v-if="summary.governance.firstMilestone.description" class="text-xs">{{ summary.governance.firstMilestone.description }}</p>
+                <p v-if="summary.governance.firstMilestone.kpi" class="text-xs text-gray-600">Complete when: {{ summary.governance.firstMilestone.kpi }}</p>
+              </template>
+              <template v-if="summary.governance.buildTeamStatus || summary.governance.maintenanceOwnerStatus">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Ownership</p>
+                <p v-if="summary.governance.buildTeamStatus" class="text-xs">Build: {{ summary.governance.buildTeamStatus }}</p>
+                <p v-if="summary.governance.maintenanceOwnerStatus" class="text-xs">Maintain: {{ summary.governance.maintenanceOwnerStatus }}</p>
+              </template>
+              <p v-if="isEmptyGovernance(summary.governance)" class="italic text-gray-400">Not specified</p>
             </div>
           </div>
         </div>
@@ -190,7 +199,8 @@
                   class="border-l-2 border-gray-300 pl-2 py-0.5"
                   :class="{ 'canvas-fw-print-only': showTasksStrip && i === 0 }"
                 >
-                  <p class="font-medium text-gray-900">{{ t.title }}</p>
+                  <p v-if="t.title" class="font-medium text-gray-900">{{ t.title }}</p>
+                  <p v-if="t.targetPopulation" class="text-xs">For: {{ t.targetPopulation }}</p>
                   <p v-if="t.userStory" class="text-xs italic mt-0.5 user-story-text">
                     <template v-if="parseUserStory(t.userStory)">
                       <span
@@ -203,10 +213,29 @@
                   </p>
                 </div>
               </div>
-              <template v-if="summary.userExpectations.totalTimeSavedHoursPerMonth > 0 || Object.keys(summary.userExpectations.benefitTypeCounts).length">
+              <template
+                v-if="summary.userExpectations.totalTimeSavedHoursPerMonth > 0
+                  || Object.keys(summary.userExpectations.benefitTypeCounts).length
+                  || summary.userExpectations.expectedBenefitCount > 0
+                  || summary.userExpectations.successMetricCount > 0"
+              >
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Benefits</p>
                 <p v-if="summary.userExpectations.totalTimeSavedHoursPerMonth > 0" class="font-medium">
                   ~{{ summary.userExpectations.totalTimeSavedHoursPerMonth }} hrs/month saved
+                </p>
+                <p v-if="summary.userExpectations.expectedBenefitCount > 0" class="text-xs">
+                  {{ summary.userExpectations.expectedBenefitCount }} expected
+                  {{ summary.userExpectations.expectedBenefitCount === 1 ? 'benefit' : 'benefits' }}
+                  <span v-if="summary.userExpectations.successMetricCount > 0">
+                    · {{ summary.userExpectations.successMetricCount }} success
+                    {{ summary.userExpectations.successMetricCount === 1 ? 'metric' : 'metrics' }}
+                  </span>
+                  <span class="text-gray-500"> to quantify</span>
+                </p>
+                <p v-else-if="summary.userExpectations.successMetricCount > 0" class="text-xs">
+                  {{ summary.userExpectations.successMetricCount }} success
+                  {{ summary.userExpectations.successMetricCount === 1 ? 'metric' : 'metrics' }}
+                  <span class="text-gray-500">to quantify</span>
                 </p>
                 <div v-if="Object.keys(summary.userExpectations.benefitTypeCounts).length" class="flex flex-wrap gap-1 text-xs">
                   <button
@@ -266,7 +295,14 @@
                 </select>
               </div>
               <template v-if="!isEmptyDataAccess(summary.dataAccess)">
-                <p><strong>{{ summary.dataAccess.datasetCount }}</strong> datasets</p>
+                <p>
+                  <strong>{{ summary.dataAccess.datasetCount }}</strong>
+                  {{ summary.dataAccess.datasetCount === 1 ? 'dataset' : 'datasets' }}
+                </p>
+                <p v-if="summary.dataAccess.personalDataCount > 0" class="text-xs">
+                  {{ summary.dataAccess.personalDataCount === 1 ? 'Contains' : `${summary.dataAccess.personalDataCount} contain` }}
+                  personal or GDPR-sensitive data
+                </p>
                 <div v-if="Object.keys(summary.dataAccess.accessRightsSummary).length" class="text-xs">
                   <p v-for="(count, ar) in summary.dataAccess.accessRightsSummary" :key="ar">{{ ar }}: {{ count }}</p>
                 </div>
@@ -330,6 +366,22 @@
                 Total deployment cost: {{ formatDeploymentCostSummary(summary.developerFeasibility.deploymentCostTotalsPerMonth) }}/mo
               </p>
               <p v-if="summary.developerFeasibility.feasibilityNotes">{{ summary.developerFeasibility.feasibilityNotes }}</p>
+              <template v-if="summary.developerFeasibility.approaches.length">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Potential approaches</p>
+                <p class="text-xs">{{ summary.developerFeasibility.approaches.join(' · ') }}</p>
+              </template>
+              <template v-if="summary.developerFeasibility.constraints.length">
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-1">
+                  {{ summary.developerFeasibility.constraints.length }} constraint{{ summary.developerFeasibility.constraints.length === 1 ? '' : 's' }} to investigate
+                </p>
+                <div class="flex flex-wrap gap-1 text-xs">
+                  <span
+                    v-for="constraint in summary.developerFeasibility.constraints"
+                    :key="constraint"
+                    class="canvas-constraint-tag"
+                  >{{ constraint }}</span>
+                </div>
+              </template>
               <div v-if="summary.userExpectations.taskCount > 0" class="mt-2">
                 <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">
                   Task-level feasibility: {{ summary.developerFeasibility.tasksWithDedicatedFeasibility.length }} of {{ summary.userExpectations.taskCount }} tasks
@@ -460,6 +512,8 @@ import { useCanvasData } from '@/composables/useCanvasData'
 import { computeCanvasSummary, type CanvasSummaryData, isLink, parseUserStory } from '@/utils/canvasSummary'
 import { computeFrameworkProgress } from '@/utils/frameworkProgress'
 import { formatDeploymentCost } from '@/utils/deploymentCost'
+import { createCanvasId } from '@/utils/simplifiedCanvas'
+import type { PrimaryRequirementPatch } from '@/utils/simplifiedCanvas'
 import type { Dataset, Deliverable, Requirement } from '@/types/canvas'
 import InfoTooltip from '../InfoTooltip.vue'
 import CanvasBlockIcon from './CanvasBlockIcon.vue'
@@ -468,10 +522,10 @@ const {
   canvasData,
   requestSection,
   updateProject,
-  updateUserExpectations,
   updateDeveloperFeasibility,
-  updateDataAccess,
   updateOutcomes,
+  patchPrimaryRequirement,
+  patchFirstDataset,
 } = useCanvasData()
 
 const summary = computed<CanvasSummaryData>(() => computeCanvasSummary(canvasData.value))
@@ -532,32 +586,17 @@ const firstTask = computed<Requirement | undefined>(() => canvasData.value.userE
 const firstDataset = computed<Dataset | undefined>(() => canvasData.value.dataAccess?.datasets?.[0])
 const firstDeliverable = computed<Deliverable | undefined>(() => canvasData.value.outcomes?.deliverables?.[0])
 
-function patchFirstTask(patch: Partial<Requirement>) {
-  const requirements = canvasData.value.userExpectations?.requirements || []
-  if (requirements.length === 0) {
-    updateUserExpectations({ requirements: [{ id: `req-${Date.now()}`, title: '', benefits: [], ...patch }] })
-  } else {
-    const updated = [...requirements]
-    updated[0] = { ...updated[0], ...patch }
-    updateUserExpectations({ requirements: updated })
-  }
+// The strips write through the same helpers as the simplified canvas, so both
+// views share one primary requirement, dataset and first deliverable instead of
+// forking a second set of lazily created parents.
+function patchFirstTask(patch: PrimaryRequirementPatch) {
+  patchPrimaryRequirement(patch)
 }
 
 function setTechnicalRisk(value: string) {
   updateDeveloperFeasibility({
     technicalRisk: (value || undefined) as 'low' | 'medium' | 'high' | 'critical' | undefined,
   })
-}
-
-function patchFirstDataset(patch: Partial<Dataset>) {
-  const datasets = canvasData.value.dataAccess?.datasets || []
-  if (datasets.length === 0) {
-    updateDataAccess({ datasets: [{ id: `dataset-${Date.now()}`, title: '', ...patch }] })
-  } else {
-    const updated = [...datasets]
-    updated[0] = { ...updated[0], ...patch }
-    updateDataAccess({ datasets: updated })
-  }
 }
 
 const personalDataAnswer = computed(() => {
@@ -574,7 +613,7 @@ function setPersonalDataAnswer(answer: string) {
 function patchFirstDeliverable(patch: Partial<Deliverable>) {
   const deliverables = canvasData.value.outcomes?.deliverables || []
   if (deliverables.length === 0) {
-    updateOutcomes({ deliverables: [{ id: `deliverable-${Date.now()}`, title: '', type: '', ...patch }] })
+    updateOutcomes({ deliverables: [{ id: createCanvasId('deliverable'), title: '', type: '', ...patch }] })
   } else {
     const updated = [...deliverables]
     updated[0] = { ...updated[0], ...patch }
@@ -597,11 +636,17 @@ function formatDeploymentCostSummary(totals: Record<string, number>): string {
 
 function isEmptyProject(p: CanvasSummaryData['project']): boolean {
   const noTitle = !p.title || p.title === 'Untitled Project'
-  return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver && p.domain.length === 0
+  return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver
+    && !p.problemFrequency && p.domain.length === 0
 }
 
 function isEmptyUserExpectations(u: CanvasSummaryData['userExpectations']): boolean {
   return u.taskCount === 0 && Object.keys(u.benefitTypeCounts).length === 0 && u.tasks.length === 0
+    && u.expectedBenefitCount === 0 && u.successMetricCount === 0
+}
+
+function isEmptyGovernance(g: CanvasSummaryData['governance']): boolean {
+  return g.stages.length === 0 && !g.firstMilestone && !g.buildTeamStatus && !g.maintenanceOwnerStatus
 }
 
 function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility']): boolean {
@@ -614,6 +659,8 @@ function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility'
     d.amortizationMonths === null &&
     !d.feasibilityNotes.trim() &&
     d.tasksWithDedicatedFeasibility.length === 0 &&
+    d.constraints.length === 0 &&
+    d.approaches.length === 0 &&
     !hasDeploymentCost
   )
 }
@@ -636,6 +683,12 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
 </script>
 
 <style scoped>
+.canvas-summary-column {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .canvas-bmc-wrapper {
   box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
 }
@@ -700,6 +753,13 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
 }
 .canvas-benefit-tag:hover {
   background: rgb(243 244 246);
+}
+
+.canvas-constraint-tag {
+  padding: 0.125rem 0.375rem;
+  border: 1px solid rgb(107 114 128);
+  font-size: 0.75rem;
+  color: rgb(55 65 81);
 }
 
 .canvas-bmc-content {

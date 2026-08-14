@@ -41,11 +41,15 @@ The specification is organized into several sections:
 
 ## Schema Version
 
-The current schema version is **0.16.0 (Beta)**. The schema follows semantic versioning. <!-- x-release-please-version -->
+The current schema version is **0.17.1 (Beta)**. The schema follows semantic versioning independently from the web application release.
 
 !!! warning "Beta Testing Phase"
-    Version 0.16.0 is a **beta release** for testing and feedback. The schema structure and fields <!-- x-release-please-version -->
+    Version 0.17.1 is a **beta release** for testing and feedback. The schema structure and fields
     may change before the stable 1.0.0 release. We welcome feedback and contributions during this phase.
+
+Version 0.17.1 is an additive, backward-compatible beta patch that introduces optional
+simplified-canvas fields and an unclassified benefit branch. It is a documented beta
+exception to the normal patch-version policy.
 
 See the [Conformance](conformance.md) section for details on versioning and compatibility.
 

@@ -3,24 +3,34 @@
  * Generates ZIP file with ro-crate-metadata.json, ro-crate-preview.html, and README
  */
 
-import JSZip from 'jszip'
+import type JSZip from 'jszip'
 import type { ROCrateJSONLD } from '@/types/rocrate'
 import type { CanvasData } from '@/types/canvas'
-import type { BenefitDisplayState } from '@/types/benefitDisplay'
+import {
+  hasCustomBenefitDisplay,
+  type BenefitDisplayState,
+} from '@/types/benefitDisplay'
 import { computeCanvasSummary } from './canvasSummary'
 import { generateCanvasPreviewHtml } from './generateCanvasPreviewHtml'
 import { generateAgentInstructions } from './agent-instructions'
+
+async function createZip(): Promise<JSZip> {
+  const { default: JSZip } = await import('jszip')
+  return new JSZip()
+}
 
 /**
  * Generate README content for RO-Crate
  */
 function generateReadme(rocrate: ROCrateJSONLD, projectName: string): string {
+  const root = rocrate['@graph'].find((entity) => entity['@id'] === './')
+  const isPartial = root?.['aac:partialCanvas'] === true
   const project = rocrate['@graph'].find(
     (entity) => entity['@type']?.includes('Project') || entity['@type']?.includes('ResearchProject')
   )
 
-  const title = (project as any)?.name || projectName
-  const description = (project as any)?.description || ''
+  const title = typeof project?.name === 'string' ? project.name : projectName
+  const description = typeof project?.description === 'string' ? project.description : ''
 
   return `# ${title}
 
@@ -29,6 +39,7 @@ ${description}
 ## RO-Crate Package
 
 This RO-Crate package contains metadata describing an Agentic Automation Canvas project.
+${isPartial ? '\n> **Partial canvas:** This draft was exported with unanswered prompts. It does not claim conformance to the current AAC profile.\n' : ''}
 
 ### Contents
 
@@ -40,8 +51,9 @@ This RO-Crate package contains metadata describing an Agentic Automation Canvas 
 
 ### Standards Compliance
 
-This RO-Crate follows:
+This RO-Crate ${isPartial ? 'uses' : 'follows'}:
 - RO-Crate specification
+${isPartial ? '- AAC vocabulary terms on a best-effort basis (partial draft; AAC profile conformance is not claimed)' : '- The current Agentic Automation Canvas RO-Crate profile'}
 - Schema.org vocabularies (Project, ResearchProject, CreativeWork)
 - W3C DCAT (Data Catalog Vocabulary)
 - W3C PROV-O (Provenance Ontology)
@@ -83,7 +95,7 @@ export async function downloadROCrateZip(
   canvasData?: CanvasData,
   benefitDisplay?: BenefitDisplayState
 ): Promise<void> {
-  const zip = new JSZip()
+  const zip = await createZip()
 
   if (canvasData) {
     const summary = computeCanvasSummary(canvasData)
@@ -96,10 +108,7 @@ export async function downloadROCrateZip(
   // Add ro-crate-metadata.json
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
 
-  const hasBenefitDisplay =
-    (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
-    (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
-  if (hasBenefitDisplay) {
+  if (hasCustomBenefitDisplay(benefitDisplay)) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
 
@@ -137,7 +146,7 @@ export async function buildROCrateZipBuffer(
   canvasData?: CanvasData,
   benefitDisplay?: BenefitDisplayState
 ): Promise<ArrayBuffer> {
-  const zip = new JSZip()
+  const zip = await createZip()
 
   if (canvasData) {
     const summary = computeCanvasSummary(canvasData)
@@ -148,10 +157,7 @@ export async function buildROCrateZipBuffer(
   }
 
   zip.file('ro-crate-metadata.json', JSON.stringify(rocrate, null, 2))
-  const hasBenefitDisplay =
-    (benefitDisplay?.displayGroups?.length ?? 0) > 0 ||
-    (benefitDisplay?.displayGroupCount != null && benefitDisplay.displayGroupCount !== 5)
-  if (hasBenefitDisplay) {
+  if (hasCustomBenefitDisplay(benefitDisplay)) {
     zip.file('benefit-display.json', JSON.stringify(benefitDisplay, null, 2))
   }
   if (canvasData) {

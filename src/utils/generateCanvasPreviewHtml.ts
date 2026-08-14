@@ -1,6 +1,6 @@
 /**
  * Generate self-contained HTML preview of the canvas summary for RO-Crate export.
- * Matches the BMC-style layout from CanvasSummary.vue.
+ * Matches the BMC-style layout from SimplifiedCanvas.vue.
  */
 
 import type { CanvasData } from '@/types/canvas'
@@ -24,11 +24,30 @@ function escapeHtml(str: string): string {
 
 function isEmptyProject(p: CanvasSummaryData['project']): boolean {
   const noTitle = !p.title || p.title === 'Untitled Project'
-  return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver && p.domain.length === 0
+  return noTitle && !p.description && !p.stage && !p.headlineValue && !p.primaryValueDriver
+    && !p.problemFrequency && p.domain.length === 0
 }
 
 function isEmptyUserExpectations(u: CanvasSummaryData['userExpectations']): boolean {
   return u.taskCount === 0 && Object.keys(u.benefitTypeCounts).length === 0 && u.tasks.length === 0
+    && u.expectedBenefitCount === 0 && u.successMetricCount === 0
+}
+
+function isEmptyGovernance(g: CanvasSummaryData['governance']): boolean {
+  return g.stages.length === 0 && !g.firstMilestone && !g.buildTeamStatus && !g.maintenanceOwnerStatus
+}
+
+/** Unclassified benefits and metrics awaiting quantification in the full canvas. */
+function formatLightweightBenefitsHtml(u: CanvasSummaryData['userExpectations']): string {
+  const parts: string[] = []
+  if (u.expectedBenefitCount > 0) {
+    parts.push(`${u.expectedBenefitCount} expected ${u.expectedBenefitCount === 1 ? 'benefit' : 'benefits'}`)
+  }
+  if (u.successMetricCount > 0) {
+    parts.push(`${u.successMetricCount} success ${u.successMetricCount === 1 ? 'metric' : 'metrics'}`)
+  }
+  if (parts.length === 0) return ''
+  return `<p class="text-xs">${escapeHtml(parts.join(' · '))} <span class="text-gray-500">to quantify</span></p>`
 }
 
 function formatDeploymentCostSummaryHtml(totals: Record<string, number>): string {
@@ -48,6 +67,8 @@ function isEmptyDeveloperFeasibility(d: CanvasSummaryData['developerFeasibility'
     d.amortizationMonths === null &&
     !d.feasibilityNotes.trim() &&
     d.tasksWithDedicatedFeasibility.length === 0 &&
+    d.constraints.length === 0 &&
+    d.approaches.length === 0 &&
     !hasDeploymentCost
   )
 }
@@ -117,6 +138,7 @@ export function generateCanvasPreviewHtml(
       <p class="font-semibold">${escapeHtml(summary.project.title)}</p>
       ${summary.project.description ? `<p class="text-gray-600">${escapeHtml(summary.project.description)}</p>` : ''}
       ${summary.project.stage ? `<p class="text-xs uppercase">${escapeHtml(summary.project.stage)}</p>` : ''}
+      ${summary.project.problemFrequency ? `<p class="text-xs">Problem occurs: ${escapeHtml(summary.project.problemFrequency)}</p>` : ''}
       ${summary.project.headlineValue ? `<p class="font-medium">${escapeHtml(summary.project.headlineValue)}</p>` : ''}
       ${summary.project.primaryValueDriver ? `<p class="text-xs">Primary value: ${escapeHtml(summary.project.primaryValueDriver)}</p>` : ''}
       ${summary.project.domain.length ? `<div class="flex flex-wrap gap-1 text-xs">${summary.project.domain.map((d) => `<span class="text-gray-600">${escapeHtml(d)}</span>`).join('')}</div>` : ''}
@@ -124,10 +146,10 @@ export function generateCanvasPreviewHtml(
   }
 
   let governanceContent = ''
-  if (!summary.governance.stages.length) {
+  if (isEmptyGovernance(summary.governance)) {
     governanceContent = '<p class="italic text-gray-400">Not specified</p>'
   } else {
-    governanceContent = summary.governance.stages
+    const stagesHtml = summary.governance.stages
       .map(
         (s) =>
           `<div class="border-l-2 border-black pl-2 text-xs">
@@ -137,6 +159,19 @@ export function generateCanvasPreviewHtml(
           </div>`
       )
       .join('')
+    const milestone = summary.governance.firstMilestone
+    const milestoneHtml = milestone
+      ? `<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">First milestone</p>
+         ${milestone.description ? `<p class="text-xs">${escapeHtml(milestone.description)}</p>` : ''}
+         ${milestone.kpi ? `<p class="text-xs text-gray-600">Complete when: ${escapeHtml(milestone.kpi)}</p>` : ''}`
+      : ''
+    const ownershipHtml =
+      summary.governance.buildTeamStatus || summary.governance.maintenanceOwnerStatus
+        ? `<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Ownership</p>
+           ${summary.governance.buildTeamStatus ? `<p class="text-xs">Build: ${escapeHtml(summary.governance.buildTeamStatus)}</p>` : ''}
+           ${summary.governance.maintenanceOwnerStatus ? `<p class="text-xs">Maintain: ${escapeHtml(summary.governance.maintenanceOwnerStatus)}</p>` : ''}`
+        : ''
+    governanceContent = `${stagesHtml}${milestoneHtml}${ownershipHtml}`
   }
 
   let expectationsContent = ''
@@ -147,17 +182,21 @@ export function generateCanvasPreviewHtml(
       .map(
         (t) => `
         <div class="border-l-2 border-gray-300 pl-2 py-0.5">
-          <p class="font-medium text-gray-900">${escapeHtml(t.title)}</p>
+          ${t.title ? `<p class="font-medium text-gray-900">${escapeHtml(t.title)}</p>` : ''}
+          ${t.targetPopulation ? `<p class="text-xs">For: ${escapeHtml(t.targetPopulation)}</p>` : ''}
           ${t.userStory ? `<p class="text-xs italic mt-0.5 user-story-text">${renderUserStory(t.userStory)}</p>` : ''}
         </div>`
       )
       .join('')
+    const lightweightBenefitsHtml = formatLightweightBenefitsHtml(summary.userExpectations)
     const benefitsHtml =
       summary.userExpectations.totalTimeSavedHoursPerMonth > 0 ||
-      Object.keys(summary.userExpectations.benefitTypeCounts).length
+      Object.keys(summary.userExpectations.benefitTypeCounts).length ||
+      lightweightBenefitsHtml
         ? `
         <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Benefits</p>
         ${summary.userExpectations.totalTimeSavedHoursPerMonth > 0 ? `<p class="font-medium">~${summary.userExpectations.totalTimeSavedHoursPerMonth} hrs/month saved</p>` : ''}
+        ${lightweightBenefitsHtml}
         ${
           Object.keys(summary.userExpectations.benefitTypeCounts).length
             ? `<div class="flex flex-wrap gap-1 text-xs">${Object.entries(summary.userExpectations.benefitTypeCounts)
@@ -170,7 +209,7 @@ export function generateCanvasPreviewHtml(
         }`
         : ''
     expectationsContent = `
-      <p><strong>${summary.userExpectations.taskCount}</strong> tasks</p>
+      <p><strong>${summary.userExpectations.taskCount}</strong> ${summary.userExpectations.taskCount === 1 ? 'task' : 'tasks'}</p>
       ${tasksHtml}
       ${benefitsHtml}
     `
@@ -188,8 +227,10 @@ export function generateCanvasPreviewHtml(
     const sensitivityHtml = summary.dataAccess.sensitivitySummary.length
       ? summary.dataAccess.sensitivitySummary.map((s) => `<span class="text-gray-600">${escapeHtml(s)}</span>`).join('')
       : ''
+    const personalDataCount = summary.dataAccess.personalDataCount
     dataAccessContent = `
-      <p><strong>${summary.dataAccess.datasetCount}</strong> datasets</p>
+      <p><strong>${summary.dataAccess.datasetCount}</strong> ${summary.dataAccess.datasetCount === 1 ? 'dataset' : 'datasets'}</p>
+      ${personalDataCount > 0 ? `<p class="text-xs">${personalDataCount === 1 ? 'Contains' : `${personalDataCount} contain`} personal or GDPR-sensitive data</p>` : ''}
       ${accessRightsHtml ? `<div class="text-xs">${accessRightsHtml}</div>` : ''}
       ${sensitivityHtml ? `<div class="flex flex-wrap gap-1 text-xs">${sensitivityHtml}</div>` : ''}
     `
@@ -228,6 +269,20 @@ export function generateCanvasPreviewHtml(
       ${summary.developerFeasibility.amortizationMonths != null ? `<p class="text-xs">~${summary.developerFeasibility.amortizationMonths.toFixed(1)} mo until amortization</p>` : ''}
       ${formatDeploymentCostSummaryHtml(summary.developerFeasibility.deploymentCostTotalsPerMonth)}
       ${summary.developerFeasibility.feasibilityNotes ? `<p>${escapeHtml(summary.developerFeasibility.feasibilityNotes)}</p>` : ''}
+      ${
+        summary.developerFeasibility.approaches.length
+          ? `<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-0.5">Potential approaches</p>
+             <p class="text-xs">${escapeHtml(summary.developerFeasibility.approaches.join(' · '))}</p>`
+          : ''
+      }
+      ${
+        summary.developerFeasibility.constraints.length
+          ? `<p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mt-2 mb-1">${summary.developerFeasibility.constraints.length} constraint${summary.developerFeasibility.constraints.length === 1 ? '' : 's'} to investigate</p>
+             <div class="flex flex-wrap gap-1 text-xs">${summary.developerFeasibility.constraints
+               .map((constraint) => `<span class="px-1.5 py-0.5 border border-gray-500 text-gray-700">${escapeHtml(constraint)}</span>`)
+               .join('')}</div>`
+          : ''
+      }
       ${taskLevelHtml}
     `
   }

@@ -85,7 +85,7 @@
           <select
             :value="benefit.aggregationBasis || 'perMonth'"
             class="form-input"
-            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as any })"
+            @change="updateBenefit(index, { aggregationBasis: ($event.target as HTMLSelectElement).value as ClassifiedBenefit['aggregationBasis'] })"
           >
             <option value="perUnit">Per Unit</option>
             <option value="perMonth">Per Month</option>
@@ -112,7 +112,7 @@
           <select
             :value="getCategoricalValue(benefit.baseline)"
             class="form-input"
-            @change="updateBenefit(index, { baseline: { type: 'categorical', category: ($event.target as HTMLSelectElement).value as any } })"
+            @change="updateBenefit(index, { baseline: { type: 'categorical', category: ($event.target as HTMLSelectElement).value as Extract<BenefitValue, { type: 'categorical' }>['category'] } })"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -139,7 +139,7 @@
           <select
             :value="getCategoricalValue(benefit.expected)"
             class="form-input"
-            @change="updateBenefit(index, { expected: { type: 'categorical', category: ($event.target as HTMLSelectElement).value as any } })"
+            @change="updateBenefit(index, { expected: { type: 'categorical', category: ($event.target as HTMLSelectElement).value as Extract<BenefitValue, { type: 'categorical' }>['category'] } })"
           >
             <option value="low">Low</option>
             <option value="medium">Medium</option>
@@ -166,7 +166,7 @@
           <select
             :value="benefit.confidenceUser || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceUser: ($event.target as HTMLSelectElement).value as any || undefined })"
+            @change="updateBenefit(index, { confidenceUser: (($event.target as HTMLSelectElement).value || undefined) as ClassifiedBenefit['confidenceUser'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -179,7 +179,7 @@
           <select
             :value="benefit.confidenceDev || ''"
             class="form-input"
-            @change="updateBenefit(index, { confidenceDev: ($event.target as HTMLSelectElement).value as any || undefined })"
+            @change="updateBenefit(index, { confidenceDev: (($event.target as HTMLSelectElement).value || undefined) as ClassifiedBenefit['confidenceDev'] })"
           >
             <option value="">Select...</option>
             <option value="low">Low</option>
@@ -206,19 +206,19 @@
 
 <script setup lang="ts">
 import { ref, watch } from 'vue'
-import type { Benefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
+import type { ClassifiedBenefit, BenefitValue, BenefitDirection, ValueMeaning } from '@/types/canvas'
 import InfoTooltip from '../InfoTooltip.vue'
 
 interface Props {
-  benefits: Benefit[]
+  benefits: ClassifiedBenefit[]
 }
 
 const props = defineProps<Props>()
 const emit = defineEmits<{
-  'update': [benefits: Benefit[]]
+  'update': [benefits: ClassifiedBenefit[]]
 }>()
 
-const localBenefits = ref<Benefit[]>([])
+const localBenefits = ref<ClassifiedBenefit[]>([])
 
 watch(() => props.benefits, (newBenefits) => {
   localBenefits.value = newBenefits.map(b => ({ ...b }))
@@ -259,7 +259,7 @@ function isCategoricalMetric(metricId: string): boolean {
   return metricDefaults[metricId]?.isCategorical || false
 }
 
-function createDefaultBenefit(): Benefit {
+function createDefaultBenefit(): ClassifiedBenefit {
   const defaults = getMetricDefaults('complianceIncidents')
   return {
     benefitType: 'risk',
@@ -284,7 +284,7 @@ function removeBenefit(index: number) {
   emitUpdate()
 }
 
-function updateBenefit(index: number, updates: Partial<Benefit>) {
+function updateBenefit(index: number, updates: Partial<ClassifiedBenefit>) {
   localBenefits.value = localBenefits.value.map((b, i) => 
     i === index ? { ...b, ...updates } : b
   )
@@ -294,7 +294,7 @@ function updateBenefit(index: number, updates: Partial<Benefit>) {
 function handleMetricChange(index: number, metricId: string) {
   const useCategorical = isCategoricalMetric(metricId)
   const defaults = getMetricDefaults(metricId)
-  const updates: Partial<Benefit> = {
+  const updates: Partial<ClassifiedBenefit> = {
     metricId,
     metricLabel: getMetricLabel(metricId),
     benefitUnit: getDefaultUnit(metricId),
@@ -314,7 +314,7 @@ function handleMetricChange(index: number, metricId: string) {
 }
 
 function handleValueTypeChange(index: number, valueType: string) {
-  const updates: Partial<Benefit> = {}
+  const updates: Partial<ClassifiedBenefit> = {}
   
   if (valueType === 'categorical') {
     updates.baseline = { type: 'categorical', category: 'high' }

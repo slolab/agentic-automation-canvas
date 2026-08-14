@@ -8,10 +8,7 @@
   "extra-files": [
     "pyproject.toml",
     "README.md",
-    "docs/index.md",
-    "docs/spec/index.md",
-    "docs/spec/conformance.md",
-    "docs/schema/index.md"
+    "docs/index.md"
   ],
   "packages": {
     ".": {}

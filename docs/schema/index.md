@@ -23,13 +23,19 @@ YAML representation of the schema:
 
 ## Schema Version
 
-Current schema version: **0.16.0** (Beta) <!-- x-release-please-version -->
+Current schema version: **0.17.1** (Beta)
 
 !!! warning "Beta Status"
     This schema is currently in **beta testing**. The structure and fields may change before the 1.0.0 release. 
     Feedback and testing are welcome during this phase.
 
-The schema `$id` is: `https://w3id.org/aac/schema/aac.schema.json`
+The exact versioned schema `$id` is:
+`https://w3id.org/aac/schema/0.17.1/aac.schema.json`. The stable
+`https://w3id.org/aac/schema/aac.schema.json` alias resolves to the current schema.
+
+Version 0.17.1 is an additive, backward-compatible beta patch. It introduces optional
+simplified-canvas fields and an unclassified benefit branch without invalidating 0.17.0
+documents. This is a documented beta exception to the normal patch-version policy.
 
 ## Usage
 

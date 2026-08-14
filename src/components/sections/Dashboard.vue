@@ -344,8 +344,9 @@ import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
 import { generateDependencyMermaid, hasDependencies } from '@/utils/dependencyGraph'
-import type { Requirement, Benefit } from '@/types/canvas'
+import type { Requirement, ClassifiedBenefit } from '@/types/canvas'
 import { getMonthlyDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
+import { isBenefitOfType, isClassifiedBenefit } from '@/utils/benefits'
 
 const { canvasData, benefitDisplay } = useCanvasData()
 
@@ -577,7 +578,7 @@ const displayGroupsWithBenefits = computed(() => {
         .map((ref) => {
           const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
           const benefit = req?.benefits?.[ref.benefitIndex]
-          if (!req || !benefit) return null
+          if (!req || !benefit || !isClassifiedBenefit(benefit)) return null
           const taskDescription = req.title || req.description || ref.requirementId
           const valueDisplay = formatBenefitValueDisplay(benefit)
           return { taskDescription, valueDisplay }
@@ -588,8 +589,8 @@ const displayGroupsWithBenefits = computed(() => {
 })
 
 // Helper to get time benefit from a requirement
-function getTimeBenefit(req: Requirement): Benefit | undefined {
-  return (req.benefits || []).find(b => b.benefitType === 'time')
+function getTimeBenefit(req: Requirement): ClassifiedBenefit | undefined {
+  return (req.benefits || []).find(b => isBenefitOfType(b, 'time'))
 }
 
 

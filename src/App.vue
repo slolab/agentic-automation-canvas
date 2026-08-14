@@ -1,226 +1,222 @@
 <template>
   <div
     id="app"
-    class="flex flex-col min-h-screen"
+    class="flex min-h-screen flex-col overflow-x-clip bg-gray-50"
     @dragenter.prevent="onDragEnter"
     @dragover.prevent
     @dragleave="onDragLeave"
     @drop.prevent="onDrop"
   >
-    <header class="bg-white shadow-sm border-b border-gray-200">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div class="flex items-start justify-between">
-          <div class="flex items-center gap-3">
-            <img :src="`${baseUrl}logo.svg`" alt="" class="h-10 w-10 shrink-0" />
-            <div>
-              <h1 class="text-2xl font-bold text-gray-900">Agentic Automation Canvas</h1>
-            <p class="text-sm text-gray-600 mt-1">
-              Stop guessing—structured guidance for expectations, progress, and governance
-            </p>
-            </div>
-          </div>
-          <div ref="headerActionsRef" class="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-3">
+    <header class="sticky top-0 z-50 border-b border-gray-200 bg-white/95 shadow-sm backdrop-blur">
+      <div class="mx-auto flex min-h-14 max-w-[1800px] items-center gap-4 px-4 py-2 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 items-center gap-2.5">
+          <img :src="`${baseUrl}logo.svg`" alt="" class="h-9 w-9 shrink-0" />
+          <div class="flex min-w-0 items-center gap-1.5">
+            <h1 class="truncate text-lg font-bold leading-tight text-gray-950 sm:text-xl">Agentic Automation Canvas</h1>
             <button
               type="button"
-              @click="openInfo"
-              class="flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-              title="Learn about Agentic Automation Canvas"
+              class="shrink-0 rounded-md p-1 text-gray-500 hover:bg-gray-100 hover:text-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-600"
+              aria-label="Open general information about Agentic Automation Canvas"
+              title="About the Agentic Automation Canvas"
+              @click="openGeneralGuidance"
             >
-              <svg
-                class="w-4 h-4 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span v-show="headerActionsMode === 'full'">What is this?</span>
-              <span v-show="headerActionsMode === 'short'">About</span>
+              <InfoIcon />
+            </button>
+          </div>
+        </div>
+
+        <div ref="headerActionsRef" class="ml-auto flex min-w-0 flex-1 items-center justify-end gap-1.5 sm:gap-2">
+          <div
+            class="inline-flex shrink-0 rounded-lg border border-gray-300 bg-gray-100 p-1 shadow-inner"
+            role="group"
+            aria-label="Canvas view"
+          >
+            <button
+              type="button"
+              :aria-pressed="canvasView === 'simplified'"
+              :class="[
+                'rounded-md px-2.5 py-1.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-1',
+                canvasView === 'simplified'
+                  ? 'bg-white text-primary-800 shadow-sm'
+                  : 'text-gray-600 hover:bg-white/60 hover:text-gray-950',
+              ]"
+              @click="setCanvasView('simplified')"
+            >
+              Simplified
             </button>
             <button
               type="button"
-              @click="loadExample"
+              :aria-pressed="canvasView === 'detailed'"
               :class="[
-                'flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors',
-                showLoadExampleHint && 'load-example-hint-pulse',
+                'relative rounded-md px-2.5 py-1.5 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-primary-600 focus:ring-offset-1',
+                canvasView === 'detailed'
+                  ? 'bg-white text-primary-800 shadow-sm'
+                  : 'text-gray-600 hover:bg-white/60 hover:text-gray-950',
               ]"
-              title="Load example dataset"
+              @click="setCanvasView('detailed')"
             >
-              <svg
-                class="w-4 h-4 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
+              Advanced
+            </button>
+          </div>
+
+          <template v-if="!hasMeaningfulContent">
+            <button
+              type="button"
+              class="header-action"
+              aria-label="Show Example canvas"
+              @click="loadExample"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5.59a1 1 0 0 1 .7.29l5.42 5.42a1 1 0 0 1 .29.7V19a2 2 0 0 1-2 2Z" />
               </svg>
-              <span v-show="headerActionsMode === 'full'">Load Example</span>
-              <span v-show="headerActionsMode === 'short'">Example</span>
+              <span v-show="headerActionsMode !== 'icon'" class="whitespace-nowrap">Show Example</span>
             </button>
             <ImportButton :header-actions-mode="headerActionsMode" />
-          </div>
+          </template>
+          <template v-else>
+            <button
+              type="button"
+              class="header-action"
+              aria-label="Clear Canvas"
+              @click="clearData"
+            >
+              <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.87 12.14A2 2 0 0 1 16.14 21H7.86a2 2 0 0 1-1.99-1.86L5 7m5 4v6m4-6v6m1-10V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v3M4 7h16" />
+              </svg>
+              <span v-show="headerActionsMode !== 'icon'">Clear Canvas</span>
+            </button>
+          </template>
+          <button
+            v-if="hasMeaningfulContent"
+            type="button"
+            class="btn-primary flex shrink-0 items-center gap-2"
+            aria-label="Download RO-Crate"
+            title="Download this canvas as an RO-Crate. Incomplete canvases can be exported as partial drafts."
+            @click="requestDownloadROCrate"
+          >
+            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-4-4 4m0 0-4-4m4 4V4" />
+            </svg>
+            <span v-show="headerActionsMode === 'full'">Download RO-Crate</span>
+            <span v-show="headerActionsMode === 'short'">Download</span>
+          </button>
         </div>
       </div>
     </header>
-    
-    <main class="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-28 w-full">
-      <CanvasForm />
+
+    <!-- Both canvas views sit on a floating white card over the grey page ground. -->
+    <main class="w-full flex-1 bg-gray-50 py-8">
+      <div class="mx-auto w-full max-w-[1800px] px-4 sm:px-6 lg:px-8">
+        <CanvasForm v-model:view-mode="canvasView" />
+      </div>
     </main>
-    
-    <!-- Bot Assistant -->
-    <BotAssistant />
-    
-    <!-- Info Overlay -->
-    <InfoOverlay ref="infoOverlay" />
-    
-    <footer class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-40">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 min-w-0">
-        <div class="flex flex-nowrap items-center gap-4 min-w-0">
-          <div
-            class="flex min-w-0 flex-col gap-1 text-sm text-gray-500"
-            :class="footerActionsMode === 'icon' ? 'flex-[2]' : 'flex-1'"
+
+    <footer class="mt-8 border-t border-gray-200 bg-gray-50">
+      <div class="mx-auto flex max-w-[1800px] flex-wrap items-center gap-x-6 gap-y-4 px-4 py-5 text-sm text-gray-600 sm:px-6 lg:px-8">
+        <div class="flex min-w-0 flex-1 flex-wrap items-center gap-x-3 gap-y-2">
+          <span class="font-semibold text-gray-800">Agentic Automation Canvas</span>
+          <span
+            class="inline-flex items-center rounded-full border border-primary-200 bg-primary-100 px-2.5 py-0.5 text-xs font-medium text-primary-800"
+            title="Application version"
           >
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-              <p class="font-medium text-gray-700">Agentic Automation Canvas</p>
-              <a
-                href="https://github.com/slolab/agentic-automation-canvas"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-primary-600 hover:text-primary-800 underline flex items-center gap-1 shrink-0"
-              >
-                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                  <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
-                </svg>
-                <span>View on GitHub</span>
-              </a>
-            </div>
-            <div class="flex flex-wrap items-center gap-2 sm:gap-3">
-              <span
-                class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 border border-primary-200 shrink-0"
-                title="App version (from package.json at build time)"
-              >
-                v{{ appVersion }}
-              </span>
-              <span class="text-gray-400 text-xs italic">Read the paper: <a
-                href="https://slolab.github.io/aac-manuscript/"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-primary-600 hover:text-primary-800 underline"
-              >online</a> / <a
-                href="https://arxiv.org/abs/2602.15090"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-primary-600 hover:text-primary-800 underline"
-              >arXiv</a></span>
-            </div>
-          </div>
+            v{{ appVersion }}
+          </span>
           <a
-            href="https://slolab.ai"
+            href="https://github.com/slolab/agentic-automation-canvas"
             target="_blank"
             rel="noopener noreferrer"
-            class="flex shrink-0 items-center gap-1.5"
-            title="slolab"
-          >
-            <img src="/slolab.png" alt="slolab" class="h-8 w-auto" />
-            <span class="text-[10px] sm:text-xs leading-tight text-gray-400 whitespace-nowrap">
-              made by<br />slolab
-            </span>
-          </a>
-          <div ref="footerActionsRef" class="flex min-w-0 flex-1 flex-nowrap items-center justify-end gap-3">
+            class="font-medium text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
+          >GitHub</a>
+          <a
+            :href="`${baseUrl}docs/`"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="font-medium text-primary-700 underline hover:text-primary-900 focus:outline-none focus:ring-2 focus:ring-primary-600"
+          >Documentation</a>
+          <span class="text-xs text-gray-500">
+            Read the paper:
             <a
-              :href="`${baseUrl}docs/`"
+              href="https://slolab.github.io/aac-manuscript/"
               target="_blank"
               rel="noopener noreferrer"
-              class="flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-              title="View documentation"
-            >
-              <svg
-                class="w-4 h-4 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-                />
-              </svg>
-              <span v-show="footerActionsMode === 'full'">Documentation</span>
-              <span v-show="footerActionsMode === 'short'">Docs</span>
-            </a>
-            <button
-              type="button"
-              @click="clearData"
-              class="flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-              title="Clear all form data"
-            >
-              <svg
-                class="w-4 h-4 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              <span v-show="footerActionsMode === 'full'">Clear Form</span>
-              <span v-show="footerActionsMode === 'short'">Clear</span>
-            </button>
-            <button
-              type="button"
-              @click="downloadROCrate"
-              :disabled="!canDownload"
-              class="btn-primary disabled:opacity-50 disabled:cursor-not-allowed flex shrink-0 items-center gap-2"
-            >
-              <svg
-                class="w-5 h-5 shrink-0"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-                />
-              </svg>
-              <span v-show="footerActionsMode === 'full'">Download RO-Crate</span>
-              <span v-show="footerActionsMode === 'short'">Download</span>
-            </button>
-          </div>
+              class="text-primary-700 underline hover:text-primary-900"
+            >HTML</a>
+            ·
+            <a
+              href="https://arxiv.org/abs/2602.15090"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary-700 underline hover:text-primary-900"
+            >arXiv</a>
+          </span>
         </div>
+        <a
+          href="https://slolab.ai"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="flex shrink-0 items-center gap-2 rounded-sm focus:outline-none focus:ring-2 focus:ring-primary-600"
+          title="Visit slolab"
+        >
+          <img :src="`${baseUrl}slolab.png`" alt="slolab" class="h-8 w-auto" />
+          <span class="whitespace-nowrap text-xs leading-tight text-gray-500">made by<br />slolab</span>
+        </a>
       </div>
     </footer>
 
-    <!-- Drag-and-drop overlay -->
+    <GuidanceSidebar />
+
+    <Teleport to="body">
+      <div
+        v-if="showPartialDialog"
+        class="fixed inset-0 z-[80] flex items-center justify-center p-4"
+        @keydown="handlePartialDialogKeydown"
+      >
+        <div class="absolute inset-0 bg-gray-950/40" aria-hidden="true" @click="closePartialDialog" />
+        <section
+          ref="partialDialogPanel"
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="partial-dialog-title"
+          aria-describedby="partial-dialog-description"
+          class="relative max-h-[calc(100vh-2rem)] w-full max-w-xl overflow-y-auto rounded-xl bg-white p-6 shadow-2xl"
+        >
+          <h2 id="partial-dialog-title" class="text-xl font-bold text-gray-950">This canvas is still partial</h2>
+          <p id="partial-dialog-description" class="mt-2 text-sm leading-6 text-gray-700">
+            {{ pendingMissingPrompts.length }} simplified prompt{{ pendingMissingPrompts.length === 1 ? ' is' : 's are' }} unanswered. You can keep editing, or export a clearly marked partial RO-Crate that does not claim AAC profile conformance.
+          </p>
+          <ul class="mt-4 max-h-64 space-y-1 overflow-y-auto rounded-lg bg-gray-50 p-4 text-sm text-gray-700">
+            <li v-for="prompt in pendingMissingPrompts" :key="prompt.id">
+              <strong>{{ prompt.section }}:</strong> {{ prompt.label }}
+            </li>
+          </ul>
+          <div class="mt-6 flex flex-wrap justify-end gap-3">
+            <button
+              ref="continueEditingButton"
+              type="button"
+              class="btn-secondary"
+              @click="continueEditing"
+            >
+              Continue editing
+            </button>
+            <button type="button" class="btn-primary" @click="exportPartialCanvas">
+              Export anyway
+            </button>
+          </div>
+        </section>
+      </div>
+    </Teleport>
+
     <Teleport to="body">
       <div
         v-if="isDragging"
-        class="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 pointer-events-none"
+        class="pointer-events-none fixed inset-0 z-[90] flex items-center justify-center bg-black/50"
       >
-        <div class="bg-white rounded-xl shadow-2xl px-12 py-10 text-center max-w-md">
-          <svg class="w-16 h-16 mx-auto text-orange-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+        <div class="max-w-md rounded-xl bg-white px-12 py-10 text-center shadow-2xl">
+          <svg class="mx-auto mb-4 h-16 w-16 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16v1a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3v-1m-4-8-4-4m0 0L8 8m4-4v12" />
           </svg>
           <p class="text-lg font-semibold text-gray-900">Drop RO-Crate ZIP to import</p>
-          <p class="text-sm text-gray-500 mt-1">This will replace your current canvas data</p>
+          <p class="mt-1 text-sm text-gray-500">This will replace your current canvas data</p>
         </div>
       </div>
     </Teleport>
@@ -228,251 +224,239 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { computed, nextTick, ref } from 'vue'
+import CanvasForm from './components/CanvasForm.vue'
+import GuidanceSidebar from './components/GuidanceSidebar.vue'
+import ImportButton from './components/ImportButton.vue'
+import InfoIcon from './components/InfoIcon.vue'
 import { useCanvasData } from './composables/useCanvasData'
+import { useGuidance } from './composables/useGuidance'
 import { useHeaderActionsMode } from './composables/useHeaderActionsMode'
 import { exampleData, exampleBenefitDisplay } from './data/example-data'
-import { generateROCrate, validateForExport, hasBlockingErrors } from './utils/rocrate'
+import { generateROCrate } from '@/rocrate/export'
 import { downloadROCrateZip } from './utils/download'
-import { importROCrateFromZip } from './utils/import'
-import CanvasForm from './components/CanvasForm.vue'
-import BotAssistant from './components/BotAssistant.vue'
-import ImportButton from './components/ImportButton.vue'
-import InfoOverlay from './components/InfoOverlay.vue'
+import { ROCrateImportError, importROCrateFromZip, isZipFile } from '@/rocrate/container'
+import { formatDiagnostics } from '@/diagnostics'
+import { CurrentCanvasValidationError } from '@/schema/validation'
+import { hasCustomBenefitDisplay } from '@/types/benefitDisplay'
+import {
+  hasMeaningfulCanvasContent,
+  missingSimplifiedPrompts,
+  simplifiedPromptDomId,
+  type MissingSimplifiedPrompt,
+} from '@/utils/simplifiedCanvasState'
 
-const { canvasData, benefitDisplay, importFromROCrate, clearData: clearCanvasData, validateAll } = useCanvasData()
-const infoOverlay = ref<InstanceType<typeof InfoOverlay> | null>(null)
+const {
+  canvasData,
+  benefitDisplay,
+  importFromROCrate,
+  clearData: clearCanvasData,
+  reportDiagnostics,
+  validateAll,
+  requestSection,
+} = useCanvasData()
+const { openGuidance } = useGuidance()
 const headerActionsRef = ref<HTMLElement | null>(null)
-const headerActionsMode = useHeaderActionsMode(headerActionsRef)
-const footerActionsRef = ref<HTMLElement | null>(null)
-// Footer right column is ~half the row; use lower breakpoints so full labels can show
-const footerActionsMode = useHeaderActionsMode(footerActionsRef, { widthFull: 480, widthShort: 260 })
+const headerActionsMode = useHeaderActionsMode(headerActionsRef, { widthFull: 850, widthShort: 620 })
 const baseUrl = import.meta.env.BASE_URL || '/'
-// Injected at build time from package.json (vite.config.ts define)
+const canvasView = ref<'simplified' | 'detailed'>('simplified')
+const hasMeaningfulContent = computed(() =>
+  hasMeaningfulCanvasContent(canvasData.value) || hasCustomBenefitDisplay(benefitDisplay.value),
+)
 const appVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : '—'
 
-const LOAD_EXAMPLE_HINT_KEY = 'aac-load-example-hint-seen'
-const showLoadExampleHint = ref(false)
+const showPartialDialog = ref(false)
+const pendingMissingPrompts = ref<MissingSimplifiedPrompt[]>([])
+const partialDialogPanel = ref<HTMLElement | null>(null)
+const continueEditingButton = ref<HTMLButtonElement | null>(null)
+let downloadTrigger: HTMLElement | null = null
 
-onMounted(() => {
-  showLoadExampleHint.value = !localStorage.getItem(LOAD_EXAMPLE_HINT_KEY)
-})
-
-const loadExample = () => {
-  localStorage.setItem(LOAD_EXAMPLE_HINT_KEY, '1')
-  showLoadExampleHint.value = false
-  if (confirm('This will replace your current data with an example dataset. Continue?')) {
-    importFromROCrate(exampleData, exampleBenefitDisplay)
-    // Don't switch tabs - stay on current tab
-  }
+function openGeneralGuidance(event: MouseEvent) {
+  openGuidance('aac', event.currentTarget as HTMLElement)
 }
 
-const openInfo = () => {
-  infoOverlay.value?.open()
+function setCanvasView(view: 'simplified' | 'detailed') {
+  canvasView.value = view
 }
 
-// Drag-and-drop RO-Crate import
+function loadExample() {
+  importFromROCrate(exampleData, exampleBenefitDisplay)
+}
+
 const isDragging = ref(false)
 let dragCounter = 0
 
-const onDragEnter = (e: DragEvent) => {
-  if (e.dataTransfer?.types.includes('Files')) {
-    dragCounter++
+function onDragEnter(event: DragEvent) {
+  if (event.dataTransfer?.types.includes('Files')) {
+    dragCounter += 1
     isDragging.value = true
   }
 }
 
-const onDragLeave = () => {
-  dragCounter--
+function onDragLeave() {
+  dragCounter -= 1
   if (dragCounter <= 0) {
     dragCounter = 0
     isDragging.value = false
   }
 }
 
-const onDrop = async (e: DragEvent) => {
+async function onDrop(event: DragEvent) {
   dragCounter = 0
   isDragging.value = false
-
-  const file = e.dataTransfer?.files?.[0]
+  const file = event.dataTransfer?.files?.[0]
   if (!file) return
 
-  const fileName = file.name.toLowerCase()
-  const isValidZip = fileName.endsWith('.zip') ||
-    file.type === 'application/zip' ||
-    file.type === 'application/x-zip-compressed'
-
-  if (!isValidZip) {
+  if (!isZipFile(file)) {
     alert('Please drop a ZIP file containing an RO-Crate.')
     return
   }
-
-  if (!confirm(`Import RO-Crate from "${file.name}"?\n\nThis will replace your current canvas data.`)) {
-    return
-  }
+  if (!confirm(`Import RO-Crate from "${file.name}"?\n\nThis will replace your current canvas data.`)) return
 
   try {
     const result = await importROCrateFromZip(file)
-    importFromROCrate(result.canvasData, result.benefitDisplay, result.crateSchemaVersion, true, result.migrationWarnings)
-    if (result.migrationWarnings && result.migrationWarnings.length > 0) {
-      alert(`RO-Crate imported successfully.\n\nMigrations applied:\n${result.migrationWarnings.join('\n')}`)
-    } else {
-      alert('RO-Crate imported successfully!')
-    }
+    importFromROCrate(result.canvasData, result.benefitDisplay, result.diagnostics)
+    alert('RO-Crate imported successfully!')
   } catch (error) {
+    reportImportFailure(error)
+  }
+}
+
+function reportImportFailure(error: unknown) {
+  if (error instanceof ROCrateImportError) {
+    reportDiagnostics(error.diagnostics)
+    alert(`Could not import this RO-Crate:\n\n${formatDiagnostics(error.diagnostics)}`)
+  } else {
     alert(`Error importing RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
-    console.error('Import error:', error)
+  }
+  console.error('Import error:', error)
+}
+
+function clearData() {
+  if (!confirm('Are you sure you want to clear all canvas data? This cannot be undone.')) return
+  clearCanvasData()
+}
+
+async function requestDownloadROCrate(event: MouseEvent) {
+  downloadTrigger = event.currentTarget as HTMLElement
+  const missing = missingSimplifiedPrompts(canvasData.value)
+  if (missing.length === 0) {
+    await performDownload(false)
+    return
+  }
+
+  pendingMissingPrompts.value = missing
+  canvasView.value = 'simplified'
+  requestSection('simplified-canvas')
+  showPartialDialog.value = true
+  await nextTick()
+  continueEditingButton.value?.focus()
+}
+
+function closePartialDialog() {
+  showPartialDialog.value = false
+  const target = downloadTrigger
+  window.setTimeout(() => target?.focus(), 0)
+}
+
+async function continueEditing() {
+  const first = pendingMissingPrompts.value[0]
+  showPartialDialog.value = false
+  canvasView.value = 'simplified'
+  requestSection('simplified-canvas')
+  await nextTick()
+  if (first) {
+    const field = document.getElementById(simplifiedPromptDomId(first.id))
+    field?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    // Some prompts are groups: 'solution-approaches' is a <fieldset>, which is
+    // not focusable, so focus its first control instead of dropping to <body>.
+    const focusable = field?.matches('input, select, textarea, button')
+      ? field
+      : field?.querySelector<HTMLElement>('input, select, textarea, button')
+    focusable?.focus()
   }
 }
 
-const validation = computed(() => validateAll())
+async function exportPartialCanvas() {
+  showPartialDialog.value = false
+  await performDownload(true)
+  downloadTrigger?.focus()
+}
 
-const canDownload = computed(() => {
-  return validation.value.isValid && !!(canvasData.value.project.title && canvasData.value.project.description)
-})
-
-const clearData = () => {
-  if (confirm('Are you sure you want to clear all form data? This cannot be undone.')) {
-    clearCanvasData()
+function handlePartialDialogKeydown(event: KeyboardEvent) {
+  if (event.key === 'Escape') {
+    event.preventDefault()
+    closePartialDialog()
+    return
+  }
+  if (event.key !== 'Tab' || !partialDialogPanel.value) return
+  const focusable = [...partialDialogPanel.value.querySelectorAll<HTMLElement>(
+    'button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+  )]
+  if (focusable.length === 0) return
+  const first = focusable[0]
+  const last = focusable[focusable.length - 1]
+  if (event.shiftKey && document.activeElement === first) {
+    event.preventDefault()
+    last.focus()
+  } else if (!event.shiftKey && document.activeElement === last) {
+    event.preventDefault()
+    first.focus()
   }
 }
 
-const downloadROCrate = async () => {
+async function performDownload(allowPartial: boolean) {
   const validationResult = validateAll()
-  
-  // Block on errors
-  if (!validationResult.isValid) {
-    const errorMessages = validationResult.errors.map(e => `- ${e.field}: ${e.message}`).join('\n')
+  if (!allowPartial && !validationResult.isValid) {
+    const errorMessages = validationResult.errors.map((error) => `- ${error.field}: ${error.message}`).join('\n')
     alert(`Please fix validation errors before downloading:\n\n${errorMessages}`)
     return
   }
 
-  // Show warnings but allow export
-  if (validationResult.warnings.length > 0) {
-    const warningMessages = validationResult.warnings.map(w => `- ${w.field}: ${w.message}`).join('\n')
-    const proceed = confirm(`The following warnings were found. You can still export, but consider addressing them:\n\n${warningMessages}\n\nDo you want to proceed with export?`)
-    if (!proceed) {
-      return
-    }
+  if (!allowPartial && validationResult.warnings.length > 0) {
+    const warningMessages = validationResult.warnings.map((warning) => `- ${warning.field}: ${warning.message}`).join('\n')
+    if (!confirm(`The following warnings were found:\n\n${warningMessages}\n\nDo you want to proceed with export?`)) return
   }
 
-  // Additional validation: check for null values and reference resolution
   const additionalWarnings: string[] = []
-  
-  // Check Person references
-  const personIds = new Set((canvasData.value.persons || []).map(p => p.id))
-  
-  // Check creator references
-  if (canvasData.value.project.creator) {
-    canvasData.value.project.creator.forEach((creatorId, idx) => {
-      if (!personIds.has(creatorId)) {
-        additionalWarnings.push(`Project creator[${idx}] references unknown person: ${creatorId}`)
+  const personIds = new Set((canvasData.value.persons || []).map((person) => person.id))
+  canvasData.value.project.creator?.forEach((creatorId, index) => {
+    if (!personIds.has(creatorId)) additionalWarnings.push(`Project creator[${index}] references unknown person: ${creatorId}`)
+  })
+  canvasData.value.governance?.stages?.forEach((stage, stageIndex) => {
+    stage.agents?.forEach((agent, agentIndex) => {
+      if (agent.type === 'person' && agent.personId && !personIds.has(agent.personId)) {
+        additionalWarnings.push(`Stage[${stageIndex}].agent[${agentIndex}] references unknown person: ${agent.personId}`)
       }
     })
-  }
-  
-  
-  // Check agent references
-  if (canvasData.value.governance?.stages) {
-    canvasData.value.governance.stages.forEach((stage, stageIdx) => {
-      if (stage.agents) {
-        stage.agents.forEach((agent, agentIdx) => {
-          if (agent.type === 'person' && agent.personId && !personIds.has(agent.personId)) {
-            additionalWarnings.push(`Stage[${stageIdx}].agent[${agentIdx}] references unknown person: ${agent.personId}`)
-          }
-        })
-      }
-    })
-  }
-  
-  if (additionalWarnings.length > 0) {
-    const proceed = confirm(`Additional validation warnings:\n\n${additionalWarnings.join('\n')}\n\nDo you want to proceed with export?`)
-    if (!proceed) {
-      return
-    }
-  }
-
-  // Validate for RO-Crate export (benefit semantics, aggregation consistency)
-  const exportErrors = validateForExport(canvasData.value)
-  
-  // Block export if there are critical errors
-  if (hasBlockingErrors(exportErrors)) {
-    const errorMessages = exportErrors
-      .filter(e => e.severity === 'error')
-      .map(e => `${e.path}: ${e.message}`)
-      .join('\n\n')
-    alert(`Export blocked due to validation errors:\n\n${errorMessages}\n\nPlease fix these issues before exporting.`)
-    return
-  }
-  
-  // Show warnings but allow proceeding
-  const warnings = exportErrors.filter(e => e.severity === 'warning')
-  if (warnings.length > 0) {
-    const warningMessages = warnings.map(e => `${e.path}: ${e.message}`).join('\n\n')
-    const proceed = confirm(`Export validation warnings:\n\n${warningMessages}\n\nDo you want to proceed anyway?`)
-    if (!proceed) {
-      return
-    }
-  }
+  })
+  if (!allowPartial && additionalWarnings.length > 0 && !confirm(`Additional validation warnings:\n\n${additionalWarnings.join('\n')}\n\nDo you want to proceed with export?`)) return
 
   try {
     const rocrate = generateROCrate(canvasData.value, {
       benefitDisplay: benefitDisplay.value,
-      schemaVersion: appVersion !== '—' ? appVersion : undefined,
+      allowPartial,
     })
-    
-    // Validate RO-Crate structure: check for null values
-    const nullValues: string[] = []
-    const checkForNulls = (obj: any, path: string = '') => {
-      if (obj === null) {
-        nullValues.push(path || 'root')
-        return
-      }
-      if (Array.isArray(obj)) {
-        obj.forEach((item, idx) => {
-          if (item === null) {
-            nullValues.push(`${path}[${idx}]`)
-          } else if (typeof item === 'object') {
-            checkForNulls(item, `${path}[${idx}]`)
-          }
-        })
-      } else if (typeof obj === 'object') {
-        Object.keys(obj).forEach(key => {
-          const newPath = path ? `${path}.${key}` : key
-          checkForNulls(obj[key], newPath)
-        })
-      }
-    }
-    checkForNulls(rocrate)
-    
-    if (nullValues.length > 0) {
-      console.warn('RO-Crate contains null values:', nullValues)
-      // Note: We'll filter these out in generateROCrate, but warn here
-    }
-    
     const projectName = canvasData.value.project.title
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '-')
       .replace(/^-+|-+$/g, '') || 'agentic-automation-project'
-    
     await downloadROCrateZip(rocrate, projectName, canvasData.value, benefitDisplay.value)
+    pendingMissingPrompts.value = []
   } catch (error) {
-    alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    if (error instanceof CurrentCanvasValidationError) {
+      alert(`${error.message}. Please fix these fields before exporting:\n\n${formatDiagnostics(error.diagnostics)}`)
+    } else {
+      alert(`Error generating RO-Crate: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    }
     console.error('RO-Crate generation error:', error)
   }
 }
 </script>
 
 <style scoped>
-.load-example-hint-pulse {
-  animation: load-example-pulse 1.5s ease-in-out infinite;
+.header-action {
+  @apply inline-flex shrink-0 items-center gap-1.5 rounded-md px-2.5 py-2 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-gray-950 focus:outline-none focus:ring-2 focus:ring-primary-600;
 }
-@keyframes load-example-pulse {
-  0%, 100% {
-    box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.5);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(14, 165, 233, 0);
-  }
-}
+
 </style>

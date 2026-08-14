@@ -1,41 +1,48 @@
 {
   "name": "agentic-automation-canvas",
   "version": "0.16.0",
-  "description": "Agentic Automation Canvas - Interactive form for capturing project metadata and generating RO-Crate packages",
+  "description": "A visual framework for shaping agentic automation projects and generating RO-Crate packages",
   "author": "Sebastian Lobentanzer, slolab",
   "license": "Apache-2.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run schema:check && npm run typecheck && vite build",
     "build:all": "./scripts/build-all.sh",
     "preview": "vite preview",
     "preview:all": "npx serve dist -p 4173",
     "docs:dev": "uv run python -m mkdocs serve",
     "docs:build": "uv run python tools/generate-reference.py && uv run python -m mkdocs build",
-    "build:dev-rocrate": "tsx scripts/build-dev-rocrate.ts",
+    "build:dev-rocrate": "tsx --import ./scripts/register-raw-assets.mjs scripts/build-dev-rocrate.ts",
+    "build:simplified-rocrate": "tsx --import ./scripts/register-raw-assets.mjs scripts/build-simplified-rocrate.ts",
+    "schema:generate": "node scripts/generate-schema-types.mjs",
+    "schema:check": "node scripts/generate-schema-types.mjs --check",
+    "typecheck": "vue-tsc --noEmit -p tsconfig.aac.json",
     "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore",
     "test": "vitest run",
     "test:watch": "vitest"
   },
   "dependencies": {
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "jszip": "^3.10.1",
     "mermaid": "^10.9.5",
-    "vue": "^3.4.21",
-    "vue-draggable-next": "^2.3.0"
+    "vue": "^3.4.21"
   },
   "devDependencies": {
-    "@headlessui/vue": "^1.7.16",
+    "@types/node": "^20.19.43",
     "@vitejs/plugin-vue": "^6.0.3",
     "@vue/eslint-config-typescript": "^13.0.0",
     "autoprefixer": "^10.4.18",
     "eslint": "^8.57.0",
     "eslint-plugin-vue": "^9.23.0",
+    "json-schema-to-typescript": "^15.0.4",
     "postcss": "^8.4.35",
     "tailwindcss": "^3.4.1",
     "tsx": "^4.21.0",
     "typescript": "^5.4.5",
     "vite": "^7.3.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "vue-tsc": "^3.3.9"
   }
 }

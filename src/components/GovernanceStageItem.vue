@@ -64,7 +64,7 @@
         <FormField
           :id="`stage-name-${index}`"
           label="Stage Name"
-          tooltip="Select the governance stage type: <strong>Design</strong> - Planning and requirements; <strong>Development</strong> - Building the system; <strong>Validation</strong> - Testing and evaluation; <strong>Deployment</strong> - Rolling out to users; <strong>Monitoring</strong> - Ongoing operation. Stages are represented as PROV-O Activities and link sequentially to show project workflow."
+          tooltip="Select the governance stage type: <strong>Planning</strong> - Initial problem framing and first milestone; <strong>Design</strong> - Requirements and solution design; <strong>Development</strong> - Building the system; <strong>Validation</strong> - Testing and evaluation; <strong>Deployment</strong> - Rolling out to users; <strong>Monitoring</strong> - Ongoing operation. Stages are represented as PROV-O Activities and link sequentially to show project workflow."
           required
         >
           <select
@@ -74,6 +74,7 @@
             @change="update({ ...stage, name: ($event.target as HTMLSelectElement).value })"
           >
             <option value="">Select stage</option>
+            <option value="Planning">Planning</option>
             <option value="Design">Design</option>
             <option value="Development">Development</option>
             <option value="Validation">Validation</option>
@@ -84,7 +85,7 @@
 
         <!-- Warning if stage won't be exported -->
         <div v-if="!willBeExported" class="p-3 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800">
-          <strong>Note:</strong> This stage will not be exported in the RO-Crate because it is missing required fields. Stages must have a name and at least one agent to be exported as PROV-O Activities.
+          <strong>Note:</strong> This stage will not be exported in the RO-Crate because it does not have a name.
         </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -464,12 +465,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import InfoTooltip from './InfoTooltip.vue'
 import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { GovernanceStage, Agent, Milestone, Person } from '@/types/canvas'
 import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 import { isHttpUrl } from '@/utils/url'
 
 interface Props {
@@ -479,10 +481,24 @@ interface Props {
 }
 
 const props = defineProps<Props>()
-const { canvasData } = useCanvasData()
+const { canvasData, focusFieldRequest } = useCanvasData()
 
 // New stages (without name) start expanded
 const isExpanded = ref(!props.stage.name || props.stage.name.trim() === '')
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'stage' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 const showAddAgent = ref(false)
 const newAgent = ref<Agent>({ type: 'person' })
@@ -498,9 +514,9 @@ const availablePersons = computed<Person[]>(() => {
   return canvasData.value.persons || []
 })
 
-// Check if stage will be exported (has name and at least one agent)
+// Governance stages are exported whenever they have a name; agents are optional.
 const willBeExported = computed(() => {
-  return !!(props.stage.name && props.stage.name.trim() && props.stage.agents && props.stage.agents.length > 0)
+  return !!props.stage.name?.trim()
 })
 
 // Helper functions
