@@ -536,6 +536,18 @@ export function useCanvasData() {
     let total = 0
     const data = canvasData.value
 
+    // Global completion: every canvas area contributes one equal share of the
+    // percentage, whether or not it holds data yet. Each share is the filled
+    // fraction of the fields that currently exist in that area, so adding an
+    // item to an empty area raises the number instead of inflating a shared
+    // denominator, and untouched areas keep counting against the total.
+    const areas: Array<{ completed: number; total: number }> = []
+    const closeArea = () => {
+      areas.push({ completed, total })
+      completed = 0
+      total = 0
+    }
+
     // Project fields (mandatory)
     total++
     if (data.project.title?.trim()) completed++
@@ -586,6 +598,7 @@ export function useCanvasData() {
       total++
       if (data.project.primaryValueDriver) completed++
     }
+    closeArea()
 
     // Requirements (optional section - only count if exists)
     if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
@@ -627,6 +640,7 @@ export function useCanvasData() {
         }
       })
     }
+    closeArea()
 
     // Developer Feasibility (optional section)
     if (data.developerFeasibility) {
@@ -655,6 +669,7 @@ export function useCanvasData() {
         if (data.developerFeasibility.feasibilityNotes?.trim()) completed++
       }
     }
+    closeArea()
 
     // Governance Stages (optional section)
     if (data.governance?.stages && data.governance.stages.length > 0) {
@@ -700,6 +715,7 @@ export function useCanvasData() {
         }
       })
     }
+    closeArea()
 
     // Datasets (optional section)
     if (data.dataAccess?.datasets && data.dataAccess.datasets.length > 0) {
@@ -734,6 +750,7 @@ export function useCanvasData() {
         }
       })
     }
+    closeArea()
 
     // Outcomes (optional section)
     if (data.outcomes?.deliverables && data.outcomes.deliverables.length > 0) {
@@ -791,7 +808,12 @@ export function useCanvasData() {
       })
     }
 
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
+    closeArea()
+
+    const filledFraction =
+      areas.reduce((sum, area) => sum + (area.total > 0 ? area.completed / area.total : 0), 0) /
+      areas.length
+    const percentage = Math.round(filledFraction * 100)
     const validation = validateAll()
 
     return {
