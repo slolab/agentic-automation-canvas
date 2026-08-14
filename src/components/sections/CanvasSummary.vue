@@ -683,11 +683,8 @@ function isEmptyOutcomes(o: CanvasSummaryData['outcomes']): boolean {
 </script>
 
 <style scoped>
-/* The one-pager keeps printable proportions, so it is centred in the content
-   column rather than stretched across a wide screen. */
 .canvas-summary-column {
   width: 100%;
-  max-width: 1100px;
   margin-left: auto;
   margin-right: auto;
 }

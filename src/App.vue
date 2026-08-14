@@ -113,12 +113,7 @@
         canvasView === 'detailed' ? 'bg-gray-50 py-8' : 'bg-white pb-0 pt-4',
       ]"
     >
-      <div
-        :class="[
-          'mx-auto w-full px-4 sm:px-6 lg:px-8',
-          canvasView === 'detailed' ? 'max-w-7xl' : 'max-w-[1800px]',
-        ]"
-      >
+      <div class="mx-auto w-full max-w-[1800px] px-4 sm:px-6 lg:px-8">
         <CanvasForm v-model:view-mode="canvasView" />
       </div>
     </main>
