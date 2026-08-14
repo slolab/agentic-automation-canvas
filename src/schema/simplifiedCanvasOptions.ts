@@ -37,10 +37,9 @@ const problemFrequencyLabels: Record<ProblemFrequency, string> = {
 
 const technicalApproachLabels = {
   'agentic-user-support': 'Agentic User Support',
-  'unstructured-content-processing': 'Process large volumes of unstructured documents or logs',
-  'code-development': 'Write, Test, and Debug Code',
+  'code-development': 'Code Development and Debugging',
   'computer-use': 'Computer Use',
-  'live-event-monitoring': 'Monitor Live Events',
+  'live-event-monitoring': 'Live Event Monitoring',
   'intelligent-search': 'Intelligent Search',
   'agentic-research-support': 'Agentic Research Support',
   'data-metadata-curation': 'Data and Metadata Curation',
@@ -48,6 +47,7 @@ const technicalApproachLabels = {
   'experiment-protocol-design': 'Experiment and Protocol Design',
   'simulation-parameter-optimization': 'Simulation and Parameter Optimization',
   'laboratory-workflow-coordination': 'Laboratory Workflow Coordination',
+  'unstructured-content-processing': 'Unstructured Content Processing',
   other: 'Other',
 }
 

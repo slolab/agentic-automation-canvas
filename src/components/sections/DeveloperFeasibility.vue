@@ -224,7 +224,7 @@
           <legend class="form-label">Development Constraints</legend>
           <p class="mb-3 text-xs text-gray-500">Flags from the simplified canvas that require a deeper assessment.</p>
           <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-            <label v-for="option in constraintOptions" :key="option.value" class="form-checkbox-field items-start">
+            <label v-for="option in constraintOptions" :key="option.value" class="form-checkbox-field items-baseline">
               <input
                 type="checkbox"
                 class="form-checkbox-small mt-0.5"
@@ -551,7 +551,7 @@
                     <label
                       v-for="option in approachOptions"
                       :key="option.value"
-                      class="form-checkbox-field items-start"
+                      class="form-checkbox-field items-baseline"
                     >
                       <input
                         type="checkbox"

@@ -208,7 +208,7 @@
 
           <fieldset id="solution-approaches">
             <legend class="canvas-label">Potential Approaches</legend>
-            <div class="grid grid-cols-2 gap-x-2 gap-y-0.5">
+            <div class="grid grid-cols-2 gap-x-2 gap-y-1">
               <label v-for="option in approachOptions" :key="option.value" class="canvas-check">
                 <input
                   type="checkbox"
@@ -266,8 +266,8 @@
 
         <fieldset>
           <legend class="canvas-label">Constraints to investigate</legend>
-          <div class="grid grid-cols-2 gap-x-3 gap-y-0.5 2xl:grid-cols-3">
-            <label v-for="option in constraintOptions" :key="option.value" class="canvas-check items-start">
+          <div class="grid grid-cols-2 gap-x-3 gap-y-1 2xl:grid-cols-3">
+            <label v-for="option in constraintOptions" :key="option.value" class="canvas-check">
               <input
                 type="checkbox"
                 class="form-checkbox-small mt-0.5"
@@ -682,7 +682,7 @@ function updateStageDate(field: 'startDate' | 'endDate', event: Event) {
 }
 
 .canvas-check {
-  @apply flex min-w-0 cursor-pointer items-center gap-1.5 text-[0.68rem] leading-4 text-gray-700;
+  @apply flex min-w-0 cursor-pointer items-start gap-1.5 text-[0.68rem] leading-4 text-gray-700;
 }
 
 .canvas-check:hover {
