@@ -36,16 +36,50 @@
       <!-- One floating card holds the section tabs and the active section, so both
            share the same width on every tab. -->
       <div class="rounded-lg bg-white shadow-lg">
-        <div class="rounded-t-lg border-b border-gray-200 px-6 py-4">
-          <div class="mb-2 flex items-center justify-between">
-            <span class="text-sm font-medium text-gray-700">Canvas completion</span>
-            <span class="text-sm font-medium" :class="getCompletionTextColor()">
+        <div class="rounded-t-lg bg-gray-50">
+          <div class="flex w-full items-center px-6">
+            <nav
+              class="min-w-0 flex-1 overflow-x-auto"
+              role="tablist"
+              aria-label="Detailed canvas sections"
+              @keydown="handleTabKeydown"
+            >
+              <div class="flex">
+                <button
+                  v-for="(section, index) in sections"
+                  :id="`detailed-tab-${section.id}`"
+                  :key="section.id"
+                  :ref="(element) => setTabRef(element, index)"
+                  type="button"
+                  role="tab"
+                  :aria-selected="activeSection === section.id"
+                  :aria-controls="`detailed-panel-${section.id}`"
+                  :tabindex="activeSection === section.id ? 0 : -1"
+                  :class="[
+                    'shrink-0 border-t-2 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-primary-600',
+                    activeSection === section.id
+                      ? 'border-primary-600 text-primary-700'
+                      : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-950',
+                  ]"
+                  @click="activeSection = section.id"
+                >
+                  {{ section.label }}
+                </button>
+              </div>
+            </nav>
+            <span
+              class="shrink-0 pl-4 text-xs font-medium tabular-nums"
+              :class="getCompletionTextColor()"
+              title="Canvas completion"
+            >
               {{ completionPercentage.percentage }}%
-              <span v-if="!completionPercentage.isValid" class="text-xs">(validation errors)</span>
+              <span v-if="!completionPercentage.isValid">(validation errors)</span>
             </span>
           </div>
+          <!-- The completion bar doubles as the divider under the tabs: the gray
+               track reads as a hairline, the filled part carries the status color. -->
           <div
-            class="h-2 w-full rounded-full bg-gray-200"
+            class="h-0.5 w-full bg-gray-200"
             role="progressbar"
             aria-label="Canvas completion"
             :aria-valuenow="completionPercentage.percentage"
@@ -53,43 +87,11 @@
             aria-valuemax="100"
           >
             <div
-              class="h-2 rounded-full transition-all duration-300"
+              class="h-full transition-all duration-300"
               :class="getCompletionBarColor()"
               :style="{ width: `${completionPercentage.percentage}%` }"
             />
           </div>
-        </div>
-
-        <div class="flex w-full items-center border-b border-gray-200 bg-gray-50 px-6">
-          <nav
-            class="min-w-0 flex-1 overflow-x-auto"
-            role="tablist"
-            aria-label="Detailed canvas sections"
-            @keydown="handleTabKeydown"
-          >
-            <div class="flex">
-              <button
-                v-for="(section, index) in sections"
-                :id="`detailed-tab-${section.id}`"
-                :key="section.id"
-                :ref="(element) => setTabRef(element, index)"
-                type="button"
-                role="tab"
-                :aria-selected="activeSection === section.id"
-                :aria-controls="`detailed-panel-${section.id}`"
-                :tabindex="activeSection === section.id ? 0 : -1"
-                :class="[
-                  'shrink-0 border-b-2 px-4 py-3 text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-inset focus:ring-primary-600',
-                  activeSection === section.id
-                    ? 'border-primary-600 text-primary-700'
-                    : 'border-transparent text-gray-600 hover:border-gray-300 hover:text-gray-950',
-                ]"
-                @click="activeSection = section.id"
-              >
-                {{ section.label }}
-              </button>
-            </div>
-          </nav>
         </div>
 
         <div
