@@ -617,7 +617,9 @@ function updateStageDate(field: 'startDate' | 'endDate', event: Event) {
   grid-template-areas:
     'problem change solutions'
     'reality reality milestone';
-  height: clamp(32rem, calc(100vh - 9.5rem), 58rem);
+  /* Viewport height minus the chrome around the board: sticky header, the main
+     area's vertical padding, the card padding, and the project title bar. */
+  height: clamp(32rem, calc(100vh - 15.5rem), 58rem);
   min-height: 0;
   border: 3px solid rgb(17 24 39);
   background: rgb(17 24 39);

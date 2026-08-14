@@ -104,15 +104,8 @@
       </div>
     </header>
 
-    <!-- The detailed canvas sits on a floating card over the grey page ground, as
-         in the pre-simplified app. The simplified canvas keeps the wide, plain
-         white landing page. -->
-    <main
-      :class="[
-        'w-full flex-1',
-        canvasView === 'detailed' ? 'bg-gray-50 py-8' : 'bg-white pb-0 pt-4',
-      ]"
-    >
+    <!-- Both canvas views sit on a floating white card over the grey page ground. -->
+    <main class="w-full flex-1 bg-gray-50 py-8">
       <div class="mx-auto w-full max-w-[1800px] px-4 sm:px-6 lg:px-8">
         <CanvasForm v-model:view-mode="canvasView" />
       </div>

@@ -30,7 +30,9 @@
       </button>
     </div>
 
-    <SimplifiedCanvas v-if="viewMode === 'simplified'" :key="'simplified-canvas'" />
+    <div v-if="viewMode === 'simplified'" class="rounded-lg bg-white p-6 shadow-lg">
+      <SimplifiedCanvas :key="'simplified-canvas'" />
+    </div>
 
     <template v-else>
       <!-- One floating card holds the section tabs and the active section, so both
