@@ -281,8 +281,6 @@ function setCanvasView(view: 'simplified' | 'detailed') {
 
 function loadExample() {
   importFromROCrate(exampleData, exampleBenefitDisplay)
-  canvasView.value = 'simplified'
-  requestSection('simplified-canvas')
 }
 
 const isDragging = ref(false)
@@ -337,8 +335,6 @@ function reportImportFailure(error: unknown) {
 function clearData() {
   if (!confirm('Are you sure you want to clear all canvas data? This cannot be undone.')) return
   clearCanvasData()
-  canvasView.value = 'simplified'
-  requestSection('simplified-canvas')
 }
 
 async function requestDownloadROCrate(event: MouseEvent) {
