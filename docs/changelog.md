@@ -5,6 +5,13 @@ All notable changes to the Agentic Automation Canvas specification and schema wi
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.17.0](https://github.com/slolab/agentic-automation-canvas/compare/v0.16.0...v0.17.0) (2026-11-08)
+
+
+### Features
+
+* make the simplified canvas the canonical AAC landing page ([#53](https://github.com/slolab/agentic-automation-canvas/issues/53)) ([1227cb4](https://github.com/slolab/agentic-automation-canvas/commit/1227cb4ab7807c32b8e572980742b9b293093170))
+
 ## [0.16.0](https://github.com/slolab/agentic-automation-canvas/compare/v0.15.0...v0.16.0) (2026-07-22)
 
 

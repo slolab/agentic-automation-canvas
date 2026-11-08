@@ -1,7 +1,7 @@
 # Agentic Automation Canvas (AAC)
 
 !!! warning "Beta Release"
-    **Application release 0.16.0 (Beta)**: The application is currently in beta testing. <!-- x-release-please-version -->
+    **Application release 0.17.0 (Beta)**: The application is currently in beta testing. <!-- x-release-please-version -->
     Its current AAC data contract is independently versioned as schema **0.17.1**. Both may
     change before their stable 1.0.0 releases. Feedback and contributions are welcome!
 
