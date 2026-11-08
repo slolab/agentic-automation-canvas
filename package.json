@@ -1,6 +1,6 @@
 {
   "name": "agentic-automation-canvas",
-  "version": "0.16.0",
+  "version": "0.17.0",
   "description": "A visual framework for shaping agentic automation projects and generating RO-Crate packages",
   "author": "Sebastian Lobentanzer, slolab",
   "license": "Apache-2.0",
