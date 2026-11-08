@@ -19,25 +19,7 @@ uv run python -m mkdocs build --quiet
 echo "📄 Preparing schema artifacts..."
 mkdir -p site/schema site/examples
 
-# Copy schema and update $id to w3id.org
-uv run python -c "
-import json
-import yaml
-
-with open('schema/canvas-schema.json', 'r') as f:
-    schema = json.load(f)
-
-# Update \$id to w3id.org
-schema['\$id'] = 'https://w3id.org/aac/schema/aac.schema.json'
-
-# Write updated schema
-with open('site/schema/aac.schema.json', 'w') as f:
-    json.dump(schema, f, indent=2)
-
-# Convert to YAML
-with open('site/schema/aac.schema.yaml', 'w') as f:
-    yaml.dump(schema, f, default_flow_style=False, sort_keys=False, allow_unicode=True)
-"
+uv run python tools/publish-schemas.py
 
 # Copy examples
 echo "📋 Copying examples..."
@@ -50,6 +32,7 @@ mkdir -p dist/agentic-automation-canvas
 # Move Vue app files to the base path
 mv dist/index.html dist/agentic-automation-canvas/ 2>/dev/null || true
 mv dist/assets dist/agentic-automation-canvas/ 2>/dev/null || true
+mv dist/logo.svg dist/agentic-automation-canvas/ 2>/dev/null || true
 mv dist/favicon.svg dist/agentic-automation-canvas/ 2>/dev/null || true
 # Copy docs to the base path subdirectory
 mkdir -p dist/agentic-automation-canvas/docs

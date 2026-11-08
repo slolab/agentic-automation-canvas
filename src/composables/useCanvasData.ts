@@ -2,15 +2,44 @@
  * Composable for managing canvas form data state
  */
 
-import { ref, computed, watch } from 'vue'
-import type { CanvasData, Milestone } from '@/types/canvas'
+import { ref, computed, toRaw, watch } from 'vue'
+import type { CanvasData, Dataset, Milestone } from '@/types/canvas'
+import type { Diagnostic } from '@/diagnostics'
+import { logDiagnostics } from '@/diagnostics'
+import { decodePointer } from '@/json'
+import {
+  clearPersistedBenefitDisplay,
+  readPersistedBenefitDisplay,
+  savePersistedBenefitDisplay,
+} from '@/persistence/benefitDisplay'
+import {
+  clearPersistedCanvas,
+  readPersistedCanvas,
+  savePersistedCanvas,
+} from '@/persistence/canvas'
+import { recoverCanvasToCurrent } from '@/schema/recovery'
+import { validateCurrentCanvas } from '@/schema/validation'
 import type { BenefitDisplayState } from '@/types/benefitDisplay'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
+import { isBenefitOfType } from '@/utils/benefits'
 import { collectDataAccessFlags } from '@/utils/dataAccessWarnings'
+import { todayIsoDate } from '@/utils/date'
 import type { FocusFieldRequest } from '@/utils/fieldNavigation'
-
-const STORAGE_KEY = 'agentic-automation-canvas-data'
-const BENEFIT_DISPLAY_STORAGE_KEY = 'agentic-automation-canvas-benefit-display'
+import {
+  applyDatasetConstraintToggle as applyDatasetConstraintToggleData,
+  patchFirstDataset as patchFirstDatasetData,
+  patchFirstStageMilestone as patchFirstStageMilestoneData,
+  patchFirstStage as patchFirstStageData,
+  patchPrimaryRequirement as patchPrimaryRequirementData,
+  replacePrimaryUnclassifiedBenefits as replacePrimaryUnclassifiedBenefitsData,
+  retainedClassifiedBenefitIndexes,
+} from '@/utils/simplifiedCanvas'
+import type {
+  ConstraintToggle,
+  PrimaryRequirementPatch,
+  FirstStagePatch,
+  UnclassifiedBenefitField,
+} from '@/utils/simplifiedCanvas'
 
 // Initialize with default structure
 const canvasData = ref<CanvasData>({
@@ -20,7 +49,7 @@ const canvasData = ref<CanvasData>({
     projectStage: '',
   },
   version: '0.1.0',
-  versionDate: new Date().toISOString().split('T')[0],
+  versionDate: todayIsoDate(),
 })
 
 // App-only: version at last import, for "increment version" reminder (not in schema)
@@ -29,19 +58,13 @@ const lastImportedVersion = ref<string | null>(null)
 // App-only: true after first user edit since last import; reminder only shown when true
 const hasChangedSinceImport = ref(false)
 
-// App-only: schema version of the last imported crate (for version-mismatch warning)
-const lastImportedCrateSchemaVersion = ref<string | null>(null)
-
-// App-only: true when last import was from a crate with no aac:schemaVersion (treat as prior/legacy)
-const importedCrateHadNoSchemaVersion = ref(false)
-
-// App-only: migration warnings from last import (normalization applied)
-const lastImportMigrationWarnings = ref<string[]>([])
+// App-only: non-blocking findings from the most recent load or import.
+const lastDiagnostics = ref<Diagnostic[]>([])
 
 // App-only: benefit display groups for dashboard (not in schema; stored in benefit-display.json in crate)
 const benefitDisplay = ref<BenefitDisplayState>({ displayGroups: [] })
 
-// App-only: when set, CanvasForm switches to this section (e.g. after Load Example)
+// App-only: when set, CanvasForm navigates to the requested detailed section or simplified canvas.
 const requestedSection = ref<string | null>(null)
 
 // App-only: when set, collapsible components expand and focus the specified field
@@ -53,237 +76,228 @@ const requestSection = (section: string) => {
 // Incremented on import so UserExpectations can remount and pick up fresh data
 const dataVersion = ref(0)
 
-// Load from localStorage on init
+interface ValidationError {
+  field: string
+  message: string
+  severity: 'error' | 'warning'
+}
+
+function schemaPathToField(path: string): string {
+  const segments = decodePointer(path)
+  if (segments.length === 0) return 'canvas'
+
+  const fullPath = segments.reduce((field, segment) => {
+    if (/^\d+$/.test(segment)) return `${field}[${segment}]`
+    return field ? `${field}.${segment}` : segment
+  }, '')
+
+  if (fullPath.startsWith('userExpectations.requirements[')) {
+    return fullPath.slice('userExpectations.'.length)
+  }
+  if (fullPath.startsWith('dataAccess.datasets[')) {
+    return fullPath.slice('dataAccess.'.length)
+  }
+  return fullPath || 'canvas'
+}
+
+function currentSchemaErrors(): ValidationError[] {
+  return validateCurrentCanvas(canvasData.value).diagnostics.map((diagnostic) => ({
+    field: schemaPathToField(diagnostic.path),
+    message: diagnostic.message,
+    severity: 'error',
+  }))
+}
+
 const loadFromStorage = () => {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored)
-      canvasData.value = parsed
+  const result = readPersistedCanvas()
+  if (result) {
+    lastDiagnostics.value = result.diagnostics
+    if (result.canvasData) {
+      canvasData.value = result.canvasData
       // Ensure version fields are initialized if missing
       if (!canvasData.value.version && !canvasData.value.project.version) {
         canvasData.value.version = '0.1.0'
         canvasData.value.project.version = '0.1.0'
       }
       if (!canvasData.value.versionDate && !canvasData.value.project.versionDate) {
-        const today = new Date().toISOString().split('T')[0]
-        canvasData.value.versionDate = today
-        canvasData.value.project.versionDate = today
+        canvasData.value.versionDate = todayIsoDate()
+        canvasData.value.project.versionDate = todayIsoDate()
       }
     }
-  } catch (error) {
-    console.warn('Failed to load canvas data from storage:', error)
   }
-  try {
-    const stored = localStorage.getItem(BENEFIT_DISPLAY_STORAGE_KEY)
-    if (stored) {
-      const parsed = JSON.parse(stored) as BenefitDisplayState
-      if (parsed && Array.isArray(parsed.displayGroups)) {
-        benefitDisplay.value = {
-          displayGroups: parsed.displayGroups,
-          displayGroupCount: parsed.displayGroupCount,
-        }
-      }
-    }
-  } catch (error) {
-    console.warn('Failed to load benefit display from storage:', error)
-  }
+
+  const storedBenefitDisplay = readPersistedBenefitDisplay()
+  if (storedBenefitDisplay) benefitDisplay.value = storedBenefitDisplay
 }
 
-// Save to localStorage whenever data changes
-watch(
-  canvasData,
-  (newData) => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(newData))
-    } catch (error) {
-      console.warn('Failed to save canvas data to storage:', error)
-    }
-  },
-  { deep: true }
-)
-
-watch(
-  benefitDisplay,
-  (newData) => {
-    try {
-      localStorage.setItem(BENEFIT_DISPLAY_STORAGE_KEY, JSON.stringify(newData))
-    } catch (error) {
-      console.warn('Failed to save benefit display to storage:', error)
-    }
-  },
-  { deep: true }
-)
+watch(canvasData, savePersistedCanvas, { deep: true })
+watch(benefitDisplay, savePersistedBenefitDisplay, { deep: true })
 
 // Initialize
 loadFromStorage()
 
+function unwrapReactiveData(value: unknown, seen = new WeakMap<object, unknown>()): unknown {
+  if (value === null || typeof value !== 'object') return value
+
+  const raw = toRaw(value)
+  const existing = seen.get(raw)
+  if (existing !== undefined) return existing
+
+  if (Array.isArray(raw)) {
+    const unwrapped: unknown[] = []
+    seen.set(raw, unwrapped)
+    raw.forEach((item) => unwrapped.push(unwrapReactiveData(item, seen)))
+    return unwrapped
+  }
+
+  const unwrapped: Record<string, unknown> = {}
+  seen.set(raw, unwrapped)
+  Object.entries(raw).forEach(([key, item]) => {
+    unwrapped[key] = unwrapReactiveData(item, seen)
+  })
+  return unwrapped
+}
+
+function cloneCanvasData<T>(value: T): T {
+  return structuredClone(unwrapReactiveData(value)) as T
+}
+
+function mergeSection<T extends object>(current: T, updates: Partial<T>): T {
+  return Object.assign({}, current, cloneCanvasData(updates))
+}
+
 export function useCanvasData() {
   const updateProject = (updates: Partial<CanvasData['project']>) => {
     hasChangedSinceImport.value = true
-    // Ensure arrays are properly copied to preserve references
-    const updatedProject: any = {
-      ...canvasData.value.project,
-    }
-    // Apply updates, ensuring arrays are copied
-    Object.keys(updates).forEach((key) => {
-      const value = (updates as any)[key]
-      if (Array.isArray(value)) {
-        updatedProject[key] = [...value]
-      } else {
-        updatedProject[key] = value
-      }
-    })
-    canvasData.value.project = updatedProject
+    canvasData.value.project = mergeSection(canvasData.value.project, updates)
   }
 
-  const updateUserExpectations = (updates: Partial<CanvasData['userExpectations']>) => {
+  const updateUserExpectations = (
+    updates: Partial<NonNullable<CanvasData['userExpectations']>>,
+  ) => {
     hasChangedSinceImport.value = true
-    if (!canvasData.value.userExpectations) {
-      canvasData.value.userExpectations = {}
-    }
-    // Ensure arrays are properly copied to preserve references
-    const updatedExpectations: any = {
-      ...canvasData.value.userExpectations,
-    }
-    // Apply updates, ensuring arrays are copied
-    Object.keys(updates || {}).forEach((key) => {
-      const value = (updates as any)[key]
-      if (Array.isArray(value)) {
-        updatedExpectations[key] = [...value]
-      } else {
-        updatedExpectations[key] = value
-      }
-    })
-    canvasData.value.userExpectations = updatedExpectations
+    canvasData.value.userExpectations = mergeSection(
+      canvasData.value.userExpectations ?? {},
+      updates,
+    )
   }
 
-  const updateDeveloperFeasibility = (updates: Partial<CanvasData['developerFeasibility']>) => {
+  const updateDeveloperFeasibility = (
+    updates: Partial<NonNullable<CanvasData['developerFeasibility']>>,
+  ) => {
     hasChangedSinceImport.value = true
-    if (!canvasData.value.developerFeasibility) {
-      canvasData.value.developerFeasibility = {}
-    }
-    // Ensure arrays are properly copied to preserve references
-    const updatedFeasibility: any = {
-      ...canvasData.value.developerFeasibility,
-    }
-    // Apply updates, ensuring arrays are copied
-    Object.keys(updates || {}).forEach((key) => {
-      const value = (updates as any)[key]
-      if (Array.isArray(value)) {
-        updatedFeasibility[key] = [...value]
-      } else {
-        updatedFeasibility[key] = value
-      }
-    })
-    canvasData.value.developerFeasibility = updatedFeasibility
+    canvasData.value.developerFeasibility = mergeSection(
+      canvasData.value.developerFeasibility ?? {},
+      updates,
+    )
   }
 
-  const updateGovernance = (updates: Partial<CanvasData['governance']>) => {
+  const updateGovernance = (
+    updates: Partial<NonNullable<CanvasData['governance']>>,
+  ) => {
     hasChangedSinceImport.value = true
-    if (!canvasData.value.governance) {
-      canvasData.value.governance = {}
-    }
-    // Ensure arrays are properly copied to preserve references (including nested arrays)
-    const updatedGovernance: any = {
-      ...canvasData.value.governance,
-    }
-    // Apply updates, ensuring arrays are copied (deep copy for nested arrays)
-    Object.keys(updates || {}).forEach((key) => {
-      const value = (updates as any)[key]
-      if (Array.isArray(value)) {
-        // Deep copy array items that may contain nested arrays (e.g., agents within stages)
-        updatedGovernance[key] = value.map((item: any) => {
-          if (item && typeof item === 'object') {
-            const copiedItem = { ...item }
-            // Handle nested arrays (e.g., agents, milestones, complianceStandards)
-            Object.keys(copiedItem).forEach((nestedKey) => {
-              if (Array.isArray(copiedItem[nestedKey])) {
-                copiedItem[nestedKey] = [...copiedItem[nestedKey]]
-              }
-            })
-            return copiedItem
-          }
-          return item
-        })
-      } else {
-        updatedGovernance[key] = value
-      }
-    })
-    canvasData.value.governance = updatedGovernance
+    canvasData.value.governance = mergeSection(canvasData.value.governance ?? {}, updates)
   }
 
-  const updateDataAccess = (updates: Partial<CanvasData['dataAccess']>) => {
+  const updateDataAccess = (
+    updates: Partial<NonNullable<CanvasData['dataAccess']>>,
+  ) => {
     hasChangedSinceImport.value = true
-    if (!canvasData.value.dataAccess) {
-      canvasData.value.dataAccess = {}
-    }
-    // Ensure arrays are properly copied to preserve references
-    const updatedDataAccess: any = {
-      ...canvasData.value.dataAccess,
-    }
-    // Apply updates, ensuring arrays are copied
-    Object.keys(updates || {}).forEach((key) => {
-      const value = (updates as any)[key]
-      if (Array.isArray(value)) {
-        // Deep copy array items that may contain nested arrays (e.g., duoTerms)
-        updatedDataAccess[key] = value.map((item: any) => {
-          if (item && typeof item === 'object') {
-            const copiedItem = { ...item }
-            // Handle nested arrays (e.g., duoTerms, authors)
-            Object.keys(copiedItem).forEach((nestedKey) => {
-              if (Array.isArray(copiedItem[nestedKey])) {
-                copiedItem[nestedKey] = [...copiedItem[nestedKey]]
-              }
-            })
-            return copiedItem
-          }
-          return item
-        })
-      } else {
-        updatedDataAccess[key] = value
-      }
-    })
-    canvasData.value.dataAccess = updatedDataAccess
+    canvasData.value.dataAccess = mergeSection(canvasData.value.dataAccess ?? {}, updates)
   }
 
   const updatePersons = (persons: CanvasData['persons']) => {
     hasChangedSinceImport.value = true
-    canvasData.value.persons = persons ? [...persons] : undefined
+    canvasData.value.persons = persons ? cloneCanvasData(persons) : undefined
   }
 
-  const updateOutcomes = (updates: Partial<CanvasData['outcomes']>) => {
+  const updateOutcomes = (
+    updates: Partial<NonNullable<CanvasData['outcomes']>>,
+  ) => {
     hasChangedSinceImport.value = true
-    if (!canvasData.value.outcomes) {
-      canvasData.value.outcomes = {}
-    }
-    // Ensure arrays are properly copied to preserve references
-    const updatedOutcomes: any = {
-      ...canvasData.value.outcomes,
-    }
-    // Apply updates, ensuring arrays are copied
-    Object.keys(updates || {}).forEach((key) => {
-      const value = (updates as any)[key]
-      if (Array.isArray(value)) {
-        // Deep copy array items that may contain nested arrays (e.g., authors in publications)
-        updatedOutcomes[key] = value.map((item: any) => {
-          if (item && typeof item === 'object') {
-            const copiedItem = { ...item }
-            // Handle nested arrays (e.g., authors)
-            Object.keys(copiedItem).forEach((nestedKey) => {
-              if (Array.isArray(copiedItem[nestedKey])) {
-                copiedItem[nestedKey] = [...copiedItem[nestedKey]]
-              }
-            })
-            return copiedItem
-          }
-          return item
-        })
-      } else {
-        updatedOutcomes[key] = value
+    canvasData.value.outcomes = mergeSection(canvasData.value.outcomes ?? {}, updates)
+  }
+
+  const patchPrimaryRequirement = (updates: PrimaryRequirementPatch) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.userExpectations = patchPrimaryRequirementData(
+      canvasData.value.userExpectations,
+      updates,
+    )
+  }
+
+  const replacePrimaryUnclassifiedBenefits = (
+    field: UnclassifiedBenefitField,
+    values: readonly string[],
+  ) => {
+    hasChangedSinceImport.value = true
+    const previousPrimary = canvasData.value.userExpectations?.requirements?.[0]
+    const nextExpectations = replacePrimaryUnclassifiedBenefitsData(
+      canvasData.value.userExpectations,
+      field,
+      values,
+    )
+    const nextPrimary = nextExpectations.requirements?.[0]
+
+    if (previousPrimary && nextPrimary && previousPrimary.id === nextPrimary.id) {
+      const indexMap = retainedClassifiedBenefitIndexes(
+        previousPrimary.benefits,
+        nextPrimary.benefits,
+      )
+      let referencesChanged = false
+      const displayGroups = benefitDisplay.value.displayGroups.map((group) => ({
+        ...group,
+        benefitRefs: group.benefitRefs.map((reference) => {
+          if (reference.requirementId !== previousPrimary.id) return reference
+          const nextIndex = indexMap.get(reference.benefitIndex)
+          if (nextIndex === undefined || nextIndex === reference.benefitIndex) return reference
+          referencesChanged = true
+          return { ...reference, benefitIndex: nextIndex }
+        }),
+      }))
+      if (referencesChanged) {
+        benefitDisplay.value = { ...benefitDisplay.value, displayGroups }
       }
-    })
-    canvasData.value.outcomes = updatedOutcomes
+    }
+
+    canvasData.value.userExpectations = nextExpectations
+  }
+
+  const patchFirstStageMilestone = (updates: Partial<Milestone>) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.governance = patchFirstStageMilestoneData(
+      canvasData.value.governance,
+      updates,
+    )
+  }
+
+  const patchFirstDataset = (updates: Partial<Dataset>) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.dataAccess = patchFirstDatasetData(
+      canvasData.value.dataAccess,
+      updates,
+    )
+  }
+
+  /**
+   * Keep the dataset implied by the data constraints in step with the checkbox
+   * the user just clicked. Called from the constraint toggles rather than from
+   * updateDeveloperFeasibility, so a dataset the user deleted in Data Access is
+   * not resurrected by an unrelated feasibility edit.
+   */
+  const applyDatasetConstraintToggle = (toggle: ConstraintToggle) => {
+    const next = applyDatasetConstraintToggleData(canvasData.value.dataAccess, toggle)
+    if (next === canvasData.value.dataAccess) return
+    hasChangedSinceImport.value = true
+    canvasData.value.dataAccess = next
+  }
+
+  const patchFirstStage = (updates: FirstStagePatch) => {
+    hasChangedSinceImport.value = true
+    canvasData.value.governance = patchFirstStageData(
+      canvasData.value.governance,
+      updates,
+    )
   }
 
   const clearData = () => {
@@ -300,15 +314,14 @@ export function useCanvasData() {
       dataAccess: undefined,
       outcomes: undefined,
       version: '0.1.0',
-      versionDate: new Date().toISOString().split('T')[0],
+      versionDate: todayIsoDate(),
     }
     lastImportedVersion.value = null
-    lastImportedCrateSchemaVersion.value = null
-    importedCrateHadNoSchemaVersion.value = false
     hasChangedSinceImport.value = false
+    lastDiagnostics.value = []
     benefitDisplay.value = { displayGroups: [] }
-    localStorage.removeItem(STORAGE_KEY)
-    localStorage.removeItem(BENEFIT_DISPLAY_STORAGE_KEY)
+    clearPersistedCanvas()
+    clearPersistedBenefitDisplay()
   }
 
   const exportData = (): string => {
@@ -316,23 +329,27 @@ export function useCanvasData() {
   }
 
   const importData = (json: string) => {
+    let parsed: unknown
     try {
-      const parsed = JSON.parse(json)
-      canvasData.value = parsed
-    } catch (error) {
+      parsed = JSON.parse(json) as unknown
+    } catch {
       throw new Error('Invalid JSON data')
     }
+
+    const recovered = recoverCanvasToCurrent(parsed)
+    canvasData.value = recovered.data
+    lastDiagnostics.value = recovered.diagnostics
+    dataVersion.value++
+    logDiagnostics(recovered.diagnostics)
   }
 
   const importFromROCrate = (
     data: CanvasData,
     importedBenefitDisplay?: BenefitDisplayState,
-    crateSchemaVersion?: string,
-    fromCrateFile = false,
-    migrationWarnings?: string[]
+    diagnostics: readonly Diagnostic[] = [],
   ) => {
     // Deep copy the data to ensure reactivity works properly
-    const newData = JSON.parse(JSON.stringify(data))
+    const newData = cloneCanvasData(data)
     // Clear existing data first to ensure watchers trigger
     canvasData.value = {
       project: {
@@ -347,60 +364,39 @@ export function useCanvasData() {
     } else if (newData.version && !newData.project?.version) {
       newData.project.version = newData.version
     }
-    // Always set versionDate to today's date when importing (download date)
-    const today = new Date().toISOString().split('T')[0]
-    newData.versionDate = today
-    newData.project.versionDate = today
     canvasData.value = newData
+    lastDiagnostics.value = [...diagnostics]
     dataVersion.value++
     lastImportedVersion.value = newData.project?.version ?? newData.version ?? null
-    if (fromCrateFile) {
-      lastImportedCrateSchemaVersion.value = crateSchemaVersion ?? null
-      importedCrateHadNoSchemaVersion.value = crateSchemaVersion === undefined || crateSchemaVersion === ''
-    } else {
-      lastImportedCrateSchemaVersion.value = null
-      importedCrateHadNoSchemaVersion.value = false
-    }
     hasChangedSinceImport.value = false
     if (importedBenefitDisplay) {
       benefitDisplay.value = importedBenefitDisplay
     } else {
       benefitDisplay.value = { displayGroups: [] }
     }
-    lastImportMigrationWarnings.value = migrationWarnings ?? []
   }
 
-  const clearMigrationWarnings = () => {
-    lastImportMigrationWarnings.value = []
+  const clearDiagnostics = () => {
+    lastDiagnostics.value = []
   }
 
-  // Validation functions
-  interface ValidationError {
-    field: string
-    message: string
-    severity: 'error' | 'warning'
+  /** Surface findings from a boundary that failed before any data was loaded. */
+  const reportDiagnostics = (diagnostics: readonly Diagnostic[]) => {
+    lastDiagnostics.value = [...diagnostics]
   }
 
-  const validateProject = (): ValidationError[] => {
+  // JSON Schema owns structural validation. These handwritten rules are
+  // presentation and domain advisories that the structural contract cannot express.
+  const projectAdvisories = (): ValidationError[] => {
     const errors: ValidationError[] = []
     const project = canvasData.value.project
 
-    if (!project.title || !project.title.trim()) {
-      errors.push({ field: 'project.title', message: 'Project title is required', severity: 'error' })
-    }
-
-    if (!project.description || !project.description.trim()) {
-      errors.push({ field: 'project.description', message: 'Project description is required', severity: 'error' })
-    } else {
+    if (project.description?.trim()) {
       // Check if description has at least one sentence (contains period, exclamation, or question mark)
       const sentencePattern = /[.!?]/
       if (!sentencePattern.test(project.description)) {
-        errors.push({ field: 'project.description', message: 'Description should be at least one sentence', severity: 'error' })
+        errors.push({ field: 'project.description', message: 'Description should be at least one sentence', severity: 'warning' })
       }
-    }
-
-    if (!project.projectStage || !project.projectStage.trim()) {
-      errors.push({ field: 'project.projectStage', message: 'Project stage is required', severity: 'error' })
     }
 
     // Version management: recommend incrementing version only after first change since import
@@ -417,56 +413,31 @@ export function useCanvasData() {
       })
     }
 
-    // Crate has different or missing schema version: schema may have changed; legacy before v1 not supported
-    const currentSchemaVersion = typeof __APP_VERSION__ !== 'undefined' ? __APP_VERSION__ : null
-    if (currentSchemaVersion != null) {
-      if (importedCrateHadNoSchemaVersion.value) {
-        errors.push({
-          field: 'project',
-          message: `This crate has no schema version (created with an older or unknown schema). The schema may have changed—not all components may have transferred. Support may be limited for crates created before v1—they may not map fully. Downloading the crate again will fix this.`,
-          severity: 'warning',
-        })
-      } else if (
-        lastImportedCrateSchemaVersion.value != null &&
-        lastImportedCrateSchemaVersion.value !== currentSchemaVersion
-      ) {
-        errors.push({
-          field: 'project',
-          message: `This crate uses schema version ${lastImportedCrateSchemaVersion.value}; current schema is ${currentSchemaVersion}. The schema may have changed—not all components may have transferred. Support may be limited for crates created before v1—they may not map fully. Downloading the crate again will fix this.`,
-          severity: 'warning',
-        })
-      }
-    }
-
     return errors
   }
 
-  const validateRequirements = (): ValidationError[] => {
+  const requirementAdvisories = (): ValidationError[] => {
     const errors: ValidationError[] = []
     const requirements = canvasData.value.userExpectations?.requirements || []
 
     if (requirements.length === 0) {
-      errors.push({ field: 'userExpectations.requirements', message: 'At least one task is required', severity: 'error' })
+      errors.push({ field: 'userExpectations.requirements', message: 'Consider adding at least one task', severity: 'warning' })
       return errors
     }
 
     requirements.forEach((req, index) => {
       const prefix = `requirements[${index}]`
 
-      if (!req.title || !req.title.trim()) {
-        errors.push({ field: `${prefix}.title`, message: 'Task title is required', severity: 'error' })
-      }
-
       if (!req.unitOfWork || !req.unitOfWork.trim()) {
-        errors.push({ field: `${prefix}.unitOfWork`, message: 'Unit of work is required', severity: 'error' })
+        errors.push({ field: `${prefix}.unitOfWork`, message: 'Unit of work is recommended', severity: 'warning' })
       }
 
       if (!req.unitCategory) {
-        errors.push({ field: `${prefix}.unitCategory`, message: 'Unit category is required', severity: 'error' })
+        errors.push({ field: `${prefix}.unitCategory`, message: 'Unit category is recommended', severity: 'warning' })
       }
 
-      if (req.volumePerMonth === undefined || req.volumePerMonth < 1) {
-        errors.push({ field: `${prefix}.volumePerMonth`, message: 'Volume per month must be at least 1', severity: 'error' })
+      if (req.volumePerMonth === undefined) {
+        errors.push({ field: `${prefix}.volumePerMonth`, message: 'Volume per month is recommended', severity: 'warning' })
       }
 
       // Validate benefits array
@@ -474,16 +445,8 @@ export function useCanvasData() {
         errors.push({ field: `${prefix}.benefits`, message: 'At least one benefit is required', severity: 'warning' })
       } else {
         // Check for time benefit and validate net savings (baseline − expected − oversight)
-        const timeBenefit = req.benefits.find(b => b.benefitType === 'time')
+        const timeBenefit = req.benefits.find(b => isBenefitOfType(b, 'time'))
         if (timeBenefit) {
-          // Validate oversight values
-          if (timeBenefit.oversightMinutesPerUnit !== undefined && timeBenefit.oversightMinutesPerUnit < 0) {
-            errors.push({ field: `${prefix}.benefits[].oversightMinutesPerUnit`, message: 'Human oversight minutes per unit must be ≥ 0', severity: 'error' })
-          }
-          if (timeBenefit.oversightMinutesPerMonth !== undefined && timeBenefit.oversightMinutesPerMonth < 0) {
-            errors.push({ field: `${prefix}.benefits[].oversightMinutesPerMonth`, message: 'Human oversight minutes per month must be ≥ 0', severity: 'error' })
-          }
-          
           // Validate net savings
           const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
           const volume = req.volumePerMonth || 0
@@ -495,39 +458,27 @@ export function useCanvasData() {
           }
         }
 
-        // Validate each benefit
-        req.benefits.forEach((benefit, bIndex) => {
-          const benefitPrefix = `${prefix}.benefits[${bIndex}]`
-          if (!benefit.metricLabel || !benefit.metricLabel.trim()) {
-            errors.push({ field: `${benefitPrefix}.metricLabel`, message: 'Benefit metric label is required', severity: 'error' })
-          }
-          if (!benefit.benefitUnit || !benefit.benefitUnit.trim()) {
-            errors.push({ field: `${benefitPrefix}.benefitUnit`, message: 'Benefit unit is required', severity: 'error' })
-          }
-        })
       }
     })
 
     return errors
   }
 
-  const validateDatasets = (): ValidationError[] => {
+  const datasetAdvisories = (): ValidationError[] => {
     const errors: ValidationError[] = []
     const datasets = canvasData.value.dataAccess?.datasets || []
 
     datasets.forEach((dataset, index) => {
       const prefix = `datasets[${index}]`
 
-      if (!dataset.title || !dataset.title.trim()) {
-        errors.push({ field: `${prefix}.title`, message: 'Dataset title is required', severity: 'error' })
-      }
-
       if (!dataset.accessRights || !dataset.accessRights.trim()) {
-        errors.push({ field: `${prefix}.accessRights`, message: 'Access rights are required', severity: 'error' })
-      }
-
-      if (dataset.containsPersonalData && (!dataset.accessRights || !dataset.accessRights.trim())) {
-        errors.push({ field: `${prefix}.accessRights`, message: 'Access restriction text is required when dataset contains personal data', severity: 'error' })
+        errors.push({
+          field: `${prefix}.accessRights`,
+          message: dataset.containsPersonalData
+            ? 'Access restriction text is recommended when a dataset contains personal data'
+            : 'Access rights are recommended',
+          severity: 'warning',
+        })
       }
     })
 
@@ -549,58 +500,25 @@ export function useCanvasData() {
       })
   }
 
-  const validateOutcomes = (): ValidationError[] => {
-    const errors: ValidationError[] = []
-    const outcomes = canvasData.value.outcomes
+  const validateProject = (): ValidationError[] => [
+    ...currentSchemaErrors().filter(
+      (error) => error.field === 'project' || error.field.startsWith('project.'),
+    ),
+    ...projectAdvisories(),
+  ]
 
-    // Validate deliverables
-    if (outcomes?.deliverables && outcomes.deliverables.length > 0) {
-      outcomes.deliverables.forEach((deliverable, index) => {
-        const prefix = `outcomes.deliverables[${index}]`
-
-        if (!deliverable.title || !deliverable.title.trim()) {
-          errors.push({ field: `${prefix}.title`, message: 'Deliverable title is required', severity: 'error' })
-        }
-
-        if (!deliverable.type || !deliverable.type.trim()) {
-          errors.push({ field: `${prefix}.type`, message: 'Deliverable type is required', severity: 'error' })
-        }
-      })
-    }
-
-    // Validate publications
-    if (outcomes?.publications && outcomes.publications.length > 0) {
-      outcomes.publications.forEach((publication, index) => {
-        const prefix = `outcomes.publications[${index}]`
-
-        if (!publication.title || !publication.title.trim()) {
-          errors.push({ field: `${prefix}.title`, message: 'Publication title is required', severity: 'error' })
-        }
-      })
-    }
-
-    // Validate evaluations
-    if (outcomes?.evaluations && outcomes.evaluations.length > 0) {
-      outcomes.evaluations.forEach((evaluation, index) => {
-        const prefix = `outcomes.evaluations[${index}]`
-
-        if (!evaluation.type || !evaluation.type.trim()) {
-          errors.push({ field: `${prefix}.type`, message: 'Evaluation type is required', severity: 'error' })
-        }
-      })
-    }
-
-    return errors
-  }
-
-  const validateAll = (): { errors: ValidationError[]; warnings: ValidationError[]; isValid: boolean } => {
+  const validateAll = (): {
+    errors: ValidationError[]
+    warnings: ValidationError[]
+    isValid: boolean
+  } => {
     const allErrors: ValidationError[] = []
-    
-    allErrors.push(...validateProject())
-    allErrors.push(...validateRequirements())
-    allErrors.push(...validateDatasets())
+
+    allErrors.push(...currentSchemaErrors())
+    allErrors.push(...projectAdvisories())
+    allErrors.push(...requirementAdvisories())
+    allErrors.push(...datasetAdvisories())
     allErrors.push(...validateTaskDataAccess())
-    allErrors.push(...validateOutcomes())
 
     const errors = allErrors.filter(e => e.severity === 'error')
     const warnings = allErrors.filter(e => e.severity === 'warning')
@@ -612,19 +530,31 @@ export function useCanvasData() {
     }
   }
 
-  // Computed: form completion percentage (field-by-field)
+  // Computed: detailed-canvas completion percentage (field-by-field)
   const completionPercentage = computed(() => {
     let completed = 0
     let total = 0
     const data = canvasData.value
 
+    // Global completion: every canvas area contributes one equal share of the
+    // percentage, whether or not it holds data yet. Each share is the filled
+    // fraction of the fields that currently exist in that area, so adding an
+    // item to an empty area raises the number instead of inflating a shared
+    // denominator, and untouched areas keep counting against the total.
+    const areas: Array<{ completed: number; total: number }> = []
+    const closeArea = () => {
+      areas.push({ completed, total })
+      completed = 0
+      total = 0
+    }
+
     // Project fields (mandatory)
     total++
     if (data.project.title?.trim()) completed++
-    
+
     total++
     if (data.project.description?.trim()) completed++
-    
+
     total++
     if (data.project.projectStage?.trim()) completed++
 
@@ -668,6 +598,7 @@ export function useCanvasData() {
       total++
       if (data.project.primaryValueDriver) completed++
     }
+    closeArea()
 
     // Requirements (optional section - only count if exists)
     if (data.userExpectations?.requirements && data.userExpectations.requirements.length > 0) {
@@ -675,16 +606,16 @@ export function useCanvasData() {
         // Mandatory fields per requirement
         total++
         if (req.title?.trim()) completed++
-        
+
         total++
         if (req.unitOfWork?.trim()) completed++
-        
+
         total++
         if (req.unitCategory) completed++
-        
+
         total++
         if (req.volumePerMonth !== undefined && req.volumePerMonth >= 1) completed++
-        
+
         total++
         if (req.benefits && req.benefits.length > 0) completed++
 
@@ -709,6 +640,7 @@ export function useCanvasData() {
         }
       })
     }
+    closeArea()
 
     // Developer Feasibility (optional section)
     if (data.developerFeasibility) {
@@ -737,6 +669,7 @@ export function useCanvasData() {
         if (data.developerFeasibility.feasibilityNotes?.trim()) completed++
       }
     }
+    closeArea()
 
     // Governance Stages (optional section)
     if (data.governance?.stages && data.governance.stages.length > 0) {
@@ -782,6 +715,7 @@ export function useCanvasData() {
         }
       })
     }
+    closeArea()
 
     // Datasets (optional section)
     if (data.dataAccess?.datasets && data.dataAccess.datasets.length > 0) {
@@ -816,6 +750,7 @@ export function useCanvasData() {
         }
       })
     }
+    closeArea()
 
     // Outcomes (optional section)
     if (data.outcomes?.deliverables && data.outcomes.deliverables.length > 0) {
@@ -873,9 +808,14 @@ export function useCanvasData() {
       })
     }
 
-    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
+    closeArea()
+
+    const filledFraction =
+      areas.reduce((sum, area) => sum + (area.total > 0 ? area.completed / area.total : 0), 0) /
+      areas.length
+    const percentage = Math.round(filledFraction * 100)
     const validation = validateAll()
-    
+
     return {
       percentage,
       isValid: validation.isValid,
@@ -891,8 +831,9 @@ export function useCanvasData() {
   return {
     canvasData,
     lastImportedVersion,
-    lastImportMigrationWarnings,
-    clearMigrationWarnings,
+    lastDiagnostics,
+    clearDiagnostics,
+    reportDiagnostics,
     benefitDisplay,
     markChangedSinceImport,
     updateProject,
@@ -902,6 +843,12 @@ export function useCanvasData() {
     updateGovernance,
     updateDataAccess,
     updateOutcomes,
+    patchPrimaryRequirement,
+    replacePrimaryUnclassifiedBenefits,
+    patchFirstDataset,
+    applyDatasetConstraintToggle,
+    patchFirstStageMilestone,
+    patchFirstStage,
     clearData,
     exportData,
     importData,
@@ -909,9 +856,6 @@ export function useCanvasData() {
     completionPercentage,
     validateAll,
     validateProject,
-    validateRequirements,
-    validateDatasets,
-    validateOutcomes,
     requestedSection,
     requestSection,
     focusFieldRequest,

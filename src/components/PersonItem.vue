@@ -200,11 +200,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import FormField from './FormField.vue'
 import ExternalLinkIcon from './ExternalLinkIcon.vue'
 import type { Person } from '@/types/canvas'
 import functionRolesData from '@/data/function-roles.json'
+import { useCanvasData } from '@/composables/useCanvasData'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
 
 interface Props {
   person: Person
@@ -219,9 +221,25 @@ const props = defineProps<Props>()
 // Existing persons start collapsed
 const isExpanded = ref(!props.person.name || props.person.name.trim() === '')
 
+const { focusFieldRequest } = useCanvasData()
+
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'person' || req.itemIndex !== props.index) return
+    isExpanded.value = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
+
 // Load function roles from vocabulary
 const functionRolesList = computed((): { id: string; label: string }[] => {
-  return (functionRolesData as any).roles || []
+  return functionRolesData.roles
 })
 
 // Selected roles

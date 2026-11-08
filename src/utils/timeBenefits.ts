@@ -6,6 +6,7 @@
 
 import type { Benefit, BenefitValue, Requirement } from '@/types/canvas'
 import { toMinutes, parseTimeUnit, type TimeUnit } from './timeUnitConversion'
+import { isClassifiedBenefit } from './benefits'
 
 export function getExpectedLikely(value: BenefitValue): number {
   if (value.type === 'numeric') return value.value
@@ -17,6 +18,7 @@ export function getExpectedLikely(value: BenefitValue): number {
  * Converts from the requirement's time unit to minutes for consistent calculations.
  */
 export function getTimeSavedPerUnit(benefit: Benefit, requirement?: Requirement): number {
+  if (!isClassifiedBenefit(benefit)) return 0
   const baseline = getExpectedLikely(benefit.baseline)
   const expected = getExpectedLikely(benefit.expected)
   
@@ -50,6 +52,7 @@ export function getTimeSavedPerUnit(benefit: Benefit, requirement?: Requirement)
  * - For oneOff, no oversight
  */
 export function getOversightMinutes(benefit: Benefit, volumePerMonth?: number): number {
+  if (!isClassifiedBenefit(benefit)) return 0
   // Oversight follows the aggregation basis of the benefit
   if (benefit.aggregationBasis === 'perUnit') {
     // For perUnit aggregation, oversight is per unit - multiply by volume

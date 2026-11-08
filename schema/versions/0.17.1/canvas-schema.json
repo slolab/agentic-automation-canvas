@@ -1,0 +1,1320 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://w3id.org/aac/schema/0.17.1/aac.schema.json",
+  "title": "CanvasData",
+  "description": "Version 0.17.1 JSON Schema for Agentic Automation Canvas data.",
+  "type": "object",
+  "required": [
+    "project"
+  ],
+  "properties": {
+    "version": {
+      "type": "string",
+      "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
+      "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
+    },
+    "versionDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the version was downloaded or created (ISO date format)"
+    },
+    "persons": {
+      "type": "array",
+      "description": "Centralized Person entities. All persons involved in the project are managed here and referenced by stakeholders and agents.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Unique identifier for the Person (e.g., 'person-0', 'person-1')"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "affiliation": {
+            "type": "string",
+            "description": "Optional disambiguation field"
+          },
+          "orcid": {
+            "type": "string",
+            "format": "uri",
+            "description": "Optional stable identifier (e.g., ORCID)"
+          },
+          "functionRoles": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Functional roles from the AAC controlled vocabulary"
+          },
+          "localTitle": {
+            "type": "string",
+            "description": "Free-text position or title description"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ],
+        "title": "Person",
+        "additionalProperties": false
+      }
+    },
+    "project": {
+      "type": "object",
+      "required": [
+        "title",
+        "description"
+      ],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "problemFrequency": {
+          "type": "string",
+          "enum": [
+            "daily",
+            "weekly",
+            "monthly",
+            "few-times-per-year",
+            "less-than-yearly"
+          ],
+          "description": "Approximate frequency with which the project problem occurs"
+        },
+        "problemExamples": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Concrete examples of the problem, beginning with the most recent real case"
+        },
+        "objective": {
+          "type": "string"
+        },
+        "projectStage": {
+          "type": "string"
+        },
+        "startDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "endDate": {
+          "type": "string",
+          "format": "date"
+        },
+        "domain": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "keywords": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "fundingGrant": {
+          "type": "string"
+        },
+        "leadOrganization": {
+          "type": "string"
+        },
+        "projectId": {
+          "type": "string",
+          "format": "uri"
+        },
+        "headlineValue": {
+          "type": "string"
+        },
+        "primaryValueDriver": {
+          "type": "string",
+          "enum": [
+            "time",
+            "quality",
+            "risk",
+            "enablement",
+            "cost"
+          ]
+        },
+        "roughEstimateValue": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Optional manual estimate of project-level benefit value when getting started (before task-level benefits)"
+        },
+        "roughEstimateUnit": {
+          "type": "string",
+          "description": "Unit for the rough estimate (e.g., 'hours/month', '% error reduction', 'incidents prevented/month')"
+        },
+        "version": {
+          "type": "string",
+          "description": "Semantic version of the canvas (e.g., '0.1.0'). Should follow semantic versioning standards (https://semver.org/).",
+          "pattern": "^\\d+\\.\\d+\\.\\d+(-[\\w\\-]+)?(\\+[\\w\\-]+)?$"
+        },
+        "versionDate": {
+          "type": "string",
+          "format": "date",
+          "description": "Date when the version was downloaded or created (ISO date format)"
+        },
+        "creator": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Person IDs of project creators"
+        },
+        "license": {
+          "type": "string",
+          "format": "uri",
+          "description": "License URI for the canvas and its RO-Crate export"
+        }
+      },
+      "title": "ProjectDefinition",
+      "additionalProperties": false
+    },
+    "userExpectations": {
+      "type": "object",
+      "properties": {
+        "requirements": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string",
+                "minLength": 1
+              },
+              "description": {
+                "type": "string"
+              },
+              "userStory": {
+                "type": "string"
+              },
+              "priority": {
+                "type": "string",
+                "enum": [
+                  "low",
+                  "medium",
+                  "high",
+                  "critical"
+                ]
+              },
+              "status": {
+                "type": "string",
+                "enum": [
+                  "planned",
+                  "in-progress",
+                  "completed",
+                  "cancelled"
+                ]
+              },
+              "value": {
+                "type": "string"
+              },
+              "unitOfWork": {
+                "type": "string",
+                "minLength": 1
+              },
+              "unitCategory": {
+                "type": "string",
+                "enum": [
+                  "item",
+                  "interaction",
+                  "computation",
+                  "other"
+                ]
+              },
+              "volumePerMonth": {
+                "type": "number",
+                "minimum": 1
+              },
+              "timeUnit": {
+                "type": "string",
+                "enum": [
+                  "minutes",
+                  "hours"
+                ],
+                "description": "Standardized time unit for this requirement's time benefits and oversight. All time values use this unit for consistency."
+              },
+              "benefits": {
+                "type": "array",
+                "description": "Array of benefit metrics for this requirement",
+                "items": {
+                  "$ref": "#/$defs/Benefit"
+                }
+              },
+              "dependsOn": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "IDs of requirements this task depends on"
+              },
+              "stakeholders": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                },
+                "description": "Person IDs of stakeholders for this task"
+              },
+              "targetPopulation": {
+                "type": "string",
+                "description": "The user population whose benefit estimates this task captures (e.g., 'junior researchers', 'clinical staff with 3+ years experience'). Specifying this makes heterogeneity explicit when different user groups are expected to benefit differently from the same type of task."
+              },
+              "dataAccess": {
+                "type": "object",
+                "description": "Task-level data access: which datasets this task uses and what the agent may do with them. Datasets remain defined once in dataAccess.datasets; tasks reference them by id (edited from the Data Access tab).",
+                "properties": {
+                  "datasetLinks": {
+                    "type": "array",
+                    "description": "Links to datasets this task uses, with agent permissions",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "datasetId": {
+                          "type": "string",
+                          "description": "Id of a dataset defined in dataAccess.datasets"
+                        },
+                        "agentActions": {
+                          "type": "array",
+                          "description": "What the agent is allowed to do with this dataset",
+                          "items": {
+                            "type": "string",
+                            "enum": [
+                              "read",
+                              "modify",
+                              "process",
+                              "generate"
+                            ],
+                            "title": "AgentDataAction"
+                          }
+                        },
+                        "notes": {
+                          "type": "string",
+                          "description": "Free-text notes on this task-dataset link"
+                        }
+                      },
+                      "required": [
+                        "datasetId"
+                      ],
+                      "title": "TaskDatasetLink",
+                      "additionalProperties": false
+                    }
+                  }
+                },
+                "title": "RequirementDataAccess",
+                "additionalProperties": false
+              },
+              "feasibility": {
+                "type": "object",
+                "description": "Optional per-task feasibility (overrides project-level defaults)",
+                "properties": {
+                  "technicalRisk": {
+                    "type": "string",
+                    "enum": [
+                      "low",
+                      "medium",
+                      "high",
+                      "critical"
+                    ]
+                  },
+                  "effortEstimate": {
+                    "type": "object",
+                    "properties": {
+                      "value": {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      "unit": {
+                        "type": "string",
+                        "enum": [
+                          "weeks",
+                          "person-hours"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "value",
+                      "unit"
+                    ],
+                    "additionalProperties": false
+                  },
+                  "feasibilityNotes": {
+                    "type": "string"
+                  },
+                  "algorithms": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "tools": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  },
+                  "modelSelection": {
+                    "type": "string",
+                    "enum": [
+                      "open-source",
+                      "frontier-model",
+                      "fine-tuned",
+                      "custom",
+                      "other",
+                      "none"
+                    ],
+                    "description": "Type of model to be used (if applicable). Set to 'none' if task is deterministic."
+                  },
+                  "modelName": {
+                    "type": "string",
+                    "description": "Specific model name or identifier (e.g., 'claude-opus-4-5', 'Qwen2.5-72B-Instruct')"
+                  },
+                  "modelCardUri": {
+                    "type": "string",
+                    "format": "uri",
+                    "description": "URI pointing to the model's model card"
+                  },
+                  "technologyApproach": {
+                    "type": "object",
+                    "description": "Potential agentic use cases and selected technology architecture for this task. Set architecture to 'none' if the task is deterministic and doesn't require LLMs.",
+                    "properties": {
+                      "architecture": {
+                        "type": "string",
+                        "enum": [
+                          "none",
+                          "simple-prompting",
+                          "rag",
+                          "fine-tuning",
+                          "agents",
+                          "other"
+                        ],
+                        "description": "Primary technology architecture. 'none' indicates deterministic task without LLM requirement."
+                      },
+                      "approaches": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": "Free-text agentic use-case patterns selected as potential approaches"
+                      },
+                      "customApproaches": {
+                        "type": "array",
+                        "uniqueItems": true,
+                        "items": {
+                          "type": "string",
+                          "minLength": 1
+                        },
+                        "description": "User-defined potential approaches entered when the controlled vocabulary is insufficient"
+                      },
+                      "ragDetails": {
+                        "type": "object",
+                        "properties": {
+                          "retrievalMethod": {
+                            "type": "string"
+                          },
+                          "embeddingModel": {
+                            "type": "string"
+                          },
+                          "chunkingStrategy": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "fineTuningDetails": {
+                        "type": "object",
+                        "properties": {
+                          "baseModel": {
+                            "type": "string",
+                            "description": "Base model that was fine-tuned"
+                          },
+                          "tuningApproach": {
+                            "type": "string",
+                            "description": "Method used for fine-tuning (e.g., LoRA, QLoRA, full fine-tuning)"
+                          },
+                          "dataset": {
+                            "type": "string",
+                            "description": "Dataset used for fine-tuning"
+                          }
+                        },
+                        "additionalProperties": false
+                      },
+                      "agenticDetails": {
+                        "type": "object",
+                        "properties": {
+                          "framework": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "e.g. ReAct, MCP, Plan-and-Execute"
+                          },
+                          "tools": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "MCP tools, custom tools"
+                          },
+                          "orchestration": {
+                            "type": "array",
+                            "items": {
+                              "type": "string"
+                            },
+                            "description": "e.g. LangGraph"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  },
+                  "risks": {
+                    "type": "array",
+                    "description": "Per-task risk assessments paralleling benefits",
+                    "items": {
+                      "$ref": "#/$defs/Risk"
+                    }
+                  },
+                  "deploymentCost": {
+                    "type": "object",
+                    "description": "Estimated deployment/operational cost for running this automated task",
+                    "properties": {
+                      "costPerUnit": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Cost per interaction/unit of work"
+                      },
+                      "costPerMonth": {
+                        "type": "number",
+                        "minimum": 0,
+                        "description": "Flat monthly deployment cost"
+                      },
+                      "aggregationBasis": {
+                        "type": "string",
+                        "enum": [
+                          "perUnit",
+                          "perMonth"
+                        ],
+                        "description": "Whether cost is specified per interaction (multiplied by volume) or as a flat monthly figure"
+                      },
+                      "currency": {
+                        "type": "string",
+                        "pattern": "^[A-Z]{3}$",
+                        "description": "Currency for the cost estimate as a 3-letter code (e.g., USD, EUR, GBP)"
+                      },
+                      "costNotes": {
+                        "type": "string",
+                        "description": "Assumptions or notes about the cost estimate"
+                      }
+                    },
+                    "required": [
+                      "aggregationBasis",
+                      "currency"
+                    ],
+                    "title": "DeploymentCost",
+                    "additionalProperties": false
+                  }
+                },
+                "title": "RequirementFeasibility",
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "benefits"
+            ],
+            "title": "Requirement",
+            "additionalProperties": false
+          }
+        }
+      },
+      "title": "UserExpectations",
+      "additionalProperties": false
+    },
+    "developerFeasibility": {
+      "type": "object",
+      "description": "Project-level feasibility (simple, generic defaults that apply to all tasks unless overridden)",
+      "properties": {
+        "trlLevel": {
+          "type": "object",
+          "description": "Technology Readiness Level - project-level maturity assessment",
+          "properties": {
+            "current": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9
+            },
+            "target": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 9
+            }
+          },
+          "additionalProperties": false
+        },
+        "technicalRisk": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "description": "Overall technical risk for the project"
+        },
+        "effortEstimate": {
+          "type": "object",
+          "description": "Overall effort estimate for the project",
+          "properties": {
+            "value": {
+              "type": "number",
+              "minimum": 0
+            },
+            "unit": {
+              "type": "string",
+              "enum": [
+                "weeks",
+                "person-hours"
+              ]
+            }
+          },
+          "required": [
+            "value",
+            "unit"
+          ],
+          "additionalProperties": false
+        },
+        "feasibilityNotes": {
+          "type": "string",
+          "description": "Project-level feasibility notes"
+        },
+        "solutionsToResearch": {
+          "type": "string",
+          "description": "Tools, products, services, or other existing solutions that require research"
+        },
+        "constraintFlags": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Free-text project constraints that require deeper feasibility investigation"
+        }
+      },
+      "title": "DeveloperFeasibility",
+      "additionalProperties": false
+    },
+    "governance": {
+      "type": "object",
+      "properties": {
+        "buildTeamStatus": {
+          "type": "string",
+          "enum": [
+            "none",
+            "possible",
+            "committed"
+          ],
+          "description": "Whether a person or team is available to build the capability"
+        },
+        "maintenanceOwnerStatus": {
+          "type": "string",
+          "enum": [
+            "none",
+            "possible",
+            "committed"
+          ],
+          "description": "Whether a person or team is available to maintain the capability long-term"
+        },
+        "stages": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "startDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "endDate": {
+                "type": "string",
+                "format": "date"
+              },
+              "agents": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "personId": {
+                      "type": "string",
+                      "description": "Reference to Person entity ID (required when type is 'person')"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Name for organization/software agents (required when type is not 'person')"
+                    },
+                    "role": {
+                      "type": "string"
+                    },
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "person",
+                        "organization",
+                        "software"
+                      ]
+                    },
+                    "roleContext": {
+                      "type": "string",
+                      "description": "Optional role context"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "person"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "personId"
+                    ]
+                  },
+                  "else": {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "title": "Agent",
+                  "additionalProperties": false
+                }
+              },
+              "milestones": {
+                "type": "array",
+                "items": {
+                  "title": "Milestone",
+                  "type": "object",
+                  "properties": {
+                    "description": {
+                      "type": "string"
+                    },
+                    "kpi": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "description"
+                  ],
+                  "additionalProperties": false
+                }
+              },
+              "complianceStandards": {
+                "type": "array",
+                "description": "Compliance standards as plain strings or structured framework references",
+                "items": {
+                  "oneOf": [
+                    {
+                      "type": "string"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "framework": {
+                          "type": "string",
+                          "description": "Name of the compliance framework (e.g., 'NIST AI RMF', 'ISO/IEC 42001', 'EU AI Act')"
+                        },
+                        "clauses": {
+                          "type": "array",
+                          "items": {
+                            "type": "string"
+                          },
+                          "description": "Specific clauses or tokens (e.g., 'GOVERN-1', 'Article 72')"
+                        },
+                        "uri": {
+                          "type": "string",
+                          "format": "uri",
+                          "description": "URI to the framework or standard document"
+                        }
+                      },
+                      "required": [
+                        "framework"
+                      ],
+                      "title": "ComplianceStandard",
+                      "additionalProperties": false
+                    }
+                  ]
+                }
+              },
+              "policyCardUri": {
+                "type": "string",
+                "format": "uri",
+                "description": "URI pointing to a Policy Card (machine-readable deployment governance artifact) governing this stage"
+              }
+            },
+            "required": [
+              "id",
+              "name"
+            ],
+            "title": "GovernanceStage",
+            "additionalProperties": false
+          }
+        }
+      },
+      "title": "GovernanceStaging",
+      "additionalProperties": false
+    },
+    "dataAccess": {
+      "type": "object",
+      "properties": {
+        "datasets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "format": {
+                "type": "string"
+              },
+              "license": {
+                "type": "string",
+                "format": "uri"
+              },
+              "accessRights": {
+                "type": "string",
+                "enum": [
+                  "open",
+                  "restricted",
+                  "confidential",
+                  "highly-restricted"
+                ]
+              },
+              "duoTerms": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "format": "uri"
+                }
+              },
+              "pid": {
+                "type": "string",
+                "format": "uri"
+              },
+              "datasetSheetUri": {
+                "type": "string",
+                "format": "uri",
+                "description": "URI pointing to a FAIR dataset sheet"
+              },
+              "publisher": {
+                "type": "string"
+              },
+              "containsPersonalData": {
+                "type": "boolean"
+              },
+              "sensitivityLevel": {
+                "type": "string"
+              }
+            },
+              "required": [
+                "id",
+                "title"
+            ],
+            "title": "Dataset",
+            "additionalProperties": false
+          }
+        }
+      },
+      "title": "DataAccessSensitivity",
+      "additionalProperties": false
+    },
+    "outcomes": {
+      "type": "object",
+      "properties": {
+        "deliverables": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "description": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "pid": {
+                "type": "string",
+                "format": "uri"
+              }
+            },
+            "required": [
+              "id",
+              "title",
+              "type"
+            ],
+            "title": "Deliverable",
+            "additionalProperties": false
+          }
+        },
+        "publications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              },
+              "doi": {
+                "type": "string",
+                "format": "uri"
+              },
+              "authors": {
+                "type": "array",
+                "description": "Publication authors. Each author is either a reference to a Person entity or a free-text organization/consortium name.",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "type": {
+                      "type": "string",
+                      "enum": [
+                        "person",
+                        "organization"
+                      ]
+                    },
+                    "personId": {
+                      "type": "string",
+                      "description": "Reference to Person entity ID (required when type is 'person')"
+                    },
+                    "name": {
+                      "type": "string",
+                      "description": "Name for organization authors (required when type is 'organization')"
+                    }
+                  },
+                  "required": [
+                    "type"
+                  ],
+                  "if": {
+                    "properties": {
+                      "type": {
+                        "const": "person"
+                      }
+                    }
+                  },
+                  "then": {
+                    "required": [
+                      "personId"
+                    ]
+                  },
+                  "else": {
+                    "required": [
+                      "name"
+                    ]
+                  },
+                  "title": "PublicationAuthor",
+                  "additionalProperties": false
+                }
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              }
+            },
+            "required": [
+              "id",
+              "title"
+            ],
+            "title": "Publication",
+            "additionalProperties": false
+          }
+        },
+        "evaluations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "date": {
+                "type": "string",
+                "format": "date"
+              },
+              "metrics": {
+                "type": "object",
+                "additionalProperties": true
+              },
+              "results": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "id",
+              "type"
+            ],
+            "title": "Evaluation",
+            "additionalProperties": false
+          }
+        }
+      },
+      "title": "OutcomesEvaluation",
+      "additionalProperties": false
+    }
+  },
+  "$defs": {
+    "BenefitValue": {
+      "description": "A benefit value: numeric, categorical, or binary",
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "numeric"
+            },
+            "value": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "type",
+            "value"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "categorical"
+            },
+            "category": {
+              "type": "string",
+              "enum": [
+                "low",
+                "medium",
+                "high"
+              ]
+            }
+          },
+          "required": [
+            "type",
+            "category"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "binary"
+            },
+            "bool": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "type",
+            "bool"
+          ],
+          "additionalProperties": false
+        }
+      ],
+      "title": "BenefitValue"
+    },
+    "Benefit": {
+      "description": "A classified benefit metric or an unclassified benefit captured by the simplified canvas",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ClassifiedBenefit"
+        },
+        {
+          "$ref": "#/$defs/UnclassifiedBenefit"
+        }
+      ],
+      "title": "Benefit"
+    },
+    "ClassifiedBenefit": {
+      "type": "object",
+      "description": "A quantified and classified benefit metric for a requirement",
+      "properties": {
+        "benefitType": {
+          "type": "string",
+          "enum": [
+            "time",
+            "quality",
+            "risk",
+            "enablement",
+            "cost"
+          ],
+          "description": "Type of benefit"
+        },
+        "metricId": {
+          "type": "string",
+          "description": "Identifier for the metric (controlled vocabulary or 'custom')"
+        },
+        "metricLabel": {
+          "type": "string",
+          "description": "Human-readable label for the metric"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Original free-form benefit description, retained when a simplified-canvas benefit is classified"
+        },
+        "direction": {
+          "type": "string",
+          "enum": [
+            "increaseIsBetter",
+            "decreaseIsBetter",
+            "targetIsBetter",
+            "boolIsBetter"
+          ],
+          "description": "Indicates whether higher values, lower values, hitting a target, or boolean true is the desired outcome",
+          "title": "BenefitDirection"
+        },
+        "valueMeaning": {
+          "type": "string",
+          "enum": [
+            "absolute",
+            "delta"
+          ],
+          "description": "Whether baseline/expected are absolute measured values or improvement deltas",
+          "title": "ValueMeaning"
+        },
+        "target": {
+          "type": "number",
+          "description": "Target value when direction is 'targetIsBetter'"
+        },
+        "aggregationBasis": {
+          "type": "string",
+          "enum": [
+            "perUnit",
+            "perMonth",
+            "oneOff"
+          ],
+          "default": "perUnit",
+          "description": "How the benefit value is aggregated"
+        },
+        "benefitUnit": {
+          "type": "string",
+          "description": "Unit for the benefit value (e.g., 'minutes', '%', 'incidents/month')"
+        },
+        "baseline": {
+          "$ref": "#/$defs/BenefitValue"
+        },
+        "expected": {
+          "$ref": "#/$defs/BenefitValue"
+        },
+        "oversightMinutesPerUnit": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Human oversight per unit in minutes. Only used when aggregationBasis is 'perUnit'. Mutually exclusive with oversightMinutesPerMonth. Subtracted from gross time benefit."
+        },
+        "oversightMinutesPerMonth": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Human oversight per month in minutes. Only used when aggregationBasis is 'perMonth'. Mutually exclusive with oversightMinutesPerUnit. Subtracted from gross time benefit."
+        },
+        "confidenceUser": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "User's confidence in the benefit estimate"
+        },
+        "confidenceDev": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high"
+          ],
+          "description": "Developer's confidence in the benefit estimate"
+        },
+        "assumptions": {
+          "type": "string",
+          "description": "Key assumptions underlying the benefit estimate"
+        }
+      },
+      "required": [
+        "benefitType",
+        "metricId",
+        "metricLabel",
+        "direction",
+        "valueMeaning",
+        "benefitUnit",
+        "baseline",
+        "expected"
+      ],
+      "if": {
+        "properties": {
+          "direction": {
+            "const": "targetIsBetter"
+          }
+        },
+        "required": [
+          "direction"
+        ]
+      },
+      "then": {
+        "required": [
+          "target"
+        ]
+      },
+      "title": "ClassifiedBenefit",
+      "additionalProperties": false
+    },
+    "UnclassifiedBenefit": {
+      "type": "object",
+      "description": "A free-form benefit or metric awaiting classification and quantification",
+      "properties": {
+        "benefitType": {
+          "const": "unclassified",
+          "description": "Marks a lightweight simplified-canvas benefit"
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free-form expected benefit"
+        },
+        "metricLabel": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Free-form success metric to quantify later"
+        }
+      },
+      "required": [
+        "benefitType"
+      ],
+      "minProperties": 2,
+      "title": "UnclassifiedBenefit",
+      "additionalProperties": false
+    },
+    "Risk": {
+      "type": "object",
+      "description": "A risk assessment for a requirement, paralleling benefit metrics",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the risk"
+        },
+        "riskCategory": {
+          "type": "string",
+          "enum": [
+            "technical",
+            "data",
+            "compliance",
+            "operational",
+            "ethical",
+            "adoption"
+          ],
+          "description": "Category of risk",
+          "title": "RiskCategory"
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Short title for the risk"
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the risk"
+        },
+        "likelihood": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "description": "Probability of the risk occurring",
+          "title": "RiskSeverity"
+        },
+        "impact": {
+          "type": "string",
+          "enum": [
+            "low",
+            "medium",
+            "high",
+            "critical"
+          ],
+          "description": "Severity if the risk materialises"
+        },
+        "mitigation": {
+          "type": "string",
+          "description": "Strategy to mitigate or address the risk"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "identified",
+            "mitigated",
+            "accepted",
+            "resolved"
+          ],
+          "description": "Current status of the risk",
+          "title": "RiskStatus"
+        }
+      },
+      "required": [
+        "id",
+        "riskCategory",
+        "title",
+        "likelihood",
+        "impact",
+        "status"
+      ],
+      "title": "Risk",
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

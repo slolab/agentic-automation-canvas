@@ -9,25 +9,20 @@ Execute before creating a PR.
 ### Commands (all must pass)
 
 1. `npm run lint`
-2. `npm run build:all`
-3. `uv run python tools/validate-examples.py`
+2. `npm run test`
+3. `npm run build:all`
+4. `uv run python tools/validate-examples.py`
 
 ### Tasks
 
 #### Documentation
-- Schema changes → update `docs/reference/index.md`
+- Schema changes → run `uv run python tools/generate-reference.py` and commit the regenerated `docs/reference/index.md` (never hand-edit it; CI fails on drift)
 - New features → add docs
 - UI-only changes → no docs needed
 - Check: `grep -r "fieldName" docs/`
 
 #### Changelog
-Add to `docs/changelog.md`:
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
-
-### Added/Changed/Fixed/Removed
-- [changes]
-```
+Do not add release sections — release-please generates them from the PR title.
 
 #### Examples
 If schema changed:
@@ -55,6 +50,7 @@ title can be set accordingly.
 
 ### Checklist
 - [ ] Lint passes
+- [ ] Tests pass
 - [ ] Build passes
 - [ ] Schema validation passes
 - [ ] Docs reviewed

@@ -55,8 +55,17 @@
                 </svg>
                 {{ formatEffort(localData.effortEstimate) }}
               </span>
+              <span v-if="localData.constraintFlags?.length" class="flex items-center gap-1">
+                {{ localData.constraintFlags.length }} constraint{{ localData.constraintFlags.length === 1 ? '' : 's' }} flagged
+              </span>
+              <span v-if="canvasData.governance?.buildTeamStatus || canvasData.governance?.maintenanceOwnerStatus" class="flex items-center gap-1">
+                Team readiness recorded
+              </span>
             </div>
-            <div v-if="!trlSummary && !localData.technicalRisk && !localData.effortEstimate?.value" class="text-xs text-gray-400 italic">
+            <div
+              v-if="!trlSummary && !localData.technicalRisk && !localData.effortEstimate?.value && !localData.constraintFlags?.length && !canvasData.governance?.buildTeamStatus && !canvasData.governance?.maintenanceOwnerStatus"
+              class="text-xs text-gray-400 italic"
+            >
               No project-level feasibility information added yet
             </div>
           </div>
@@ -182,19 +191,89 @@
 
         <FormField
           id="feasibility-notes"
-          label="Project-Level Notes"
-          help-text="Additional notes on project-level feasibility"
-          tooltip="Add any additional notes about technical feasibility, challenges, dependencies, or considerations at the project level."
+          label="What Has Already Been Tried?"
+          help-text="Previous approaches and what happened"
+          tooltip="Record manual workarounds, tools, pilots, and what was learned before selecting a new approach."
         >
           <textarea
             id="feasibility-notes"
             v-model="localData.feasibilityNotes"
             rows="3"
             class="form-input"
-            placeholder="e.g., Overall project considerations, dependencies, or challenges"
+            placeholder="Describe prior approaches, workarounds, or pilots and what happened"
             @blur="update"
           />
         </FormField>
+
+        <FormField
+          id="solutions-to-research"
+          label="Tools or Existing Solutions to Research"
+          help-text="Products, services, or comparable solutions that should be investigated"
+        >
+          <textarea
+            id="solutions-to-research"
+            v-model="localData.solutionsToResearch"
+            rows="3"
+            class="form-input"
+            placeholder="What should be researched before building something new?"
+            @blur="update"
+          />
+        </FormField>
+
+        <fieldset>
+          <legend class="form-label">Development Constraints</legend>
+          <p class="mb-3 text-xs text-gray-500">Flags from the simplified canvas that require a deeper assessment.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
+            <label v-for="option in constraintOptions" :key="option.value" class="form-checkbox-field items-baseline">
+              <input
+                type="checkbox"
+                class="form-checkbox-small mt-0.5"
+                :checked="localData.constraintFlags?.includes(option.value) ?? false"
+                @change="toggleProjectConstraint(option.value, $event)"
+              />
+              <span>{{ option.label }}</span>
+            </label>
+          </div>
+        </fieldset>
+
+        <div v-if="selectedProjectConstraints.includes('other') || customProjectConstraints.length > 0">
+          <label for="other-project-constraints" class="form-label">Other Constraints</label>
+          <TagEntryInput
+            id="other-project-constraints"
+            v-model="customProjectConstraints"
+            placeholder="Type a constraint and press Enter"
+            item-label="constraints"
+            :disabled="!selectedProjectConstraints.includes('other')"
+          />
+          <p v-if="!selectedProjectConstraints.includes('other')" class="mt-1 text-xs text-gray-500">
+            Select Other to edit these saved constraints.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField id="build-team-status-detailed" label="Team Available to Build?">
+            <select
+              id="build-team-status-detailed"
+              :value="canvasData.governance?.buildTeamStatus ?? ''"
+              class="form-input"
+              @change="updateProjectTeamStatus('buildTeamStatus', $event)"
+            >
+              <option value="">Not answered</option>
+              <option v-for="option in teamStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+          </FormField>
+          <FormField id="maintenance-owner-status-detailed" label="Owner Available to Maintain Long-Term?">
+            <select
+              id="maintenance-owner-status-detailed"
+              :value="canvasData.governance?.maintenanceOwnerStatus ?? ''"
+              class="form-input"
+              @change="updateProjectTeamStatus('maintenanceOwnerStatus', $event)"
+            >
+              <option value="">Not answered</option>
+              <option v-for="option in teamStatusOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
+            </select>
+          </FormField>
+        </div>
 
         <!-- Done Button -->
         <div class="pt-4 border-t border-gray-200 mt-4">
@@ -385,7 +464,7 @@
                       :id="`deployment-cost-basis-${requirement.id}`"
                       :value="requirement.feasibility?.deploymentCost?.aggregationBasis || ''"
                       class="form-input"
-                      @change="updateDeploymentCostField(requirement, 'aggregationBasis', ($event.target as HTMLSelectElement).value || undefined)"
+                      @change="updateDeploymentCostBasis(requirement, ($event.target as HTMLSelectElement).value)"
                     >
                       <option value="">Not specified</option>
                       <option value="perUnit">Per interaction</option>
@@ -461,10 +540,52 @@
 
               <!-- Technology Approach -->
               <div class="border-t border-gray-200 pt-4">
-                <h5 class="text-sm font-medium text-gray-900 mb-3">Technology Approach</h5>
+                <h5 class="text-sm font-medium text-gray-900 mb-3">Potential Approaches and Architecture</h5>
                 <p class="text-xs text-gray-600 mb-3">
-                  Specify the technology approach for this task. Select "None" if the task is deterministic and doesn't require LLMs or automation.
+                  Select the agentic work patterns that may fit this task. The architecture details below are optional and can be refined later.
                 </p>
+
+                <fieldset class="mb-4">
+                  <legend class="form-label">Potential Approaches</legend>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    <label
+                      v-for="option in approachOptions"
+                      :key="option.value"
+                      class="form-checkbox-field items-baseline"
+                    >
+                      <input
+                        type="checkbox"
+                        :checked="requirement.feasibility?.technologyApproach?.approaches?.includes(option.value) ?? false"
+                        @change="toggleTaskApproach(requirement.id, option.value, $event)"
+                      />
+                      <span>{{ option.label }}</span>
+                    </label>
+                  </div>
+                </fieldset>
+
+                <div
+                  v-if="requirement.feasibility?.technologyApproach?.approaches?.includes('other')
+                    || (requirement.feasibility?.technologyApproach?.customApproaches?.length ?? 0) > 0"
+                  class="mb-4"
+                >
+                  <label :for="`task-${requirement.id}-custom-approaches`" class="form-label">
+                    Other Potential Approaches
+                  </label>
+                  <TagEntryInput
+                    :id="`task-${requirement.id}-custom-approaches`"
+                    :model-value="requirement.feasibility?.technologyApproach?.customApproaches ?? []"
+                    placeholder="Type an approach and press Enter"
+                    item-label="approaches"
+                    :disabled="!requirement.feasibility?.technologyApproach?.approaches?.includes('other')"
+                    @update:model-value="updateTaskCustomApproaches(requirement.id, $event)"
+                  />
+                  <p
+                    v-if="!requirement.feasibility?.technologyApproach?.approaches?.includes('other')"
+                    class="mt-1 text-xs text-gray-500"
+                  >
+                    Select Other to edit these saved approaches.
+                  </p>
+                </div>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                   <FormField
@@ -544,12 +665,9 @@
                     @change="updateTaskTechApproach(requirement.id, ($event.target as HTMLSelectElement).value)"
                   >
                     <option value="">Not specified</option>
-                    <option value="none">None (deterministic, no LLM required)</option>
-                    <option value="simple-prompting">Simple prompting</option>
-                    <option value="rag">RAG (Retrieval-augmented generation)</option>
-                    <option value="fine-tuning">Fine-tuning</option>
-                    <option value="agents">Agents (ReAct, MCP, tools)</option>
-                    <option value="other">Other</option>
+                    <option v-for="option in architectureOptions" :key="option.value" :value="option.value">
+                      {{ option.label }}
+                    </option>
                   </select>
                 </FormField>
 
@@ -1194,8 +1312,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
+import TagEntryInput from '../TagEntryInput.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import ExternalLinkIcon from '../ExternalLinkIcon.vue'
 import type { DeveloperFeasibility, RequirementFeasibility, Benefit, Risk, DeploymentCost } from '@/types/canvas'
@@ -1204,8 +1323,27 @@ import type { Requirement } from '@/types/canvas'
 import { markdownToHtml } from '@/utils/markdown'
 import { getTimeSavedPerUnit, getOversightMinutes } from '@/utils/timeBenefits'
 import { getMonthlyDeploymentCost, formatDeploymentCost, aggregateDeploymentCosts } from '@/utils/deploymentCost'
+import { applyFieldFocus } from '@/utils/fieldNavigation'
+import {
+  approachOptions,
+  architectureOptions,
+  constraintOptions,
+  suggestedConstraintValues,
+  teamStatusOptions,
+  type ConstraintFlag,
+  type TeamStatus,
+  type TechnicalApproach,
+  type TechnologyArchitecture,
+} from '@/schema/simplifiedCanvasOptions'
 
-const { canvasData, updateDeveloperFeasibility, updateUserExpectations } = useCanvasData()
+const {
+  canvasData,
+  focusFieldRequest,
+  applyDatasetConstraintToggle,
+  updateDeveloperFeasibility,
+  updateGovernance,
+  updateUserExpectations,
+} = useCanvasData()
 
 function updateRequirement(taskId: string, updatedRequirement: Requirement) {
   const requirements = canvasData.value.userExpectations?.requirements || []
@@ -1223,6 +1361,21 @@ const cardExpanded = ref({
   taskLevel: false,
   effortSummary: false,
 })
+
+// Project-level feasibility fields live in the collapsible "projectLevel" card.
+watch(
+  focusFieldRequest,
+  async (req) => {
+    if (!req || req.itemType !== 'feasibility') return
+    cardExpanded.value.projectLevel = true
+    if (req.domFieldId) {
+      await nextTick()
+      applyFieldFocus(req.domFieldId)
+    }
+    focusFieldRequest.value = null
+  },
+  { immediate: true },
+)
 
 const requirements = computed(() => canvasData.value.userExpectations?.requirements || [])
 
@@ -1416,12 +1569,20 @@ const algorithmsInputs = ref<Record<string, string>>({})
 const toolsInputs = ref<Record<string, string>>({})
 
 // Migrate old string effortEstimate to structured format
-function migrateEffortEstimate(effort: any): { value: number; unit: 'weeks' | 'person-hours' } | undefined {
+type EffortEstimate = NonNullable<DeveloperFeasibility['effortEstimate']>
+
+function migrateEffortEstimate(effort: unknown): EffortEstimate | undefined {
   if (!effort) return undefined
   
   // Already in new format
-  if (typeof effort === 'object' && effort.value !== undefined && effort.unit) {
-    return effort
+  if (
+    typeof effort === 'object' &&
+    'value' in effort &&
+    typeof effort.value === 'number' &&
+    'unit' in effort &&
+    (effort.unit === 'weeks' || effort.unit === 'person-hours')
+  ) {
+    return { value: effort.value, unit: effort.unit }
   }
   
   // Old string format - try to parse
@@ -1479,6 +1640,8 @@ const initLocalData = (): DeveloperFeasibility => {
     technicalRisk: feasibility?.technicalRisk,
     effortEstimate,
     feasibilityNotes: feasibility?.feasibilityNotes,
+    solutionsToResearch: feasibility?.solutionsToResearch,
+    constraintFlags: feasibility?.constraintFlags ? [...feasibility.constraintFlags] : undefined,
   }
 }
 
@@ -1548,18 +1711,22 @@ watch(
   (newFeasibility) => {
     if (!isLocalUpdate) {
       if (newFeasibility && Object.keys(newFeasibility).length > 0) {
-        const migratedEffort = migrateEffortEstimate(newFeasibility.effortEstimate)
+        const storedEffort = newFeasibility.effortEstimate as unknown
+        const needsEffortMigration = typeof storedEffort === 'string'
+        const migratedEffort = migrateEffortEstimate(storedEffort)
         localData.value = {
           trlLevel: newFeasibility.trlLevel || {},
           technicalRisk: newFeasibility.technicalRisk,
           effortEstimate: migratedEffort,
           feasibilityNotes: newFeasibility.feasibilityNotes,
+          solutionsToResearch: newFeasibility.solutionsToResearch,
+          constraintFlags: newFeasibility.constraintFlags ? [...newFeasibility.constraintFlags] : undefined,
         }
         if (!localData.value.trlLevel) {
           localData.value.trlLevel = {}
         }
         // If migration happened, update the canvas data
-        if (migratedEffort !== newFeasibility.effortEstimate) {
+        if (needsEffortMigration) {
           isLocalUpdate = true
           updateDeveloperFeasibility(localData.value)
           setTimeout(() => {
@@ -1610,25 +1777,52 @@ watch(
 
 const update = () => {
   isLocalUpdate = true
+  // value="" from the placeholder option is not a member of the schema enum, and
+  // would fail current-schema validation and block the export.
+  if ((localData.value.technicalRisk as unknown) === '') delete localData.value.technicalRisk
   updateDeveloperFeasibility(localData.value)
   setTimeout(() => {
     isLocalUpdate = false
   }, 0)
 }
 
+function toggleProjectConstraint(value: ConstraintFlag, event: Event) {
+  const checked = (event.target as HTMLInputElement).checked
+  const current = selectedProjectConstraints.value
+  const suggested = checked
+    ? [...new Set([...current, value])]
+    : current.filter((candidate) => candidate !== value)
+  localData.value.constraintFlags = [...suggested, ...customProjectConstraints.value]
+  update()
+  applyDatasetConstraintToggle({ flag: value, checked, flags: suggested })
+}
+
+const selectedProjectConstraints = computed(() =>
+  (localData.value.constraintFlags ?? []).filter((value) => suggestedConstraintValues.includes(value)),
+)
+
+const customProjectConstraints = computed<string[]>({
+  get: () => (localData.value.constraintFlags ?? [])
+    .filter((value) => !suggestedConstraintValues.includes(value)),
+  set: (values) => {
+    localData.value.constraintFlags = [...selectedProjectConstraints.value, ...values]
+    update()
+  },
+})
+
+function updateProjectTeamStatus(
+  field: 'buildTeamStatus' | 'maintenanceOwnerStatus',
+  event: Event,
+) {
+  const value = (event.target as HTMLSelectElement).value as TeamStatus | ''
+  updateGovernance({ [field]: value || undefined })
+}
+
 // Effort estimate helpers
 function updateEffortValue(valueStr: string) {
   const value = valueStr === '' ? undefined : parseFloat(valueStr)
   if (value === undefined || isNaN(value)) {
-    if (localData.value.effortEstimate) {
-      localData.value.effortEstimate = {
-        ...localData.value.effortEstimate,
-        value: undefined as any
-      }
-      if (!localData.value.effortEstimate.value) {
-        localData.value.effortEstimate = undefined
-      }
-    }
+    localData.value.effortEstimate = undefined
   } else {
     if (!localData.value.effortEstimate) {
       localData.value.effortEstimate = { value, unit: 'weeks' }
@@ -1740,7 +1934,17 @@ function ensureDeploymentCost(req: Requirement): DeploymentCost {
   return req.feasibility.deploymentCost
 }
 
-function updateDeploymentCostField(req: Requirement, field: string, value: any) {
+function updateDeploymentCostBasis(req: Requirement, rawValue: string) {
+  const aggregationBasis: DeploymentCost['aggregationBasis'] | undefined =
+    rawValue === 'perUnit' || rawValue === 'perMonth' ? rawValue : undefined
+  updateDeploymentCostField(req, 'aggregationBasis', aggregationBasis)
+}
+
+function updateDeploymentCostField<K extends keyof DeploymentCost>(
+  req: Requirement,
+  field: K,
+  value: DeploymentCost[K] | undefined,
+) {
   if (!value && field === 'aggregationBasis') {
     // Clear deployment cost when basis is unset
     if (req.feasibility) {
@@ -1750,7 +1954,11 @@ function updateDeploymentCostField(req: Requirement, field: string, value: any) 
     return
   }
   const dc = ensureDeploymentCost(req)
-  ;(dc as any)[field] = value
+  if (value === undefined) {
+    delete dc[field]
+  } else {
+    dc[field] = value
+  }
   update()
 }
 
@@ -1782,15 +1990,18 @@ function updateTaskTechApproach(taskId: string, architecture: string) {
   const requirement = requirements.value.find((r) => r.id === taskId)
   if (!requirement) return
 
-  const valid = ['none', 'simple-prompting', 'rag', 'fine-tuning', 'agents', 'other'] as const
-  const arch = (architecture && valid.includes(architecture as typeof valid[number]) ? architecture : undefined) as typeof valid[number] | undefined
+  const arch = architectureOptions.some((option) => option.value === architecture)
+    ? architecture as TechnologyArchitecture
+    : undefined
+  const current = requirement.feasibility?.technologyApproach
+  const nextTechnologyApproach = {
+    ...current,
+    architecture: arch,
+  }
 
   const updates: Partial<RequirementFeasibility> = {
-    technologyApproach: arch
-      ? {
-          ...requirement.feasibility?.technologyApproach,
-          architecture: arch,
-        }
+    technologyApproach: Object.values(nextTechnologyApproach).some((value) => value !== undefined)
+      ? nextTechnologyApproach
       : undefined,
   }
   
@@ -1802,6 +2013,41 @@ function updateTaskTechApproach(taskId: string, architecture: string) {
   }
 
   updateTaskFeasibility(taskId, updates)
+}
+
+function toggleTaskApproach(taskId: string, value: TechnicalApproach, event: Event) {
+  const requirement = requirements.value.find((candidate) => candidate.id === taskId)
+  if (!requirement) return
+
+  const checked = (event.target as HTMLInputElement).checked
+  const currentTechnologyApproach = requirement.feasibility?.technologyApproach
+  const currentApproaches = currentTechnologyApproach?.approaches ?? []
+  const approaches = checked
+    ? [...new Set([...currentApproaches, value])]
+    : currentApproaches.filter((candidate) => candidate !== value)
+
+  const technologyApproach = {
+    ...currentTechnologyApproach,
+    approaches: approaches.length > 0 ? approaches : undefined,
+  }
+
+  updateTaskFeasibility(taskId, {
+    technologyApproach: Object.values(technologyApproach).some((entry) => entry !== undefined)
+      ? technologyApproach
+      : undefined,
+  })
+}
+
+function updateTaskCustomApproaches(taskId: string, values: string[]) {
+  const requirement = requirements.value.find((candidate) => candidate.id === taskId)
+  if (!requirement) return
+
+  const technologyApproach = {
+    ...requirement.feasibility?.technologyApproach,
+    customApproaches: values.length > 0 ? values : undefined,
+  }
+
+  updateTaskFeasibility(taskId, { technologyApproach })
 }
 
 function updateTaskRagDetails(taskId: string, field: 'retrievalMethod' | 'embeddingModel' | 'chunkingStrategy', value: string) {

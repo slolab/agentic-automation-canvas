@@ -1,0 +1,139 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://w3id.org/aac/profile/0.17.1",
+  "title": "AAC RO-Crate Profile 0.17.1",
+  "description": "Structural profile for RO-Crates exported from AAC schema 0.17.1.",
+  "type": "object",
+  "required": [
+    "@context",
+    "@graph"
+  ],
+  "properties": {
+    "@context": {
+      "type": "array",
+      "minItems": 2,
+      "contains": {
+        "const": "https://w3id.org/ro/crate/1.2/context"
+      }
+    },
+    "@graph": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "@id",
+          "@type"
+        ],
+        "properties": {
+          "@id": {
+            "type": "string"
+          },
+          "@type": {
+            "oneOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "string"
+                }
+              }
+            ]
+          }
+        },
+        "additionalProperties": true
+      },
+      "allOf": [
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "@id": {
+                "const": "ro-crate-metadata.json"
+              },
+              "@type": {
+                "const": "schema:CreativeWork"
+              },
+              "conformsTo": {
+                "type": "object",
+                "properties": {
+                  "@id": {
+                    "const": "https://w3id.org/ro/crate/1.2"
+                  }
+                },
+                "required": [
+                  "@id"
+                ],
+                "additionalProperties": false
+              },
+              "about": {
+                "type": "object",
+                "properties": {
+                  "@id": {
+                    "const": "./"
+                  }
+                },
+                "required": [
+                  "@id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "@id",
+              "@type",
+              "conformsTo",
+              "about"
+            ]
+          }
+        },
+        {
+          "contains": {
+            "type": "object",
+            "properties": {
+              "@id": {
+                "const": "./"
+              },
+              "@type": {
+                "type": "array",
+                "contains": {
+                  "const": "schema:Dataset"
+                }
+              },
+              "datePublished": {
+                "type": "string",
+                "format": "date"
+              },
+              "aac:schemaVersion": {
+                "const": "0.17.1"
+              },
+              "conformsTo": {
+                "type": "object",
+                "properties": {
+                  "@id": {
+                    "const": "https://w3id.org/aac/profile/0.17.1"
+                  }
+                },
+                "required": [
+                  "@id"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "@id",
+              "@type",
+              "datePublished",
+              "aac:schemaVersion",
+              "conformsTo"
+            ]
+          }
+        }
+      ]
+    }
+  },
+  "additionalProperties": false
+}

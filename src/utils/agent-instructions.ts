@@ -11,6 +11,7 @@ import type {
   RequirementFeasibility,
   BenefitValue,
 } from '@/types/canvas'
+import { isUnclassifiedBenefit } from '@/utils/benefits'
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -69,6 +70,11 @@ function renderRequirements(data: CanvasData): string | undefined {
 
     if (req.benefits?.length) {
       for (const b of req.benefits) {
+        if (isUnclassifiedBenefit(b)) {
+          const label = b.description?.trim() || b.metricLabel?.trim()
+          if (label) parts.push(`- Unclassified benefit: ${label}`)
+          continue
+        }
         const base = formatBenefitValue(b.baseline)
         const exp = formatBenefitValue(b.expected)
         parts.push(`- ${b.metricLabel}: ${base} → ${exp} ${b.benefitUnit}`)
@@ -156,6 +162,7 @@ function renderConstraints(data: CanvasData): string | undefined {
   const notes: string[] = []
   for (const req of data.userExpectations?.requirements ?? []) {
     for (const b of req.benefits ?? []) {
+      if (isUnclassifiedBenefit(b)) continue
       if (b.assumptions) notes.push(`${req.title} / ${b.metricLabel}: ${b.assumptions}`)
     }
   }

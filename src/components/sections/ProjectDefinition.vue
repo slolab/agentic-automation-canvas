@@ -215,9 +215,9 @@
 
         <FormField
           id="project-description"
-          label="Description"
-          help-text="A detailed description of the project and its objectives"
-          tooltip="Provide a comprehensive description (2-4 paragraphs) covering: what the automation does, why it's needed, who will benefit, and how it works. This is the main narrative about your project and will be used in documentation and RO-Crate metadata."
+          label="Problem Description"
+          help-text="A detailed description of the problem the project addresses"
+          tooltip="Describe what goes wrong today and the consequences. Keep the problem separate from a proposed technical solution; the affected population, frequency, and recent examples are captured below."
           :error="errors.description"
           required
         >
@@ -231,11 +231,45 @@
           />
         </FormField>
 
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            id="project-problem-frequency"
+            label="Problem Frequency"
+            help-text="A deliberately rough indication of how often the problem occurs"
+          >
+            <select
+              id="project-problem-frequency"
+              v-model="localData.problemFrequency"
+              class="form-input"
+              @change="update"
+            >
+              <option value="">Select frequency</option>
+              <option v-for="option in frequencyOptions" :key="option.value" :value="option.value">
+                {{ option.label }}
+              </option>
+            </select>
+          </FormField>
+
+          <FormField
+            id="project-problem-examples"
+            label="Problem Examples"
+            help-text="Concrete cases, beginning with the most recent"
+          >
+            <TagEntryInput
+              id="project-problem-examples"
+              :model-value="localData.problemExamples ?? []"
+              placeholder="Type a concrete case and press Enter"
+              item-label="examples"
+              @update:model-value="updateDetailedProblemExamples"
+            />
+          </FormField>
+        </div>
+
         <FormField
           id="project-objective"
-          label="Objective"
-          help-text="The main objective or goal of the project. Maps to <a href='https://schema.org/abstract' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org abstract property'>schema:abstract</a> (summary of the project)."
-          tooltip="A concise summary (1-2 sentences) of the project's main goal. This differs from Description: Objective is a brief abstract/summary, while Description provides full details. Example: 'Automate document routing to reduce manual processing time by 60% while improving accuracy.'"
+          label="Desired Change"
+          help-text="What should happen differently? Maps to <a href='https://schema.org/abstract' target='_blank' rel='noopener noreferrer' class='text-primary-600 hover:text-primary-800 underline' title='Schema.org abstract property'>schema:abstract</a>."
+          tooltip="Describe the changed outcome or way of working without prematurely committing to a technical approach."
         >
           <textarea
             id="project-objective"
@@ -396,6 +430,22 @@
           </div>
         </FormField>
 
+        <FormField
+          id="project-lead-organization"
+          label="Lead Organization or Team"
+          help-text="The organization or team responsible for leading the work"
+          tooltip="Name the group that owns or coordinates the project. This is the same value shown in the simplified canvas."
+        >
+          <input
+            id="project-lead-organization"
+            v-model="localData.leadOrganization"
+            type="text"
+            class="form-input"
+            placeholder="e.g., Clinical Operations"
+            @blur="update"
+          />
+        </FormField>
+
         <div class="pt-6 border-t-2 border-gray-200 mt-8">
           <h3 class="subsection-header">Version Management</h3>
           <p class="text-sm text-gray-600 mb-4">
@@ -444,16 +494,16 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               id="project-headline-value"
-              label="Headline Value"
-              help-text="Short text summary of the project's value proposition"
-              tooltip="A brief, human-readable summary of your project's value (1-2 sentences). This is different from detailed benefit metrics - it's a quick statement that captures the essence. Do NOT include numbers or units here - those go in Benefit Value and Benefit Unit fields and are combined automatically. Example: 'Saves time through automated document processing' or 'Reduces errors while improving compliance'."
+              label="Why This Is Important Right Now"
+              help-text="The current reason this change deserves attention"
+              tooltip="Explain the urgency or present context in general terms. Detailed, quantified benefits remain attached to tasks."
             >
-              <input
+              <textarea
                 id="project-headline-value"
                 v-model="localData.headlineValue"
-                type="text"
+                rows="2"
                 class="form-input"
-                placeholder="e.g., Saves time through automated data processing"
+                placeholder="What makes this worth addressing now?"
                 @blur="update"
               />
             </FormField>
@@ -573,7 +623,7 @@
                 <div class="flex items-center gap-1">
                   <button
                     type="button"
-                    :disabled="(benefitDisplay.displayGroupCount ?? 5) <= MIN_DISPLAY_GROUPS"
+                    :disabled="(benefitDisplay.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT) <= MIN_DISPLAY_GROUPS"
                     @click="setDisplayGroupCount(-1)"
                     class="inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                     title="Decrease number of display groups"
@@ -583,7 +633,7 @@
                   <span class="text-xs text-gray-500 min-w-[4rem] text-center">{{ displayGroupSlotIds.length }} group{{ displayGroupSlotIds.length === 1 ? '' : 's' }}</span>
                   <button
                     type="button"
-                    :disabled="(benefitDisplay.displayGroupCount ?? 5) >= MAX_DISPLAY_GROUPS"
+                    :disabled="(benefitDisplay.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT) >= MAX_DISPLAY_GROUPS"
                     @click="setDisplayGroupCount(1)"
                     class="inline-flex items-center justify-center w-8 h-8 rounded-md text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500"
                     title="Increase number of display groups"
@@ -634,13 +684,22 @@ import { ref, watch, computed, nextTick } from 'vue'
 import FormField from '../FormField.vue'
 import InfoTooltip from '../InfoTooltip.vue'
 import ExternalLinkIcon from '../ExternalLinkIcon.vue'
-import type { ProjectDefinition, Requirement, Benefit } from '@/types/canvas'
-import type { BenefitDisplayGroup, BenefitRef } from '@/types/benefitDisplay'
+import TagEntryInput from '../TagEntryInput.vue'
+import { frequencyOptions } from '@/schema/simplifiedCanvasOptions'
+import type { ProjectDefinition, Requirement, Benefit, ClassifiedBenefit } from '@/types/canvas'
+import {
+  DEFAULT_DISPLAY_GROUP_COUNT,
+  MAX_DISPLAY_GROUPS,
+  MIN_DISPLAY_GROUPS,
+  type BenefitDisplayGroup,
+  type BenefitRef,
+} from '@/types/benefitDisplay'
 import { useCanvasData } from '@/composables/useCanvasData'
 import { applyFieldFocus } from '@/utils/fieldNavigation'
 import { getTimeSavedPerUnit } from '@/utils/timeBenefits'
 import { formatDisplayGroupValue } from '@/utils/displayGroupValue'
 import { getMetricDisplayLabel, formatBenefitValueDisplay } from '@/data/benefitMetrics'
+import { isBenefitOfType, isClassifiedBenefit, isUnclassifiedBenefit } from '@/utils/benefits'
 
 const { canvasData, benefitDisplay, markChangedSinceImport, updateProject, validateProject: validateProjectFn, focusFieldRequest } = useCanvasData()
 
@@ -650,11 +709,14 @@ const initLocalData = (): ProjectDefinition => {
   return {
     title: project.title || '',
     description: project.description || '',
+    problemFrequency: project.problemFrequency,
+    problemExamples: project.problemExamples ? [...project.problemExamples] : undefined,
     objective: project.objective,
     projectStage: project.projectStage,
     startDate: project.startDate,
     endDate: project.endDate,
     projectId: project.projectId,
+    leadOrganization: project.leadOrganization,
     headlineValue: project.headlineValue,
     primaryValueDriver: project.primaryValueDriver,
     roughEstimateValue: project.roughEstimateValue,
@@ -676,6 +738,11 @@ const versionError = computed(() => {
 // Chip inputs for domains and keywords
 const domainInput = ref('')
 const keywordInput = ref('')
+
+function updateDetailedProblemExamples(values: string[]) {
+  localData.value.problemExamples = values.length > 0 ? values : undefined
+  void update()
+}
 
 function addDomainChips() {
   const values = domainInput.value.split(',').map(s => s.trim()).filter(Boolean)
@@ -744,6 +811,11 @@ function getTaskDescription(requirementId: string): string {
 }
 
 function getMetricLabelForBenefit(benefit: Benefit): string {
+  if (isUnclassifiedBenefit(benefit)) {
+    if (benefit.description?.trim()) return 'Expected benefit:'
+    if (benefit.metricLabel?.trim()) return 'Success metric:'
+    return 'Unclassified benefit'
+  }
   return getMetricDisplayLabel(benefit.benefitType, benefit.metricId, benefit.metricLabel) || benefit.metricLabel || benefit.metricId || ''
 }
 
@@ -757,10 +829,6 @@ function benefitTypeBadgeClass(type: string): string {
   }
   return classes[type] || 'bg-gray-100 text-gray-700'
 }
-
-const MIN_DISPLAY_GROUPS = 1
-const MAX_DISPLAY_GROUPS = 15
-const DEFAULT_DISPLAY_GROUP_COUNT = 5
 
 const displayGroupSlotIds = computed(() => {
   const count = benefitDisplay.value.displayGroupCount ?? DEFAULT_DISPLAY_GROUP_COUNT
@@ -796,6 +864,7 @@ function isInGroup(row: BenefitRow, group: BenefitDisplayGroup | undefined): boo
 }
 
 function isCompatibleWithGroup(row: BenefitRow, group: BenefitDisplayGroup | undefined): boolean {
+  if (!isClassifiedBenefit(row.benefit)) return false
   if (!group || group.benefitRefs.length === 0) return true
   return group.benefitType === row.benefit.benefitType && group.metricId === row.benefit.metricId
 }
@@ -803,12 +872,16 @@ function isCompatibleWithGroup(row: BenefitRow, group: BenefitDisplayGroup | und
 function canToggleDisplayGroup(row: BenefitRow, slotId: number): boolean {
   const group = getGroupBySlotId(slotId)
   if (isInGroup(row, group)) return true
+  if (!isClassifiedBenefit(row.benefit)) return false
   return isCompatibleWithGroup(row, group)
 }
 
 function displayGroupButtonClass(row: BenefitRow, slotId: number): string {
   const group = getGroupBySlotId(slotId)
   const inGroup = isInGroup(row, group)
+  if (!isClassifiedBenefit(row.benefit) && !inGroup) {
+    return 'bg-gray-100 text-gray-300 cursor-not-allowed'
+  }
   const compatible = isCompatibleWithGroup(row, group)
   if (inGroup) {
     return benefitTypeBadgeClass(row.benefit.benefitType) + ' cursor-pointer hover:opacity-90'
@@ -822,6 +895,7 @@ function displayGroupButtonClass(row: BenefitRow, slotId: number): string {
 function displayGroupButtonTitle(row: BenefitRow, slotId: number): string {
   const group = getGroupBySlotId(slotId)
   const inGroup = isInGroup(row, group)
+  if (!isClassifiedBenefit(row.benefit) && !inGroup) return 'Classify this benefit before adding it to a display group'
   const compatible = isCompatibleWithGroup(row, group)
   if (inGroup) return `Remove from display group ${slotId}`
   if (group && !compatible) return `Display group ${slotId} has different metric; cannot add`
@@ -834,6 +908,7 @@ function toggleDisplayGroup(row: BenefitRow, slotId: number): void {
     removeFromDisplayGroup(row, slotId)
     return
   }
+  if (!isClassifiedBenefit(row.benefit)) return
   if (!isCompatibleWithGroup(row, group)) return
   const ref: BenefitRef = { requirementId: row.requirementId, benefitIndex: row.benefitIndex }
   const groups = benefitDisplay.value.displayGroups
@@ -896,7 +971,7 @@ function formatDate(dateStr: string): string {
 
 // Format task time saved for display (baseline − expected) × volume
 function getTaskTimeSaved(task: Requirement): string | null {
-  const timeBenefit = (task.benefits || []).find(b => b.benefitType === 'time')
+  const timeBenefit = (task.benefits || []).find(b => isBenefitOfType(b, 'time'))
   if (!timeBenefit) return null
   
   const savedPerUnit = getTimeSavedPerUnit(timeBenefit, task)
@@ -927,7 +1002,7 @@ const computedBenefitFromTasks = computed<{ value: number; unit: string; source:
   const reqs = canvasData.value.userExpectations?.requirements || []
   let totalMinutes = 0
   for (const req of reqs) {
-    const timeBenefit = (req.benefits || []).find(b => b.benefitType === 'time')
+    const timeBenefit = (req.benefits || []).find(b => isBenefitOfType(b, 'time'))
     if (!timeBenefit) continue
     const savedPerUnit = getTimeSavedPerUnit(timeBenefit, req)
     const volume = req.volumePerMonth || 0
@@ -1051,25 +1126,39 @@ const hasTaskBenefits = computed(() => {
 })
 
 // Benefit count by type for compact tags (category + number)
+const benefitTypes = [
+  'time',
+  'quality',
+  'risk',
+  'enablement',
+  'cost',
+] as const satisfies readonly ClassifiedBenefit['benefitType'][]
+
 const benefitCountTags = computed(() => {
   const reqs = canvasData.value.userExpectations?.requirements || []
-  const counts: Record<string, number> = { time: 0, quality: 0, risk: 0, enablement: 0, cost: 0 }
+  const counts: Record<ClassifiedBenefit['benefitType'], number> = {
+    time: 0,
+    quality: 0,
+    risk: 0,
+    enablement: 0,
+    cost: 0,
+  }
   reqs.forEach((r) => {
     (r.benefits || []).forEach((b) => {
-      if (counts[b.benefitType] !== undefined) counts[b.benefitType]++
+      if (isClassifiedBenefit(b)) counts[b.benefitType]++
     })
   })
-  return (['time', 'quality', 'risk', 'enablement', 'cost'] as const)
+  return benefitTypes
     .filter((type) => counts[type] > 0)
     .map((type) => ({ type, count: counts[type] }))
 })
 
 // Resolve the first valid benefit for a display group (ground truth for metric/type)
-function resolveFirstBenefit(g: BenefitDisplayGroup, reqs: Requirement[]) {
+function resolveFirstBenefit(g: BenefitDisplayGroup, reqs: Requirement[]): ClassifiedBenefit | undefined {
   for (const ref of g.benefitRefs) {
     const req = reqs.find((r, i) => (r.id || `req-${i}`) === ref.requirementId)
     const benefit = req?.benefits?.[ref.benefitIndex]
-    if (benefit) return benefit
+    if (benefit && isClassifiedBenefit(benefit)) return benefit
   }
   return undefined
 }
@@ -1164,11 +1253,14 @@ watch(
       localData.value = {
         title: newProject.title || '',
         description: newProject.description || '',
+        problemFrequency: newProject.problemFrequency,
+        problemExamples: newProject.problemExamples ? [...newProject.problemExamples] : undefined,
         objective: newProject.objective,
         projectStage: newProject.projectStage,
         startDate: newProject.startDate,
         endDate: newProject.endDate,
         projectId: newProject.projectId,
+        leadOrganization: newProject.leadOrganization,
         headlineValue: newProject.headlineValue,
         primaryValueDriver: newProject.primaryValueDriver,
         roughEstimateValue: newProject.roughEstimateValue,
@@ -1214,6 +1306,12 @@ const update = async () => {
   isLocalUpdate = true
   // Update project with version fields
   const updateData: Partial<ProjectDefinition> = { ...localData.value }
+  // The "select …" placeholder options carry value="", which is not a member of
+  // these schema enums; keeping it would fail current-schema validation and
+  // block the export. An unselected enum is absent, not empty.
+  // (`as unknown` because the runtime value the select writes is outside the type.)
+  if ((updateData.problemFrequency as unknown) === '') delete updateData.problemFrequency
+  if ((updateData.primaryValueDriver as unknown) === '') delete updateData.primaryValueDriver
   updateProject(updateData)
   
   // Also update root-level version fields for consistency

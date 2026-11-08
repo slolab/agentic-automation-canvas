@@ -89,7 +89,7 @@ const items = computed({
 const getItemKey = (item: T, index: number): string => {
   // Try to use id if available, otherwise use index
   if (typeof item === 'object' && item !== null && 'id' in item) {
-    return String((item as any).id) || `item-${index}`
+    return String(item.id ?? '') || `item-${index}`
   }
   return `item-${index}`
 }

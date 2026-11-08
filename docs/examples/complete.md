@@ -7,9 +7,9 @@ This is a comprehensive Agentic Automation Canvas example with all sections popu
 The complete example includes:
 
 - **Full Project Definition**: Title, description, objectives, stages, domain, keywords, funding, and benefit metrics
-- **User Expectations**: Multiple requirements with detailed benefit metrics and per-task stakeholders
+- **User Expectations**: A detailed requirement with multiple benefit metrics and per-task stakeholders
 - **Developer Feasibility**: TRL levels, technical risk assessment, model selection, baseline capabilities, expected gains, implementation difficulty
-- **Governance**: Multiple governance stages with agents (people, organizations, software), milestones, and compliance standards
+- **Governance**: A governance stage with agents (people, organizations, software), milestones, and compliance standards
 - **Data Access**: Dataset metadata with access rights, sensitivity levels, DUO terms, and PIDs
 - **Outcomes**: Deliverables, publications with DOIs, and evaluation results with metrics
 

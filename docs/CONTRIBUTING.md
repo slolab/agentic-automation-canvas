@@ -42,12 +42,22 @@ Thank you for your interest in contributing to the Agentic Automation Canvas pro
 ├── src/                    # Source code
 │   ├── components/         # Vue components
 │   ├── composables/        # Vue composables
-│   ├── types/              # TypeScript types
+│   ├── types/              # TypeScript types (AAC domain types are generated)
 │   ├── utils/              # Utility functions
 │   └── styles/             # Global styles
-├── schema/                 # Schema definitions (standalone)
+├── schema/                 # Versioned AAC schemas, profiles, and current aliases
+├── tests/                  # Centralized tests, grouped to mirror src domains
 ├── docs/                   # Documentation
 └── public/                 # Static assets
+```
+
+## Testing
+
+Keep automated tests under `tests/`, mirroring the relevant `src/` domain. Do not
+colocate `*.spec.ts`, `*.test.ts`, or `*.type-test.ts` files with production code.
+
+```bash
+npm test
 ```
 
 ## Making Changes
@@ -79,12 +89,13 @@ releases by hand.
 4. **Merge the release PR.** release-please tags `vX.Y.Z`, creates the GitHub Release, and
    the workflow dispatches **Deploy to GitHub Pages** at that tag.
 
-Version locations updated automatically: `package.json` and `package-lock.json` (native
-node updater), plus the lines annotated with `x-release-please-version` in
-`pyproject.toml`, `README.md`, `docs/index.md`, `docs/spec/index.md`,
-`docs/spec/conformance.md`, and `docs/schema/index.md` (listed under `extra-files` in
-`release-please-config.json`). If you add a new file that displays the version, annotate
-the line and add the file to `extra-files`.
+Application-version locations updated automatically: `package.json` and
+`package-lock.json` (native node updater), plus the lines annotated with
+`x-release-please-version` in `pyproject.toml`, `README.md`, and `docs/index.md` (listed
+under `extra-files` in `release-please-config.json`). AAC schema versions are selected
+independently in `schema/manifest.json` and must never use release-please annotations.
+If you add a new file that displays the application version, annotate the line and add
+the file to `extra-files`.
 
 Notes and limitations:
 
@@ -101,13 +112,60 @@ Notes and limitations:
 
 ## Schema Changes
 
-If you're modifying the schema (`schema/` directory):
+The versioned JSON Schema is the single source of truth for the AAC data contract.
+Released contracts under `schema/versions/<version>/` are immutable. The selected
+version in `schema/manifest.json` is the current contract.
 
-- Update `schema/canvas-schema.json` (JSON Schema)
-- Update TypeScript interfaces in `src/types/canvas.ts`
-- Update RO-Crate generator in `src/utils/rocrate.ts`
-- Update example RO-Crates in `schema/examples/`
-- Update mapping documentation in `schema/mappings/`
+The following files are generated from that selection and must not be edited by hand:
+
+- `schema/canvas-schema.json` and `schema/rocrate-profile.json` — stable aliases for
+  consumers that need the current contract
+- `src/types/canvas.ts` — AAC domain types used by application, UI, import, and export code
+- `src/schema/contract.ts` — current schema, profile, and RO-Crate contract constants
+
+To change the schema:
+
+1. Create a new `schema/versions/<version>/` contract by copying the current version;
+   never alter an already released version.
+2. Edit the new versioned JSON Schema and RO-Crate profile, then point
+   `schema/manifest.json` at them.
+3. Regenerate all derived artifacts:
+
+   ```bash
+   npm run schema:generate
+   ```
+
+4. Update schema examples, RO-Crate mappings, recovery/import behavior, and reference
+   documentation as required by the contract change. The schema-exhaustive current
+   round-trip fixture will fail until every newly declared field is represented.
+5. Verify that no generated artifact has drifted and that all handwritten logic still
+   type-checks against the generated model:
+
+   ```bash
+   npm run schema:check
+   npm run typecheck
+   uv run python tools/validate-examples.py
+   ```
+
+Do not hand-code AAC schema interfaces. UI and mapping logic must consume the generated
+types so a schema change produces compile-time errors where handwritten logic needs to be
+updated. Rare presentation-only configuration may be handwritten when it cannot
+reasonably be derived, but it must still be strongly typed against the generated model.
+
+Runtime data is also checked against the current JSON Schema. Current-schema exports are
+strict and are blocked by schema errors. Import is deliberately tolerant: every
+non-current or unversioned crate uses the same current-model recovery path, reports
+structured warnings or errors, and loads whatever can be recovered instead of blocking
+the view. Historical contracts are published artifacts, not lossless import promises.
+
+Recovery returns data that conforms *structurally* to the current schema but is not
+necessarily valid against it. Required text the user has not filled in yet — an empty
+`title` or `name` on an item they just created — is preserved as an empty string and
+produces no finding, because an incomplete canvas is the normal state while editing.
+Dropping it would delete the enclosing task, person, or risk. Export re-validates
+strictly and reports those fields as errors. Keep this in mind when adding a
+`minLength` constraint: it must describe a value that is complete, not one that is
+merely present.
 
 ## Standards Compliance
 

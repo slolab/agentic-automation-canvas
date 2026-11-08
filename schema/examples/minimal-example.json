@@ -1,9 +1,20 @@
 {
-  "@context": "https://w3id.org/ro/crate/1.2/context",
+  "@context": [
+    "https://w3id.org/ro/crate/1.2/context",
+    {
+      "schema": "https://schema.org/",
+      "prov": "http://www.w3.org/ns/prov#",
+      "p-plan": "http://purl.org/net/p-plan#",
+      "dct": "http://purl.org/dc/terms/",
+      "dcat": "http://www.w3.org/ns/dcat#",
+      "frapo": "http://purl.org/cerif/frapo/",
+      "aac": "https://w3id.org/aac/schema/"
+    }
+  ],
   "@graph": [
     {
       "@id": "ro-crate-metadata.json",
-      "@type": "CreativeWork",
+      "@type": "schema:CreativeWork",
       "conformsTo": {
         "@id": "https://w3id.org/ro/crate/1.2"
       },
@@ -13,20 +24,47 @@
     },
     {
       "@id": "./",
-      "@type": "Dataset",
-      "name": "Minimal Agentic Automation Canvas Example",
-      "description": "A minimal example RO-Crate generated from Agentic Automation Canvas",
-      "datePublished": "2025-01-01",
-      "about": {
-        "@id": "#project-1"
-      }
-    },
-    {
-      "@id": "#project-1",
-      "@type": ["Project", "ResearchProject"],
+      "@type": [
+        "schema:Dataset",
+        "dcat:Dataset"
+      ],
       "name": "Example Agentic Automation Project",
       "description": "A minimal example project",
-      "startDate": "2025-01-01"
+      "datePublished": "2026-08-11",
+      "aac:schemaVersion": "0.17.1",
+      "conformsTo": {
+        "@id": "https://w3id.org/aac/profile/0.17.1"
+      },
+      "about": {
+        "@id": "#project"
+      },
+      "aac:version": "0.1.0",
+      "aac:versionDate": "2025-01-30",
+      "hasPart": [
+        {
+          "@id": "AGENTS.md"
+        }
+      ]
+    },
+    {
+      "@id": "#project",
+      "@type": [
+        "schema:Project",
+        "schema:ResearchProject"
+      ],
+      "name": "Example Agentic Automation Project",
+      "description": "A minimal example project",
+      "aac:projectStage": "Planning",
+      "startDate": "2025-01-01",
+      "aac:version": "0.1.0",
+      "aac:versionDate": "2025-01-30"
+    },
+    {
+      "@id": "AGENTS.md",
+      "@type": "schema:File",
+      "name": "Agent instructions",
+      "description": "AI coding agent instructions derived from the AAC canvas specification",
+      "schema:encodingFormat": "text/markdown"
     }
   ]
 }

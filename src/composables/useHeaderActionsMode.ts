@@ -6,7 +6,7 @@ const WIDTH_FULL = 560
 const WIDTH_SHORT = 340
 
 export type UseHeaderActionsModeOptions = {
-  /** Min width (px) for full labels. Default 560. Use lower for footer (observed column is ~half row). */
+  /** Minimum available width (px) for full action labels. Default 560. */
   widthFull?: number
   /** Min width (px) for short labels. Default 340. */
   widthShort?: number

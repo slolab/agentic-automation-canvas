@@ -4,7 +4,7 @@ This document provides a deterministic mapping from Agentic Automation Canvas fi
 
 ## Overview
 
-The canvas data model is the source of truth. RO-Crate export is a deterministic projection of this model using Schema.org, PROV-O, P-Plan, DCAT, and custom AAC vocabulary terms.
+The current versioned AAC JSON Schema is the source of truth. Generated TypeScript types drive a deterministic RO-Crate projection using Schema.org, PROV-O, P-Plan, DCAT, and custom AAC vocabulary terms.
 
 ## Entity Mappings
 
@@ -20,13 +20,19 @@ The canvas data model is the source of truth. RO-Crate export is a deterministic
 | `project.endDate` | `endDate` | ISO date format |
 | `project.domain` | `aac:domain` | Array of strings |
 | `project.keywords` | `keywords` | Schema.org property |
+| `project.fundingGrant` | `frapo:isFundedBy` → `frapo:hasGrantNumber` | Separate Grant entity |
+| `project.leadOrganization` | `aac:leadOrganization` | Organization name |
 | `project.projectId` | `identifier` | URI/DOI |
 | `project.headlineValue` | `aac:headlineValue` | Free text |
+| `project.problemFrequency` | `aac:problemFrequency` | Enum: daily, weekly, monthly, few-times-per-year, less-than-yearly |
+| `project.problemExamples` | `aac:problemExamples` | Array of strings |
 | `project.roughEstimateValue` | `aac:roughEstimateValue` | Number (optional project-level estimate) |
 | `project.roughEstimateUnit` | `aac:roughEstimateUnit` | String (unit for rough estimate) |
 | `project.primaryValueDriver` | `aac:primaryValueDriver` | Enum: time, quality, risk, enablement, cost |
 | `project.version` | `aac:version` | Semantic version |
 | `project.versionDate` | `aac:versionDate` | ISO date |
+| `project.creator` | `creator` | Person entity references |
+| `project.license` | Root dataset `license` | `{ @id: "URL" }` |
 
 ### Person Entities
 
@@ -34,10 +40,12 @@ Persons are exported as identity-only entities. Roles are NOT embedded in Person
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `persons[].id` | `@id` | Format: `#person-N` |
+| `persons[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
 | `persons[].name` | `name` | Required |
 | `persons[].affiliation` | `schema:affiliation` | Optional, for disambiguation |
 | `persons[].orcid` | `schema:identifier` | ORCID URI |
+| `persons[].functionRoles` | `aac:functionRoles` | Functional-role vocabulary values |
+| `persons[].localTitle` | `aac:localTitle` | Free-text position/title |
 
 **Important:** Person entities do not contain role information. Roles are represented as separate `schema:Role` nodes.
 
@@ -49,10 +57,11 @@ Roles are exported as separate `schema:Role` nodes that reference Person entitie
 |--------|-------------------|-------|
 | Role assignment | `@type` | `schema:Role` |
 | Role assignment | `@id` | Format: `#role-N` |
-| `stakeholders[].role` or `agents[].role` | `schema:roleName` | Role name |
+| Stakeholder assignment or `agents[].role` | `schema:roleName` | `Stakeholder` or the agent role |
 | Person reference | `schema:member` | `{ @id: "#person-N" }` |
-| Context | `aac:roleContext` | `stakeholder`, `stage-agent`, or `task-agent` |
+| Context | `aac:roleContext` | `stakeholder` or `stage-agent` |
 | Stage reference (if stage-agent) | `aac:stageId` | Stage @id |
+| `agents[].roleContext` | `aac:agentRoleContext` | Free-text context for a stage-agent role |
 
 ### Stakeholder Mappings
 
@@ -67,17 +76,23 @@ Stakeholders are managed per-task (in `requirement.stakeholders` array).
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `requirements[].id` | `@id` | Format: `#requirement-N` |
-| `requirements[].description` | `description` | Required |
-| `requirements[].userStory` | `name` | Optional |
+| `requirements[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
+| `requirements[].title` | `name`, `aac:title` | Required |
+| `requirements[].description` | `description` | Optional |
+| `requirements[].userStory` | `aac:userStory` | Optional |
 | `requirements[].priority` | `priority` | Enum |
 | `requirements[].status` | `status` | Enum |
+| `requirements[].value` | `aac:value` | Free text |
 | `requirements[].unitOfWork` | `aac:unitOfWork` | String |
 | `requirements[].unitCategory` | `aac:unitCategory` | Enum |
 | `requirements[].volumePerMonth` | `aac:volumePerMonth` | Number |
 | `requirements[].timeUnit` | `aac:timeUnit` | Enum: minutes, hours |
-| `requirements[].stakeholders` | Person entity references | Array of Person IDs (per-task stakeholders) |
+| `requirements[].dependsOn` | `aac:dependsOn` | Logical requirement IDs |
+| `requirements[].stakeholders` | `aac:stakeholders` | Logical Person IDs; also aggregated to Project `contributor` references |
+| `requirements[].targetPopulation` | `aac:targetPopulation` | Free text |
 | `requirements[].benefits` | `aac:benefits` | Array of Benefit objects |
+| `requirements[].dataAccess` | `aac:dataAccess`, `prov:used` | Embedded links plus dataset entity references |
+| `requirements[].feasibility` | `aac:feasibility` | Embedded feasibility object |
 
 ### Benefit Objects
 
@@ -85,7 +100,7 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `benefitType` | `benefitType` | Required: time, quality, risk, enablement, cost |
+| `benefitType` | `benefitType` | Required: time, quality, risk, enablement, cost, or `unclassified` |
 | `metricId` | `metricId` | Required |
 | `metricLabel` | `metricLabel` | Required |
 | `direction` | `direction` | Required: increaseIsBetter, decreaseIsBetter, targetIsBetter, boolIsBetter |
@@ -95,8 +110,8 @@ Benefits are embedded as-is in requirement entities under `aac:benefits`.
 | `benefitUnit` | `benefitUnit` | Required |
 | `baseline` | `baseline` | BenefitValue object |
 | `expected` | `expected` | BenefitValue object |
-| `oversightMinutesPerUnit` | `aac:humanOversightMinutesPerUnit` | Optional: For time benefits with perUnit aggregation. RO-Crate exports this from first time benefit for backward compatibility (legacy field name). |
-| `oversightMinutesPerMonth` | (not exported) | Optional: For time benefits with perMonth aggregation. Stored in canvas but not exported to RO-Crate (perMonth oversight is task-specific). |
+| `oversightMinutesPerUnit` | `oversightMinutesPerUnit` | Embedded intact; also emitted as legacy step term `aac:humanOversightMinutesPerUnit` for older readers |
+| `oversightMinutesPerMonth` | `oversightMinutesPerMonth` | Embedded intact in `aac:benefits` |
 | `confidenceUser` | `confidenceUser` | Optional: low, medium, high |
 | `confidenceDev` | `confidenceDev` | Optional: low, medium, high |
 | `assumptions` | `assumptions` | Optional |
@@ -118,7 +133,7 @@ Developer feasibility is embedded directly in the RO-Crate root dataset as `aac:
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `stages[].id` | `@id` | Format: `#stage-N` |
+| `stages[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
 | `stages[].name` | `name` | Required |
 | `stages[].startDate` | `startedAtTime` | ISO datetime |
 | `stages[].endDate` | `endedAtTime` | ISO datetime |
@@ -148,7 +163,7 @@ Risks are embedded within each requirement's feasibility under `aac:feasibility.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `datasets[].id` | `@id` | Format: `#dataset-N` |
+| `datasets[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
 | `datasets[].title` | `name` | Required |
 | `datasets[].description` | `description` | Optional |
 | `datasets[].format` | `schema:encodingFormat` | MIME type or format name |
@@ -156,7 +171,7 @@ Risks are embedded within each requirement's feasibility under `aac:feasibility.
 | `datasets[].accessRights` | `dct:accessRights` | Access level |
 | `datasets[].pid` | `identifier` | PID/DOI |
 | `datasets[].datasetSheetUri` | `dcat:landingPage` | `{ @id: URI }` — DCAT: “Web page that opens the dataset or its metadata” (FAIR dataset sheet) |
-| `datasets[].publisher` | `publisher` | Publisher name |
+| `datasets[].publisher` | `schema:publisher` | Publisher name |
 | `datasets[].duoTerms` | `dct:conformsTo` | Array of `{ @id: DUO_URL }` |
 | `datasets[].containsPersonalData` | `aac:containsPersonalData` | Boolean |
 | `datasets[].sensitivityLevel` | `aac:sensitivityLevel` | Sensitivity classification |
@@ -167,7 +182,7 @@ Risks are embedded within each requirement's feasibility under `aac:feasibility.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `deliverables[].id` | `@id` | Format: `#outcome-N` |
+| `deliverables[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
 | `deliverables[].title` | `name` | Required |
 | `deliverables[].type` | `@type` | Format: `schema:{type}` |
 | `deliverables[].description` | `description` | Optional |
@@ -178,7 +193,7 @@ Risks are embedded within each requirement's feasibility under `aac:feasibility.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `publications[].id` | `@id` | Format: `#publication-N` |
+| `publications[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
 | `publications[].title` | `name` | Required |
 | `publications[].doi` | `identifier` | DOI |
 | `publications[].authors` | `author` | Array of Person objects |
@@ -188,7 +203,7 @@ Risks are embedded within each requirement's feasibility under `aac:feasibility.
 
 | Canvas Field | RO-Crate Property | Notes |
 |-------------|-------------------|-------|
-| `evaluations[].id` | `@id` | Format: `#evaluation-N` |
+| `evaluations[].id` | `aac:canvasId` | Logical canvas ID; `@id` is allocated collision-free |
 | `evaluations[].type` | `name`, `aac:evaluationType` | Type string |
 | `evaluations[].date` | `datePublished` | ISO date |
 | `evaluations[].metrics` | `aac:metrics` | Object with additional properties |
@@ -205,7 +220,8 @@ The RO-Crate export uses the following namespace prefixes:
   "p-plan": "http://purl.org/net/p-plan#",
   "dct": "http://purl.org/dc/terms/",
   "dcat": "http://www.w3.org/ns/dcat#",
-  "aac": "https://w3id.org/aac/"
+  "frapo": "http://purl.org/cerif/frapo/",
+  "aac": "https://w3id.org/aac/schema/"
 }
 ```
 
@@ -241,12 +257,12 @@ This enables downstream analytics without ambiguity.
 2. Fall back to legacy `aac:roles` embedded in Person entities
 3. Match roles to stakeholders/agents by context
 
-### Benefit Migration
+### Non-current crates
 
-For older exports without `direction`/`valueMeaning`:
-- Default `direction` to `increaseIsBetter` for time metrics
-- Default `valueMeaning` to `delta` for time-saved metrics
-- Default `valueMeaning` to `absolute` for other metrics
+Non-current, missing, and unknown AAC schema/profile declarations all use the same
+best-effort current-model import. Known compatible values are retained; incompatible
+values are omitted with visible structured diagnostics. No historical version has a
+separate lossless compatibility promise.
 
 ## Related Documentation
 

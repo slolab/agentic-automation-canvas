@@ -57,9 +57,13 @@ def format_type(schema: Dict[str, Any], defs: Dict[str, Any] = None) -> str:
         if ref_path.startswith("#/$defs/"):
             ref_name = ref_path.replace("#/$defs/", "")
             if defs and ref_name in defs:
-                # Check if it's a oneOf type (like BenefitValue) - don't link
+                # Link named oneOf branches when the union is made entirely of references.
                 ref_schema = defs[ref_name]
                 if "oneOf" in ref_schema:
+                    branches = ref_schema["oneOf"]
+                    if branches and all("$ref" in branch for branch in branches):
+                        branch_types = ", ".join(format_type(branch, defs) for branch in branches)
+                        return f"one of {branch_types}"
                     return ref_name
                 # Use anchor link within the same page instead of separate .md file
                 anchor = ref_name.lower().replace("_", "-")
@@ -78,6 +82,19 @@ def format_type(schema: Dict[str, Any], defs: Dict[str, Any] = None) -> str:
             return f"array of {items_type}"
         
         return schema_type
+
+    if "const" in schema:
+        value = schema["const"]
+        if isinstance(value, bool):
+            return "boolean"
+        if isinstance(value, str):
+            return "string"
+        if isinstance(value, int):
+            return "integer"
+        if isinstance(value, float):
+            return "number"
+        if value is None:
+            return "null"
     
     if "oneOf" in schema:
         return "oneOf"
@@ -95,6 +112,14 @@ def format_constraints(schema: Dict[str, Any]) -> str:
     if "enum" in schema:
         enum_values = ", ".join(f"`{v}`" for v in schema["enum"])
         constraints.append(f"Enum: {enum_values}")
+
+    if "const" in schema:
+        constraints.append(f"Constant: `{schema['const']}`")
+
+    items = schema.get("items")
+    if schema.get("type") == "array" and isinstance(items, dict) and "enum" in items:
+        enum_values = ", ".join(f"`{v}`" for v in items["enum"])
+        constraints.append(f"Item enum: {enum_values}")
     
     if "pattern" in schema:
         constraints.append(f"Pattern: `{schema['pattern']}`")

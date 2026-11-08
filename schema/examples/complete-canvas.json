@@ -5,7 +5,9 @@
     {
       "id": "person-0",
       "name": "Dr. Jane Smith",
-      "affiliation": "Biomedical Research Institute"
+      "affiliation": "Biomedical Research Institute",
+      "functionRoles": ["project-lead", "domain-expert"],
+      "localTitle": "Principal Investigator"
     },
     {
       "id": "person-1",
@@ -17,12 +19,19 @@
   "project": {
     "title": "Biomedical AI Automation Project",
     "description": "An agentic automation system for processing biomedical data using AI to reduce manual effort and improve data quality.",
+    "problemFrequency": "daily",
+    "problemExamples": [
+      "The most recent dataset required two researchers to spend a full day correcting inconsistent source formats."
+    ],
     "objective": "Automate data processing workflows to reduce time spent on repetitive tasks.",
     "projectStage": "Development",
     "startDate": "2025-01-01",
     "endDate": "2025-12-31",
     "domain": ["Biomedical", "AI"],
     "keywords": ["AI", "biomedical", "automation", "data processing"],
+    "leadOrganization": "Biomedical Research Institute",
+    "creator": ["person-0", "person-1"],
+    "license": "https://creativecommons.org/licenses/by/4.0/",
     "headlineValue": "Saves time through automated data processing",
     "primaryValueDriver": "time",
     "roughEstimateValue": 10,
@@ -49,6 +58,7 @@
             "benefitType": "time",
             "metricId": "processingTime",
             "metricLabel": "Processing time",
+            "description": "Reduce the time researchers spend on repetitive data processing.",
             "direction": "decreaseIsBetter",
             "valueMeaning": "absolute",
             "aggregationBasis": "perUnit",
@@ -78,6 +88,19 @@
             },
             "confidenceUser": "medium",
             "confidenceDev": "medium"
+          },
+          {
+            "benefitType": "unclassified",
+            "description": "Researchers can spend more time interpreting results"
+          },
+          {
+            "benefitType": "unclassified",
+            "metricLabel": "Datasets completed without manual rework"
+          },
+          {
+            "benefitType": "unclassified",
+            "description": "Faster delivery of analysis-ready datasets",
+            "metricLabel": "Median time from raw data receipt to analysis readiness"
           }
         ],
         "stakeholders": ["person-0", "person-1"],
@@ -85,6 +108,11 @@
           "modelSelection": "frontier-model",
           "modelName": "gpt-4o",
           "modelCardUri": "https://platform.openai.com/docs/models/gpt-4o",
+          "technologyApproach": {
+            "architecture": "agents",
+            "approaches": ["agentic-research-support", "data-metadata-curation", "analysis-pipeline-orchestration", "computer-use", "other"],
+            "customApproaches": ["Domain-specific quality review"]
+          },
           "risks": [
             {
               "id": "risk-1",
@@ -122,36 +150,22 @@
       "target": 7
     },
     "technicalRisk": "medium",
-    "algorithms": ["Machine Learning", "Natural Language Processing"],
-    "tools": ["Python", "TensorFlow", "Biomedical Data APIs"],
     "effortEstimate": {
       "value": 28,
       "unit": "weeks"
     },
     "feasibilityNotes": "Core technologies are mature. Main challenge is domain-specific data handling.",
-    "modelSelection": "frontier-model",
-    "modelName": "gpt-4o",
-    "baselineCapability": {
-      "taskPerformance": "moderate",
-      "successRate": 65,
-      "limitations": "Naive model struggles with domain-specific terminology and complex multi-step workflows",
-      "requiresCustomInstructions": true,
-      "customInstructionsComplexity": "high"
-    },
-    "expectedGains": {
-      "performanceImprovement": "significant",
-      "headroom": "high",
-      "justification": "Agentic capabilities will enable complex workflows that naive models cannot handle"
-    },
-    "implementationDifficulty": {
-      "skillAdditionDifficulty": "moderate",
-      "baselineComparisonRequired": true,
-      "validationMonitoringRequired": true,
-      "securityLevel": "medium"
-    },
-    "agenticExplanation": "Agentic capabilities added through tool use, structured workflows, and domain-specific instructions"
+    "solutionsToResearch": "Compare existing biomedical data-processing platforms before commissioning a custom system.",
+    "constraintFlags": [
+      "large-data",
+      "cluster-compute",
+      "personal-data",
+      "valuable-ip"
+    ]
   },
   "governance": {
+    "buildTeamStatus": "committed",
+    "maintenanceOwnerStatus": "possible",
     "stages": [
       {
         "id": "stage-0",
@@ -171,8 +185,13 @@
           }
         ],
         "milestones": [
-          "Core processing engine completed",
-          "Integration testing passed"
+          {
+            "description": "Core processing engine completed",
+            "kpi": "All core workflow tests pass"
+          },
+          {
+            "description": "Integration testing passed"
+          }
         ],
         "complianceStandards": [
           "GDPR",
