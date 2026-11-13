@@ -1,6 +1,6 @@
 # The Agentic Automation Canvas (AAC)
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18649620.svg)](https://doi.org/10.5281/zenodo.18649620)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.18649597.svg)](https://doi.org/10.5281/zenodo.18649597)
 
 > [!WARNING]
 > **Application release 0.17.0 (Beta)**: The application is currently in beta testing. <!-- x-release-please-version -->
